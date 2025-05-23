@@ -12,6 +12,8 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { readFileSync } from "fs";
 import http from 'http';
 import https from 'https';
+import { validateEnvironment, validateConfig, checkElasticsearchConnection, testBasicOperations } from './validation.js';
+import { request } from 'undici';
 
 // Configure detailed logging
 const logger = {
@@ -153,6 +155,18 @@ export async function createElasticsearchMcpServer(
   });
 
   try {
+    // Validate environment variables
+    const envValidation = validateEnvironment();
+    if (!envValidation.valid) {
+      throw new Error(`Environment validation failed: ${envValidation.errors.join(', ')}`);
+    }
+
+    // Validate config
+    const configValidation = validateConfig(config);
+    if (!configValidation.valid) {
+      throw new Error(`Config validation failed: ${configValidation.errors.join(', ')}`);
+    }
+
     const validatedConfig = ConfigSchema.parse(config);
     logger.debug("Config validation passed");
     
@@ -227,6 +241,16 @@ export async function createElasticsearchMcpServer(
       throw error;
     }
 
+    // Test basic operations
+    const operationsCheck = await testBasicOperations(esClient);
+    if (!operationsCheck.valid) {
+      logger.warn("Basic operations check failed:", operationsCheck.errors.join(', '));
+      const warnings = operationsCheck.warnings || [];
+      if (warnings.length > 0) {
+        logger.warn("Warnings:", warnings.join(', '));
+      }
+    }
+
     logger.info("Creating MCP Server instance");
     const server = new McpServer({
       name: "elasticsearch-mcp-server",
@@ -249,21 +273,26 @@ export async function createElasticsearchMcpServer(
       async ({ indexPattern }) => {
         logger.debug(`Listing indices with pattern: ${indexPattern}`);
         try {
-          const response = await esClient.cat.indices({ 
-            index: indexPattern, 
-            format: "json",
-            h: "index,health,status,docs.count"
+          const response = await request(`${url}/_cat/indices/${indexPattern}?format=json&h=index,health,status,docs.count`, {
+            method: 'GET',
+            headers: {
+              'Authorization': apiKey ? `ApiKey ${apiKey}` : undefined,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
           });
-          
-          logger.debug(`Response from Elasticsearch: ${JSON.stringify(response)}`);
 
-          if (!Array.isArray(response)) {
+          const data = await response.body.json();
+          
+          logger.debug(`Response from Elasticsearch: ${JSON.stringify(data)}`);
+
+          if (!Array.isArray(data)) {
             throw new Error("Invalid response format from Elasticsearch");
           }
 
-          logger.debug(`Found ${response.length} indices`);
+          logger.debug(`Found ${data.length} indices`);
 
-          const indicesInfo = response.map((index) => ({
+          const indicesInfo = data.map((index) => ({
             index: index.index,
             health: index.health,
             status: index.status,
@@ -317,9 +346,19 @@ export async function createElasticsearchMcpServer(
       },
       async ({ index }) => {
         try {
-          const mappingResponse = await esClient.indices.getMapping({
-            index,
+          logger.debug(`Getting mappings for index: ${index}`);
+          const response = await request(`${url}/${index}/_mapping`, {
+            method: 'GET',
+            headers: {
+              'Authorization': apiKey ? `ApiKey ${apiKey}` : undefined,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
           });
+
+          const data = await response.body.json() as Record<string, { mappings: any }>;
+          
+          logger.debug(`Response from Elasticsearch: ${JSON.stringify(data)}`);
 
           return {
             content: [
@@ -329,11 +368,7 @@ export async function createElasticsearchMcpServer(
               },
               {
                 type: "text" as const,
-                text: `Mappings for index ${index}: ${JSON.stringify(
-                  mappingResponse[index]?.mappings || {},
-                  null,
-                  2
-                )}`,
+                text: JSON.stringify(data[index]?.mappings || {}, null, 2),
               },
             ],
           };
@@ -388,26 +423,33 @@ export async function createElasticsearchMcpServer(
       },
       async ({ index, queryBody }) => {
         try {
+          logger.debug(`Searching index: ${index} with query: ${JSON.stringify(queryBody)}`);
+          
           // Get mappings to identify text fields for highlighting
-          const mappingResponse = await esClient.indices.getMapping({
-            index,
+          const mappingResponse = await request(`${url}/${index}/_mapping`, {
+            method: 'GET',
+            headers: {
+              'Authorization': apiKey ? `ApiKey ${apiKey}` : undefined,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
           });
 
-          const indexMappings = mappingResponse[index]?.mappings || {};
+          const mappingData = await mappingResponse.body.json() as Record<string, { mappings: any }>;
+          const indexMappings = mappingData[index]?.mappings || {};
 
-          const searchRequest: estypes.SearchRequest = {
-            index,
+          const searchRequest = {
             ...queryBody,
           };
 
           // Always do highlighting
           if (indexMappings.properties) {
-            const textFields: Record<string, estypes.SearchHighlightField> = {};
+            const textFields: Record<string, any> = {};
 
             for (const [fieldName, fieldData] of Object.entries(
               indexMappings.properties
             )) {
-              if (fieldData.type === "text" || "dense_vector" in fieldData) {
+              if ((fieldData as any).type === "text" || "dense_vector" in (fieldData as any)) {
                 textFields[fieldName] = {};
               }
             }
@@ -419,19 +461,45 @@ export async function createElasticsearchMcpServer(
             };
           }
 
-          const result = await esClient.search(searchRequest);
+          const response = await request(`${url}/${index}/_search`, {
+            method: 'POST',
+            headers: {
+              'Authorization': apiKey ? `ApiKey ${apiKey}` : undefined,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify(searchRequest)
+          });
+
+          const result = await response.body.json() as any;
 
           // Extract the 'from' parameter from queryBody, defaulting to 0 if not provided
           const from = queryBody.from || 0;
 
-          const contentFragments = result.hits.hits.map((hit) => {
+          // Handle aggregation results
+          if (queryBody.size === 0 || queryBody.aggs) {
+            return {
+              content: [
+                {
+                  type: "text" as const,
+                  text: `Search results with aggregations:`,
+                },
+                {
+                  type: "text" as const,
+                  text: JSON.stringify(result.aggregations || {}, null, 2),
+                },
+              ],
+            };
+          }
+
+          const contentFragments = result.hits.hits.map((hit: any) => {
             const highlightedFields = hit.highlight || {};
             const sourceData = hit._source || {};
 
             let content = "";
 
             for (const [field, highlights] of Object.entries(highlightedFields)) {
-              if (highlights && highlights.length > 0) {
+              if (highlights && Array.isArray(highlights) && highlights.length > 0) {
                 content += `${field} (highlighted): ${highlights.join(
                   " ... "
                 )}\n`;
@@ -493,12 +561,30 @@ export async function createElasticsearchMcpServer(
       },
       async ({ index }) => {
         try {
-          const response = await esClient.cat.shards({
-            index,
-            format: "json",
+          logger.debug(`Getting shard information${index ? ` for index: ${index}` : ''}`);
+          const response = await request(`${url}/_cat/shards${index ? `/${index}` : ''}?format=json`, {
+            method: 'GET',
+            headers: {
+              'Authorization': apiKey ? `ApiKey ${apiKey}` : undefined,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
           });
 
-          const shardsInfo = response.map((shard) => ({
+          const data = await response.body.json() as Array<{
+            index: string;
+            shard: string;
+            prirep: string;
+            state: string;
+            docs: string;
+            store: string;
+            ip: string;
+            node: string;
+          }>;
+          
+          logger.debug(`Response from Elasticsearch: ${JSON.stringify(data)}`);
+
+          const shardsInfo = data.map((shard) => ({
             index: shard.index,
             shard: shard.shard,
             prirep: shard.prirep,
