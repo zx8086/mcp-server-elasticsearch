@@ -1,27 +1,24 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 /*
  * Copyright Elasticsearch B.V. and contributors
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { exec } from "child_process";
-import fs from "fs/promises";
-import path from "path";
+import { spawn } from "bun";
+import { readFile, writeFile } from "fs/promises";
+import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Execute license-checker command
-const generateNotice = () => {
-  return new Promise((resolve, reject) => {
-    exec("npx license-checker --json --production", (error, stdout) => {
-      if (error) {
-        return reject(error);
-      }
-      resolve(JSON.parse(stdout));
-    });
+const generateNotice = async () => {
+  const proc = spawn(["bunx", "license-checker", "--json", "--production"], {
+    stdout: "pipe",
   });
+  const output = await new Response(proc.stdout).text();
+  return JSON.parse(output);
 };
 
 async function createNoticeFile() {
@@ -75,7 +72,7 @@ The Elasticsearch MCP Server contains the following third-party dependencies:
       // Include license text if available
       if (info.licenseFile && typeof info.licenseFile === "string") {
         try {
-          const licenseText = await fs.readFile(info.licenseFile, "utf-8");
+          const licenseText = await readFile(info.licenseFile, "utf-8");
           noticeContent += `${licenseText.trim()}\n`;
         } catch (err) {
           noticeContent += `License text not available.\n`;
@@ -86,8 +83,8 @@ The Elasticsearch MCP Server contains the following third-party dependencies:
     }
 
     // Write the NOTICE.txt file in the repo root
-    await fs.writeFile(
-      path.join(__dirname, "..", "NOTICE.txt"),
+    await writeFile(
+      join(__dirname, "..", "NOTICE.txt"),
       noticeContent,
       "utf-8"
     );

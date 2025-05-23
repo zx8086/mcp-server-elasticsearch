@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 /*
  * Copyright Elasticsearch B.V. and contributors
@@ -7,9 +7,80 @@
 
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client, estypes, ClientOptions } from "@elastic/elasticsearch";
+import { Client, estypes, ClientOptions, TransportRequestParams, Transport } from "@elastic/elasticsearch";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import fs from "fs";
+import { readFileSync } from "fs";
+import http from 'http';
+import https from 'https';
+
+// Configure detailed logging
+const logger = {
+  info: (message: string, ...args: any[]) => {
+    const safeArgs = args.map(arg => {
+      if (typeof arg === 'object' && arg !== null) {
+        try {
+          return JSON.stringify(arg, (key, value) => {
+            if (key === 'auth' || key === 'password' || key === 'apiKey') return '[REDACTED]';
+            return value;
+          });
+        } catch (e) {
+          return '[Object]';
+        }
+      }
+      return arg;
+    });
+    // Write all logs to stderr
+    console.error(`[${new Date().toISOString()}] [INFO] ${message}`, ...safeArgs);
+  },
+  error: (message: string, ...args: any[]) => {
+    const safeArgs = args.map(arg => {
+      if (typeof arg === 'object' && arg !== null) {
+        try {
+          return JSON.stringify(arg, (key, value) => {
+            if (key === 'auth' || key === 'password' || key === 'apiKey') return '[REDACTED]';
+            return value;
+          });
+        } catch (e) {
+          return '[Object]';
+        }
+      }
+      return arg;
+    });
+    console.error(`[${new Date().toISOString()}] [ERROR] ${message}`, ...safeArgs);
+  },
+  debug: (message: string, ...args: any[]) => {
+    const safeArgs = args.map(arg => {
+      if (typeof arg === 'object' && arg !== null) {
+        try {
+          return JSON.stringify(arg, (key, value) => {
+            if (key === 'auth' || key === 'password' || key === 'apiKey') return '[REDACTED]';
+            return value;
+          });
+        } catch (e) {
+          return '[Object]';
+        }
+      }
+      return arg;
+    });
+    console.error(`[${new Date().toISOString()}] [DEBUG] ${message}`, ...safeArgs);
+  },
+  warn: (message: string, ...args: any[]) => {
+    const safeArgs = args.map(arg => {
+      if (typeof arg === 'object' && arg !== null) {
+        try {
+          return JSON.stringify(arg, (key, value) => {
+            if (key === 'auth' || key === 'password' || key === 'apiKey') return '[REDACTED]';
+            return value;
+          });
+        } catch (e) {
+          return '[Object]';
+        }
+      }
+      return arg;
+    });
+    console.error(`[${new Date().toISOString()}] [WARN] ${message}`, ...safeArgs);
+  }
+};
 
 // Configuration schema with auth options
 const ConfigSchema = z
@@ -72,369 +143,461 @@ type ElasticsearchConfig = z.infer<typeof ConfigSchema>;
 
 export async function createElasticsearchMcpServer(
   config: ElasticsearchConfig
-) {
-  const validatedConfig = ConfigSchema.parse(config);
-  const { url, apiKey, username, password, caCert } = validatedConfig;
-
-  const clientOptions: ClientOptions = {
-    node: url,
-  };
-
-  // Set up authentication
-  if (apiKey) {
-    clientOptions.auth = { apiKey };
-  } else if (username && password) {
-    clientOptions.auth = { username, password };
-  }
-
-  // Set up SSL/TLS certificate if provided
-  if (caCert) {
-    try {
-      const ca = fs.readFileSync(caCert);
-      clientOptions.tls = { ca };
-    } catch (error) {
-      console.error(
-        `Failed to read certificate file: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
-    }
-  }
-
-  const esClient = new Client(clientOptions);
-
-  const server = new McpServer({
-    name: "elasticsearch-mcp-server",
-    version: "0.1.1",
+): Promise<McpServer> {
+  logger.info("Starting server creation with config:", { 
+    url: config.url,
+    hasApiKey: !!config.apiKey,
+    hasUsername: !!config.username,
+    hasPassword: !!config.password,
+    hasCaCert: !!config.caCert
   });
 
-  // Tool 1: List indices
-  server.tool(
-    "list_indices",
-    "List all available Elasticsearch indices",
-    {
-      indexPattern: z
-        .string()
-        .trim()
-        .min(1, "Index pattern is required")
-        .describe("Index pattern of Elasticsearch indices to list"),
-    },
-    async ( {indexPattern} ) => {
-      try {
-        const response = await esClient.cat.indices({ 
-          index: indexPattern, 
-          format: "json" 
-        });
+  try {
+    const validatedConfig = ConfigSchema.parse(config);
+    logger.debug("Config validation passed");
+    
+    const { url, apiKey, username, password, caCert } = validatedConfig;
 
-        const indicesInfo = response.map((index) => ({
-          index: index.index,
-          health: index.health,
-          status: index.status,
-          docsCount: index.docsCount,
-        }));
-
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Found ${indicesInfo.length} indices`,
-            },
-            {
-              type: "text" as const,
-              text: JSON.stringify(indicesInfo, null, 2),
-            },
-          ],
-        };
-      } catch (error) {
-        console.error(
-          `Failed to list indices: ${
-            error instanceof Error ? error.message : String(error)
-          }`
-        );
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Error: ${
-                error instanceof Error ? error.message : String(error)
-              }`,
-            },
-          ],
-        };
+    logger.info("Creating Elasticsearch client with URL:", url);
+    const clientOptions: ClientOptions = {
+      node: url,
+      auth: apiKey ? { apiKey } : username && password ? { username, password } : undefined,
+      compression: true,
+      maxRetries: 3,
+      requestTimeout: 30000,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      context: {
+        userAgent: 'elasticsearch-js/8.10.0 (bun 1.2.14)'
       }
-    }
-  );
+    };
 
-  // Tool 2: Get mappings for an index
-  server.tool(
-    "get_mappings",
-    "Get field mappings for a specific Elasticsearch index",
-    {
-      index: z
-        .string()
-        .trim()
-        .min(1, "Index name is required")
-        .describe("Name of the Elasticsearch index to get mappings for"),
-    },
-    async ({ index }) => {
-      try {
-        const mappingResponse = await esClient.indices.getMapping({
-          index,
-        });
+    logger.debug("Initializing Elasticsearch client with options:", { 
+      ...clientOptions, 
+      auth: clientOptions.auth ? '[REDACTED]' : undefined
+    });
+    
+    const esClient = new Client(clientOptions);
+    logger.info("Elasticsearch client created");
 
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Mappings for index: ${index}`,
-            },
-            {
-              type: "text" as const,
-              text: `Mappings for index ${index}: ${JSON.stringify(
-                mappingResponse[index]?.mappings || {},
-                null,
-                2
-              )}`,
-            },
-          ],
-        };
-      } catch (error) {
-        console.error(
-          `Failed to get mappings: ${
-            error instanceof Error ? error.message : String(error)
-          }`
-        );
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Error: ${
-                error instanceof Error ? error.message : String(error)
-              }`,
-            },
-          ],
-        };
-      }
-    }
-  );
-
-  // Tool 3: Search an index with simplified parameters
-  server.tool(
-    "search",
-    "Perform an Elasticsearch search with the provided query DSL. Highlights are always enabled.",
-    {
-      index: z
-        .string()
-        .trim()
-        .min(1, "Index name is required")
-        .describe("Name of the Elasticsearch index to search"),
-
-      queryBody: z
-        .record(z.any())
-        .refine(
-          (val) => {
+    // Test connection using Node's native HTTP client
+    try {
+      logger.debug("Testing connection to Elasticsearch...");
+      const urlObj = new URL(url);
+      const client = urlObj.protocol === 'https:' ? https : http;
+      
+      const response = await new Promise<{ version?: { number: string }, cluster_name: string }>((resolve, reject) => {
+        const req = client.request({
+          hostname: urlObj.hostname,
+          port: urlObj.port,
+          path: '/',
+          method: 'GET',
+          headers: {
+            'Authorization': apiKey ? `ApiKey ${apiKey}` : undefined,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        }, (res) => {
+          let data = '';
+          res.on('data', (chunk) => data += chunk);
+          res.on('end', () => {
             try {
-              JSON.parse(JSON.stringify(val));
-              return true;
+              resolve(JSON.parse(data));
             } catch (e) {
-              return false;
+              reject(e);
             }
-          },
-          {
-            message: "queryBody must be a valid Elasticsearch query DSL object",
-          }
-        )
-        .describe(
-          "Complete Elasticsearch query DSL object that can include query, size, from, sort, etc."
-        ),
-    },
-    async ({ index, queryBody }) => {
-      try {
-        // Get mappings to identify text fields for highlighting
-        const mappingResponse = await esClient.indices.getMapping({
-          index,
+          });
         });
+        
+        req.on('error', reject);
+        req.end();
+      });
 
-        const indexMappings = mappingResponse[index]?.mappings || {};
+      logger.info("Successfully connected to Elasticsearch", {
+        version: response.version?.number,
+        clusterName: response.cluster_name
+      });
+    } catch (error: unknown) {
+      logger.error("Failed to connect to Elasticsearch:", error instanceof Error ? error.message : String(error));
+      if (error instanceof Error && error.stack) {
+        logger.error("Connection error stack trace:", error.stack);
+      }
+      throw error;
+    }
 
-        const searchRequest: estypes.SearchRequest = {
-          index,
-          ...queryBody,
-        };
+    logger.info("Creating MCP Server instance");
+    const server = new McpServer({
+      name: "elasticsearch-mcp-server",
+      version: "0.1.1",
+    });
+    logger.debug("MCP Server instance created");
 
-        // Always do highlighting
-        if (indexMappings.properties) {
-          const textFields: Record<string, estypes.SearchHighlightField> = {};
+    // Tool 1: List indices
+    logger.debug("Registering list_indices tool");
+    server.tool(
+      "list_indices",
+      "List all available Elasticsearch indices",
+      {
+        indexPattern: z
+          .string()
+          .trim()
+          .min(1, "Index pattern is required")
+          .describe("Index pattern of Elasticsearch indices to list"),
+      },
+      async ({ indexPattern }) => {
+        logger.debug(`Listing indices with pattern: ${indexPattern}`);
+        try {
+          const response = await esClient.cat.indices({ 
+            index: indexPattern, 
+            format: "json",
+            h: "index,health,status,docs.count"
+          });
+          
+          logger.debug(`Response from Elasticsearch: ${JSON.stringify(response)}`);
 
-          for (const [fieldName, fieldData] of Object.entries(
-            indexMappings.properties
-          )) {
-            if (fieldData.type === "text" || "dense_vector" in fieldData) {
-              textFields[fieldName] = {};
-            }
+          if (!Array.isArray(response)) {
+            throw new Error("Invalid response format from Elasticsearch");
           }
 
-          searchRequest.highlight = {
-            fields: textFields,
-            pre_tags: ["<em>"],
-            post_tags: ["</em>"],
-          };
-        }
+          logger.debug(`Found ${response.length} indices`);
 
-        const result = await esClient.search(searchRequest);
-
-        // Extract the 'from' parameter from queryBody, defaulting to 0 if not provided
-        const from = queryBody.from || 0;
-
-        const contentFragments = result.hits.hits.map((hit) => {
-          const highlightedFields = hit.highlight || {};
-          const sourceData = hit._source || {};
-
-          let content = "";
-
-          for (const [field, highlights] of Object.entries(highlightedFields)) {
-            if (highlights && highlights.length > 0) {
-              content += `${field} (highlighted): ${highlights.join(
-                " ... "
-              )}\n`;
-            }
-          }
-
-          for (const [field, value] of Object.entries(sourceData)) {
-            if (!(field in highlightedFields)) {
-              content += `${field}: ${JSON.stringify(value)}\n`;
-            }
-          }
+          const indicesInfo = response.map((index) => ({
+            index: index.index,
+            health: index.health,
+            status: index.status,
+            docsCount: index["docs.count"],
+          }));
 
           return {
-            type: "text" as const,
-            text: content.trim(),
+            content: [
+              {
+                type: "text" as const,
+                text: `Found ${indicesInfo.length} indices`,
+              },
+              {
+                type: "text" as const,
+                text: JSON.stringify(indicesInfo, null, 2),
+              },
+            ],
           };
-        });
-
-        const metadataFragment = {
-          type: "text" as const,
-          text: `Total results: ${
-            typeof result.hits.total === "number"
-              ? result.hits.total
-              : result.hits.total?.value || 0
-          }, showing ${result.hits.hits.length} from position ${from}`,
-        };
-
-        return {
-          content: [metadataFragment, ...contentFragments],
-        };
-      } catch (error) {
-        console.error(
-          `Search failed: ${
+        } catch (error: unknown) {
+          logger.error(
+            "Failed to list indices:",
             error instanceof Error ? error.message : String(error)
-          }`
-        );
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Error: ${
-                error instanceof Error ? error.message : String(error)
-              }`,
-            },
-          ],
-        };
+          );
+          if (error instanceof Error && error.stack) {
+            logger.error("Stack trace:", error.stack);
+          }
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Error: ${
+                  error instanceof Error ? error.message : String(error)
+                }`,
+              },
+            ],
+          };
+        }
       }
-    }
-  );
+    );
 
-  // Tool 4: Get shard information
-  server.tool(
-    "get_shards",
-    "Get shard information for all or specific indices",
-    {
-      index: z
-        .string()
-        .optional()
-        .describe("Optional index name to get shard information for"),
-    },
-    async ({ index }) => {
-      try {
-        const response = await esClient.cat.shards({
-          index,
-          format: "json",
-        });
+    // Tool 2: Get mappings for an index
+    server.tool(
+      "get_mappings",
+      "Get field mappings for a specific Elasticsearch index",
+      {
+        index: z
+          .string()
+          .trim()
+          .min(1, "Index name is required")
+          .describe("Name of the Elasticsearch index to get mappings for"),
+      },
+      async ({ index }) => {
+        try {
+          const mappingResponse = await esClient.indices.getMapping({
+            index,
+          });
 
-        const shardsInfo = response.map((shard) => ({
-          index: shard.index,
-          shard: shard.shard,
-          prirep: shard.prirep,
-          state: shard.state,
-          docs: shard.docs,
-          store: shard.store,
-          ip: shard.ip,
-          node: shard.node,
-        }));
-
-        const metadataFragment = {
-          type: "text" as const,
-          text: `Found ${shardsInfo.length} shards${
-            index ? ` for index ${index}` : ""
-          }`,
-        };
-
-        return {
-          content: [
-            metadataFragment,
-            {
-              type: "text" as const,
-              text: JSON.stringify(shardsInfo, null, 2),
-            },
-          ],
-        };
-      } catch (error) {
-        console.error(
-          `Failed to get shard information: ${
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Mappings for index: ${index}`,
+              },
+              {
+                type: "text" as const,
+                text: `Mappings for index ${index}: ${JSON.stringify(
+                  mappingResponse[index]?.mappings || {},
+                  null,
+                  2
+                )}`,
+              },
+            ],
+          };
+        } catch (error: unknown) {
+          logger.error(
+            "Failed to get mappings:",
             error instanceof Error ? error.message : String(error)
-          }`
-        );
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Error: ${
-                error instanceof Error ? error.message : String(error)
-              }`,
-            },
-          ],
-        };
+          );
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Error: ${
+                  error instanceof Error ? error.message : String(error)
+                }`,
+              },
+            ],
+          };
+        }
       }
-    }
-  );
+    );
 
-  return server;
+    // Tool 3: Search an index with simplified parameters
+    server.tool(
+      "search",
+      "Perform an Elasticsearch search with the provided query DSL. Highlights are always enabled.",
+      {
+        index: z
+          .string()
+          .trim()
+          .min(1, "Index name is required")
+          .describe("Name of the Elasticsearch index to search"),
+
+        queryBody: z
+          .record(z.any())
+          .refine(
+            (val) => {
+              try {
+                JSON.parse(JSON.stringify(val));
+                return true;
+              } catch (e) {
+                return false;
+              }
+            },
+            {
+              message: "queryBody must be a valid Elasticsearch query DSL object",
+            }
+          )
+          .describe(
+            "Complete Elasticsearch query DSL object that can include query, size, from, sort, etc."
+          ),
+      },
+      async ({ index, queryBody }) => {
+        try {
+          // Get mappings to identify text fields for highlighting
+          const mappingResponse = await esClient.indices.getMapping({
+            index,
+          });
+
+          const indexMappings = mappingResponse[index]?.mappings || {};
+
+          const searchRequest: estypes.SearchRequest = {
+            index,
+            ...queryBody,
+          };
+
+          // Always do highlighting
+          if (indexMappings.properties) {
+            const textFields: Record<string, estypes.SearchHighlightField> = {};
+
+            for (const [fieldName, fieldData] of Object.entries(
+              indexMappings.properties
+            )) {
+              if (fieldData.type === "text" || "dense_vector" in fieldData) {
+                textFields[fieldName] = {};
+              }
+            }
+
+            searchRequest.highlight = {
+              fields: textFields,
+              pre_tags: ["<em>"],
+              post_tags: ["</em>"],
+            };
+          }
+
+          const result = await esClient.search(searchRequest);
+
+          // Extract the 'from' parameter from queryBody, defaulting to 0 if not provided
+          const from = queryBody.from || 0;
+
+          const contentFragments = result.hits.hits.map((hit) => {
+            const highlightedFields = hit.highlight || {};
+            const sourceData = hit._source || {};
+
+            let content = "";
+
+            for (const [field, highlights] of Object.entries(highlightedFields)) {
+              if (highlights && highlights.length > 0) {
+                content += `${field} (highlighted): ${highlights.join(
+                  " ... "
+                )}\n`;
+              }
+            }
+
+            for (const [field, value] of Object.entries(sourceData)) {
+              if (!(field in highlightedFields)) {
+                content += `${field}: ${JSON.stringify(value)}\n`;
+              }
+            }
+
+            return {
+              type: "text" as const,
+              text: content.trim(),
+            };
+          });
+
+          const metadataFragment = {
+            type: "text" as const,
+            text: `Total results: ${
+              typeof result.hits.total === "number"
+                ? result.hits.total
+                : result.hits.total?.value || 0
+            }, showing ${result.hits.hits.length} from position ${from}`,
+          };
+
+          return {
+            content: [metadataFragment, ...contentFragments],
+          };
+        } catch (error: unknown) {
+          logger.error(
+            "Search failed:",
+            error instanceof Error ? error.message : String(error)
+          );
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Error: ${
+                  error instanceof Error ? error.message : String(error)
+                }`,
+              },
+            ],
+          };
+        }
+      }
+    );
+
+    // Tool 4: Get shard information
+    server.tool(
+      "get_shards",
+      "Get shard information for all or specific indices",
+      {
+        index: z
+          .string()
+          .optional()
+          .describe("Optional index name to get shard information for"),
+      },
+      async ({ index }) => {
+        try {
+          const response = await esClient.cat.shards({
+            index,
+            format: "json",
+          });
+
+          const shardsInfo = response.map((shard) => ({
+            index: shard.index,
+            shard: shard.shard,
+            prirep: shard.prirep,
+            state: shard.state,
+            docs: shard.docs,
+            store: shard.store,
+            ip: shard.ip,
+            node: shard.node,
+          }));
+
+          const metadataFragment = {
+            type: "text" as const,
+            text: `Found ${shardsInfo.length} shards${
+              index ? ` for index ${index}` : ""
+            }`,
+          };
+
+          return {
+            content: [
+              metadataFragment,
+              {
+                type: "text" as const,
+                text: JSON.stringify(shardsInfo, null, 2),
+              },
+            ],
+          };
+        } catch (error: unknown) {
+          logger.error(
+            "Failed to get shard information:",
+            error instanceof Error ? error.message : String(error)
+          );
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `Error: ${
+                  error instanceof Error ? error.message : String(error)
+                }`,
+              },
+            ],
+          };
+        }
+      }
+    );
+
+    logger.info("All tools registered successfully");
+    return server;
+  } catch (error: unknown) {
+    logger.error("Error creating server:", error instanceof Error ? error.message : String(error));
+    throw error;
+  }
 }
 
-const config: ElasticsearchConfig = {
-  url: process.env.ES_URL || "",
-  apiKey: process.env.ES_API_KEY || "",
-  username: process.env.ES_USERNAME || "",
-  password: process.env.ES_PASSWORD || "",
-  caCert: process.env.ES_CA_CERT || "",
-};
+if (import.meta.main) {
+  logger.info("Starting application");
+  
+  const config: ElasticsearchConfig = {
+    url: process.env.ES_URL || "",
+    apiKey: process.env.ES_API_KEY || "",
+    username: process.env.ES_USERNAME || "",
+    password: process.env.ES_PASSWORD || "",
+    caCert: process.env.ES_CA_CERT || "",
+  };
 
-async function main() {
-  const transport = new StdioServerTransport();
-  const server = await createElasticsearchMcpServer(config);
-
-  await server.connect(transport);
-
-  process.on("SIGINT", async () => {
-    await server.close();
-    process.exit(0);
+  logger.debug("Environment variables loaded:", {
+    hasUrl: !!config.url,
+    hasApiKey: !!config.apiKey,
+    hasUsername: !!config.username,
+    hasPassword: !!config.password,
+    hasCaCert: !!config.caCert
   });
-}
 
-main().catch((error) => {
-  console.error(
-    "Server error:",
-    error instanceof Error ? error.message : String(error)
-  );
-  process.exit(1);
-});
+  try {
+    logger.info("Creating StdioServerTransport");
+    const transport = new StdioServerTransport();
+    
+    logger.info("Creating Elasticsearch MCP Server");
+    const server = await createElasticsearchMcpServer(config);
+    
+    logger.info("Connecting server to transport");
+    await server.connect(transport);
+    logger.info("Server connected successfully");
+
+    process.on("SIGINT", async () => {
+      logger.info("Received SIGINT, shutting down...");
+      await server.close();
+      logger.info("Server closed successfully");
+      process.exit(0);
+    });
+
+    logger.info("Server startup complete");
+  } catch (error: unknown) {
+    logger.error(
+      "Server startup failed:",
+      error instanceof Error ? error.message : String(error)
+    );
+    if (error instanceof Error && error.stack) {
+      logger.error("Stack trace:", error.stack);
+    }
+    process.exit(1);
+  }
+}
