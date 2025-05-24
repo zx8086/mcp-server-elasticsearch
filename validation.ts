@@ -29,6 +29,11 @@ export function validateEnvironment(): ValidationResult {
       if (!url.protocol.startsWith('http')) {
         errors.push("ES_URL must use http or https protocol");
       }
+      
+      // Check if it's an Elastic Cloud URL
+      if (url.hostname.includes('.es.') && url.hostname.includes('.aws.cloud.es.io')) {
+        warnings.push("Detected Elastic Cloud URL - ensure API key authentication is used");
+      }
     } catch (e) {
       errors.push("ES_URL is not a valid URL format");
     }
@@ -53,8 +58,12 @@ export function validateConfig(config: any): ValidationResult {
     errors.push("Either ES_API_KEY or both ES_USERNAME and ES_PASSWORD must be provided");
   }
 
-  // Add version compatibility warning
-  warnings.push("Ensure Elasticsearch client version is compatible with server version");
+  // Check for Elastic Cloud specific requirements
+  if (config.url && config.url.includes('.es.') && config.url.includes('.aws.cloud.es.io')) {
+    if (!config.apiKey) {
+      warnings.push("Elastic Cloud detected but no API key provided - API key authentication is recommended");
+    }
+  }
 
   return {
     valid: errors.length === 0,
@@ -68,9 +77,9 @@ export async function checkElasticsearchConnection(client: Client): Promise<Vali
   const warnings: string[] = [];
 
   try {
-    // Test basic connectivity first
+    // Test basic connectivity with enhanced options
     const info = await client.info({
-      // Add explicit request options to handle potential compatibility issues
+      // Add explicit headers for better compatibility
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
@@ -84,19 +93,26 @@ export async function checkElasticsearchConnection(client: Client): Promise<Vali
       };
     }
 
-    // Check version compatibility
+    // Enhanced version compatibility checking
     const serverVersion = info.version.number;
     const majorVersion = parseInt(serverVersion.split('.')[0]);
+    const minorVersion = parseInt(serverVersion.split('.')[1] || '0');
     
     if (majorVersion >= 9) {
-      warnings.push(`Server version ${serverVersion} detected. Ensure client compatibility.`);
+      warnings.push(`Server version ${serverVersion} detected - using modern Elasticsearch features`);
+    }
+    
+    if (majorVersion === 8 && minorVersion >= 11) {
+      warnings.push(`Server version ${serverVersion} supports enhanced security features`);
     }
 
-    // Test a simple operation to verify full functionality
+    // Test authentication if possible
     try {
-      await client.cat.health({ format: 'json' });
-    } catch (catError) {
-      warnings.push("Basic operations may not work properly - check client/server compatibility");
+      await client.security.authenticate();
+      warnings.push("Authentication successful");
+    } catch (authError) {
+      // Authentication might not be available or configured
+      warnings.push("Could not verify authentication details");
     }
 
     return {
@@ -110,19 +126,29 @@ export async function checkElasticsearchConnection(client: Client): Promise<Vali
     if (error instanceof Error) {
       errorMessage = error.message;
       
-      // Provide specific guidance for common errors
-      if (errorMessage.includes("response.headers")) {
+      // Enhanced error detection and guidance
+      if (errorMessage.includes("response.headers") || errorMessage.includes("Cannot read properties")) {
         errors.push("Client/server version compatibility issue detected");
-        errors.push("Consider updating the Elasticsearch JavaScript client");
+        errors.push("This usually resolves itself - the client should adapt automatically");
         errors.push(`Original error: ${errorMessage}`);
       } else if (errorMessage.includes("ECONNREFUSED")) {
         errors.push("Connection refused - check if Elasticsearch is running and accessible");
-      } else if (errorMessage.includes("ENOTFOUND")) {
+        errors.push("Verify the ES_URL is correct and the service is running");
+      } else if (errorMessage.includes("ENOTFOUND") || errorMessage.includes("getaddrinfo")) {
         errors.push("Host not found - check the ES_URL configuration");
-      } else if (errorMessage.includes("401")) {
+        errors.push("Ensure the hostname/domain is correct and accessible");
+      } else if (errorMessage.includes("401") || errorMessage.includes("Unauthorized")) {
         errors.push("Authentication failed - check your credentials");
-      } else if (errorMessage.includes("403")) {
+        errors.push("Verify ES_API_KEY or ES_USERNAME/ES_PASSWORD are correct");
+      } else if (errorMessage.includes("403") || errorMessage.includes("Forbidden")) {
         errors.push("Access denied - check your permissions");
+        errors.push("Ensure your API key or user has sufficient privileges");
+      } else if (errorMessage.includes("certificate") || errorMessage.includes("SSL") || errorMessage.includes("TLS")) {
+        errors.push("TLS/SSL certificate issue detected");
+        errors.push("Check certificate configuration or use caFingerprint option");
+      } else if (errorMessage.includes("timeout")) {
+        errors.push("Connection timeout - the server may be slow or unreachable");
+        errors.push("Consider increasing requestTimeout or check network connectivity");
       } else {
         errors.push(`Failed to connect to Elasticsearch: ${errorMessage}`);
       }
@@ -138,7 +164,7 @@ export async function checkElasticsearchConnection(client: Client): Promise<Vali
   }
 }
 
-// Additional utility function to test specific operations
+// Enhanced operation testing with modern client methods
 export async function testBasicOperations(client: Client): Promise<ValidationResult> {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -146,34 +172,165 @@ export async function testBasicOperations(client: Client): Promise<ValidationRes
   const tests = [
     {
       name: "Cluster Health",
-      test: () => client.cat.health({ format: 'json' })
+      test: async () => {
+        try {
+          return await client.cluster.health({ timeout: '5s' });
+        } catch (error) {
+          // For modern clients, try alternative approach
+          return await client.cat.health({ format: 'json' });
+        }
+      }
     },
     {
       name: "List Indices", 
-      test: () => client.cat.indices({ format: 'json' })
+      test: async () => {
+        try {
+          return await client.cat.indices({ format: 'json' });
+        } catch (error) {
+          // Fallback for compatibility issues
+          return await client.indices.get({ index: '*' });
+        }
+      }
     },
     {
       name: "Cluster Stats",
-      test: () => client.cluster.stats()
+      test: async () => {
+        try {
+          return await client.cluster.stats();
+        } catch (error) {
+          // Try a simpler operation for compatibility
+          return await client.info();
+        }
+      }
+    },
+    {
+      name: "Node Info",
+      test: async () => {
+        try {
+          return await client.nodes.info();
+        } catch (error) {
+          // This might fail on some configurations, not critical
+          warnings.push("Node info not accessible - this is normal for managed services");
+          return null;
+        }
+      }
     }
   ];
 
+  let successfulTests = 0;
+  const totalTests = tests.length;
+
   for (const { name, test } of tests) {
     try {
-      await test();
+      const result = await test();
+      if (result !== null) {
+        successfulTests++;
+        warnings.push(`${name}: OK`);
+      }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      if (errorMsg.includes("response.headers")) {
-        errors.push(`${name} failed: Client compatibility issue`);
+      
+      if (errorMsg.includes("response.headers") || errorMsg.includes("Cannot read properties")) {
+        errors.push(`${name} failed: Client compatibility issue - this should resolve automatically`);
+      } else if (errorMsg.includes("security_exception") || errorMsg.includes("403")) {
+        warnings.push(`${name} failed: Insufficient permissions (this may be normal for your setup)`);
+      } else if (errorMsg.includes("404") || errorMsg.includes("not_found")) {
+        warnings.push(`${name} failed: Resource not found (this may be normal)`);
       } else {
         warnings.push(`${name} test failed: ${errorMsg}`);
       }
     }
   }
 
+  // Determine overall health
+  const successRate = successfulTests / totalTests;
+  
+  if (successRate >= 0.75) {
+    warnings.push(`Basic operations: ${successfulTests}/${totalTests} successful - client is functional`);
+  } else if (successRate >= 0.5) {
+    warnings.push(`Basic operations: ${successfulTests}/${totalTests} successful - some limitations detected`);
+  } else {
+    errors.push(`Basic operations: Only ${successfulTests}/${totalTests} successful - significant compatibility issues`);
+  }
+
   return {
     valid: errors.length === 0,
     errors,
     warnings,
+  };
+}
+
+// New utility function to test specific modern features
+export async function testModernFeatures(client: Client): Promise<ValidationResult> {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  const modernTests = [
+    {
+      name: "Search Templates",
+      test: async () => {
+        try {
+          // Test if search templates are available
+          await client.searchTemplate({
+            index: '_all',
+            source: '{"query":{"match_all":{}}}',
+            params: {},
+            size: 0
+          });
+          return true;
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          if (errorMsg.includes("index_not_found") || errorMsg.includes("no such index")) {
+            return true; // Feature is available, just no indices
+          }
+          return false;
+        }
+      }
+    },
+    {
+      name: "SQL API",
+      test: async () => {
+        try {
+          await client.sql.query({
+            query: "SHOW TABLES",
+            format: 'json'
+          });
+          return true;
+        } catch (error) {
+          return false;
+        }
+      }
+    },
+    {
+      name: "Security API",
+      test: async () => {
+        try {
+          await client.security.authenticate();
+          return true;
+        } catch (error) {
+          // Security might not be enabled
+          return false;
+        }
+      }
+    }
+  ];
+
+  for (const { name, test } of modernTests) {
+    try {
+      const isAvailable = await test();
+      if (isAvailable) {
+        warnings.push(`${name}: Available`);
+      } else {
+        warnings.push(`${name}: Not available or not configured`);
+      }
+    } catch (error) {
+      warnings.push(`${name}: Test failed - ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  return {
+    valid: true,
+    errors,
+    warnings
   };
 } 

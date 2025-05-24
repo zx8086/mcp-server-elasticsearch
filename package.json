@@ -5,11 +5,11 @@
   "license": "Apache-2.0",
   "author": "Elastic",
   "type": "module",
-  "main": "index.ts",
-  "module": "index.ts",
-  "types": "index.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
-    "mcp-server-elasticsearch": "./start-elasticsearch-mcp.sh"
+    "mcp-server-elasticsearch": "./dist/index.js"
   },
   "keywords": [
     "elasticsearch",
@@ -18,30 +18,34 @@
     "mcp-server"
   ],
   "files": [
-    "index.ts",
-    "start-elasticsearch-mcp.sh",
+    "dist",
     "NOTICE.txt",
     "LICENSE",
     "README.md"
   ],
   "scripts": {
-    "start": "bun run index.ts --transport stdio",
-    "inspector": "mcp-inspector bun run index.ts",
-    "test": "bun test"
+    "build": "bun build ./index.ts --outdir ./dist --target node",
+    "start": "bun run dist/index.js",
+    "dev": "bun run index.ts",
+    "test": "bun test",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write \"**/*.{ts,js,json,md}\""
   },
   "dependencies": {
-    "@elastic/elasticsearch": "9.0.2",
-    "@modelcontextprotocol/sdk": "^1.12.0",
-    "undici": "^7.10.0",
-    "zod": "^3.25.27"
+    "@elastic/elasticsearch": "^8.12.1",
+    "@elastic/transport": "^8.12.1",
+    "@modelcontextprotocol/sdk": "^0.1.0",
+    "zod": "^3.22.4"
   },
   "engines": {
     "bun": ">=1.0.0"
   },
   "devDependencies": {
-    "@modelcontextprotocol/inspector": "^0.13.0",
-    "bun-types": "^1.2.14",
-    "license-checker": "25.0.1"
+    "@types/node": "^20.11.19",
+    "bun-types": "latest",
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3"
   },
   "publishConfig": {
     "access": "public"
