@@ -597,7 +597,7 @@ For debugging MCP protocol issues:
 bun run inspector
 ```
 
-Open http://localhost:5173 to inspect MCP communication.
+Open http://localhost:6274 to inspect MCP communication.
 
 ### Development Workflow
 
