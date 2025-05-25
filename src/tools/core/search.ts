@@ -66,7 +66,9 @@ export function registerSearchTool(server, esClient) {
             };
           }
         }
-        const result = await esClient.search(searchRequest);
+        const result = await esClient.search(searchRequest, {
+          opaqueId: 'search'
+        });
         const from = queryBody.from || 0;
         if (queryBody.size === 0 || queryBody.aggs) {
           return {

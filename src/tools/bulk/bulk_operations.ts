@@ -26,6 +26,8 @@ export function registerBulkOperationsTool(server, esClient) {
           require_alias: params.requireAlias,
           timeout: params.timeout,
           wait_for_active_shards: params.waitForActiveShards,
+        }, {
+          opaqueId: 'bulk_operations'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {

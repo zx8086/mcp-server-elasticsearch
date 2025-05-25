@@ -38,6 +38,8 @@ export function registerUpdateDocumentTool(server, esClient) {
           wait_for_active_shards: params.waitForActiveShards,
           if_seq_no: params.ifSeqNo,
           if_primary_term: params.ifPrimaryTerm,
+        }, {
+          opaqueId: 'update_document'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {

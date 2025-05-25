@@ -18,6 +18,8 @@ export function registerGetMultiTermVectorsTool(server, esClient) {
           docs: params.docs,
           ids: params.ids,
           parameters: params.parameters,
+        }, {
+          opaqueId: 'get_multi_term_vectors'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {

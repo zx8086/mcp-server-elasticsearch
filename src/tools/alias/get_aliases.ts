@@ -20,6 +20,8 @@ export function registerGetAliasesTool(server, esClient) {
           ignore_unavailable: params.ignoreUnavailable,
           allow_no_indices: params.allowNoIndices,
           expand_wildcards: params.expandWildcards,
+        }, {
+          opaqueId: 'get_aliases'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {

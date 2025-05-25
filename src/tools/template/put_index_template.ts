@@ -30,6 +30,8 @@ export function registerPutIndexTemplateTool(server, esClient) {
           allow_auto_create: params.allowAutoCreate,
           create: params.create,
           master_timeout: params.masterTimeout,
+        }, {
+          opaqueId: 'put_index_template'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {

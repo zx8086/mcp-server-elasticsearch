@@ -24,6 +24,8 @@ export function registerCreateIndexTool(server, esClient) {
           timeout: params.timeout,
           master_timeout: params.masterTimeout,
           wait_for_active_shards: params.waitForActiveShards,
+        }, {
+          opaqueId: 'create_index'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {

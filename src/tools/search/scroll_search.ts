@@ -16,6 +16,8 @@ export function registerScrollSearchTool(server, esClient) {
           scroll_id: params.scrollId,
           scroll: params.scroll,
           rest_total_hits_as_int: params.restTotalHitsAsInt,
+        }, {
+          opaqueId: 'scroll_search'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {

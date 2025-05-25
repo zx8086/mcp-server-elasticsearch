@@ -28,6 +28,8 @@ export function registerUpdateIndexSettingsTool(server, esClient) {
           allow_no_indices: params.allowNoIndices,
           expand_wildcards: params.expandWildcards,
           flat_settings: params.flatSettings,
+        }, {
+          opaqueId: 'update_index_settings'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {

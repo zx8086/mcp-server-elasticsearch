@@ -40,6 +40,8 @@ export function registerUpdateByQueryTool(server, esClient) {
           search_type: params.searchType,
           search_timeout: params.searchTimeout,
           slices: params.slices,
+        }, {
+          opaqueId: 'update_by_query'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {

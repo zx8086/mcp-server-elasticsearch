@@ -18,6 +18,8 @@ export function registerGetNodesInfoTool(server, esClient) {
           metric: params.metric,
           flat_settings: params.flatSettings,
           timeout: params.timeout,
+        }, {
+          opaqueId: 'get_nodes_info'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {

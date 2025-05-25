@@ -16,6 +16,8 @@ export function registerExecuteSqlQueryTool(server, esClient) {
           query: params.query,
           format: params.format,
           fetch_size: params.fetchSize,
+        }, {
+          opaqueId: 'execute_sql_query'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {

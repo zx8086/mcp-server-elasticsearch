@@ -40,6 +40,8 @@ export function registerCountDocumentsTool(server, esClient) {
           routing: params.routing,
           q: params.q,
           terminate_after: params.terminateAfter,
+        }, {
+          opaqueId: 'count_documents'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {

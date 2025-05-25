@@ -24,6 +24,8 @@ export function registerPutAliasTool(server, esClient) {
           is_write_index: params.isWriteIndex,
           is_hidden: params.isHidden,
           must_exist: params.mustExist,
+        }, {
+          opaqueId: 'put_alias'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {

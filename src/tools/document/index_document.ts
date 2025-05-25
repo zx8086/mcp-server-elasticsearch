@@ -22,6 +22,8 @@ export function registerIndexDocumentTool(server, esClient) {
           refresh: params.refresh,
           routing: params.routing,
           pipeline: params.pipeline,
+        }, {
+          opaqueId: 'index_document'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {

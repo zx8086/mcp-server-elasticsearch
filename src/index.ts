@@ -133,6 +133,10 @@ export async function createElasticsearchMcpServer(
       maxRetries: 3,
       requestTimeout: 30000,
       
+      // Client identification and observability
+      name: 'elasticsearch-mcp-server',
+      opaqueIdPrefix: 'mcp-server::',
+      
       // Updated headers for better compatibility
       headers: {
         'Accept': 'application/json',

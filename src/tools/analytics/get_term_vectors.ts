@@ -42,6 +42,8 @@ export function registerGetTermVectorsTool(server, esClient) {
           per_field_analyzer: params.perFieldAnalyzer,
           preference: params.preference,
           realtime: params.realtime,
+        }, {
+          opaqueId: 'get_term_vectors'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {

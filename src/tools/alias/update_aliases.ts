@@ -16,6 +16,8 @@ export function registerUpdateAliasesTool(server, esClient) {
           actions: params.actions,
           timeout: params.timeout,
           master_timeout: params.masterTimeout,
+        }, {
+          opaqueId: 'update_aliases'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {

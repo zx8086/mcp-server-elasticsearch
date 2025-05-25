@@ -34,6 +34,8 @@ export function registerGetClusterHealthTool(server, esClient) {
           wait_for_no_relocating_shards: params.waitForNoRelocatingShards,
           wait_for_nodes: params.waitForNodes,
           wait_for_status: params.waitForStatus,
+        }, {
+          opaqueId: 'get_cluster_health'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {

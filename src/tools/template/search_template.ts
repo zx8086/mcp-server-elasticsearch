@@ -24,7 +24,9 @@ export function registerSearchTemplateTool(server, esClient) {
     },
     async (params) => {
       try {
-        const result = await esClient.searchTemplate(params);
+        const result = await esClient.searchTemplate(params, {
+          opaqueId: 'search_template'
+        });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {
         logger.error("Failed to execute search template:", error);

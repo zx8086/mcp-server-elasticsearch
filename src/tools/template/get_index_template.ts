@@ -18,6 +18,8 @@ export function registerGetIndexTemplateTool(server, esClient) {
           flat_settings: params.flatSettings,
           master_timeout: params.masterTimeout,
           local: params.local,
+        }, {
+          opaqueId: 'get_index_template'
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {
