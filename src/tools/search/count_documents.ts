@@ -1,3 +1,5 @@
+/* src/tools/search/count_documents.ts */
+
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 

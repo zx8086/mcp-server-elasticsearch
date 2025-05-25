@@ -1,3 +1,5 @@
+/* src/tools/mapping/clear_sql_cursor.ts */
+
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 

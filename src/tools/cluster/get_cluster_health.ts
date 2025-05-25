@@ -1,3 +1,5 @@
+/* src/tools/cluster/get_cluster_health.ts */
+
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 

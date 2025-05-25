@@ -1,3 +1,5 @@
+/* src/tools/advanced/delete_by_query.ts */
+
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";

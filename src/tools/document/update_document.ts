@@ -1,3 +1,5 @@
+/* src/tools/document/update_document.ts */
+
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";

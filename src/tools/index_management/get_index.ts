@@ -1,3 +1,5 @@
+/* src/tools/index_management/get_index.ts */
+
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 

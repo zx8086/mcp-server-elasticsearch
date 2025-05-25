@@ -1,3 +1,5 @@
+/* src/tools/bulk/multi_get.ts */
+
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 

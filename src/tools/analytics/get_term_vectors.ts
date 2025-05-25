@@ -1,3 +1,5 @@
+/* src/tools/analytics/get_term_vectors.ts */
+
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 

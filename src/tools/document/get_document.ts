@@ -1,3 +1,5 @@
+/* src/tools/document/get_document.ts */
+
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 

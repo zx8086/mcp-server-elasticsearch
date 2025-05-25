@@ -1,3 +1,5 @@
+/* src/tools/index_management/flush_index.ts */
+
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 

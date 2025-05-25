@@ -1,3 +1,5 @@
+/* src/tools/index_management/delete_index.ts */
+
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";

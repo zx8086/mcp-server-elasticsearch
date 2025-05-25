@@ -1,3 +1,5 @@
+/* src/tools/index_management/update_index_settings.ts */
+
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 

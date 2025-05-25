@@ -1,3 +1,5 @@
+/* src/tools/advanced/translate_sql_query.ts */
+
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 
