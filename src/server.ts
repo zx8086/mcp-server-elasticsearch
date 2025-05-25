@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { 
   Client, 
@@ -16,10 +15,11 @@ import {
 } from "@elastic/elasticsearch";
 import { HttpConnection } from "@elastic/transport";
 import { readFileSync } from "fs";
-import { validateEnvironment, validateConfig, checkElasticsearchConnection, testBasicOperations, testModernFeatures } from './validation.js';
+import { checkElasticsearchConnection, testBasicOperations, testModernFeatures } from './validation.js';
 import { logger } from './utils/logger.js';
 import { initializeReadOnlyManager } from './utils/readOnlyMode.js';
 import { registerAllTools } from "./tools/index.js";
+import { Config } from './config.js';
 
 // Define the types we need using estypes
 type Refresh = estypes.Refresh;
@@ -31,140 +31,66 @@ type ExpandWildcards = 'all' | 'open' | 'closed' | 'hidden' | 'none';
 type VersionType = 'internal' | 'external' | 'external_gte' | 'force';
 type SearchType = 'query_then_fetch' | 'dfs_query_then_fetch';
 
-// Configuration schema with auth options
-const ConfigSchema = z
-  .object({
-    url: z
-      .string()
-      .trim()
-      .min(1, "Elasticsearch URL cannot be empty")
-      .url("Invalid Elasticsearch URL format")
-      .describe("Elasticsearch server URL"),
-
-    apiKey: z
-      .string()
-      .optional()
-      .describe("API key for Elasticsearch authentication"),
-
-    username: z
-      .string()
-      .optional()
-      .describe("Username for Elasticsearch authentication"),
-
-    password: z
-      .string()
-      .optional()
-      .describe("Password for Elasticsearch authentication"),
-
-    caCert: z
-      .string()
-      .optional()
-      .describe("Path to custom CA certificate for Elasticsearch"),
-
-    readOnlyMode: z
-      .boolean()
-      .default(false)
-      .describe("Enable read-only mode to restrict destructive operations"),
-  })
-  .refine(
-    (data) => {
-      // If username is provided, password must be provided
-      if (data.username) {
-        return !!data.password;
-      }
-
-      // If password is provided, username must be provided
-      if (data.password) {
-        return !!data.username;
-      }
-
-      // If apiKey is provided, it's valid
-      if (data.apiKey) {
-        return true;
-      }
-
-      // No auth is also valid (for local development)
-      return true;
-    },
-    {
-      message:
-        "Either ES_API_KEY or both ES_USERNAME and ES_PASSWORD must be provided, or no auth for local development",
-      path: ["username", "password"],
-    }
-  );
-
-type ElasticsearchConfig = z.infer<typeof ConfigSchema>;
-
 export async function createElasticsearchMcpServer(
-  config: ElasticsearchConfig
+  config: Config
 ): Promise<McpServer> {
-  logger.info("Starting server creation with config:", { 
-    url: config.url,
-    hasApiKey: !!config.apiKey,
-    hasUsername: !!config.username,
-    hasPassword: !!config.password,
-    hasCaCert: !!config.caCert,
-    readOnlyMode: config.readOnlyMode || false
+  logger.info("Creating Elasticsearch MCP server", { 
+    url: config.elasticsearch.url,
+    hasApiKey: !!config.elasticsearch.apiKey,
+    hasUsername: !!config.elasticsearch.username,
+    hasPassword: !!config.elasticsearch.password,
+    hasCaCert: !!config.elasticsearch.caCert,
+    readOnlyMode: config.server.readOnlyMode,
+    readOnlyStrictMode: config.server.readOnlyStrictMode,
   });
 
   try {
-    // Validate environment variables
-    const envValidation = validateEnvironment();
-    if (!envValidation.valid) {
-      throw new Error(`Environment validation failed: ${envValidation.errors.join(', ')}`);
-    }
-
-    // Validate config
-    const configValidation = validateConfig(config);
-    if (!configValidation.valid) {
-      throw new Error(`Config validation failed: ${configValidation.errors.join(', ')}`);
-    }
-
-    const validatedConfig = ConfigSchema.parse(config);
-    logger.debug("Config validation passed");
+    // Initialize read-only mode manager with config values
+    initializeReadOnlyManager(
+      config.server.readOnlyMode, 
+      config.server.readOnlyStrictMode
+    );
     
-    // Initialize read-only mode manager
-    const strictMode = process.env.READ_ONLY_STRICT_MODE !== 'false' && process.env.READ_ONLY_STRICT_MODE !== '0';
-    initializeReadOnlyManager(validatedConfig.readOnlyMode, strictMode);
-    
-    if (validatedConfig.readOnlyMode) {
+    if (config.server.readOnlyMode) {
       logger.info("🔒 READ-ONLY MODE ACTIVE", {
-        strictMode,
-        behavior: strictMode ? "Destructive operations will be BLOCKED" : "Destructive operations will show WARNINGS"
+        strictMode: config.server.readOnlyStrictMode,
+        behavior: config.server.readOnlyStrictMode 
+          ? "Destructive operations will be BLOCKED" 
+          : "Destructive operations will show WARNINGS"
       });
     }
-    
-    const { url, apiKey, username, password, caCert } = validatedConfig;
 
-    logger.info("Creating Elasticsearch client with URL:", { url });
-    
-    // FIXED: Use HttpConnection instead of UndiciConnection to resolve the undici issues
+    // Build Elasticsearch client configuration
     const clientOptions: ClientOptions = {
-      node: url,
-      auth: apiKey ? { apiKey } : username && password ? { username, password } : undefined,
+      node: config.elasticsearch.url,
+      auth: config.elasticsearch.apiKey 
+        ? { apiKey: config.elasticsearch.apiKey } 
+        : config.elasticsearch.username && config.elasticsearch.password 
+          ? { username: config.elasticsearch.username, password: config.elasticsearch.password } 
+          : undefined,
       
-      // CRITICAL FIX: Use HttpConnection instead of default UndiciConnection
+      // Use HttpConnection for better compatibility
       Connection: HttpConnection,
       
-      // Modern client configuration
-      compression: true,
-      maxRetries: 3,
-      requestTimeout: 30000,
+      // Apply configuration from config
+      compression: config.elasticsearch.compression,
+      maxRetries: config.elasticsearch.maxRetries,
+      requestTimeout: config.elasticsearch.requestTimeout,
       
       // Client identification and observability
-      name: 'elasticsearch-mcp-server',
-      opaqueIdPrefix: 'mcp-server::',
+      name: config.server.name,
+      opaqueIdPrefix: `${config.server.name}::`,
       
-      // Updated headers for better compatibility
+      // Headers for better compatibility
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         'Accept-Encoding': 'gzip, deflate'
       },
       
-      // Updated context with proper user agent
+      // User agent with version info
       context: {
-        userAgent: 'elasticsearch-mcp-server/0.1.1 (bun)'
+        userAgent: `${config.server.name}/${config.server.version} (bun)`
       },
       
       // Enhanced error handling and redaction
@@ -173,22 +99,22 @@ export async function createElasticsearchMcpServer(
         additionalKeys: ['authorization', 'x-elastic-client-meta']
       },
       
-      // Enable meta header for telemetry (can be disabled if needed)
-      enableMetaHeader: true,
+      // Use configuration for meta header
+      enableMetaHeader: config.elasticsearch.enableMetaHeader,
       
-      // Disable prototype poisoning protection for performance (already default)
-      disablePrototypePoisoningProtection: true,
+      // Use configuration for prototype poisoning protection
+      disablePrototypePoisoningProtection: config.elasticsearch.disablePrototypePoisoningProtection,
       
       // Add TLS configuration if CA cert is provided
-      ...(caCert && {
+      ...(config.elasticsearch.caCert && {
         tls: {
-          ca: readFileSync(caCert),
+          ca: readFileSync(config.elasticsearch.caCert),
           rejectUnauthorized: true
         }
       })
     };
 
-    logger.debug("Initializing Elasticsearch client with HttpConnection:", { 
+    logger.debug("Initializing Elasticsearch client with configuration:", { 
       ...clientOptions, 
       auth: clientOptions.auth ? '[REDACTED]' : undefined,
       tls: clientOptions.tls ? '[TLS_CONFIG_PRESENT]' : undefined,
@@ -196,38 +122,63 @@ export async function createElasticsearchMcpServer(
     });
     
     const esClient = new Client(clientOptions);
-    logger.info("Elasticsearch client created");
+    logger.info("✅ Elasticsearch client created successfully");
 
-    // Enhanced connection test with better error handling
+    // Enhanced connection test with configuration-aware timeouts
     try {
       logger.debug("Testing connection to Elasticsearch...");
       
       // Use the client's info method for initial connection test
       const info = await esClient.info();
       
-      logger.info("Successfully connected to Elasticsearch", {
+      logger.info("🌐 Successfully connected to Elasticsearch", {
         version: info.version?.number,
         clusterName: info.cluster_name,
-        clusterUuid: info.cluster_uuid
+        clusterUuid: info.cluster_uuid,
+        luceneVersion: info.version?.lucene_version,
       });
       
-      // Store version info for later use
+      // Store version info for feature detection
       const serverVersion = info.version?.number;
       const majorVersion = serverVersion ? parseInt(serverVersion.split('.')[0]) : 0;
       
       if (majorVersion >= 9) {
-        logger.info(`Connected to Elasticsearch ${serverVersion} - using modern client features`);
+        logger.info(`🆕 Connected to Elasticsearch ${serverVersion} - using modern client features`);
+      } else if (majorVersion >= 8) {
+        logger.info(`⚡ Connected to Elasticsearch ${serverVersion} - full feature support`);
+      } else {
+        logger.warn(`⚠️ Connected to older Elasticsearch ${serverVersion} - some features may be limited`);
       }
       
     } catch (error: unknown) {
-      logger.error("Failed to connect to Elasticsearch:", { 
+      logger.error("❌ Failed to connect to Elasticsearch:", { 
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined
       });
       throw error;
     }
 
-    // Test basic operations with improved error handling
+    // Test connection with configuration-aware validation
+    try {
+      const connectionCheck = await checkElasticsearchConnection(esClient);
+      if (!connectionCheck.valid) {
+        logger.error("Connection validation failed:", { 
+          errors: connectionCheck.errors,
+          warnings: connectionCheck.warnings || []
+        });
+        throw new Error(`Connection validation failed: ${connectionCheck.errors.join(', ')}`);
+      } else if (connectionCheck.warnings && connectionCheck.warnings.length > 0) {
+        logger.info("Connection validation completed with notes:", { 
+          warnings: connectionCheck.warnings
+        });
+      }
+    } catch (error) {
+      logger.warn("Connection validation test failed, but continuing:", { 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+
+    // Test basic operations with error handling
     try {
       const operationsCheck = await testBasicOperations(esClient);
       if (!operationsCheck.valid) {
@@ -236,7 +187,7 @@ export async function createElasticsearchMcpServer(
           warnings: operationsCheck.warnings || []
         });
       } else {
-        logger.info("All basic operations successful");
+        logger.info("✅ All basic operations successful");
       }
     } catch (error) {
       logger.warn("Basic operations test failed, but continuing:", { 
@@ -249,7 +200,7 @@ export async function createElasticsearchMcpServer(
       const modernFeaturesCheck = await testModernFeatures(esClient);
       const warnings = modernFeaturesCheck.warnings || [];
       if (warnings.length > 0) {
-        logger.info("Modern features check:", { warnings });
+        logger.info("🔧 Modern features availability:", { features: warnings });
       }
     } catch (error) {
       logger.warn("Modern features test failed, but continuing:", { 
@@ -257,26 +208,32 @@ export async function createElasticsearchMcpServer(
       });
     }
 
-    logger.info("Creating MCP Server instance");
+    logger.info("🏗️ Creating MCP Server instance");
     const server = new McpServer({
-      name: "elasticsearch-mcp-server",
-      version: "0.1.1",
+      name: config.server.name,
+      version: config.server.version,
     });
     logger.debug("MCP Server instance created");
 
-    // Register all tools (modularized)
+    // Register all tools with the validated client
     registerAllTools(server, esClient);
 
-    logger.info("All tools registered successfully", {
-      readOnlyMode: validatedConfig.readOnlyMode,
-      message: validatedConfig.readOnlyMode ? "Destructive operations are restricted" : "All operations available"
+    logger.info("🛠️ All tools registered successfully", {
+      serverName: config.server.name,
+      version: config.server.version,
+      readOnlyMode: config.server.readOnlyMode,
+      toolCount: "All available tools registered",
+      message: config.server.readOnlyMode 
+        ? "Destructive operations are restricted" 
+        : "All operations available"
     });
+    
     return server;
   } catch (error: unknown) {
-    logger.error("Error creating server:", { 
+    logger.error("💥 Error creating server:", { 
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined
     });
     throw error;
   }
-} 
+}

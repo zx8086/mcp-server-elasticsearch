@@ -100,14 +100,8 @@ export async function checkElasticsearchConnection(client: Client): Promise<Vali
   const warnings: string[] = [];
 
   try {
-    // Test basic connectivity with enhanced options
-    const info = await client.info({
-      // Add explicit headers for better compatibility
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    });
+    // Test basic connectivity without explicit headers
+    const info = await client.info();
 
     if (!info || !info.version) {
       return {

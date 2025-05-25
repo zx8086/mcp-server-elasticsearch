@@ -2,6 +2,10 @@
 
 import { z } from "zod";
 
+// =============================================================================
+// CONFIGURATION SCHEMAS
+// =============================================================================
+
 const ServerConfigSchema = z.object({
     name: z.string().min(1).default("elasticsearch-mcp-server"),
     version: z.string().min(1).default("0.1.1"),
@@ -72,9 +76,12 @@ const ConfigSchema = z.object({
     security: SecurityConfigSchema,
 });
 
-type Config = z.infer<typeof ConfigSchema>;
+export type Config = z.infer<typeof ConfigSchema>;
 
-// Default configuration
+// =============================================================================
+// DEFAULT CONFIGURATION
+// =============================================================================
+
 const defaultConfig: Config = {
     server: {
         name: "elasticsearch-mcp-server",
@@ -107,7 +114,10 @@ const defaultConfig: Config = {
     },
 };
 
-// Environment variable mapping
+// =============================================================================
+// ENVIRONMENT VARIABLE MAPPING
+// =============================================================================
+
 const envVarMapping = {
     server: {
         name: "MCP_SERVER_NAME",
@@ -142,19 +152,21 @@ const envVarMapping = {
         allowIndexManagement: "ALLOW_INDEX_MANAGEMENT",
         maxBulkOperations: "MAX_BULK_OPERATIONS",
     },
-};
+} as const;
 
-// Load configuration from environment variables
+// =============================================================================
+// ENVIRONMENT VARIABLE LOADING
+// =============================================================================
+
+function parseEnvVar(value: string | undefined, type: "string" | "number" | "boolean"): unknown {
+    if (value === undefined) return undefined;
+    if (type === "number") return Number(value);
+    if (type === "boolean") return value.toLowerCase() === "true";
+    return value;
+}
+
 function loadConfigFromEnv(): Partial<Config> {
     const config: Partial<Config> = {};
-
-    // Helper function to parse environment variables
-    const parseEnvVar = (value: string | undefined, type: "string" | "number" | "boolean"): unknown => {
-        if (value === undefined) return undefined;
-        if (type === "number") return Number(value);
-        if (type === "boolean") return value.toLowerCase() === "true";
-        return value;
-    };
 
     // Load server config
     config.server = {
@@ -200,7 +212,10 @@ function loadConfigFromEnv(): Partial<Config> {
     return config;
 }
 
-// Validation functions
+// =============================================================================
+// VALIDATION FUNCTIONS
+// =============================================================================
+
 export function validateEnvironment(): { valid: boolean; errors: string[]; warnings?: string[] } {
     const requiredVars = ["ES_URL"];
     const errors: string[] = [];
@@ -261,23 +276,26 @@ export function validateEnvironment(): { valid: boolean; errors: string[]; warni
     };
 }
 
-// Initialize configuration
+// =============================================================================
+// CONFIGURATION INITIALIZATION
+// =============================================================================
+
 let config: Config;
 
 try {
     // Validate environment first
     const envValidation = validateEnvironment();
     if (!envValidation.valid) {
-        console.error("Environment validation failed:", envValidation.errors.join(', '));
+        console.error("❌ Environment validation failed:", envValidation.errors.join(', '));
         if (envValidation.warnings && envValidation.warnings.length > 0) {
-            console.warn("Environment warnings:", envValidation.warnings.join(', '));
+            console.warn("⚠️ Environment warnings:", envValidation.warnings.join(', '));
         }
         process.exit(1);
     }
 
     // Show warnings if any
     if (envValidation.warnings && envValidation.warnings.length > 0) {
-        console.warn("Environment warnings:", envValidation.warnings.join(', '));
+        console.warn("⚠️ Environment warnings:", envValidation.warnings.join(', '));
     }
 
     // Merge default config with environment variables
@@ -292,7 +310,8 @@ try {
     // Validate and set configuration
     config = ConfigSchema.parse(mergedConfig);
 
-    console.error("Configuration loaded successfully:", JSON.stringify({
+    // Log successful configuration (to stderr to not interfere with MCP protocol)
+    console.error("✅ Configuration loaded successfully:", JSON.stringify({
         server: {
             name: config.server.name,
             version: config.server.version,
@@ -321,9 +340,27 @@ try {
         },
     }, null, 2));
 } catch (error) {
-    console.error("Configuration validation failed:", error instanceof Error ? error.message : String(error));
+    console.error("💥 Configuration validation failed:", error instanceof Error ? error.message : String(error));
     throw new Error("Invalid configuration: " + (error instanceof Error ? error.message : String(error)));
 }
 
-export { config };
+// =============================================================================
+// EXPORTS
+// =============================================================================
+
+export { config, envVarMapping, defaultConfig };
 export type { Config };
+
+// Helper function to get configuration documentation
+export function getConfigDocumentation(): Record<string, any> {
+    return {
+        environmentVariables: envVarMapping,
+        defaults: defaultConfig,
+        schemas: {
+            server: ServerConfigSchema.describe("Server configuration options"),
+            elasticsearch: ElasticsearchConfigSchema.describe("Elasticsearch connection configuration"),
+            logging: LoggingConfigSchema.describe("Logging configuration"),
+            security: SecurityConfigSchema.describe("Security and permission configuration"),
+        }
+    };
+}
