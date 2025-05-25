@@ -6,19 +6,18 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-
 // Define the parameter schema type
 const DeleteAliasParams = z.object({
-      index: z.string().min(1, "Index is required"),
-      name: z.string().min(1, "Alias name is required"),
-      timeout: z.string().optional(),
-      masterTimeout: z.string().optional(),
+  index: z.string().min(1, "Index is required"),
+  name: z.string().min(1, "Alias name is required"),
+  timeout: z.string().optional(),
+  masterTimeout: z.string().optional(),
 });
 
 type DeleteAliasParamsType = z.infer<typeof DeleteAliasParams>;
 export const registerDeleteAliasTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
+  server: McpServer,
+  esClient: Client,
 ) => {
   server.tool(
     "delete_alias",
@@ -37,13 +36,22 @@ export const registerDeleteAliasTool: ToolRegistrationFunction = (
           timeout: params.timeout,
           master_timeout: params.masterTimeout,
         });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
       } catch (error) {
         logger.error("Failed to delete alias:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
       }
-    }
+    },
   );
-} 
+};

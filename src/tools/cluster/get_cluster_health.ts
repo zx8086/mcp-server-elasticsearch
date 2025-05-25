@@ -12,16 +12,16 @@ const GetClusterHealthParams = z.object({
   expandWildcards: z
     .enum(["all", "open", "closed", "hidden", "none"])
     .optional(),
-  level: z.string().optional(),
+  level: z.enum(["cluster", "indices", "shards"]).optional(),
   local: z.boolean().optional(),
   masterTimeout: z.string().optional(),
   timeout: z.string().optional(),
-  waitForActiveShards: z.string().optional(),
-  waitForEvents: z.string().optional(),
+  waitForActiveShards: z.union([z.literal("all"), z.number()]).optional(),
+  waitForEvents: z.enum(["immediate", "urgent", "high", "normal", "low", "languid"]).optional(),
   waitForNoInitializingShards: z.boolean().optional(),
   waitForNoRelocatingShards: z.boolean().optional(),
   waitForNodes: z.string().optional(),
-  waitForStatus: z.string().optional(),
+  waitForStatus: z.enum(["green", "yellow", "red"]).optional(),
 });
 
 type GetClusterHealthParamsType = z.infer<typeof GetClusterHealthParams>;
@@ -32,20 +32,7 @@ export const registerGetClusterHealthTool: ToolRegistrationFunction = (
   server.tool(
     "get_cluster_health",
     "Get the health status of the Elasticsearch cluster",
-    {
-      index: z.string().optional(),
-      expandWildcards: z.string().optional(),
-      level: z.string().optional(),
-      local: z.boolean().optional(),
-      masterTimeout: z.string().optional(),
-      timeout: z.string().optional(),
-      waitForActiveShards: z.string().optional(),
-      waitForEvents: z.string().optional(),
-      waitForNoInitializingShards: z.boolean().optional(),
-      waitForNoRelocatingShards: z.boolean().optional(),
-      waitForNodes: z.string().optional(),
-      waitForStatus: z.string().optional(),
-    },
+    GetClusterHealthParams.shape,
     async (params: GetClusterHealthParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.cluster.health(

@@ -6,21 +6,21 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-
 // Define the parameter schema type
 const GetAliasesParams = z.object({
-      index: z.string().optional(),
-      name: z.string().optional(),
-      ignoreUnavailable: z.boolean().optional(),
-      allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.enum(['all', 'open', 'closed', 'hidden', 'none']).optional(),
-    
+  index: z.string().optional(),
+  name: z.string().optional(),
+  ignoreUnavailable: z.boolean().optional(),
+  allowNoIndices: z.boolean().optional(),
+  expandWildcards: z
+    .enum(["all", "open", "closed", "hidden", "none"])
+    .optional(),
 });
 
 type GetAliasesParamsType = z.infer<typeof GetAliasesParams>;
 export const registerGetAliasesTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
+  server: McpServer,
+  esClient: Client,
 ) => {
   server.tool(
     "get_aliases",
@@ -30,26 +30,40 @@ export const registerGetAliasesTool: ToolRegistrationFunction = (
       name: z.string().optional(),
       ignoreUnavailable: z.boolean().optional(),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.enum(['all', 'open', 'closed', 'hidden', 'none']).optional(),
+      expandWildcards: z
+        .enum(["all", "open", "closed", "hidden", "none"])
+        .optional(),
     },
     async (params: GetAliasesParamsType): Promise<SearchResult> => {
       try {
-        const result = await esClient.indices.getAlias({
-          index: params.index,
-          name: params.name,
-          ignore_unavailable: params.ignoreUnavailable,
-          allow_no_indices: params.allowNoIndices,
-          expand_wildcards: params.expandWildcards,
-        }, {
-          opaqueId: 'get_aliases'
-        });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        const result = await esClient.indices.getAlias(
+          {
+            index: params.index,
+            name: params.name,
+            ignore_unavailable: params.ignoreUnavailable,
+            allow_no_indices: params.allowNoIndices,
+            expand_wildcards: params.expandWildcards,
+          },
+          {
+            opaqueId: "get_aliases",
+          },
+        );
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
       } catch (error) {
         logger.error("Failed to get aliases:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
       }
-    }
+    },
   );
-} 
+};

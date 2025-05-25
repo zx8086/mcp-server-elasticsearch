@@ -6,19 +6,17 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-
 // Define the parameter schema type
 const TranslateSqlQueryParams = z.object({
-      query: z.string().min(1, "SQL query is required"),
-      fetchSize: z.number().optional(),
-      timeZone: z.string().optional(),
-    
+  query: z.string().min(1, "SQL query is required"),
+  fetchSize: z.number().optional(),
+  timeZone: z.string().optional(),
 });
 
 type TranslateSqlQueryParamsType = z.infer<typeof TranslateSqlQueryParams>;
 export const registerTranslateSqlQueryTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
+  server: McpServer,
+  esClient: Client,
 ) => {
   server.tool(
     "translate_sql_query",
@@ -35,13 +33,22 @@ export const registerTranslateSqlQueryTool: ToolRegistrationFunction = (
           fetch_size: params.fetchSize,
           time_zone: params.timeZone,
         });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
       } catch (error) {
         logger.error("Failed to translate SQL query:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
       }
-    }
+    },
   );
-} 
+};
