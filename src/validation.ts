@@ -22,6 +22,24 @@ export function validateEnvironment(): ValidationResult {
     }
   }
 
+  // Check READ_ONLY_MODE configuration
+  if (process.env.READ_ONLY_MODE) {
+    const readOnlyValue = process.env.READ_ONLY_MODE.toLowerCase();
+    if (!['true', 'false', '1', '0'].includes(readOnlyValue)) {
+      warnings.push("READ_ONLY_MODE should be 'true', 'false', '1', or '0'. Defaulting to false.");
+    } else if (['true', '1'].includes(readOnlyValue)) {
+      warnings.push("READ_ONLY_MODE is enabled - destructive operations will be restricted");
+    }
+  }
+
+  // Check READ_ONLY_STRICT_MODE
+  if (process.env.READ_ONLY_STRICT_MODE) {
+    const strictValue = process.env.READ_ONLY_STRICT_MODE.toLowerCase();
+    if (!['true', 'false', '1', '0'].includes(strictValue)) {
+      warnings.push("READ_ONLY_STRICT_MODE should be 'true', 'false', '1', or '0'. Defaulting to true.");
+    }
+  }
+
   // Check for potential URL format issues
   if (process.env.ES_URL) {
     try {
@@ -56,6 +74,11 @@ export function validateConfig(config: any): ValidationResult {
 
   if (!config.apiKey && (!config.username || !config.password)) {
     errors.push("Either ES_API_KEY or both ES_USERNAME and ES_PASSWORD must be provided");
+  }
+
+  // Validate read-only mode configuration
+  if (config.readOnlyMode === true) {
+    warnings.push("Server will run in READ-ONLY mode - destructive operations restricted");
   }
 
   // Check for Elastic Cloud specific requirements

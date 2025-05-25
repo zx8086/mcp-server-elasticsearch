@@ -15,6 +15,7 @@ interface ElasticsearchConfig {
   username?: string;
   password?: string;
   caCert?: string;
+  readOnlyMode?: boolean;
 }
 
 function loadConfigFromEnv(): ElasticsearchConfig {
@@ -24,6 +25,7 @@ function loadConfigFromEnv(): ElasticsearchConfig {
     username: process.env.ES_USERNAME,
     password: process.env.ES_PASSWORD,
     caCert: process.env.ES_CA_CERT,
+    readOnlyMode: process.env.READ_ONLY_MODE === 'true' || process.env.READ_ONLY_MODE === '1',
   };
 }
 
@@ -37,6 +39,7 @@ async function main() {
       hasUsername: !!config.username,
       hasPassword: !!config.password,
       hasCaCert: !!config.caCert,
+      readOnlyMode: config.readOnlyMode || false,
     });
 
     // Create MCP server

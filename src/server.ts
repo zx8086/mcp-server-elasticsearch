@@ -18,6 +18,7 @@ import { HttpConnection } from "@elastic/transport";
 import { readFileSync } from "fs";
 import { validateEnvironment, validateConfig, checkElasticsearchConnection, testBasicOperations, testModernFeatures } from './validation.js';
 import { logger } from './utils/logger.js';
+import { initializeReadOnlyManager } from './utils/readOnlyMode.js';
 import { registerAllTools } from "./tools/index.js";
 
 // Define the types we need using estypes
@@ -59,6 +60,11 @@ const ConfigSchema = z
       .string()
       .optional()
       .describe("Path to custom CA certificate for Elasticsearch"),
+
+    readOnlyMode: z
+      .boolean()
+      .default(false)
+      .describe("Enable read-only mode to restrict destructive operations"),
   })
   .refine(
     (data) => {
@@ -97,7 +103,8 @@ export async function createElasticsearchMcpServer(
     hasApiKey: !!config.apiKey,
     hasUsername: !!config.username,
     hasPassword: !!config.password,
-    hasCaCert: !!config.caCert
+    hasCaCert: !!config.caCert,
+    readOnlyMode: config.readOnlyMode || false
   });
 
   try {
@@ -115,6 +122,17 @@ export async function createElasticsearchMcpServer(
 
     const validatedConfig = ConfigSchema.parse(config);
     logger.debug("Config validation passed");
+    
+    // Initialize read-only mode manager
+    const strictMode = process.env.READ_ONLY_STRICT_MODE !== 'false' && process.env.READ_ONLY_STRICT_MODE !== '0';
+    initializeReadOnlyManager(validatedConfig.readOnlyMode, strictMode);
+    
+    if (validatedConfig.readOnlyMode) {
+      logger.info("🔒 READ-ONLY MODE ACTIVE", {
+        strictMode,
+        behavior: strictMode ? "Destructive operations will be BLOCKED" : "Destructive operations will show WARNINGS"
+      });
+    }
     
     const { url, apiKey, username, password, caCert } = validatedConfig;
 
@@ -249,7 +267,10 @@ export async function createElasticsearchMcpServer(
     // Register all tools (modularized)
     registerAllTools(server, esClient);
 
-    logger.info("All tools registered successfully");
+    logger.info("All tools registered successfully", {
+      readOnlyMode: validatedConfig.readOnlyMode,
+      message: validatedConfig.readOnlyMode ? "Destructive operations are restricted" : "All operations available"
+    });
     return server;
   } catch (error: unknown) {
     logger.error("Error creating server:", { 

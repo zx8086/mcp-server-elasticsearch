@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { readOnlyManager } from "../../utils/readOnlyMode.js";
 
 export function registerIndexDocumentTool(server, esClient) {
   server.tool(
@@ -14,7 +15,20 @@ export function registerIndexDocumentTool(server, esClient) {
       pipeline: z.string().optional(),
     },
     async (params) => {
+      // Check read-only mode
+      const readOnlyCheck = readOnlyManager.checkOperation("index_document");
+      if (!readOnlyCheck.allowed) {
+        return readOnlyManager.createBlockedResponse("index_document");
+      }
+
       try {
+        if (readOnlyCheck.warning) {
+          logger.warn("Proceeding with document indexing", { 
+            tool: "index_document", 
+            params: { index: params.index, id: params.id }
+          });
+        }
+
         const result = await esClient.index({
           index: params.index,
           id: params.id,
@@ -25,7 +39,13 @@ export function registerIndexDocumentTool(server, esClient) {
         }, {
           opaqueId: 'index_document'
         });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        const response = { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        
+        if (readOnlyCheck.warning) {
+          return readOnlyManager.createWarningResponse("index_document", response);
+        }
+        
+        return response;
       } catch (error) {
         logger.error("Failed to index document:", error);
         return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };

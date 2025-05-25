@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { readOnlyManager } from "../../utils/readOnlyMode.js";
 
 export function registerBulkOperationsTool(server, esClient) {
   server.tool(
@@ -19,6 +20,12 @@ export function registerBulkOperationsTool(server, esClient) {
       retries: z.number().default(3),
     },
     async (params) => {
+      // Check read-only mode first
+      const readOnlyCheck = readOnlyManager.checkOperation("bulk_operations");
+      if (!readOnlyCheck.allowed) {
+        return readOnlyManager.createBlockedResponse("bulk_operations");
+      }
+
       // Validation: Ensure index is provided globally or per-document
       const hasGlobalIndex = !!params.index;
       const allDocsHaveIndex = params.operations.every(doc => doc._index);
@@ -30,7 +37,15 @@ export function registerBulkOperationsTool(server, esClient) {
           }]
         };
       }
+      
       try {
+        if (readOnlyCheck.warning) {
+          logger.warn("🚨 CRITICAL: About to perform bulk operations", { 
+            tool: "bulk_operations", 
+            operationCount: params.operations.length,
+            warning: "This may create, update, or delete multiple documents"
+          });
+        }
         // Use the helper API for better performance and reliability
         const result = await esClient.helpers.bulk({
           datasource: params.operations,
@@ -57,7 +72,7 @@ export function registerBulkOperationsTool(server, esClient) {
           opaqueId: 'bulk_operations'
         });
         
-        return { 
+        const response = { 
           content: [{ 
             type: "text", 
             text: JSON.stringify({
@@ -69,6 +84,12 @@ export function registerBulkOperationsTool(server, esClient) {
             }, null, 2) 
           }] 
         };
+        
+        if (readOnlyCheck.warning) {
+          return readOnlyManager.createWarningResponse("bulk_operations", response);
+        }
+        
+        return response;
       } catch (error) {
         logger.error("Failed to perform bulk operations:", error);
         return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
