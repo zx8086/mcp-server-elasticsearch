@@ -6,12 +6,6 @@
 
 A production-ready Model Context Protocol (MCP) server that connects AI assistants like Claude Desktop to Elasticsearch clusters. This server provides comprehensive Elasticsearch operations through natural language interactions, featuring advanced configuration management, security controls, and extensive tooling.
 
-> **⚠️ Experimental Features**: This repository contains experimental features intended for research and evaluation and are not production-ready.
-
-<a href="https://glama.ai/mcp/servers/@elastic/mcp-server-elasticsearch">
-  <img width="380" height="200" src="https://glama.ai/mcp/servers/@elastic/mcp-server-elasticsearch/badge" alt="Elasticsearch Server MCP server" />
-</a>
-
 ## 🚀 Key Features
 
 - **🔧 Comprehensive Tooling**: 50+ Elasticsearch operations including search, indexing, cluster management, and analytics
@@ -35,7 +29,6 @@ A production-ready Model Context Protocol (MCP) server that connects AI assistan
 - [Architecture](#architecture)
 - [Security](#security)
 - [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
 
 ## 🔧 Prerequisites
 
@@ -72,6 +65,7 @@ bun --version
 
 ### Other Requirements
 
+- **Bun**: Latest version (recommended runtime)
 - **Elasticsearch**: Version 7.x or higher (8.x+ recommended)
 - **MCP Client**: Claude Desktop, or any MCP-compatible client
 - **Node.js**: 18+ (for npm compatibility if needed)
@@ -356,8 +350,6 @@ READ_ONLY_STRICT_MODE=false
 ```
 "What indices do I have in my cluster?"
 "Show me the field mappings for the 'products' index"
-"Find all orders over $500 from last month"
-"Which products received the most 5-star reviews?"
 "Count how many documents are in the logs index"
 "What's the health status of my cluster?"
 ```
@@ -606,10 +598,6 @@ bun run inspector
 ```
 
 Open http://localhost:5173 to inspect MCP communication.
-
-## 🤝 Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines.
 
 ### Development Workflow
 
