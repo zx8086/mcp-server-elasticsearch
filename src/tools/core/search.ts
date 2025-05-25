@@ -2,8 +2,11 @@
 
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolFunction, ToolParams, SearchResult } from "../types.js";
 
-export function registerSearchTool(server, esClient) {
+export const registerSearchTool: ToolFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "search",
     "Perform an Elasticsearch search with the provided query DSL. Highlights are always enabled.",
@@ -32,9 +35,9 @@ export function registerSearchTool(server, esClient) {
           "Complete Elasticsearch query DSL object that can include query, size, from, sort, etc."
         ),
     },
-    async ({ index, queryBody }) => {
+    async ({ index, queryBody }: ToolParams): Promise<SearchResult> => {
       try {
-        logger.debug("Searching index", { index, queryBody });
+        logger.debug("Searching index", { index, queryBody } as const);
         let indexMappings = {};
         try {
           const mappingResponse = await esClient.indices.getMapping({ index });
@@ -109,7 +112,7 @@ export function registerSearchTool(server, esClient) {
       } catch (error) {
         logger.error("Search failed:", {
           error: error instanceof Error ? error.message : String(error)
-        });
+        } as const);
         return {
           content: [
             { type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` },
@@ -118,4 +121,4 @@ export function registerSearchTool(server, esClient) {
       }
     }
   );
-} 
+}; 
