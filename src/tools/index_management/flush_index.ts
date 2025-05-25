@@ -13,7 +13,7 @@ const FlushIndexParams = z.object({
       index: z.string().min(1, "Index is required"),
       ignoreUnavailable: z.boolean().optional(),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.string().optional(),
+      expandWildcards: z.enum(['all', 'open', 'closed', 'hidden', 'none']).optional(),
       force: z.boolean().optional(),
       waitIfOngoing: z.boolean().optional(),
     

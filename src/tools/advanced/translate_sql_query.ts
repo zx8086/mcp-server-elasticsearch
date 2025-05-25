@@ -9,7 +9,6 @@ import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
 // Define the parameter schema type
 const TranslateSqlQueryParams = z.object({
-
       query: z.string().min(1, "SQL query is required"),
       fetchSize: z.number().optional(),
       timeZone: z.string().optional(),

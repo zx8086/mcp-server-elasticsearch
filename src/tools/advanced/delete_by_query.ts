@@ -5,36 +5,41 @@ import { logger } from "../../utils/logger.js";
 import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import type {
+  ToolRegistrationFunction,
+  SearchResult,
+  WaitForActiveShards,
+} from "../types.js";
 
-
-// Define the parameter schema type
+// Define the parameter schema
 const DeleteByQueryParams = z.object({
-
-      index: z.string().min(1, "Index is required"),
-      query: z.record(z.any()),
-      maxDocs: z.number().optional(),
-      conflicts: z.string().optional(),
-      refresh: z.boolean().optional(),
-      timeout: z.string().optional(),
-      waitForActiveShards: z.string().optional(),
-      waitForCompletion: z.boolean().optional(),
-      requestsPerSecond: z.number().optional(),
-      scroll: z.string().optional(),
-      scrollSize: z.number().optional(),
-      searchType: z.string().optional(),
-      searchTimeout: z.string().optional(),
-      slices: z.number().optional(),
-    
+  index: z.string().min(1, "Index is required"),
+  query: z.record(z.any()),
+  maxDocs: z.number().optional(),
+  conflicts: z.enum(["abort", "proceed"]).optional(),
+  refresh: z.boolean().optional(),
+  timeout: z.string().optional(),
+  waitForActiveShards: z.custom<WaitForActiveShards>().optional(),
+  waitForCompletion: z.boolean().optional(),
+  requestsPerSecond: z.number().optional(),
+  scroll: z.string().optional(),
+  scrollSize: z.number().optional(),
+  searchType: z.enum(["query_then_fetch", "dfs_query_then_fetch"]).optional(),
+  searchTimeout: z.string().optional(),
+  slices: z.number().optional(),
 });
 
 type DeleteByQueryParamsType = z.infer<typeof DeleteByQueryParams>;
+
 export const registerDeleteByQueryTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
+  server: McpServer,
+  esClient: Client,
 ) => {
   // Implementation function without read-only checks
-  const deleteByQueryImpl = async (params: DeleteByQueryParamsType): Promise<SearchResult> => {
+  const deleteByQueryImpl = async (
+    params: DeleteByQueryParamsType,
+    extra: Record<string, unknown>,
+  ): Promise<SearchResult> => {
     try {
       const result = await esClient.deleteByQuery({
         index: params.index,
@@ -52,12 +57,21 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (
         search_timeout: params.searchTimeout,
         slices: params.slices,
       });
-      return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+      return {
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+      };
     } catch (error) {
       logger.error("Failed to delete by query:", {
-          error: error instanceof Error ? error.message : String(error)
-        });
-      return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+          },
+        ],
+      };
     }
   };
 
@@ -68,19 +82,24 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (
       index: z.string().min(1, "Index is required"),
       query: z.record(z.any()),
       maxDocs: z.number().optional(),
-      conflicts: z.string().optional(),
+      conflicts: z.enum(["abort", "proceed"]).optional(),
       refresh: z.boolean().optional(),
       timeout: z.string().optional(),
-      waitForActiveShards: z.string().optional(),
+      waitForActiveShards: z.custom<WaitForActiveShards>().optional(),
       waitForCompletion: z.boolean().optional(),
       requestsPerSecond: z.number().optional(),
       scroll: z.string().optional(),
       scrollSize: z.number().optional(),
-      searchType: z.string().optional(),
+      searchType: z
+        .enum(["query_then_fetch", "dfs_query_then_fetch"])
+        .optional(),
       searchTimeout: z.string().optional(),
       slices: z.number().optional(),
     },
-    // Use the decorator to wrap the implementation with read-only checks
-    withReadOnlyCheck("delete_by_query", deleteByQueryImpl, OperationType.DELETE)
+    withReadOnlyCheck(
+      "delete_by_query",
+      deleteByQueryImpl,
+      OperationType.DELETE,
+    ),
   );
-} 
+};

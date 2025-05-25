@@ -13,7 +13,7 @@ const GetIndexParams = z.object({
       index: z.string().min(1, "Index is required"),
       ignoreUnavailable: z.boolean().optional(),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.string().optional(),
+      expandWildcards: z.enum(['all', 'open', 'closed', 'hidden', 'none']).optional(),
       flatSettings: z.boolean().optional(),
       includeDefaults: z.boolean().optional(),
       local: z.boolean().optional(),

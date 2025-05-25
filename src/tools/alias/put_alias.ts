@@ -15,8 +15,6 @@ const PutAliasParams = z.object({
       filter: z.record(z.any()).optional(),
       routing: z.string().optional(),
       isWriteIndex: z.boolean().optional(),
-      isHidden: z.boolean().optional(),
-      mustExist: z.boolean().optional(),
     
 });
 
@@ -34,8 +32,6 @@ export const registerPutAliasTool: ToolRegistrationFunction = (
       filter: z.record(z.any()).optional(),
       routing: z.string().optional(),
       isWriteIndex: z.boolean().optional(),
-      isHidden: z.boolean().optional(),
-      mustExist: z.boolean().optional(),
     },
     async (params: PutAliasParamsType): Promise<SearchResult> => {
       try {
@@ -45,8 +41,6 @@ export const registerPutAliasTool: ToolRegistrationFunction = (
           filter: params.filter,
           routing: params.routing,
           is_write_index: params.isWriteIndex,
-          is_hidden: params.isHidden,
-          must_exist: params.mustExist,
         }, {
           opaqueId: 'put_alias'
         });

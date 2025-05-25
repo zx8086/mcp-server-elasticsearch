@@ -1,0 +1,38 @@
+/* src/tools/elasticsearch/types.ts */
+
+// Common Elasticsearch parameter types
+export type ExpandWildcards = 'open' | 'closed' | 'hidden' | 'none' | 'all';
+export type WaitForActiveShards = 'all' | number;
+export type Conflicts = 'abort' | 'proceed';
+export type SearchType = 'query_then_fetch' | 'dfs_query_then_fetch';
+
+// Common request parameters
+export interface CommonRequestParams {
+  index?: string | string[];
+  waitForActiveShards?: WaitForActiveShards;
+  expandWildcards?: ExpandWildcards;
+  ignoreUnavailable?: boolean;
+  allowNoIndices?: boolean;
+}
+
+// Common response types
+export interface ElasticsearchResponse {
+  _index: string;
+  _id: string;
+  _version?: number;
+  _shards?: {
+    total: number;
+    successful: number;
+    failed: number;
+  };
+  result?: string;
+}
+
+// Error response type
+export interface ElasticsearchError {
+  error: {
+    type: string;
+    reason: string;
+    status: number;
+  };
+} 

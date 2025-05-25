@@ -16,7 +16,7 @@ const DeleteIndexParams = z.object({
       masterTimeout: z.string().optional(),
       ignoreUnavailable: z.boolean().optional(),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.string().optional(),
+      expandWildcards: z.enum(['all', 'open', 'closed', 'hidden', 'none']).optional(),
     
 });
 

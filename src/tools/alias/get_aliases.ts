@@ -9,12 +9,11 @@ import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
 // Define the parameter schema type
 const GetAliasesParams = z.object({
-
       index: z.string().optional(),
       name: z.string().optional(),
       ignoreUnavailable: z.boolean().optional(),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.string().optional(),
+      expandWildcards: z.enum(['all', 'open', 'closed', 'hidden', 'none']).optional(),
     
 });
 
@@ -31,7 +30,7 @@ export const registerGetAliasesTool: ToolRegistrationFunction = (
       name: z.string().optional(),
       ignoreUnavailable: z.boolean().optional(),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.string().optional(),
+      expandWildcards: z.enum(['all', 'open', 'closed', 'hidden', 'none']).optional(),
     },
     async (params: GetAliasesParamsType): Promise<SearchResult> => {
       try {

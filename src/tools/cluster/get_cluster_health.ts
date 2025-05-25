@@ -11,7 +11,7 @@ import { ToolRegistrationFunction, SearchResult } from "../types.js";
 const GetClusterHealthParams = z.object({
 
       index: z.string().optional(),
-      expandWildcards: z.string().optional(),
+      expandWildcards: z.enum(['all', 'open', 'closed', 'hidden', 'none']).optional(),
       level: z.string().optional(),
       local: z.boolean().optional(),
       masterTimeout: z.string().optional(),
