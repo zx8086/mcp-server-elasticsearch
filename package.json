@@ -24,11 +24,11 @@
     "README.md"
   ],
   "scripts": {
-    "build": "bun build ./index.ts --outdir ./dist --target node",
+    "build": "bun build ./src/index.ts --outdir ./dist --target node",
     "start": "bun run dist/index.js",
     "inspector": "bun x --bun @modelcontextprotocol/inspector bun ./dist/index.js",
     "build:inspector": "bun run build && bun run inspector",
-    "dev": "bun run index.ts",
+    "dev": "bun run src/index.ts",
     "test": "bun test",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"**/*.{ts,js,json,md}\""
