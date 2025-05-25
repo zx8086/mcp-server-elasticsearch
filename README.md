@@ -642,4 +642,4 @@ Built on Bun runtime for optimal performance:
 
 ---
 
-**Need Help?** Open an issue on GitHub or check our [troubleshooting guide](#troubleshooting) for common solutions.
+**Need Help?** Check our [troubleshooting guide](#troubleshooting) for common solutions.

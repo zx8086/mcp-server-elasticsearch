@@ -349,7 +349,6 @@ try {
 // =============================================================================
 
 export { config, envVarMapping, defaultConfig };
-export type { Config };
 
 // Helper function to get configuration documentation
 export function getConfigDocumentation(): Record<string, any> {

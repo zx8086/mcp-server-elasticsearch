@@ -1,20 +1,26 @@
+/* src/tools/index.ts */
+
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 
+// Core Tools (List Indices, Get Mappings, Search, Get Shards)
 import { registerListIndicesTool } from "./core/list_indices.js";
 import { registerGetMappingsTool } from "./core/get_mappings.js";
 import { registerSearchTool } from "./core/search.js";
 import { registerGetShardsTool } from "./core/get_shards.js";
 
+// Document Tools (Index Document, Get Document, Update Document, Delete Document, Document Exists)
 import { registerIndexDocumentTool } from "./document/index_document.js";
 import { registerGetDocumentTool } from "./document/get_document.js";
 import { registerUpdateDocumentTool } from "./document/update_document.js";
 import { registerDeleteDocumentTool } from "./document/delete_document.js";
 import { registerDocumentExistsTool } from "./document/document_exists.js";
 
+// Bulk Tools (Bulk Operations, Multi Get)
 import { registerBulkOperationsTool } from "./bulk/bulk_operations.js";
 import { registerMultiGetTool } from "./bulk/multi_get.js";
 
+// Search Tools (Execute SQL Query, Update By Query, Count Documents, Scroll Search, Multi Search, Clear Scroll)
 import { registerExecuteSqlQueryTool } from "./search/execute_sql_query.js";
 import { registerUpdateByQueryTool } from "./search/update_by_query.js";
 import { registerCountDocumentsTool } from "./search/count_documents.js";
@@ -22,6 +28,7 @@ import { registerScrollSearchTool } from "./search/scroll_search.js";
 import { registerMultiSearchTool } from "./search/multi_search.js";
 import { registerClearScrollTool } from "./search/clear_scroll.js";
 
+// Index Management Tools (Create Index, Delete Index, Index Exists, Get Index, Update Index Settings, Get Index Settings, Refresh Index, Flush Index, Reindex Documents, Put Mapping)
 import { registerCreateIndexTool } from "./index_management/create_index.js";
 import { registerDeleteIndexTool } from "./index_management/delete_index.js";
 import { registerIndexExistsTool } from "./index_management/index_exists.js";
@@ -33,28 +40,34 @@ import { registerFlushIndexTool } from "./index_management/flush_index.js";
 import { registerReindexDocumentsTool } from "./index_management/reindex_documents.js";
 import { registerPutMappingTool } from "./index_management/put_mapping.js";
 
+// Advanced Tools (Delete By Query, Translate SQL Query)
 import { registerDeleteByQueryTool } from "./advanced/delete_by_query.js";
 import { registerTranslateSqlQueryTool } from "./advanced/translate_sql_query.js";
 
+// Template Tools (Search Template, Multi Search Template, Get Index Template, Put Index Template, Delete Index Template)
 import { registerSearchTemplateTool } from "./template/search_template.js";
 import { registerMultiSearchTemplateTool } from "./template/multi_search_template.js";
 import { registerGetIndexTemplateTool } from "./template/get_index_template.js";
 import { registerPutIndexTemplateTool } from "./template/put_index_template.js";
 import { registerDeleteIndexTemplateTool } from "./template/delete_index_template.js";
 
+// Analytics Tools (Get Term Vectors, Get Multi Term Vectors)
 import { registerGetTermVectorsTool } from "./analytics/get_term_vectors.js";
 import { registerGetMultiTermVectorsTool } from "./analytics/get_multi_term_vectors.js";
 
+// Alias Tools (Get Aliases, Put Alias, Delete Alias, Update Aliases)
 import { registerGetAliasesTool } from "./alias/get_aliases.js";
 import { registerPutAliasTool } from "./alias/put_alias.js";
 import { registerDeleteAliasTool } from "./alias/delete_alias.js";
 import { registerUpdateAliasesTool } from "./alias/update_aliases.js";
 
+// Cluster Tools (Get Cluster Health, Get Cluster Stats, Get Nodes Info, Get Nodes Stats)
 import { registerGetClusterHealthTool } from "./cluster/get_cluster_health.js";
 import { registerGetClusterStatsTool } from "./cluster/get_cluster_stats.js";
 import { registerGetNodesInfoTool } from "./cluster/get_nodes_info.js";
 import { registerGetNodesStatsTool } from "./cluster/get_nodes_stats.js";
 
+// Field Mapping Tools (Get Field Mapping, Clear SQL Cursor)
 import { registerGetFieldMappingTool } from "./mapping/get_field_mapping.js";
 import { registerClearSqlCursorTool } from "./mapping/clear_sql_cursor.js";
 

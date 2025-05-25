@@ -1,7 +1,4 @@
-/*
- * Copyright Elasticsearch B.V. and contributors
- * SPDX-License-Identifier: Apache-2.0
- */
+/* src/utils/readOnlyMode.ts */
 
 import { logger } from './logger.js';
 

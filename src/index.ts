@@ -1,9 +1,6 @@
 #!/usr/bin/env bun
 
-/*
- * Copyright Elasticsearch B.V. and contributors
- * SPDX-License-Identifier: Apache-2.0
- */
+/* src/index.ts */
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createElasticsearchMcpServer } from "./server.js";

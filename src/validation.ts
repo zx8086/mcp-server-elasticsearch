@@ -1,7 +1,4 @@
-/*
- * Copyright Elasticsearch B.V. and contributors
- * SPDX-License-Identifier: Apache-2.0
- */
+/* src/validation.ts */
 
 import { Client } from "@elastic/elasticsearch";
 
@@ -277,7 +274,7 @@ export async function testBasicOperations(client: Client): Promise<ValidationRes
   };
 }
 
-// New utility function to test specific modern features
+// Utility function to test specific modern features
 export async function testModernFeatures(client: Client): Promise<ValidationResult> {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -287,18 +284,16 @@ export async function testModernFeatures(client: Client): Promise<ValidationResu
       name: "Search Templates",
       test: async () => {
         try {
-          // Test if search templates are available
           await client.searchTemplate({
             index: '_all',
-            source: '{"query":{"match_all":{}}}',
-            params: {},
-            size: 0
+            source: '{"query":{"match_all":{}},"size":0}',
+            params: {}
           });
           return true;
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
           if (errorMsg.includes("index_not_found") || errorMsg.includes("no such index")) {
-            return true; // Feature is available, just no indices
+            return true; 
           }
           return false;
         }
@@ -325,7 +320,6 @@ export async function testModernFeatures(client: Client): Promise<ValidationResu
           await client.security.authenticate();
           return true;
         } catch (error) {
-          // Security might not be enabled
           return false;
         }
       }

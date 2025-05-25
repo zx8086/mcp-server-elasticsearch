@@ -1,9 +1,6 @@
 #!/usr/bin/env bun
 
-/*
- * Copyright Elasticsearch B.V. and contributors
- * SPDX-License-Identifier: Apache-2.0
- */
+/* src/server.ts */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { 
