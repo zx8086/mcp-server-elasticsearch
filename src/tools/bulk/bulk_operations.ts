@@ -14,22 +14,61 @@ export function registerBulkOperationsTool(server, esClient) {
       requireAlias: z.boolean().optional(),
       timeout: z.string().optional(),
       waitForActiveShards: z.string().optional(),
+      flushBytes: z.number().default(5000000),
+      concurrency: z.number().default(5),
+      retries: z.number().default(3),
     },
     async (params) => {
+      // Validation: Ensure index is provided globally or per-document
+      const hasGlobalIndex = !!params.index;
+      const allDocsHaveIndex = params.operations.every(doc => doc._index);
+      if (!hasGlobalIndex && !allDocsHaveIndex) {
+        return {
+          content: [{
+            type: "text",
+            text: "Error: You must provide an 'index' parameter or ensure every operation document has a '_index' property."
+          }]
+        };
+      }
       try {
-        const result = await esClient.bulk({
-          operations: params.operations,
-          index: params.index,
-          routing: params.routing,
-          pipeline: params.pipeline,
-          refresh: params.refresh,
-          require_alias: params.requireAlias,
-          timeout: params.timeout,
-          wait_for_active_shards: params.waitForActiveShards,
+        // Use the helper API for better performance and reliability
+        const result = await esClient.helpers.bulk({
+          datasource: params.operations,
+          onDocument(doc) {
+            return { 
+              index: { 
+                _index: params.index || doc._index,
+                routing: params.routing,
+                pipeline: params.pipeline,
+                refresh: params.refresh,
+                require_alias: params.requireAlias,
+                timeout: params.timeout,
+                wait_for_active_shards: params.waitForActiveShards
+              } 
+            };
+          },
+          flushBytes: params.flushBytes,
+          concurrency: params.concurrency,
+          retries: params.retries,
+          onDrop(doc) {
+            logger.warn('Document failed after retries:', doc);
+          }
         }, {
           opaqueId: 'bulk_operations'
         });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        
+        return { 
+          content: [{ 
+            type: "text", 
+            text: JSON.stringify({
+              total: result.total,
+              successful: result.successful,
+              failed: result.failed,
+              time: result.time,
+              bytes: result.bytes
+            }, null, 2) 
+          }] 
+        };
       } catch (error) {
         logger.error("Failed to perform bulk operations:", error);
         return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
