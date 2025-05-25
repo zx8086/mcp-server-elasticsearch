@@ -19,4 +19,10 @@ export type ToolFunction = (
   esClient: Client
 ) => void;
 
-export type ToolHandler = (params: ToolParams) => Promise<SearchResult>; 
+export type ToolHandler = (params: ToolParams) => Promise<SearchResult>;
+
+// Helper type for tool registration functions
+export type ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => void; 

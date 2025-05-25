@@ -2,8 +2,24 @@
 
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-export function registerGetShardsTool(server, esClient) {
+// Define the parameter schema type
+const GetShardsParams = z.object({
+  index: z
+    .string()
+    .optional()
+    .describe("Optional index name to get shard information for"),
+});
+
+type GetShardsParamsType = z.infer<typeof GetShardsParams>;
+
+export const registerGetShardsTool: ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => {
   server.tool(
     "get_shards",
     "Get shard information for all or specific indices",
@@ -13,7 +29,8 @@ export function registerGetShardsTool(server, esClient) {
         .optional()
         .describe("Optional index name to get shard information for"),
     },
-    async ({ index }) => {
+    async (params: GetShardsParamsType): Promise<SearchResult> => {
+      const { index } = params;
       try {
         logger.debug("Getting shard information", { index });
         const response = await esClient.cat.shards({

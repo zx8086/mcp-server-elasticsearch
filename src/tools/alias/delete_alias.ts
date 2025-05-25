@@ -2,8 +2,29 @@
 
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-export function registerDeleteAliasTool(server, esClient) {
+
+// Define the parameter schema type
+const DeleteAliasParams = z.object({
+
+      index: z.string().min(1, "Index is required"),
+      name: z.string().min(1, "Alias name is required"),
+      timeout: z.string().optional(),
+      masterTimeout: z.string().optional(),
+      ignoreUnavailable: z.boolean().optional(),
+      allowNoIndices: z.boolean().optional(),
+      expandWildcards: z.string().optional(),
+    
+});
+
+type DeleteAliasParamsType = z.infer<typeof DeleteAliasParams>;
+export const registerDeleteAliasTool: ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => {
   server.tool(
     "delete_alias",
     "Delete an alias from an index in Elasticsearch",
@@ -16,7 +37,7 @@ export function registerDeleteAliasTool(server, esClient) {
       allowNoIndices: z.boolean().optional(),
       expandWildcards: z.string().optional(),
     },
-    async (params) => {
+    async (params: DeleteAliasParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.indices.deleteAlias({
           index: params.index,
@@ -29,7 +50,9 @@ export function registerDeleteAliasTool(server, esClient) {
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {
-        logger.error("Failed to delete alias:", error);
+        logger.error("Failed to delete alias:", {
+          error: error instanceof Error ? error.message : String(error)
+        });
         return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
       }
     }

@@ -3,8 +3,26 @@
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-export function registerIndexDocumentTool(server, esClient) {
+// Define the parameter schema type
+const IndexDocumentParams = z.object({
+  index: z.string().min(1, "Index is required"),
+  id: z.string().optional(),
+  document: z.record(z.any()),
+  refresh: z.string().optional(),
+  routing: z.string().optional(),
+  pipeline: z.string().optional(),
+});
+
+type IndexDocumentParamsType = z.infer<typeof IndexDocumentParams>;
+
+export const registerIndexDocumentTool: ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => {
   server.tool(
     "index_document",
     "Index a document into Elasticsearch",
@@ -16,7 +34,7 @@ export function registerIndexDocumentTool(server, esClient) {
       routing: z.string().optional(),
       pipeline: z.string().optional(),
     },
-    async (params) => {
+    async (params: IndexDocumentParamsType): Promise<SearchResult> => {
       // Check read-only mode
       const readOnlyCheck = readOnlyManager.checkOperation("index_document");
       if (!readOnlyCheck.allowed) {
@@ -49,7 +67,9 @@ export function registerIndexDocumentTool(server, esClient) {
         
         return response;
       } catch (error) {
-        logger.error("Failed to index document:", error);
+        logger.error("Failed to index document:", {
+          error: error instanceof Error ? error.message : String(error)
+        });
         return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
       }
     }

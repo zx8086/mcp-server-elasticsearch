@@ -3,8 +3,34 @@
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-export function registerUpdateDocumentTool(server, esClient) {
+// Define the parameter schema type
+const UpdateDocumentParams = z.object({
+  index: z.string().min(1, "Index is required"),
+  id: z.string().min(1, "Document ID is required"),
+  doc: z.record(z.any()).optional(),
+  script: z.record(z.any()).optional(),
+  upsert: z.record(z.any()).optional(),
+  docAsUpsert: z.boolean().optional(),
+  detectNoop: z.boolean().optional(),
+  scriptedUpsert: z.boolean().optional(),
+  refresh: z.string().optional(),
+  routing: z.string().optional(),
+  timeout: z.string().optional(),
+  waitForActiveShards: z.string().optional(),
+  ifSeqNo: z.number().optional(),
+  ifPrimaryTerm: z.number().optional(),
+});
+
+type UpdateDocumentParamsType = z.infer<typeof UpdateDocumentParams>;
+
+export const registerUpdateDocumentTool: ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => {
   server.tool(
     "update_document",
     "Update a document in Elasticsearch by index and id",
@@ -24,7 +50,7 @@ export function registerUpdateDocumentTool(server, esClient) {
       ifSeqNo: z.number().optional(),
       ifPrimaryTerm: z.number().optional(),
     },
-    async (params) => {
+    async (params: UpdateDocumentParamsType): Promise<SearchResult> => {
       // Check read-only mode
       const readOnlyCheck = readOnlyManager.checkOperation("update_document");
       if (!readOnlyCheck.allowed) {
@@ -65,7 +91,9 @@ export function registerUpdateDocumentTool(server, esClient) {
         
         return response;
       } catch (error) {
-        logger.error("Failed to update document:", error);
+        logger.error("Failed to update document:", {
+          error: error instanceof Error ? error.message : String(error)
+        });
         return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
       }
     }

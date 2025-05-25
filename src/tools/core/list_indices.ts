@@ -2,8 +2,25 @@
 
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-export function registerListIndicesTool(server, esClient) {
+// Define the parameter schema type
+const ListIndicesParams = z.object({
+  indexPattern: z
+    .string()
+    .trim()
+    .min(1, "Index pattern is required")
+    .describe("Index pattern of Elasticsearch indices to list"),
+});
+
+type ListIndicesParamsType = z.infer<typeof ListIndicesParams>;
+
+export const registerListIndicesTool: ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => {
   server.tool(
     "list_indices",
     "List all available Elasticsearch indices",
@@ -14,7 +31,8 @@ export function registerListIndicesTool(server, esClient) {
         .min(1, "Index pattern is required")
         .describe("Index pattern of Elasticsearch indices to list"),
     },
-    async ({ indexPattern }) => {
+    async (params: ListIndicesParamsType): Promise<SearchResult> => {
+      const { indexPattern } = params;
       logger.debug("Listing indices", { pattern: indexPattern });
       try {
         const response = await esClient.cat.indices({

@@ -2,8 +2,29 @@
 
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-export function registerGetFieldMappingTool(server, esClient) {
+
+// Define the parameter schema type
+const GetFieldMappingParams = z.object({
+
+      index: z.string().min(1, "Index is required"),
+      field: z.string().min(1, "Field name is required"),
+      includeDefaults: z.boolean().optional(),
+      local: z.boolean().optional(),
+      ignoreUnavailable: z.boolean().optional(),
+      allowNoIndices: z.boolean().optional(),
+      expandWildcards: z.string().optional(),
+    
+});
+
+type GetFieldMappingParamsType = z.infer<typeof GetFieldMappingParams>;
+export const registerGetFieldMappingTool: ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => {
   server.tool(
     "get_field_mapping",
     "Get field mapping for a specific field in an index",
@@ -16,7 +37,7 @@ export function registerGetFieldMappingTool(server, esClient) {
       allowNoIndices: z.boolean().optional(),
       expandWildcards: z.string().optional(),
     },
-    async (params) => {
+    async (params: GetFieldMappingParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.indices.getFieldMapping({
           index: params.index,
@@ -29,7 +50,9 @@ export function registerGetFieldMappingTool(server, esClient) {
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {
-        logger.error("Failed to get field mapping:", error);
+        logger.error("Failed to get field mapping:", {
+          error: error instanceof Error ? error.message : String(error)
+        });
         return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
       }
     }

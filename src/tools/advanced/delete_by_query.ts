@@ -3,10 +3,38 @@
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-export function registerDeleteByQueryTool(server, esClient) {
+
+// Define the parameter schema type
+const DeleteByQueryParams = z.object({
+
+      index: z.string().min(1, "Index is required"),
+      query: z.record(z.any()),
+      maxDocs: z.number().optional(),
+      conflicts: z.string().optional(),
+      refresh: z.boolean().optional(),
+      timeout: z.string().optional(),
+      waitForActiveShards: z.string().optional(),
+      waitForCompletion: z.boolean().optional(),
+      requestsPerSecond: z.number().optional(),
+      scroll: z.string().optional(),
+      scrollSize: z.number().optional(),
+      searchType: z.string().optional(),
+      searchTimeout: z.string().optional(),
+      slices: z.number().optional(),
+    
+});
+
+type DeleteByQueryParamsType = z.infer<typeof DeleteByQueryParams>;
+export const registerDeleteByQueryTool: ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => {
   // Implementation function without read-only checks
-  const deleteByQueryImpl = async (params) => {
+  const deleteByQueryImpl = async (params: DeleteByQueryParamsType): Promise<SearchResult> => {
     try {
       const result = await esClient.deleteByQuery({
         index: params.index,
@@ -26,7 +54,9 @@ export function registerDeleteByQueryTool(server, esClient) {
       });
       return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
     } catch (error) {
-      logger.error("Failed to delete by query:", error);
+      logger.error("Failed to delete by query:", {
+          error: error instanceof Error ? error.message : String(error)
+        });
       return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
     }
   };

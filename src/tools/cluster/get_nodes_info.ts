@@ -2,8 +2,26 @@
 
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-export function registerGetNodesInfoTool(server, esClient) {
+
+// Define the parameter schema type
+const GetNodesInfoParams = z.object({
+
+      nodeId: z.string().optional(),
+      metric: z.string().optional(),
+      flatSettings: z.boolean().optional(),
+      timeout: z.string().optional(),
+    
+});
+
+type GetNodesInfoParamsType = z.infer<typeof GetNodesInfoParams>;
+export const registerGetNodesInfoTool: ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => {
   server.tool(
     "get_nodes_info",
     "Get information about nodes in the Elasticsearch cluster",
@@ -13,7 +31,7 @@ export function registerGetNodesInfoTool(server, esClient) {
       flatSettings: z.boolean().optional(),
       timeout: z.string().optional(),
     },
-    async (params) => {
+    async (params: GetNodesInfoParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.nodes.info({
           node_id: params.nodeId,
@@ -25,7 +43,9 @@ export function registerGetNodesInfoTool(server, esClient) {
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {
-        logger.error("Failed to get nodes info:", error);
+        logger.error("Failed to get nodes info:", {
+          error: error instanceof Error ? error.message : String(error)
+        });
         return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
       }
     }

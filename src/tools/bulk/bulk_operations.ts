@@ -3,8 +3,33 @@
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-export function registerBulkOperationsTool(server, esClient) {
+
+// Define the parameter schema type
+const BulkOperationsParams = z.object({
+
+      operations: z.array(z.record(z.any())),
+      index: z.string().optional(),
+      routing: z.string().optional(),
+      pipeline: z.string().optional(),
+      refresh: z.string().optional(),
+      requireAlias: z.boolean().optional(),
+      timeout: z.string().optional(),
+      waitForActiveShards: z.string().optional(),
+      flushBytes: z.number().default(5000000),
+      concurrency: z.number().default(5),
+      retries: z.number().default(3),
+    
+});
+
+type BulkOperationsParamsType = z.infer<typeof BulkOperationsParams>;
+export const registerBulkOperationsTool: ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => {
   server.tool(
     "bulk_operations",
     "Perform bulk operations in Elasticsearch",
@@ -21,7 +46,7 @@ export function registerBulkOperationsTool(server, esClient) {
       concurrency: z.number().default(5),
       retries: z.number().default(3),
     },
-    async (params) => {
+    async (params: BulkOperationsParamsType): Promise<SearchResult> => {
       // Check read-only mode first
       const readOnlyCheck = readOnlyManager.checkOperation("bulk_operations");
       if (!readOnlyCheck.allowed) {
@@ -68,7 +93,9 @@ export function registerBulkOperationsTool(server, esClient) {
           concurrency: params.concurrency,
           retries: params.retries,
           onDrop(doc) {
-            logger.warn('Document failed after retries:', doc);
+            logger.warn('Document failed after retries:', { 
+            document: JSON.stringify(doc, null, 2)
+          });
           }
         }, {
           opaqueId: 'bulk_operations'
@@ -93,7 +120,9 @@ export function registerBulkOperationsTool(server, esClient) {
         
         return response;
       } catch (error) {
-        logger.error("Failed to perform bulk operations:", error);
+        logger.error("Failed to perform bulk operations:", {
+          error: error instanceof Error ? error.message : String(error)
+        });
         return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
       }
     }

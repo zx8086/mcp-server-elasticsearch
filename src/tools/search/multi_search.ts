@@ -2,8 +2,28 @@
 
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-export function registerMultiSearchTool(server, esClient) {
+
+// Define the parameter schema type
+const MultiSearchParams = z.object({
+
+      searches: z.array(z.record(z.any())),
+      index: z.string().optional(),
+      maxConcurrentSearches: z.number().optional(),
+      ccsMinimizeRoundtrips: z.boolean().optional(),
+      restTotalHitsAsInt: z.boolean().optional(),
+      typedKeys: z.boolean().optional(),
+    
+});
+
+type MultiSearchParamsType = z.infer<typeof MultiSearchParams>;
+export const registerMultiSearchTool: ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => {
   server.tool(
     "multi_search",
     "Perform a multi-search in Elasticsearch",
@@ -15,7 +35,7 @@ export function registerMultiSearchTool(server, esClient) {
       restTotalHitsAsInt: z.boolean().optional(),
       typedKeys: z.boolean().optional(),
     },
-    async (params) => {
+    async (params: MultiSearchParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.msearch({
           searches: params.searches,
@@ -27,7 +47,9 @@ export function registerMultiSearchTool(server, esClient) {
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {
-        logger.error("Failed to perform multi-search:", error);
+        logger.error("Failed to perform multi-search:", {
+          error: error instanceof Error ? error.message : String(error)
+        });
         return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
       }
     }

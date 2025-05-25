@@ -3,8 +3,28 @@
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-export function registerDeleteIndexTool(server, esClient) {
+
+// Define the parameter schema type
+const DeleteIndexParams = z.object({
+
+      index: z.string().min(1, "Index is required"),
+      timeout: z.string().optional(),
+      masterTimeout: z.string().optional(),
+      ignoreUnavailable: z.boolean().optional(),
+      allowNoIndices: z.boolean().optional(),
+      expandWildcards: z.string().optional(),
+    
+});
+
+type DeleteIndexParamsType = z.infer<typeof DeleteIndexParams>;
+export const registerDeleteIndexTool: ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => {
   server.tool(
     "delete_index",
     "Delete an index in Elasticsearch",
@@ -16,7 +36,7 @@ export function registerDeleteIndexTool(server, esClient) {
       allowNoIndices: z.boolean().optional(),
       expandWildcards: z.string().optional(),
     },
-    async (params) => {
+    async (params: DeleteIndexParamsType): Promise<SearchResult> => {
       // Check read-only mode with enhanced warning for destructive operation
       const readOnlyCheck = readOnlyManager.checkOperation("delete_index");
       if (!readOnlyCheck.allowed) {
@@ -49,7 +69,9 @@ export function registerDeleteIndexTool(server, esClient) {
         
         return response;
       } catch (error) {
-        logger.error("Failed to delete index:", error);
+        logger.error("Failed to delete index:", {
+          error: error instanceof Error ? error.message : String(error)
+        });
         return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
       }
     }

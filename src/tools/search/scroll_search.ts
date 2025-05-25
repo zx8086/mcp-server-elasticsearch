@@ -2,8 +2,28 @@
 
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-export function registerScrollSearchTool(server, esClient) {
+
+// Define the parameter schema type
+const ScrollSearchParams = z.object({
+
+      index: z.string().min(1, "Index is required"),
+      query: z.record(z.any()),
+      scroll: z.string().default('30s'),
+      scrollId: z.string().optional(),
+      maxDocuments: z.number().optional(),
+      restTotalHitsAsInt: z.boolean().optional(),
+    
+});
+
+type ScrollSearchParamsType = z.infer<typeof ScrollSearchParams>;
+export const registerScrollSearchTool: ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => {
   server.tool(
     "scroll_search",
     "Perform a scroll search in Elasticsearch",
@@ -15,7 +35,7 @@ export function registerScrollSearchTool(server, esClient) {
       maxDocuments: z.number().optional(),
       restTotalHitsAsInt: z.boolean().optional(),
     },
-    async (params) => {
+    async (params: ScrollSearchParamsType): Promise<SearchResult> => {
       try {
         // If scrollId is provided, use the traditional scroll API
         if (params.scrollId) {
@@ -62,7 +82,9 @@ export function registerScrollSearchTool(server, esClient) {
           ]
         };
       } catch (error) {
-        logger.error("Failed to perform scroll search:", error);
+        logger.error("Failed to perform scroll search:", {
+          error: error instanceof Error ? error.message : String(error)
+        });
         return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
       }
     }

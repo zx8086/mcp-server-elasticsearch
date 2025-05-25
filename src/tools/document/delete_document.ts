@@ -3,8 +3,30 @@
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-export function registerDeleteDocumentTool(server, esClient) {
+// Define the parameter schema type
+const DeleteDocumentParams = z.object({
+  index: z.string().min(1, "Index is required"),
+  id: z.string().min(1, "Document ID is required"),
+  routing: z.string().optional(),
+  refresh: z.string().optional(),
+  version: z.number().optional(),
+  versionType: z.string().optional(),
+  ifSeqNo: z.number().optional(),
+  ifPrimaryTerm: z.number().optional(),
+  timeout: z.string().optional(),
+  waitForActiveShards: z.string().optional(),
+});
+
+type DeleteDocumentParamsType = z.infer<typeof DeleteDocumentParams>;
+
+export const registerDeleteDocumentTool: ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => {
   server.tool(
     "delete_document",
     "Delete a document from Elasticsearch by index and id",
@@ -20,7 +42,7 @@ export function registerDeleteDocumentTool(server, esClient) {
       timeout: z.string().optional(),
       waitForActiveShards: z.string().optional(),
     },
-    async (params) => {
+    async (params: DeleteDocumentParamsType): Promise<SearchResult> => {
       // Check read-only mode FIRST
       const readOnlyCheck = readOnlyManager.checkOperation("delete_document");
       if (!readOnlyCheck.allowed) {
@@ -57,7 +79,9 @@ export function registerDeleteDocumentTool(server, esClient) {
         
         return response;
       } catch (error) {
-        logger.error("Failed to delete document:", error);
+        logger.error("Failed to delete document:", {
+          error: error instanceof Error ? error.message : String(error)
+        });
         return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
       }
     }

@@ -2,8 +2,25 @@
 
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-export function registerExecuteSqlQueryTool(server, esClient) {
+
+// Define the parameter schema type
+const ExecuteSqlQueryParams = z.object({
+
+      query: z.string().min(1, "SQL query is required"),
+      format: z.string().optional(),
+      fetchSize: z.number().optional(),
+    
+});
+
+type ExecuteSqlQueryParamsType = z.infer<typeof ExecuteSqlQueryParams>;
+export const registerExecuteSqlQueryTool: ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => {
   server.tool(
     "execute_sql_query",
     "Execute a SQL query using Elasticsearch SQL API",
@@ -12,7 +29,7 @@ export function registerExecuteSqlQueryTool(server, esClient) {
       format: z.string().optional(),
       fetchSize: z.number().optional(),
     },
-    async (params) => {
+    async (params: ExecuteSqlQueryParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.sql.query({
           query: params.query,
@@ -23,7 +40,9 @@ export function registerExecuteSqlQueryTool(server, esClient) {
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {
-        logger.error("Failed to execute SQL query:", error);
+        logger.error("Failed to execute SQL query:", {
+          error: error instanceof Error ? error.message : String(error)
+        });
         return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
       }
     }

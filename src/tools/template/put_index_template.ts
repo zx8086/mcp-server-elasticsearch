@@ -2,8 +2,32 @@
 
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-export function registerPutIndexTemplateTool(server, esClient) {
+
+// Define the parameter schema type
+const PutIndexTemplateParams = z.object({
+
+      name: z.string().min(1, "Template name is required"),
+      indexPatterns: z.array(z.string()).optional(),
+      template: z.record(z.any()).optional(),
+      composedOf: z.array(z.string()).optional(),
+      priority: z.number().optional(),
+      version: z.number().optional(),
+      meta: z.record(z.any()).optional(),
+      allowAutoCreate: z.boolean().optional(),
+      create: z.boolean().optional(),
+      masterTimeout: z.string().optional(),
+    
+});
+
+type PutIndexTemplateParamsType = z.infer<typeof PutIndexTemplateParams>;
+export const registerPutIndexTemplateTool: ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => {
   server.tool(
     "put_index_template",
     "Create or update an index template in Elasticsearch",
@@ -19,7 +43,7 @@ export function registerPutIndexTemplateTool(server, esClient) {
       create: z.boolean().optional(),
       masterTimeout: z.string().optional(),
     },
-    async (params) => {
+    async (params: PutIndexTemplateParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.indices.putIndexTemplate({
           name: params.name,
@@ -37,7 +61,9 @@ export function registerPutIndexTemplateTool(server, esClient) {
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {
-        logger.error("Failed to put index template:", error);
+        logger.error("Failed to put index template:", {
+          error: error instanceof Error ? error.message : String(error)
+        });
         return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
       }
     }

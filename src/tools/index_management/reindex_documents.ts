@@ -2,8 +2,34 @@
 
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-export function registerReindexDocumentsTool(server, esClient) {
+
+// Define the parameter schema type
+const ReindexDocumentsParams = z.object({
+
+      source: z.record(z.any()),
+      dest: z.record(z.any()),
+      script: z.record(z.any()).optional(),
+      conflicts: z.string().optional(),
+      maxDocs: z.number().optional(),
+      refresh: z.boolean().optional(),
+      timeout: z.string().optional(),
+      waitForActiveShards: z.string().optional(),
+      waitForCompletion: z.boolean().optional(),
+      requestsPerSecond: z.number().optional(),
+      scroll: z.string().optional(),
+      slices: z.number().optional(),
+    
+});
+
+type ReindexDocumentsParamsType = z.infer<typeof ReindexDocumentsParams>;
+export const registerReindexDocumentsTool: ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => {
   server.tool(
     "reindex_documents",
     "Reindex documents in Elasticsearch",
@@ -21,7 +47,7 @@ export function registerReindexDocumentsTool(server, esClient) {
       scroll: z.string().optional(),
       slices: z.number().optional(),
     },
-    async (params) => {
+    async (params: ReindexDocumentsParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.reindex({
           source: params.source,
@@ -39,7 +65,9 @@ export function registerReindexDocumentsTool(server, esClient) {
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {
-        logger.error("Failed to reindex documents:", error);
+        logger.error("Failed to reindex documents:", {
+          error: error instanceof Error ? error.message : String(error)
+        });
         return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
       }
     }

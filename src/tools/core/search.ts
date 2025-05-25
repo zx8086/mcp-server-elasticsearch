@@ -5,6 +5,7 @@ import { logger } from "../../utils/logger.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 import { ToolFunction, ToolParams, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
 export const registerSearchTool: ToolFunction = (server: McpServer, esClient: Client) => {
   server.tool(

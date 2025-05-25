@@ -2,8 +2,37 @@
 
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-export function registerUpdateByQueryTool(server, esClient) {
+
+// Define the parameter schema type
+const UpdateByQueryParams = z.object({
+
+      index: z.string().min(1, "Index is required"),
+      query: z.record(z.any()),
+      script: z.record(z.any()).optional(),
+      maxDocs: z.number().optional(),
+      conflicts: z.string().optional(),
+      refresh: z.boolean().optional(),
+      timeout: z.string().optional(),
+      waitForActiveShards: z.string().optional(),
+      waitForCompletion: z.boolean().optional(),
+      requestsPerSecond: z.number().optional(),
+      scroll: z.string().optional(),
+      scrollSize: z.number().optional(),
+      searchType: z.string().optional(),
+      searchTimeout: z.string().optional(),
+      slices: z.number().optional(),
+    
+});
+
+type UpdateByQueryParamsType = z.infer<typeof UpdateByQueryParams>;
+export const registerUpdateByQueryTool: ToolRegistrationFunction = (
+  server: McpServer, 
+  esClient: Client
+) => {
   server.tool(
     "update_by_query",
     "Update documents by query in Elasticsearch",
@@ -24,7 +53,7 @@ export function registerUpdateByQueryTool(server, esClient) {
       searchTimeout: z.string().optional(),
       slices: z.number().optional(),
     },
-    async (params) => {
+    async (params: UpdateByQueryParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.updateByQuery({
           index: params.index,
@@ -47,7 +76,9 @@ export function registerUpdateByQueryTool(server, esClient) {
         });
         return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
       } catch (error) {
-        logger.error("Failed to update by query:", error);
+        logger.error("Failed to update by query:", {
+          error: error instanceof Error ? error.message : String(error)
+        });
         return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
       }
     }
