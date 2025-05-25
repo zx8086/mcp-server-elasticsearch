@@ -1,4 +1,4 @@
-# Elasticsearch MCP Server
+# Unofficial Elasticsearch MCP Server
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/npm/v/@elastic/mcp-server-elasticsearch)](https://www.npmjs.com/package/@elastic/mcp-server-elasticsearch)
