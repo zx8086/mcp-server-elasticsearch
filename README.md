@@ -6,6 +6,8 @@
 
 A production-ready Model Context Protocol (MCP) server that connects AI assistants like Claude Desktop to Elasticsearch clusters. This server provides comprehensive Elasticsearch operations through natural language interactions, featuring advanced configuration management, security controls, and extensive tooling.
 
+This is an enhancement of the Official Elastic MCP Server with the four tools (Core Operations).
+
 ## 🚀 Key Features
 
 - **🔧 Comprehensive Tooling**: 50+ Elasticsearch operations including search, indexing, cluster management, and analytics
