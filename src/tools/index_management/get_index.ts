@@ -6,25 +6,24 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-
 // Define the parameter schema type
 const GetIndexParams = z.object({
-
-      index: z.string().min(1, "Index is required"),
-      ignoreUnavailable: z.boolean().optional(),
-      allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.enum(['all', 'open', 'closed', 'hidden', 'none']).optional(),
-      flatSettings: z.boolean().optional(),
-      includeDefaults: z.boolean().optional(),
-      local: z.boolean().optional(),
-      masterTimeout: z.string().optional(),
-    
+  index: z.string().min(1, "Index is required"),
+  ignoreUnavailable: z.boolean().optional(),
+  allowNoIndices: z.boolean().optional(),
+  expandWildcards: z
+    .enum(["all", "open", "closed", "hidden", "none"])
+    .optional(),
+  flatSettings: z.boolean().optional(),
+  includeDefaults: z.boolean().optional(),
+  local: z.boolean().optional(),
+  masterTimeout: z.string().optional(),
 });
 
 type GetIndexParamsType = z.infer<typeof GetIndexParams>;
 export const registerGetIndexTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
+  server: McpServer,
+  esClient: Client,
 ) => {
   server.tool(
     "get_index",
@@ -51,13 +50,22 @@ export const registerGetIndexTool: ToolRegistrationFunction = (
           local: params.local,
           master_timeout: params.masterTimeout,
         });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
       } catch (error) {
         logger.error("Failed to get index information:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
       }
-    }
+    },
   );
-} 
+};

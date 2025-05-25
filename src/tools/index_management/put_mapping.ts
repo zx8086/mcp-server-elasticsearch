@@ -6,32 +6,29 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-
 // Define the parameter schema type
 const PutMappingParams = z.object({
-
-      index: z.string().min(1, "Index is required"),
-      properties: z.record(z.any()).optional(),
-      runtime: z.record(z.any()).optional(),
-      meta: z.record(z.any()).optional(),
-      dynamic: z.string().optional(),
-      dateDetection: z.boolean().optional(),
-      dynamicDateFormats: z.array(z.string()).optional(),
-      dynamicTemplates: z.array(z.record(z.any())).optional(),
-      numericDetection: z.boolean().optional(),
-      timeout: z.string().optional(),
-      masterTimeout: z.string().optional(),
-      ignoreUnavailable: z.boolean().optional(),
-      allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.string().optional(),
-      writeIndexOnly: z.boolean().optional(),
-    
+  index: z.string().min(1, "Index is required"),
+  properties: z.record(z.any()).optional(),
+  runtime: z.record(z.any()).optional(),
+  meta: z.record(z.any()).optional(),
+  dynamic: z.string().optional(),
+  dateDetection: z.boolean().optional(),
+  dynamicDateFormats: z.array(z.string()).optional(),
+  dynamicTemplates: z.array(z.record(z.any())).optional(),
+  numericDetection: z.boolean().optional(),
+  timeout: z.string().optional(),
+  masterTimeout: z.string().optional(),
+  ignoreUnavailable: z.boolean().optional(),
+  allowNoIndices: z.boolean().optional(),
+  expandWildcards: z.string().optional(),
+  writeIndexOnly: z.boolean().optional(),
 });
 
 type PutMappingParamsType = z.infer<typeof PutMappingParams>;
 export const registerPutMappingTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
+  server: McpServer,
+  esClient: Client,
 ) => {
   server.tool(
     "put_mapping",
@@ -72,13 +69,22 @@ export const registerPutMappingTool: ToolRegistrationFunction = (
           expand_wildcards: params.expandWildcards,
           write_index_only: params.writeIndexOnly,
         });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
       } catch (error) {
         logger.error("Failed to update index mapping:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
       }
-    }
+    },
   );
-} 
+};

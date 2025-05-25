@@ -6,18 +6,15 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-
 // Define the parameter schema type
 const ClearSqlCursorParams = z.object({
-
-      cursor: z.string().min(1, "Cursor is required"),
-    
+  cursor: z.string().min(1, "Cursor is required"),
 });
 
 type ClearSqlCursorParamsType = z.infer<typeof ClearSqlCursorParams>;
 export const registerClearSqlCursorTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
+  server: McpServer,
+  esClient: Client,
 ) => {
   server.tool(
     "clear_sql_cursor",
@@ -30,13 +27,22 @@ export const registerClearSqlCursorTool: ToolRegistrationFunction = (
         const result = await esClient.sql.clearCursor({
           cursor: params.cursor,
         });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
       } catch (error) {
         logger.error("Failed to clear SQL cursor:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
       }
-    }
+    },
   );
-} 
+};

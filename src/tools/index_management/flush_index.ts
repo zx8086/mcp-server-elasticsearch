@@ -6,23 +6,22 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-
 // Define the parameter schema type
 const FlushIndexParams = z.object({
-
-      index: z.string().min(1, "Index is required"),
-      ignoreUnavailable: z.boolean().optional(),
-      allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.enum(['all', 'open', 'closed', 'hidden', 'none']).optional(),
-      force: z.boolean().optional(),
-      waitIfOngoing: z.boolean().optional(),
-    
+  index: z.string().min(1, "Index is required"),
+  ignoreUnavailable: z.boolean().optional(),
+  allowNoIndices: z.boolean().optional(),
+  expandWildcards: z
+    .enum(["all", "open", "closed", "hidden", "none"])
+    .optional(),
+  force: z.boolean().optional(),
+  waitIfOngoing: z.boolean().optional(),
 });
 
 type FlushIndexParamsType = z.infer<typeof FlushIndexParams>;
 export const registerFlushIndexTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
+  server: McpServer,
+  esClient: Client,
 ) => {
   server.tool(
     "flush_index",
@@ -45,13 +44,22 @@ export const registerFlushIndexTool: ToolRegistrationFunction = (
           force: params.force,
           wait_if_ongoing: params.waitIfOngoing,
         });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
       } catch (error) {
         logger.error("Failed to flush index:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
       }
-    }
+    },
   );
-} 
+};

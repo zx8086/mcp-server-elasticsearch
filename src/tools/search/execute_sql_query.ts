@@ -6,20 +6,17 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-
 // Define the parameter schema type
 const ExecuteSqlQueryParams = z.object({
-
-      query: z.string().min(1, "SQL query is required"),
-      format: z.string().optional(),
-      fetchSize: z.number().optional(),
-    
+  query: z.string().min(1, "SQL query is required"),
+  format: z.string().optional(),
+  fetchSize: z.number().optional(),
 });
 
 type ExecuteSqlQueryParamsType = z.infer<typeof ExecuteSqlQueryParams>;
 export const registerExecuteSqlQueryTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
+  server: McpServer,
+  esClient: Client,
 ) => {
   server.tool(
     "execute_sql_query",
@@ -31,20 +28,32 @@ export const registerExecuteSqlQueryTool: ToolRegistrationFunction = (
     },
     async (params: ExecuteSqlQueryParamsType): Promise<SearchResult> => {
       try {
-        const result = await esClient.sql.query({
-          query: params.query,
-          format: params.format,
-          fetch_size: params.fetchSize,
-        }, {
-          opaqueId: 'execute_sql_query'
-        });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        const result = await esClient.sql.query(
+          {
+            query: params.query,
+            format: params.format,
+            fetch_size: params.fetchSize,
+          },
+          {
+            opaqueId: "execute_sql_query",
+          },
+        );
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
       } catch (error) {
         logger.error("Failed to execute SQL query:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
       }
-    }
+    },
   );
-} 
+};

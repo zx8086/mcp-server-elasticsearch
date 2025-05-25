@@ -6,21 +6,18 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-
 // Define the parameter schema type
 const RefreshIndexParams = z.object({
-
-      index: z.string().min(1, "Index is required"),
-      ignoreUnavailable: z.boolean().optional(),
-      allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.string().optional(),
-    
+  index: z.string().min(1, "Index is required"),
+  ignoreUnavailable: z.boolean().optional(),
+  allowNoIndices: z.boolean().optional(),
+  expandWildcards: z.string().optional(),
 });
 
 type RefreshIndexParamsType = z.infer<typeof RefreshIndexParams>;
 export const registerRefreshIndexTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
+  server: McpServer,
+  esClient: Client,
 ) => {
   server.tool(
     "refresh_index",
@@ -39,13 +36,22 @@ export const registerRefreshIndexTool: ToolRegistrationFunction = (
           allow_no_indices: params.allowNoIndices,
           expand_wildcards: params.expandWildcards,
         });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
       } catch (error) {
         logger.error("Failed to refresh index:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
       }
-    }
+    },
   );
-} 
+};

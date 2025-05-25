@@ -6,19 +6,16 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-
 // Define the parameter schema type
 const GetClusterStatsParams = z.object({
-
-      nodeId: z.string().optional(),
-      timeout: z.string().optional(),
-    
+  nodeId: z.string().optional(),
+  timeout: z.string().optional(),
 });
 
 type GetClusterStatsParamsType = z.infer<typeof GetClusterStatsParams>;
 export const registerGetClusterStatsTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
+  server: McpServer,
+  esClient: Client,
 ) => {
   server.tool(
     "get_cluster_stats",
@@ -33,13 +30,22 @@ export const registerGetClusterStatsTool: ToolRegistrationFunction = (
           node_id: params.nodeId,
           timeout: params.timeout,
         });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
       } catch (error) {
         logger.error("Failed to get cluster stats:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
       }
-    }
+    },
   );
-} 
+};

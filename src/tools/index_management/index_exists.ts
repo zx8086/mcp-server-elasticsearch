@@ -6,24 +6,21 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-
 // Define the parameter schema type
 const IndexExistsParams = z.object({
-
-      index: z.string().min(1, "Index is required"),
-      ignoreUnavailable: z.boolean().optional(),
-      allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.string().optional(),
-      flatSettings: z.boolean().optional(),
-      includeDefaults: z.boolean().optional(),
-      local: z.boolean().optional(),
-    
+  index: z.string().min(1, "Index is required"),
+  ignoreUnavailable: z.boolean().optional(),
+  allowNoIndices: z.boolean().optional(),
+  expandWildcards: z.string().optional(),
+  flatSettings: z.boolean().optional(),
+  includeDefaults: z.boolean().optional(),
+  local: z.boolean().optional(),
 });
 
 type IndexExistsParamsType = z.infer<typeof IndexExistsParams>;
 export const registerIndexExistsTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
+  server: McpServer,
+  esClient: Client,
 ) => {
   server.tool(
     "index_exists",
@@ -51,10 +48,17 @@ export const registerIndexExistsTool: ToolRegistrationFunction = (
         return { content: [{ type: "text", text: `Exists: ${exists}` }] };
       } catch (error) {
         logger.error("Failed to check if index exists:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
       }
-    }
+    },
   );
-} 
+};

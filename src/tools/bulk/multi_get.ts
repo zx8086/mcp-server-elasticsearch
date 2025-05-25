@@ -6,26 +6,23 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-
 // Define the parameter schema type
 const MultiGetParams = z.object({
-
-      docs: z.array(z.record(z.any())).optional(),
-      index: z.string().optional(),
-      preference: z.string().optional(),
-      realtime: z.boolean().optional(),
-      refresh: z.boolean().optional(),
-      routing: z.string().optional(),
-      source: z.boolean().optional(),
-      sourceExcludes: z.array(z.string()).optional(),
-      sourceIncludes: z.array(z.string()).optional(),
-    
+  docs: z.array(z.record(z.any())).optional(),
+  index: z.string().optional(),
+  preference: z.string().optional(),
+  realtime: z.boolean().optional(),
+  refresh: z.boolean().optional(),
+  routing: z.string().optional(),
+  source: z.boolean().optional(),
+  sourceExcludes: z.array(z.string()).optional(),
+  sourceIncludes: z.array(z.string()).optional(),
 });
 
 type MultiGetParamsType = z.infer<typeof MultiGetParams>;
 export const registerMultiGetTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
+  server: McpServer,
+  esClient: Client,
 ) => {
   server.tool(
     "multi_get",
@@ -54,13 +51,22 @@ export const registerMultiGetTool: ToolRegistrationFunction = (
           _source_excludes: params.sourceExcludes,
           _source_includes: params.sourceIncludes,
         });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
       } catch (error) {
         logger.error("Failed to perform multi-get:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
       }
-    }
+    },
   );
-} 
+};

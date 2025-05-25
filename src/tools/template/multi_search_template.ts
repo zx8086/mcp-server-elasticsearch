@@ -6,23 +6,20 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-
 // Define the parameter schema type
 const MultiSearchTemplateParams = z.object({
-
-      searches: z.array(z.record(z.any())),
-      index: z.string().optional(),
-      maxConcurrentSearches: z.number().optional(),
-      ccsMinimizeRoundtrips: z.boolean().optional(),
-      restTotalHitsAsInt: z.boolean().optional(),
-      typedKeys: z.boolean().optional(),
-    
+  searches: z.array(z.record(z.any())),
+  index: z.string().optional(),
+  maxConcurrentSearches: z.number().optional(),
+  ccsMinimizeRoundtrips: z.boolean().optional(),
+  restTotalHitsAsInt: z.boolean().optional(),
+  typedKeys: z.boolean().optional(),
 });
 
 type MultiSearchTemplateParamsType = z.infer<typeof MultiSearchTemplateParams>;
 export const registerMultiSearchTemplateTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
+  server: McpServer,
+  esClient: Client,
 ) => {
   server.tool(
     "multi_search_template",
@@ -45,13 +42,22 @@ export const registerMultiSearchTemplateTool: ToolRegistrationFunction = (
           rest_total_hits_as_int: params.restTotalHitsAsInt,
           typed_keys: params.typedKeys,
         });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
       } catch (error) {
         logger.error("Failed to execute multi-search template:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
       }
-    }
+    },
   );
-} 
+};

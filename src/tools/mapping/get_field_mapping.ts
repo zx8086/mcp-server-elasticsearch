@@ -6,24 +6,21 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-
 // Define the parameter schema type
 const GetFieldMappingParams = z.object({
-
-      index: z.string().min(1, "Index is required"),
-      field: z.string().min(1, "Field name is required"),
-      includeDefaults: z.boolean().optional(),
-      local: z.boolean().optional(),
-      ignoreUnavailable: z.boolean().optional(),
-      allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.string().optional(),
-    
+  index: z.string().min(1, "Index is required"),
+  field: z.string().min(1, "Field name is required"),
+  includeDefaults: z.boolean().optional(),
+  local: z.boolean().optional(),
+  ignoreUnavailable: z.boolean().optional(),
+  allowNoIndices: z.boolean().optional(),
+  expandWildcards: z.string().optional(),
 });
 
 type GetFieldMappingParamsType = z.infer<typeof GetFieldMappingParams>;
 export const registerGetFieldMappingTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
+  server: McpServer,
+  esClient: Client,
 ) => {
   server.tool(
     "get_field_mapping",
@@ -48,13 +45,22 @@ export const registerGetFieldMappingTool: ToolRegistrationFunction = (
           allow_no_indices: params.allowNoIndices,
           expand_wildcards: params.expandWildcards,
         });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
       } catch (error) {
         logger.error("Failed to get field mapping:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
       }
-    }
+    },
   );
-} 
+};

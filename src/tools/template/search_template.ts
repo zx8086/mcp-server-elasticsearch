@@ -6,32 +6,29 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-
 // Define the parameter schema type
 const SearchTemplateParams = z.object({
-
-      index: z.string().optional(),
-      id: z.string().optional(),
-      source: z.string().optional(),
-      params: z.record(z.any()).optional(),
-      explain: z.boolean().optional(),
-      profile: z.boolean().optional(),
-      allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.string().optional(),
-      ignoreUnavailable: z.boolean().optional(),
-      ignoreThrottled: z.boolean().optional(),
-      preference: z.string().optional(),
-      routing: z.string().optional(),
-      scroll: z.string().optional(),
-      searchType: z.string().optional(),
-      typedKeys: z.boolean().optional(),
-    
+  index: z.string().optional(),
+  id: z.string().optional(),
+  source: z.string().optional(),
+  params: z.record(z.any()).optional(),
+  explain: z.boolean().optional(),
+  profile: z.boolean().optional(),
+  allowNoIndices: z.boolean().optional(),
+  expandWildcards: z.string().optional(),
+  ignoreUnavailable: z.boolean().optional(),
+  ignoreThrottled: z.boolean().optional(),
+  preference: z.string().optional(),
+  routing: z.string().optional(),
+  scroll: z.string().optional(),
+  searchType: z.string().optional(),
+  typedKeys: z.boolean().optional(),
 });
 
 type SearchTemplateParamsType = z.infer<typeof SearchTemplateParams>;
 export const registerSearchTemplateTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
+  server: McpServer,
+  esClient: Client,
 ) => {
   server.tool(
     "search_template",
@@ -56,15 +53,24 @@ export const registerSearchTemplateTool: ToolRegistrationFunction = (
     async (params: SearchTemplateParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.searchTemplate(params, {
-          opaqueId: 'search_template'
+          opaqueId: "search_template",
         });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
       } catch (error) {
         logger.error("Failed to execute search template:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
       }
-    }
+    },
   );
-} 
+};

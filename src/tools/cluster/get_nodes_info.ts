@@ -6,21 +6,18 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 import { ToolRegistrationFunction, SearchResult } from "../types.js";
 
-
 // Define the parameter schema type
 const GetNodesInfoParams = z.object({
-
-      nodeId: z.string().optional(),
-      metric: z.string().optional(),
-      flatSettings: z.boolean().optional(),
-      timeout: z.string().optional(),
-    
+  nodeId: z.string().optional(),
+  metric: z.string().optional(),
+  flatSettings: z.boolean().optional(),
+  timeout: z.string().optional(),
 });
 
 type GetNodesInfoParamsType = z.infer<typeof GetNodesInfoParams>;
 export const registerGetNodesInfoTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
+  server: McpServer,
+  esClient: Client,
 ) => {
   server.tool(
     "get_nodes_info",
@@ -33,21 +30,33 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (
     },
     async (params: GetNodesInfoParamsType): Promise<SearchResult> => {
       try {
-        const result = await esClient.nodes.info({
-          node_id: params.nodeId,
-          metric: params.metric,
-          flat_settings: params.flatSettings,
-          timeout: params.timeout,
-        }, {
-          opaqueId: 'get_nodes_info'
-        });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        const result = await esClient.nodes.info(
+          {
+            node_id: params.nodeId,
+            metric: params.metric,
+            flat_settings: params.flatSettings,
+            timeout: params.timeout,
+          },
+          {
+            opaqueId: "get_nodes_info",
+          },
+        );
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
       } catch (error) {
         logger.error("Failed to get nodes info:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
       }
-    }
+    },
   );
-} 
+};
