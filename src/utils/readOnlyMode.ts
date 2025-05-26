@@ -1,6 +1,7 @@
 /* src/utils/readOnlyMode.ts */
 
 import { logger } from './logger.js';
+import { SearchResult, TextContent } from '../tools/types.js';
 
 export interface ReadOnlyCheckResult {
   allowed: boolean;
@@ -139,18 +140,18 @@ export class ReadOnlyModeManager {
   }
 
   // Helper method to create standardized error responses
-  createBlockedResponse(toolName: string): { content: Array<{ type: string; text: string }> } {
+  createBlockedResponse(toolName: string): SearchResult {
     const check = this.checkOperation(toolName);
     return {
       content: [{
         type: "text",
         text: check.error || `Operation ${toolName} is blocked in read-only mode.`
-      }]
+      } as TextContent]
     };
   }
 
   // Helper method to create warning responses
-  createWarningResponse(toolName: string, originalResponse: any): { content: Array<{ type: string; text: string }> } {
+  createWarningResponse(toolName: string, originalResponse: SearchResult): SearchResult {
     const check = this.checkOperation(toolName);
     const content = Array.isArray(originalResponse.content) ? [...originalResponse.content] : [originalResponse.content];
     
@@ -158,7 +159,7 @@ export class ReadOnlyModeManager {
       content.unshift({
         type: "text",
         text: check.warning
-      });
+      } as TextContent);
     }
     
     return { content };

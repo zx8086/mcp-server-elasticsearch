@@ -5,20 +5,20 @@ import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const DeleteDocumentParams = z.object({
   index: z.string().min(1, "Index is required"),
   id: z.string().min(1, "Document ID is required"),
   routing: z.string().optional(),
-  refresh: z.string().optional(),
+  refresh: z.enum(["true", "false", "wait_for"]).optional(),
   version: z.number().optional(),
-  versionType: z.string().optional(),
+  versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(),
   ifSeqNo: z.number().optional(),
   ifPrimaryTerm: z.number().optional(),
   timeout: z.string().optional(),
-  waitForActiveShards: z.string().optional(),
+  waitForActiveShards: z.union([z.literal("all"), z.number().min(1).max(9)]).optional(),
 });
 
 type DeleteDocumentParamsType = z.infer<typeof DeleteDocumentParams>;
@@ -34,13 +34,13 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (
       index: z.string().min(1, "Index is required"),
       id: z.string().min(1, "Document ID is required"),
       routing: z.string().optional(),
-      refresh: z.string().optional(),
+      refresh: z.enum(["true", "false", "wait_for"]).optional(),
       version: z.number().optional(),
-      versionType: z.string().optional(),
+      versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(),
       ifSeqNo: z.number().optional(),
       ifPrimaryTerm: z.number().optional(),
       timeout: z.string().optional(),
-      waitForActiveShards: z.string().optional(),
+      waitForActiveShards: z.union([z.literal("all"), z.number().min(1).max(9)]).optional(),
     },
     async (params: DeleteDocumentParamsType): Promise<SearchResult> => {
       // Check read-only mode FIRST
@@ -70,7 +70,9 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (
           timeout: params.timeout,
           wait_for_active_shards: params.waitForActiveShards,
         });
-        const response = { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        const response: SearchResult = { 
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent] 
+        };
         
         // Add warning to response if in warning mode
         if (readOnlyCheck.warning) {
@@ -82,7 +84,9 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (
         logger.error("Failed to delete document:", {
           error: error instanceof Error ? error.message : String(error)
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return { 
+          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` } as TextContent] 
+        };
       }
     }
   );

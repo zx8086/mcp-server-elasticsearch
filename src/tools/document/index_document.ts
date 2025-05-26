@@ -5,14 +5,14 @@ import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const IndexDocumentParams = z.object({
   index: z.string().min(1, "Index is required"),
   id: z.string().optional(),
   document: z.record(z.any()),
-  refresh: z.string().optional(),
+  refresh: z.enum(["true", "false", "wait_for"]).optional(),
   routing: z.string().optional(),
   pipeline: z.string().optional(),
 });
@@ -30,7 +30,7 @@ export const registerIndexDocumentTool: ToolRegistrationFunction = (
       index: z.string().min(1, "Index is required"),
       id: z.string().optional(),
       document: z.record(z.any()),
-      refresh: z.string().optional(),
+      refresh: z.enum(["true", "false", "wait_for"]).optional(),
       routing: z.string().optional(),
       pipeline: z.string().optional(),
     },
@@ -59,7 +59,9 @@ export const registerIndexDocumentTool: ToolRegistrationFunction = (
         }, {
           opaqueId: 'index_document'
         });
-        const response = { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        const response: SearchResult = { 
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent] 
+        };
         
         if (readOnlyCheck.warning) {
           return readOnlyManager.createWarningResponse("index_document", response);
@@ -70,7 +72,9 @@ export const registerIndexDocumentTool: ToolRegistrationFunction = (
         logger.error("Failed to index document:", {
           error: error instanceof Error ? error.message : String(error)
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return { 
+          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` } as TextContent] 
+        };
       }
     }
   );

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const MultiSearchTemplateParams = z.object({
@@ -35,7 +35,7 @@ export const registerMultiSearchTemplateTool: ToolRegistrationFunction = (
     async (params: MultiSearchTemplateParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.msearchTemplate({
-          searches: params.searches,
+          body: params.searches,
           index: params.index,
           max_concurrent_searches: params.maxConcurrentSearches,
           ccs_minimize_roundtrips: params.ccsMinimizeRoundtrips,
@@ -43,7 +43,7 @@ export const registerMultiSearchTemplateTool: ToolRegistrationFunction = (
           typed_keys: params.typedKeys,
         });
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
         };
       } catch (error) {
         logger.error("Failed to execute multi-search template:", {
@@ -54,7 +54,7 @@ export const registerMultiSearchTemplateTool: ToolRegistrationFunction = (
             {
               type: "text",
               text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-            },
+            } as TextContent,
           ],
         };
       }

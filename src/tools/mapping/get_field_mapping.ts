@@ -4,7 +4,7 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const GetFieldMappingParams = z.object({
@@ -14,7 +14,7 @@ const GetFieldMappingParams = z.object({
   local: z.boolean().optional(),
   ignoreUnavailable: z.boolean().optional(),
   allowNoIndices: z.boolean().optional(),
-  expandWildcards: z.string().optional(),
+  expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
 });
 
 type GetFieldMappingParamsType = z.infer<typeof GetFieldMappingParams>;
@@ -32,7 +32,7 @@ export const registerGetFieldMappingTool: ToolRegistrationFunction = (
       local: z.boolean().optional(),
       ignoreUnavailable: z.boolean().optional(),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.string().optional(),
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
     },
     async (params: GetFieldMappingParamsType): Promise<SearchResult> => {
       try {
@@ -46,7 +46,7 @@ export const registerGetFieldMappingTool: ToolRegistrationFunction = (
           expand_wildcards: params.expandWildcards,
         });
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
         };
       } catch (error) {
         logger.error("Failed to get field mapping:", {
@@ -57,7 +57,7 @@ export const registerGetFieldMappingTool: ToolRegistrationFunction = (
             {
               type: "text",
               text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-            },
+            } as TextContent,
           ],
         };
       }

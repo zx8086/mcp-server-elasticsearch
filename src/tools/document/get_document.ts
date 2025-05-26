@@ -4,7 +4,7 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const GetDocumentParams = z.object({
@@ -18,7 +18,7 @@ const GetDocumentParams = z.object({
   realtime: z.boolean().optional(),
   refresh: z.boolean().optional(),
   version: z.number().optional(),
-  versionType: z.string().optional(),
+  versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(),
 });
 
 type GetDocumentParamsType = z.infer<typeof GetDocumentParams>;
@@ -41,7 +41,7 @@ export const registerGetDocumentTool: ToolRegistrationFunction = (
       realtime: z.boolean().optional(),
       refresh: z.boolean().optional(),
       version: z.number().optional(),
-      versionType: z.string().optional(),
+      versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(),
     },
     async (params: GetDocumentParamsType): Promise<SearchResult> => {
       try {
@@ -58,12 +58,12 @@ export const registerGetDocumentTool: ToolRegistrationFunction = (
           version: params.version,
           version_type: params.versionType,
         });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent] };
       } catch (error) {
         logger.error("Failed to get document:", {
           error: error instanceof Error ? error.message : String(error)
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` } as TextContent] };
       }
     }
   );

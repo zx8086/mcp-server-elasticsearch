@@ -4,18 +4,27 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const ReindexDocumentsParams = z.object({
-  source: z.record(z.any()),
-  dest: z.record(z.any()),
+  source: z.object({
+    index: z.string(),
+    query: z.record(z.any()).optional(),
+    size: z.number().optional(),
+    sort: z.array(z.record(z.any())).optional(),
+  }),
+  dest: z.object({
+    index: z.string(),
+    version_type: z.enum(["internal", "external", "external_gte"]).optional(),
+    op_type: z.enum(["index", "create"]).optional(),
+  }),
   script: z.record(z.any()).optional(),
-  conflicts: z.string().optional(),
+  conflicts: z.enum(["abort", "proceed"]).optional(),
   maxDocs: z.number().optional(),
   refresh: z.boolean().optional(),
   timeout: z.string().optional(),
-  waitForActiveShards: z.string().optional(),
+  waitForActiveShards: z.union([z.literal("all"), z.number().min(1).max(9)]).optional(),
   waitForCompletion: z.boolean().optional(),
   requestsPerSecond: z.number().optional(),
   scroll: z.string().optional(),
@@ -31,14 +40,23 @@ export const registerReindexDocumentsTool: ToolRegistrationFunction = (
     "reindex_documents",
     "Reindex documents in Elasticsearch",
     {
-      source: z.record(z.any()),
-      dest: z.record(z.any()),
+      source: z.object({
+        index: z.string(),
+        query: z.record(z.any()).optional(),
+        size: z.number().optional(),
+        sort: z.array(z.record(z.any())).optional(),
+      }),
+      dest: z.object({
+        index: z.string(),
+        version_type: z.enum(["internal", "external", "external_gte"]).optional(),
+        op_type: z.enum(["index", "create"]).optional(),
+      }),
       script: z.record(z.any()).optional(),
-      conflicts: z.string().optional(),
+      conflicts: z.enum(["abort", "proceed"]).optional(),
       maxDocs: z.number().optional(),
       refresh: z.boolean().optional(),
       timeout: z.string().optional(),
-      waitForActiveShards: z.string().optional(),
+      waitForActiveShards: z.union([z.literal("all"), z.number().min(1).max(9)]).optional(),
       waitForCompletion: z.boolean().optional(),
       requestsPerSecond: z.number().optional(),
       scroll: z.string().optional(),
@@ -61,7 +79,7 @@ export const registerReindexDocumentsTool: ToolRegistrationFunction = (
           slices: params.slices,
         });
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
         };
       } catch (error) {
         logger.error("Failed to reindex documents:", {
@@ -72,7 +90,7 @@ export const registerReindexDocumentsTool: ToolRegistrationFunction = (
             {
               type: "text",
               text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-            },
+            } as TextContent,
           ],
         };
       }

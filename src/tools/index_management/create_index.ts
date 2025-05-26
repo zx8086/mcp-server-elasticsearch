@@ -4,7 +4,7 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const CreateIndexParams = z.object({
@@ -14,7 +14,7 @@ const CreateIndexParams = z.object({
   settings: z.record(z.any()).optional(),
   timeout: z.string().optional(),
   masterTimeout: z.string().optional(),
-  waitForActiveShards: z.string().optional(),
+  waitForActiveShards: z.union([z.literal("all"), z.number().min(1).max(9)]).optional(),
 });
 
 type CreateIndexParamsType = z.infer<typeof CreateIndexParams>;
@@ -32,7 +32,7 @@ export const registerCreateIndexTool: ToolRegistrationFunction = (
       settings: z.record(z.any()).optional(),
       timeout: z.string().optional(),
       masterTimeout: z.string().optional(),
-      waitForActiveShards: z.string().optional(),
+      waitForActiveShards: z.union([z.literal("all"), z.number().min(1).max(9)]).optional(),
     },
     async (params: CreateIndexParamsType): Promise<SearchResult> => {
       try {
@@ -51,7 +51,7 @@ export const registerCreateIndexTool: ToolRegistrationFunction = (
           },
         );
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
         };
       } catch (error) {
         logger.error("Failed to create index:", {
@@ -62,7 +62,7 @@ export const registerCreateIndexTool: ToolRegistrationFunction = (
             {
               type: "text",
               text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-            },
+            } as TextContent,
           ],
         };
       }

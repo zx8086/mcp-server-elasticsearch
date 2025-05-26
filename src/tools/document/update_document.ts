@@ -5,7 +5,7 @@ import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const UpdateDocumentParams = z.object({
@@ -17,10 +17,10 @@ const UpdateDocumentParams = z.object({
   docAsUpsert: z.boolean().optional(),
   detectNoop: z.boolean().optional(),
   scriptedUpsert: z.boolean().optional(),
-  refresh: z.string().optional(),
+  refresh: z.enum(["true", "false", "wait_for"]).optional(),
   routing: z.string().optional(),
   timeout: z.string().optional(),
-  waitForActiveShards: z.string().optional(),
+  waitForActiveShards: z.union([z.literal("all"), z.number().min(1).max(9)]).optional(),
   ifSeqNo: z.number().optional(),
   ifPrimaryTerm: z.number().optional(),
 });
@@ -43,10 +43,10 @@ export const registerUpdateDocumentTool: ToolRegistrationFunction = (
       docAsUpsert: z.boolean().optional(),
       detectNoop: z.boolean().optional(),
       scriptedUpsert: z.boolean().optional(),
-      refresh: z.string().optional(),
+      refresh: z.enum(["true", "false", "wait_for"]).optional(),
       routing: z.string().optional(),
       timeout: z.string().optional(),
-      waitForActiveShards: z.string().optional(),
+      waitForActiveShards: z.union([z.literal("all"), z.number().min(1).max(9)]).optional(),
       ifSeqNo: z.number().optional(),
       ifPrimaryTerm: z.number().optional(),
     },
@@ -83,7 +83,9 @@ export const registerUpdateDocumentTool: ToolRegistrationFunction = (
         }, {
           opaqueId: 'update_document'
         });
-        const response = { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        const response: SearchResult = { 
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent] 
+        };
         
         if (readOnlyCheck.warning) {
           return readOnlyManager.createWarningResponse("update_document", response);
@@ -94,7 +96,9 @@ export const registerUpdateDocumentTool: ToolRegistrationFunction = (
         logger.error("Failed to update document:", {
           error: error instanceof Error ? error.message : String(error)
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return { 
+          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` } as TextContent] 
+        };
       }
     }
   );

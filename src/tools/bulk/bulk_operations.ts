@@ -5,7 +5,7 @@ import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const BulkOperationsParams = z.object({
@@ -54,14 +54,11 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (
       const hasGlobalIndex = !!params.index;
       const allDocsHaveIndex = params.operations.every((doc) => doc._index);
       if (!hasGlobalIndex && !allDocsHaveIndex) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: "Error: You must provide an 'index' parameter or ensure every operation document has a '_index' property.",
-            },
-          ],
-        };
+        const content: TextContent[] = [{
+          type: "text",
+          text: "Error: You must provide an 'index' parameter or ensure every operation document has a '_index' property."
+        }];
+        return { content } as unknown as SearchResult;
       }
 
       try {
@@ -103,30 +100,25 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (
           },
         );
 
-        const response = {
-          content: [
+        const content: TextContent[] = [{
+          type: "text",
+          text: JSON.stringify(
             {
-              type: "text",
-              text: JSON.stringify(
-                {
-                  total: result.total,
-                  successful: result.successful,
-                  failed: result.failed,
-                  time: result.time,
-                  bytes: result.bytes,
-                },
-                null,
-                2,
-              ),
+              total: result.total,
+              successful: result.successful,
+              failed: result.failed,
+              time: result.time,
+              bytes: result.bytes,
             },
-          ],
-        };
+            null,
+            2,
+          )
+        }];
+        const response: SearchResult = { content };
 
         if (readOnlyCheck.warning) {
-          return readOnlyManager.createWarningResponse(
-            "bulk_operations",
-            response,
-          );
+          const warningResponse = readOnlyManager.createWarningResponse("bulk_operations", response);
+          return warningResponse as unknown as SearchResult;
         }
 
         return response;
@@ -134,14 +126,11 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (
         logger.error("Failed to perform bulk operations:", {
           error: error instanceof Error ? error.message : String(error),
         });
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-            },
-          ],
-        };
+        const content: TextContent[] = [{
+          type: "text",
+          text: `Error: ${error instanceof Error ? error.message : String(error)}`
+        }];
+        return { content } as unknown as SearchResult;
       }
     },
   );

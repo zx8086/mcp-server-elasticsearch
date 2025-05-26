@@ -5,7 +5,7 @@ import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const DeleteIndexParams = z.object({
@@ -33,7 +33,7 @@ export const registerDeleteIndexTool: ToolRegistrationFunction = (
       masterTimeout: z.string().optional(),
       ignoreUnavailable: z.boolean().optional(),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.string().optional(),
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
     },
     async (params: DeleteIndexParamsType): Promise<SearchResult> => {
       // Check read-only mode with enhanced warning for destructive operation
@@ -60,8 +60,8 @@ export const registerDeleteIndexTool: ToolRegistrationFunction = (
           allow_no_indices: params.allowNoIndices,
           expand_wildcards: params.expandWildcards,
         });
-        const response = {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        const response: SearchResult = {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
         };
 
         if (readOnlyCheck.warning) {
@@ -81,7 +81,7 @@ export const registerDeleteIndexTool: ToolRegistrationFunction = (
             {
               type: "text",
               text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-            },
+            } as TextContent,
           ],
         };
       }

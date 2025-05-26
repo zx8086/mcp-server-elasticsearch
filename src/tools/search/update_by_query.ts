@@ -4,7 +4,7 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const UpdateByQueryParams = z.object({
@@ -12,15 +12,15 @@ const UpdateByQueryParams = z.object({
   query: z.record(z.any()),
   script: z.record(z.any()).optional(),
   maxDocs: z.number().optional(),
-  conflicts: z.string().optional(),
+  conflicts: z.enum(["abort", "proceed"]).optional(),
   refresh: z.boolean().optional(),
   timeout: z.string().optional(),
-  waitForActiveShards: z.string().optional(),
+  waitForActiveShards: z.union([z.literal("all"), z.number().min(1).max(9)]).optional(),
   waitForCompletion: z.boolean().optional(),
   requestsPerSecond: z.number().optional(),
   scroll: z.string().optional(),
   scrollSize: z.number().optional(),
-  searchType: z.string().optional(),
+  searchType: z.enum(["query_then_fetch", "dfs_query_then_fetch"]).optional(),
   searchTimeout: z.string().optional(),
   slices: z.number().optional(),
 });
@@ -38,15 +38,15 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (
       query: z.record(z.any()),
       script: z.record(z.any()).optional(),
       maxDocs: z.number().optional(),
-      conflicts: z.string().optional(),
+      conflicts: z.enum(["abort", "proceed"]).optional(),
       refresh: z.boolean().optional(),
       timeout: z.string().optional(),
-      waitForActiveShards: z.string().optional(),
+      waitForActiveShards: z.union([z.literal("all"), z.number().min(1).max(9)]).optional(),
       waitForCompletion: z.boolean().optional(),
       requestsPerSecond: z.number().optional(),
       scroll: z.string().optional(),
       scrollSize: z.number().optional(),
-      searchType: z.string().optional(),
+      searchType: z.enum(["query_then_fetch", "dfs_query_then_fetch"]).optional(),
       searchTimeout: z.string().optional(),
       slices: z.number().optional(),
     },
@@ -75,7 +75,7 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (
           },
         );
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
         };
       } catch (error) {
         logger.error("Failed to update by query:", {
@@ -86,7 +86,7 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (
             {
               type: "text",
               text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-            },
+            } as TextContent,
           ],
         };
       }

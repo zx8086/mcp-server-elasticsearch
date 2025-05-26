@@ -4,14 +4,14 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const IndexExistsParams = z.object({
   index: z.string().min(1, "Index is required"),
   ignoreUnavailable: z.boolean().optional(),
   allowNoIndices: z.boolean().optional(),
-  expandWildcards: z.string().optional(),
+  expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
   flatSettings: z.boolean().optional(),
   includeDefaults: z.boolean().optional(),
   local: z.boolean().optional(),
@@ -29,7 +29,7 @@ export const registerIndexExistsTool: ToolRegistrationFunction = (
       index: z.string().min(1, "Index is required"),
       ignoreUnavailable: z.boolean().optional(),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.string().optional(),
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
       flatSettings: z.boolean().optional(),
       includeDefaults: z.boolean().optional(),
       local: z.boolean().optional(),
@@ -45,7 +45,7 @@ export const registerIndexExistsTool: ToolRegistrationFunction = (
           include_defaults: params.includeDefaults,
           local: params.local,
         });
-        return { content: [{ type: "text", text: `Exists: ${exists}` }] };
+        return { content: [{ type: "text", text: `Exists: ${exists}` } as TextContent] };
       } catch (error) {
         logger.error("Failed to check if index exists:", {
           error: error instanceof Error ? error.message : String(error),
@@ -55,7 +55,7 @@ export const registerIndexExistsTool: ToolRegistrationFunction = (
             {
               type: "text",
               text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-            },
+            } as TextContent,
           ],
         };
       }

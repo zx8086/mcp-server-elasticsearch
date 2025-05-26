@@ -4,7 +4,7 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const DocumentExistsParams = z.object({
@@ -15,7 +15,7 @@ const DocumentExistsParams = z.object({
   realtime: z.boolean().optional(),
   refresh: z.boolean().optional(),
   version: z.number().optional(),
-  versionType: z.string().optional(),
+  versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(),
 });
 
 type DocumentExistsParamsType = z.infer<typeof DocumentExistsParams>;
@@ -35,7 +35,7 @@ export const registerDocumentExistsTool: ToolRegistrationFunction = (
       realtime: z.boolean().optional(),
       refresh: z.boolean().optional(),
       version: z.number().optional(),
-      versionType: z.string().optional(),
+      versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(),
     },
     async (params: DocumentExistsParamsType): Promise<SearchResult> => {
       try {
@@ -49,12 +49,12 @@ export const registerDocumentExistsTool: ToolRegistrationFunction = (
           version: params.version,
           version_type: params.versionType,
         });
-        return { content: [{ type: "text", text: `Exists: ${exists}` }] };
+        return { content: [{ type: "text", text: `Exists: ${exists}` } as TextContent] };
       } catch (error) {
         logger.error("Failed to check if document exists:", {
           error: error instanceof Error ? error.message : String(error)
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }] };
+        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` } as TextContent] };
       }
     }
   );

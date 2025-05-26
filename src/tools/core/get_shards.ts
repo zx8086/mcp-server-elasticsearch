@@ -4,7 +4,7 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const GetShardsParams = z.object({
@@ -48,14 +48,14 @@ export const registerGetShardsTool: ToolRegistrationFunction = (
           ip: shard.ip,
           node: shard.node,
         }));
-        const metadataFragment = {
+        const metadataFragment: TextContent = {
           type: "text",
           text: `Found ${shardsInfo.length} shards${index ? ` for index ${index}` : ""}`,
         };
         return {
           content: [
             metadataFragment,
-            { type: "text", text: JSON.stringify(shardsInfo, null, 2) },
+            { type: "text", text: JSON.stringify(shardsInfo, null, 2) } as TextContent,
           ],
         };
       } catch (error) {

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const FlushIndexParams = z.object({
@@ -30,7 +30,7 @@ export const registerFlushIndexTool: ToolRegistrationFunction = (
       index: z.string().min(1, "Index is required"),
       ignoreUnavailable: z.boolean().optional(),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.string().optional(),
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
       force: z.boolean().optional(),
       waitIfOngoing: z.boolean().optional(),
     },
@@ -45,7 +45,7 @@ export const registerFlushIndexTool: ToolRegistrationFunction = (
           wait_if_ongoing: params.waitIfOngoing,
         });
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
         };
       } catch (error) {
         logger.error("Failed to flush index:", {
@@ -56,7 +56,7 @@ export const registerFlushIndexTool: ToolRegistrationFunction = (
             {
               type: "text",
               text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-            },
+            } as TextContent,
           ],
         };
       }

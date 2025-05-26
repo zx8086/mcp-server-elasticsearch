@@ -4,7 +4,27 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolFunction, ToolParams, SearchResult } from "../types.js";
+import { ToolFunction, ToolParams, SearchResult, TextContent } from "../types.js";
+
+interface MappingResponse {
+  [key: string]: {
+    mappings: {
+      properties?: Record<string, { type: string }>;
+    };
+  };
+}
+
+interface SearchQueryBody {
+  from?: number;
+  size?: number;
+  aggs?: any;
+  highlight?: {
+    fields: Record<string, any>;
+    pre_tags: string[];
+    post_tags: string[];
+  };
+  [key: string]: unknown;
+}
 
 export const registerSearchTool: ToolFunction = (
   server: McpServer,
@@ -41,26 +61,26 @@ export const registerSearchTool: ToolFunction = (
     async ({ index, queryBody }: ToolParams): Promise<SearchResult> => {
       try {
         logger.debug("Searching index", { index, queryBody } as const);
-        let indexMappings = {};
+        let indexMappings: { properties?: Record<string, { type: string }> } = {};
         try {
-          const mappingResponse = await esClient.indices.getMapping({ index });
-          indexMappings = mappingResponse[index]?.mappings || {};
+          const mappingResponse = await esClient.indices.getMapping({ index }) as MappingResponse;
+          indexMappings = mappingResponse[index as string]?.mappings || {};
         } catch (mappingError) {
           logger.warn("Could not retrieve mappings for highlighting", {
             mappingError,
           });
         }
-        const searchRequest = { index, ...queryBody };
+        const typedQueryBody = queryBody as SearchQueryBody;
+        let searchRequest = { index, ...typedQueryBody };
         if (indexMappings.properties) {
-          const textFields = {};
+          const textFields: Record<string, any> = {};
           for (const [fieldName, fieldData] of Object.entries(
             indexMappings.properties,
           )) {
-            const fieldDataTyped = fieldData;
             if (
-              fieldDataTyped.type === "text" ||
-              fieldDataTyped.type === "search_as_you_type" ||
-              fieldDataTyped.type === "match_only_text"
+              fieldData.type === "text" ||
+              fieldData.type === "search_as_you_type" ||
+              fieldData.type === "match_only_text"
             ) {
               textFields[fieldName] = {
                 pre_tags: ["<em>"],
@@ -81,15 +101,15 @@ export const registerSearchTool: ToolFunction = (
         const result = await esClient.search(searchRequest, {
           opaqueId: "search",
         });
-        const from = queryBody.from || 0;
-        if (queryBody.size === 0 || queryBody.aggs) {
+        const from = typedQueryBody.from || 0;
+        if (typedQueryBody.size === 0 || typedQueryBody.aggs) {
           return {
             content: [
-              { type: "text", text: `Search results with aggregations:` },
+              { type: "text", text: `Search results with aggregations:` } as TextContent,
               {
                 type: "text",
                 text: JSON.stringify(result.aggregations || {}, null, 2),
-              },
+              } as TextContent,
             ],
           };
         }
@@ -111,13 +131,13 @@ export const registerSearchTool: ToolFunction = (
               content += `${field}: ${JSON.stringify(value)}\n`;
             }
           }
-          return { type: "text", text: content.trim() };
+          return { type: "text", text: content.trim() } as TextContent;
         });
         const totalHits =
           typeof result.hits.total === "number"
             ? result.hits.total
             : result.hits.total?.value || 0;
-        const metadataFragment = {
+        const metadataFragment: TextContent = {
           type: "text",
           text: `Total results: ${totalHits}, showing ${result.hits.hits.length} from position ${from}`,
         };
@@ -133,7 +153,7 @@ export const registerSearchTool: ToolFunction = (
             {
               type: "text",
               text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-            },
+            } as TextContent,
           ],
         };
       }

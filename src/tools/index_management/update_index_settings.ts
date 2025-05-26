@@ -4,7 +4,7 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const UpdateIndexSettingsParams = z.object({
@@ -15,7 +15,7 @@ const UpdateIndexSettingsParams = z.object({
   masterTimeout: z.string().optional(),
   ignoreUnavailable: z.boolean().optional(),
   allowNoIndices: z.boolean().optional(),
-  expandWildcards: z.string().optional(),
+  expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
   flatSettings: z.boolean().optional(),
 });
 
@@ -35,7 +35,7 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (
       masterTimeout: z.string().optional(),
       ignoreUnavailable: z.boolean().optional(),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.string().optional(),
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
       flatSettings: z.boolean().optional(),
     },
     async (params: UpdateIndexSettingsParamsType): Promise<SearchResult> => {
@@ -57,7 +57,7 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (
           },
         );
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
         };
       } catch (error) {
         logger.error("Failed to update index settings:", {
@@ -68,7 +68,7 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (
             {
               type: "text",
               text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-            },
+            } as TextContent,
           ],
         };
       }

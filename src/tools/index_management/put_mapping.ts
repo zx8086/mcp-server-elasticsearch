@@ -4,7 +4,7 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const PutMappingParams = z.object({
@@ -12,7 +12,7 @@ const PutMappingParams = z.object({
   properties: z.record(z.any()).optional(),
   runtime: z.record(z.any()).optional(),
   meta: z.record(z.any()).optional(),
-  dynamic: z.string().optional(),
+  dynamic: z.enum(["true", "false", "strict", "runtime"]).optional(),
   dateDetection: z.boolean().optional(),
   dynamicDateFormats: z.array(z.string()).optional(),
   dynamicTemplates: z.array(z.record(z.any())).optional(),
@@ -21,7 +21,7 @@ const PutMappingParams = z.object({
   masterTimeout: z.string().optional(),
   ignoreUnavailable: z.boolean().optional(),
   allowNoIndices: z.boolean().optional(),
-  expandWildcards: z.string().optional(),
+  expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
   writeIndexOnly: z.boolean().optional(),
 });
 
@@ -38,7 +38,7 @@ export const registerPutMappingTool: ToolRegistrationFunction = (
       properties: z.record(z.any()).optional(),
       runtime: z.record(z.any()).optional(),
       meta: z.record(z.any()).optional(),
-      dynamic: z.string().optional(),
+      dynamic: z.enum(["true", "false", "strict", "runtime"]).optional(),
       dateDetection: z.boolean().optional(),
       dynamicDateFormats: z.array(z.string()).optional(),
       dynamicTemplates: z.array(z.record(z.any())).optional(),
@@ -47,7 +47,7 @@ export const registerPutMappingTool: ToolRegistrationFunction = (
       masterTimeout: z.string().optional(),
       ignoreUnavailable: z.boolean().optional(),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.string().optional(),
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
       writeIndexOnly: z.boolean().optional(),
     },
     async (params: PutMappingParamsType): Promise<SearchResult> => {
@@ -70,7 +70,7 @@ export const registerPutMappingTool: ToolRegistrationFunction = (
           write_index_only: params.writeIndexOnly,
         });
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
         };
       } catch (error) {
         logger.error("Failed to update index mapping:", {
@@ -81,7 +81,7 @@ export const registerPutMappingTool: ToolRegistrationFunction = (
             {
               type: "text",
               text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-            },
+            } as TextContent,
           ],
         };
       }

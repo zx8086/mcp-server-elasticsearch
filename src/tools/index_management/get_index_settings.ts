@@ -4,7 +4,7 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema type
 const GetIndexSettingsParams = z.object({
@@ -12,7 +12,7 @@ const GetIndexSettingsParams = z.object({
   name: z.string().optional(),
   ignoreUnavailable: z.boolean().optional(),
   allowNoIndices: z.boolean().optional(),
-  expandWildcards: z.string().optional(),
+  expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
   flatSettings: z.boolean().optional(),
   includeDefaults: z.boolean().optional(),
   local: z.boolean().optional(),
@@ -32,7 +32,7 @@ export const registerGetIndexSettingsTool: ToolRegistrationFunction = (
       name: z.string().optional(),
       ignoreUnavailable: z.boolean().optional(),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.string().optional(),
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
       flatSettings: z.boolean().optional(),
       includeDefaults: z.boolean().optional(),
       local: z.boolean().optional(),
@@ -52,7 +52,7 @@ export const registerGetIndexSettingsTool: ToolRegistrationFunction = (
           master_timeout: params.masterTimeout,
         });
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
         };
       } catch (error) {
         logger.error("Failed to get index settings:", {
@@ -63,7 +63,7 @@ export const registerGetIndexSettingsTool: ToolRegistrationFunction = (
             {
               type: "text",
               text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-            },
+            } as TextContent,
           ],
         };
       }
