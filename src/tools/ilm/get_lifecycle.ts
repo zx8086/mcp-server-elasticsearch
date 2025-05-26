@@ -4,7 +4,7 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult } from "../types.js";
+import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
 
 // Define the parameter schema
 const GetLifecycleParams = z.object({
@@ -30,12 +30,12 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (
     async (params: GetLifecycleParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.ilm.getLifecycle({
-          policy: params.policy,
+          name: params.policy,
           master_timeout: params.masterTimeout,
           timeout: params.timeout,
         });
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
         };
       } catch (error) {
         logger.error("Failed to get lifecycle policies:", {
@@ -46,7 +46,7 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (
             {
               type: "text",
               text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-            },
+            } as TextContent,
           ],
         };
       }

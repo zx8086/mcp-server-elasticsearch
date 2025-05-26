@@ -8,6 +8,7 @@ import { Client } from "@elastic/elasticsearch";
 import type {
   ToolRegistrationFunction,
   SearchResult,
+  TextContent,
 } from "../types.js";
 
 // Define the parameter schema
@@ -30,12 +31,12 @@ export const registerDeleteLifecycleTool: ToolRegistrationFunction = (
   ): Promise<SearchResult> => {
     try {
       const result = await esClient.ilm.deleteLifecycle({
-        policy: params.policy,
+        name: params.policy,
         master_timeout: params.masterTimeout,
         timeout: params.timeout,
       });
       return {
-        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
       };
     } catch (error) {
       logger.error("Failed to delete lifecycle policy:", {
@@ -46,7 +47,7 @@ export const registerDeleteLifecycleTool: ToolRegistrationFunction = (
           {
             type: "text",
             text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-          },
+          } as TextContent,
         ],
       };
     }

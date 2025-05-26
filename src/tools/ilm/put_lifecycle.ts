@@ -8,6 +8,7 @@ import { Client } from "@elastic/elasticsearch";
 import type {
   ToolRegistrationFunction,
   SearchResult,
+  TextContent,
 } from "../types.js";
 
 // Define the parameter schema
@@ -31,13 +32,13 @@ export const registerPutLifecycleTool: ToolRegistrationFunction = (
   ): Promise<SearchResult> => {
     try {
       const result = await esClient.ilm.putLifecycle({
-        policy: params.policy,
+        name: params.policy,
         body: params.body,
         master_timeout: params.masterTimeout,
         timeout: params.timeout,
       });
       return {
-        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
       };
     } catch (error) {
       logger.error("Failed to put lifecycle policy:", {
@@ -48,7 +49,7 @@ export const registerPutLifecycleTool: ToolRegistrationFunction = (
           {
             type: "text",
             text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-          },
+          } as TextContent,
         ],
       };
     }
