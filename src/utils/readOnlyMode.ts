@@ -41,7 +41,9 @@ export const DESTRUCTIVE_TOOLS = new Set([
   // ILM destructive operations
   'ilm_delete_lifecycle',
   'ilm_move_to_step',
-  'ilm_migrate_to_data_tiers'
+  'ilm_migrate_to_data_tiers',
+  // Enrich destructive operations
+  'enrich_delete_policy'
 ]);
 
 export const WRITE_TOOLS = new Set([
@@ -61,7 +63,10 @@ export const WRITE_TOOLS = new Set([
   'ilm_remove_policy',
   'ilm_retry',
   'ilm_start',
-  'ilm_stop'
+  'ilm_stop',
+  // Enrich write operations
+  'enrich_put_policy',
+  'enrich_execute_policy'
 ]);
 
 export const DELETE_TOOLS = new Set([
@@ -71,7 +76,9 @@ export const DELETE_TOOLS = new Set([
   'delete_alias',
   'delete_index_template',
   // ILM delete operations
-  'ilm_delete_lifecycle'
+  'ilm_delete_lifecycle',
+  // Enrich delete operations
+  'enrich_delete_policy'
 ]);
 
 export class ReadOnlyModeManager {

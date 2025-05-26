@@ -84,6 +84,13 @@ import { registerRetryTool } from "./ilm/retry.js";
 import { registerStartTool } from "./ilm/start.js";
 import { registerStopTool } from "./ilm/stop.js";
 
+// Enrich Tools (Get Policy, Put Policy, Delete Policy, Execute Policy, Stats)
+import { registerEnrichGetPolicyTool } from "./enrich/get_policy.js";
+import { registerEnrichPutPolicyTool } from "./enrich/put_policy.js";
+import { registerEnrichDeletePolicyTool } from "./enrich/delete_policy.js";
+import { registerEnrichExecutePolicyTool } from "./enrich/execute_policy.js";
+import { registerEnrichStatsTool } from "./enrich/stats.js";
+
 export function registerAllTools(server: McpServer, esClient: Client) {
   registerListIndicesTool(server, esClient);
   registerGetMappingsTool(server, esClient);
@@ -154,4 +161,11 @@ export function registerAllTools(server: McpServer, esClient: Client) {
   registerRetryTool(server, esClient);
   registerStartTool(server, esClient);
   registerStopTool(server, esClient);
+
+  // Register Enrich Tools
+  registerEnrichGetPolicyTool(server, esClient);
+  registerEnrichPutPolicyTool(server, esClient);
+  registerEnrichDeletePolicyTool(server, esClient);
+  registerEnrichExecutePolicyTool(server, esClient);
+  registerEnrichStatsTool(server, esClient);
 } 
