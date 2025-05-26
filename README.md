@@ -10,7 +10,7 @@ This is an enhancement of the Official Elastic MCP Server with the four tools (C
 
 ## 🚀 Key Features
 
-- **🔧 Comprehensive Tooling**: 50+ Elasticsearch operations including search, indexing, cluster management, and analytics
+- **🔧 Comprehensive Tooling**: 60+ Elasticsearch operations including search, indexing, cluster management, and analytics
 - **⚙️ Advanced Configuration**: Type-safe configuration system with environment variable validation
 - **🔒 Security Controls**: Read-only mode with strict/warning options for safe production monitoring
 - **📊 Rich Search**: Advanced search with automatic highlighting, aggregations, and SQL support
@@ -307,13 +307,13 @@ READ_ONLY_STRICT_MODE=false
 
 ### Document Operations
 - **`get_document`** - Retrieve documents by ID
-- **`index_document`** - Create or update documents
-- **`update_document`** - Update existing documents
-- **`delete_document`** - Delete documents
+- **`index_document`** - Create or update documents *(Write Operation)*
+- **`update_document`** - Update existing documents *(Write Operation)*
+- **`delete_document`** - Delete documents *(Destructive Operation)*
 - **`document_exists`** - Check if documents exist
 
 ### Bulk Operations
-- **`bulk_operations`** - Efficient bulk create/update/delete
+- **`bulk_operations`** - Efficient bulk create/update/delete *(Write/Destructive Operation)*
 - **`multi_get`** - Retrieve multiple documents
 
 ### Search & Analytics
@@ -321,17 +321,38 @@ READ_ONLY_STRICT_MODE=false
 - **`count_documents`** - Count matching documents
 - **`scroll_search`** - Handle large result sets
 - **`multi_search`** - Execute multiple searches
-- **`update_by_query`** - Bulk document updates
-- **`delete_by_query`** - Bulk document deletion
+- **`update_by_query`** - Bulk document updates *(Write Operation)*
+- **`delete_by_query`** - Bulk document deletion *(Destructive Operation)*
+- **`clear_scroll`** - Clear scroll contexts to free resources
 
 ### Index Management
-- **`create_index`** - Create new indices
-- **`delete_index`** - Delete indices
+- **`create_index`** - Create new indices *(Write Operation)*
+- **`delete_index`** - Delete indices *(Destructive Operation)*
 - **`index_exists`** - Check index existence
 - **`get_index`** - Get index information
-- **`update_index_settings`** - Modify index settings
-- **`refresh_index`** - Force index refresh
-- **`reindex_documents`** - Copy/move data between indices
+- **`get_index_settings`** - Get index settings
+- **`update_index_settings`** - Modify index settings *(Write Operation)*
+- **`put_mapping`** - Update index mappings *(Write Operation)*
+- **`refresh_index`** - Force index refresh *(Write Operation)*
+- **`flush_index`** - Force index flush *(Write Operation)*
+- **`reindex_documents`** - Copy/move data between indices *(Write Operation)*
+
+### Template Management
+- **`search_template`** - Execute stored search templates
+- **`multi_search_template`** - Execute multiple search templates
+- **`get_index_template`** - Get index template definitions
+- **`put_index_template`** - Create or update index templates *(Write Operation)*
+- **`delete_index_template`** - Delete index templates *(Destructive Operation)*
+
+### Analytics & Term Analysis
+- **`get_term_vectors`** - Get term vectors for documents
+- **`get_multi_term_vectors`** - Get term vectors for multiple documents
+
+### Index Aliases
+- **`get_aliases`** - Get index aliases
+- **`put_alias`** - Create index aliases *(Write Operation)*
+- **`delete_alias`** - Delete index aliases *(Destructive Operation)*
+- **`update_aliases`** - Update multiple aliases atomically *(Write Operation)*
 
 ### Cluster Management
 - **`get_cluster_health`** - Cluster health status
@@ -339,11 +360,30 @@ READ_ONLY_STRICT_MODE=false
 - **`get_nodes_info`** - Node information
 - **`get_nodes_stats`** - Node statistics
 
-### Advanced Features
-- **`get_term_vectors`** - Analyze document terms
-- **`search_template`** - Use search templates
-- **`translate_sql_query`** - Convert SQL to DSL
-- **`get_aliases`** - Manage index aliases
+### Field Mapping & SQL Management
+- **`get_field_mapping`** - Get specific field mappings
+- **`clear_sql_cursor`** - Clear SQL cursors
+- **`translate_sql_query`** - Convert SQL to Elasticsearch DSL
+
+### Index Lifecycle Management (ILM)
+- **`ilm_get_lifecycle`** - Get lifecycle policies
+- **`ilm_put_lifecycle`** - Create or update lifecycle policies *(Write Operation)*
+- **`ilm_delete_lifecycle`** - Delete lifecycle policies *(Destructive Operation)*
+- **`ilm_explain_lifecycle`** - Explain lifecycle state of indices
+- **`ilm_get_status`** - Get ILM status
+- **`ilm_start`** - Start ILM plugin *(Write Operation)*
+- **`ilm_stop`** - Stop ILM plugin *(Write Operation)*
+- **`ilm_retry`** - Retry failed lifecycle steps *(Write Operation)*
+- **`ilm_remove_policy`** - Remove policies from indices *(Write Operation)*
+- **`ilm_move_to_step`** - Manually move index to lifecycle step *(Destructive Operation)*
+- **`ilm_migrate_to_data_tiers`** - Migrate to data tiers *(Destructive Operation)*
+
+### Enrich Policies
+- **`enrich_get_policy`** - Get enrich policy information
+- **`enrich_put_policy`** - Create enrich policies *(Write Operation)*
+- **`enrich_delete_policy`** - Delete enrich policies *(Destructive Operation)*
+- **`enrich_execute_policy`** - Execute enrich policies *(Write Operation)*
+- **`enrich_stats`** - Get enrich statistics
 
 ## 💡 Usage Examples
 
@@ -457,7 +497,11 @@ src/
 │   ├── bulk/              # Bulk operations
 │   ├── analytics/         # Analytics and term vectors
 │   ├── alias/             # Index alias management
-│   └── template/          # Template management
+│   ├── template/          # Template management
+│   ├── advanced/          # Advanced operations
+│   ├── mapping/           # Field mapping tools
+│   ├── ilm/               # Index Lifecycle Management
+│   └── enrich/            # Enrich policies
 └── utils/
     ├── logger.ts          # MCP-compatible logging system
     └── readOnlyMode.ts    # Read-only mode management
