@@ -71,6 +71,19 @@ import { registerGetNodesStatsTool } from "./cluster/get_nodes_stats.js";
 import { registerGetFieldMappingTool } from "./mapping/get_field_mapping.js";
 import { registerClearSqlCursorTool } from "./mapping/clear_sql_cursor.js";
 
+// ILM Tools (Index Lifecycle Management)
+import { registerDeleteLifecycleTool } from "./ilm/delete_lifecycle.js";
+import { registerExplainLifecycleTool } from "./ilm/explain_lifecycle.js";
+import { registerGetLifecycleTool } from "./ilm/get_lifecycle.js";
+import { registerGetStatusTool } from "./ilm/get_status.js";
+import { registerMigrateToDataTiersTool } from "./ilm/migrate_to_data_tiers.js";
+import { registerMoveToStepTool } from "./ilm/move_to_step.js";
+import { registerPutLifecycleTool } from "./ilm/put_lifecycle.js";
+import { registerRemovePolicyTool } from "./ilm/remove_policy.js";
+import { registerRetryTool } from "./ilm/retry.js";
+import { registerStartTool } from "./ilm/start.js";
+import { registerStopTool } from "./ilm/stop.js";
+
 export function registerAllTools(server: McpServer, esClient: Client) {
   registerListIndicesTool(server, esClient);
   registerGetMappingsTool(server, esClient);
@@ -128,4 +141,17 @@ export function registerAllTools(server: McpServer, esClient: Client) {
 
   registerGetFieldMappingTool(server, esClient);
   registerClearSqlCursorTool(server, esClient);
+
+  // Register ILM Tools
+  registerDeleteLifecycleTool(server, esClient);
+  registerExplainLifecycleTool(server, esClient);
+  registerGetLifecycleTool(server, esClient);
+  registerGetStatusTool(server, esClient);
+  registerMigrateToDataTiersTool(server, esClient);
+  registerMoveToStepTool(server, esClient);
+  registerPutLifecycleTool(server, esClient);
+  registerRemovePolicyTool(server, esClient);
+  registerRetryTool(server, esClient);
+  registerStartTool(server, esClient);
+  registerStopTool(server, esClient);
 } 

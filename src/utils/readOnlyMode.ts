@@ -37,7 +37,11 @@ export const DESTRUCTIVE_TOOLS = new Set([
   'put_index_template',
   'delete_index_template',
   'refresh_index',
-  'flush_index'
+  'flush_index',
+  // ILM destructive operations
+  'ilm_delete_lifecycle',
+  'ilm_move_to_step',
+  'ilm_migrate_to_data_tiers'
 ]);
 
 export const WRITE_TOOLS = new Set([
@@ -51,7 +55,13 @@ export const WRITE_TOOLS = new Set([
   'create_index',
   'put_mapping',
   'update_index_settings',
-  'reindex_documents'
+  'reindex_documents',
+  // ILM write operations
+  'ilm_put_lifecycle',
+  'ilm_remove_policy',
+  'ilm_retry',
+  'ilm_start',
+  'ilm_stop'
 ]);
 
 export const DELETE_TOOLS = new Set([
@@ -59,7 +69,9 @@ export const DELETE_TOOLS = new Set([
   'delete_index',
   'delete_by_query',
   'delete_alias',
-  'delete_index_template'
+  'delete_index_template',
+  // ILM delete operations
+  'ilm_delete_lifecycle'
 ]);
 
 export class ReadOnlyModeManager {
