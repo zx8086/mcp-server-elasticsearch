@@ -91,6 +91,12 @@ import { registerEnrichDeletePolicyTool } from "./enrich/delete_policy.js";
 import { registerEnrichExecutePolicyTool } from "./enrich/execute_policy.js";
 import { registerEnrichStatsTool } from "./enrich/stats.js";
 
+// Autoscaling Tools (Get Policy, Put Policy, Delete Policy, Get Capacity)
+import { registerAutoscalingGetPolicyTool } from "./autoscaling/get_policy.js";
+import { registerAutoscalingPutPolicyTool } from "./autoscaling/put_policy.js";
+import { registerAutoscalingDeletePolicyTool } from "./autoscaling/delete_policy.js";
+import { registerAutoscalingGetCapacityTool } from "./autoscaling/get_capacity.js";
+
 export function registerAllTools(server: McpServer, esClient: Client) {
   registerListIndicesTool(server, esClient);
   registerGetMappingsTool(server, esClient);
@@ -168,4 +174,10 @@ export function registerAllTools(server: McpServer, esClient: Client) {
   registerEnrichDeletePolicyTool(server, esClient);
   registerEnrichExecutePolicyTool(server, esClient);
   registerEnrichStatsTool(server, esClient);
+
+  // Register Autoscaling Tools
+  registerAutoscalingGetPolicyTool(server, esClient);
+  registerAutoscalingPutPolicyTool(server, esClient);
+  registerAutoscalingDeletePolicyTool(server, esClient);
+  registerAutoscalingGetCapacityTool(server, esClient);
 } 

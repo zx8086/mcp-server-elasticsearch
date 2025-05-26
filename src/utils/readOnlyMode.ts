@@ -43,7 +43,9 @@ export const DESTRUCTIVE_TOOLS = new Set([
   'ilm_move_to_step',
   'ilm_migrate_to_data_tiers',
   // Enrich destructive operations
-  'enrich_delete_policy'
+  'enrich_delete_policy',
+  // Autoscaling destructive operations
+  'autoscaling_delete_policy'
 ]);
 
 export const WRITE_TOOLS = new Set([
@@ -66,7 +68,9 @@ export const WRITE_TOOLS = new Set([
   'ilm_stop',
   // Enrich write operations
   'enrich_put_policy',
-  'enrich_execute_policy'
+  'enrich_execute_policy',
+  // Autoscaling write operations
+  'autoscaling_put_policy'
 ]);
 
 export const DELETE_TOOLS = new Set([
@@ -78,7 +82,9 @@ export const DELETE_TOOLS = new Set([
   // ILM delete operations
   'ilm_delete_lifecycle',
   // Enrich delete operations
-  'enrich_delete_policy'
+  'enrich_delete_policy',
+  // Autoscaling delete operations
+  'autoscaling_delete_policy'
 ]);
 
 export class ReadOnlyModeManager {
