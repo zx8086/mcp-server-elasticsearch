@@ -102,6 +102,18 @@ import { registerListTasksTool } from "./tasks/list_tasks.js";
 import { registerGetTaskTool } from "./tasks/get_task.js";
 import { registerCancelTaskTool } from "./tasks/cancel_task.js";
 
+// Indices Analysis Tools (Field Usage Stats, Disk Usage, Data Lifecycle Stats, Enhanced Index Info)
+import { registerFieldUsageStatsTool } from "./indices/field_usage_stats.js";
+import { registerDiskUsageTool } from "./indices/disk_usage.js";
+import { registerGetDataLifecycleStatsTool } from "./indices/get_data_lifecycle_stats.js";
+import { registerGetIndexInfoTool } from "./indices/get_index_info.js";
+import { registerGetIndexSettingsAdvancedTool } from "./indices/get_index_settings_advanced.js";
+import { registerRolloverTool } from "./indices/rollover.js";
+import { registerExistsAliasTool } from "./indices/exists_alias.js";
+import { registerExistsIndexTemplateTool } from "./indices/exists_index_template.js";
+import { registerExistsTemplateTool } from "./indices/exists_template.js";
+import { registerExplainDataLifecycleTool } from "./indices/explain_data_lifecycle.js";
+
 export function registerAllTools(server: McpServer, esClient: Client) {
   registerListIndicesTool(server, esClient);
   registerGetMappingsTool(server, esClient);
@@ -190,4 +202,16 @@ export function registerAllTools(server: McpServer, esClient: Client) {
   registerListTasksTool(server, esClient);
   registerGetTaskTool(server, esClient);
   registerCancelTaskTool(server, esClient);
+
+  // Register Indices Analysis Tools
+  registerFieldUsageStatsTool(server, esClient);
+  registerDiskUsageTool(server, esClient);
+  registerGetDataLifecycleStatsTool(server, esClient);
+  registerGetIndexInfoTool(server, esClient);
+  registerGetIndexSettingsAdvancedTool(server, esClient);
+  registerRolloverTool(server, esClient);
+  registerExistsAliasTool(server, esClient);
+  registerExistsIndexTemplateTool(server, esClient);
+  registerExistsTemplateTool(server, esClient);
+  registerExplainDataLifecycleTool(server, esClient);
 } 

@@ -60,6 +60,7 @@ export const WRITE_TOOLS = new Set([
   'put_mapping',
   'update_index_settings',
   'reindex_documents',
+  'rollover',
   // ILM write operations
   'ilm_put_lifecycle',
   'ilm_remove_policy',
