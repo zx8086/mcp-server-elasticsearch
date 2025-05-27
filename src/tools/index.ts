@@ -97,6 +97,11 @@ import { registerAutoscalingPutPolicyTool } from "./autoscaling/put_policy.js";
 import { registerAutoscalingDeletePolicyTool } from "./autoscaling/delete_policy.js";
 import { registerAutoscalingGetCapacityTool } from "./autoscaling/get_capacity.js";
 
+// Task Tools (List Tasks, Get Task, Cancel Task)
+import { registerListTasksTool } from "./tasks/list_tasks.js";
+import { registerGetTaskTool } from "./tasks/get_task.js";
+import { registerCancelTaskTool } from "./tasks/cancel_task.js";
+
 export function registerAllTools(server: McpServer, esClient: Client) {
   registerListIndicesTool(server, esClient);
   registerGetMappingsTool(server, esClient);
@@ -180,4 +185,9 @@ export function registerAllTools(server: McpServer, esClient: Client) {
   registerAutoscalingPutPolicyTool(server, esClient);
   registerAutoscalingDeletePolicyTool(server, esClient);
   registerAutoscalingGetCapacityTool(server, esClient);
+
+  // Register Task Tools
+  registerListTasksTool(server, esClient);
+  registerGetTaskTool(server, esClient);
+  registerCancelTaskTool(server, esClient);
 } 

@@ -1,0 +1,56 @@
+/* src/tools/tasks/get_task.ts */
+
+import { z } from "zod";
+import { logger } from "../../utils/logger.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "@elastic/elasticsearch";
+import { ToolRegistrationFunction, SearchResult } from "../types.js";
+
+// Define the parameter schema
+const GetTaskParams = z.object({
+  taskId: z.string().min(1, "Task ID is required"),
+  timeout: z.union([z.string(), z.number(), z.literal(-1), z.literal(0)]).optional(),
+  waitForCompletion: z.boolean().optional(),
+});
+
+type GetTaskParamsType = z.infer<typeof GetTaskParams>;
+
+export const registerGetTaskTool: ToolRegistrationFunction = (
+  server: McpServer,
+  esClient: Client,
+) => {
+  server.tool(
+    "get_task",
+    "Get task information. Get information about a task currently running in the cluster.",
+    {
+      taskId: z.string().min(1, "Task ID is required"),
+      timeout: z.union([z.string(), z.number(), z.literal(-1), z.literal(0)]).optional(),
+      waitForCompletion: z.boolean().optional(),
+    },
+    async (params: GetTaskParamsType): Promise<SearchResult> => {
+      try {
+        const result = await esClient.tasks.get({
+          task_id: params.taskId,
+          timeout: params.timeout,
+          wait_for_completion: params.waitForCompletion,
+        });
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
+      } catch (error) {
+        logger.error("Failed to get task information:", {
+          error: error instanceof Error ? error.message : String(error),
+          taskId: params.taskId,
+        });
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
+      }
+    },
+  );
+};
