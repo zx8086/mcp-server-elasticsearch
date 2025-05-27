@@ -16,16 +16,7 @@ const GetIndexInfoParams = z.object({
   includeDefaults: z.boolean().optional(),
   local: z.boolean().optional(),
   masterTimeout: z.string().optional(),
-  features: z.union([
-    z.object({
-      name: z.string(),
-      description: z.string(),
-    }),
-    z.array(z.object({
-      name: z.string(),
-      description: z.string(),
-    }))
-  ]).optional(),
+  features: z.enum(["aliases", "mappings", "settings"]).or(z.array(z.enum(["aliases", "mappings", "settings"]))).optional(),
 });
 
 type GetIndexInfoParamsType = z.infer<typeof GetIndexInfoParams>;
@@ -46,16 +37,7 @@ export const registerGetIndexInfoTool: ToolRegistrationFunction = (
       includeDefaults: z.boolean().optional(),
       local: z.boolean().optional(),
       masterTimeout: z.string().optional(),
-      features: z.union([
-        z.object({
-          name: z.string(),
-          description: z.string(),
-        }),
-        z.array(z.object({
-          name: z.string(),
-          description: z.string(),
-        }))
-      ]).optional(),
+      features: z.enum(["aliases", "mappings", "settings"]).or(z.array(z.enum(["aliases", "mappings", "settings"]))).optional(),
     },
     async (params: GetIndexInfoParamsType): Promise<SearchResult> => {
       try {
