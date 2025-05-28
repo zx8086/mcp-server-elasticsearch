@@ -8,6 +8,7 @@ import { registerListIndicesTool } from "./core/list_indices.js";
 import { registerGetMappingsTool } from "./core/get_mappings.js";
 import { registerSearchTool } from "./core/search.js";
 import { registerGetShardsTool } from "./core/get_shards.js";
+import { registerIndicesSummaryTool } from "./core/indices_summary.js";
 
 // Document Tools (Index Document, Get Document, Update Document, Delete Document, Document Exists)
 import { registerIndexDocumentTool } from "./document/index_document.js";
@@ -114,11 +115,29 @@ import { registerExistsIndexTemplateTool } from "./indices/exists_index_template
 import { registerExistsTemplateTool } from "./indices/exists_template.js";
 import { registerExplainDataLifecycleTool } from "./indices/explain_data_lifecycle.js";
 
+// Watcher Tools
+import {
+  registerWatcherGetWatchTool,
+  registerWatcherPutWatchTool,
+  registerWatcherDeleteWatchTool,
+  registerWatcherQueryWatchesTool,
+  registerWatcherActivateWatchTool,
+  registerWatcherDeactivateWatchTool,
+  registerWatcherAckWatchTool,
+  registerWatcherExecuteWatchTool,
+  registerWatcherStartTool,
+  registerWatcherStopTool,
+  registerWatcherGetSettingsTool,
+  registerWatcherUpdateSettingsTool,
+  registerWatcherStatsTool
+} from "./watcher/index.js";
+
 export function registerAllTools(server: McpServer, esClient: Client) {
   registerListIndicesTool(server, esClient);
   registerGetMappingsTool(server, esClient);
   registerSearchTool(server, esClient);
   registerGetShardsTool(server, esClient);
+  registerIndicesSummaryTool(server, esClient);
 
   registerIndexDocumentTool(server, esClient);
   registerGetDocumentTool(server, esClient);
@@ -214,4 +233,19 @@ export function registerAllTools(server: McpServer, esClient: Client) {
   registerExistsIndexTemplateTool(server, esClient);
   registerExistsTemplateTool(server, esClient);
   registerExplainDataLifecycleTool(server, esClient);
+
+  // Register Watcher Tools
+  registerWatcherGetWatchTool(server, esClient);
+  registerWatcherPutWatchTool(server, esClient);
+  registerWatcherDeleteWatchTool(server, esClient);
+  registerWatcherQueryWatchesTool(server, esClient);
+  registerWatcherActivateWatchTool(server, esClient);
+  registerWatcherDeactivateWatchTool(server, esClient);
+  registerWatcherAckWatchTool(server, esClient);
+  registerWatcherExecuteWatchTool(server, esClient);
+  registerWatcherStartTool(server, esClient);
+  registerWatcherStopTool(server, esClient);
+  registerWatcherGetSettingsTool(server, esClient);
+  registerWatcherUpdateSettingsTool(server, esClient);
+  registerWatcherStatsTool(server, esClient);
 } 

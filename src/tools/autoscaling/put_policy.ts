@@ -15,7 +15,7 @@ const PutAutoscalingPolicyParams = z.object({
   name: z.string().min(1, "Policy name is required"),
   policy: z.object({
     roles: z.array(z.string()),
-    deciders: z.record(z.any()),
+    deciders: z.record(z.any())
   }),
   masterTimeout: z.string().optional(),
   timeout: z.string().optional(),
@@ -35,7 +35,10 @@ export const registerAutoscalingPutPolicyTool: ToolRegistrationFunction = (
     try {
       const result = await esClient.autoscaling.putAutoscalingPolicy({
         name: params.name,
-        policy: params.policy,
+        policy: {
+          roles: params.policy.roles,
+          deciders: params.policy.deciders
+        },
         master_timeout: params.masterTimeout,
         timeout: params.timeout,
       });
@@ -64,8 +67,8 @@ export const registerAutoscalingPutPolicyTool: ToolRegistrationFunction = (
       name: z.string().min(1, "Policy name is required"),
       policy: z.object({
         roles: z.array(z.string()),
-        deciders: z.record(z.any()),
-      }),
+        deciders: z.record(z.any())
+      }).strict(),
       masterTimeout: z.string().optional(),
       timeout: z.string().optional(),
     },
