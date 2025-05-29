@@ -85,22 +85,23 @@ export const registerRolloverTool: ToolRegistrationFunction = (
 ) => {
   // Implementation function without read-only checks
   const rolloverImpl = async (
-    params: RolloverParamsType,
+    params: any,
     extra: Record<string, unknown>,
   ): Promise<SearchResult> => {
+    const typedParams = params as RolloverParamsType;
     try {
       const result = await esClient.indices.rollover({
-        alias: params.alias,
-        new_index: params.new_index,
-        aliases: params.aliases,
-        conditions: params.conditions,
-        mappings: params.mappings,
-        settings: params.settings,
-        dry_run: params.dry_run,
-        master_timeout: params.master_timeout,
-        timeout: params.timeout,
-        wait_for_active_shards: params.wait_for_active_shards,
-        lazy: params.lazy,
+        alias: typedParams.alias,
+        new_index: typedParams.new_index,
+        aliases: typedParams.aliases,
+        conditions: typedParams.conditions,
+        mappings: typedParams.mappings,
+        settings: typedParams.settings,
+        dry_run: typedParams.dry_run,
+        master_timeout: typedParams.master_timeout,
+        timeout: typedParams.timeout,
+        wait_for_active_shards: typedParams.wait_for_active_shards,
+        lazy: typedParams.lazy,
       });
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
@@ -151,42 +152,6 @@ export const registerRolloverTool: ToolRegistrationFunction = (
         max_primary_shard_docs: z.number().optional(),
         min_primary_shard_docs: z.number().optional(),
       }).optional(),
-      mappings: z.object({
-        _all: z.object({
-          analyzer: z.string().optional(),
-          enabled: z.boolean(),
-          omit_norms: z.boolean().optional(),
-          search_analyzer: z.string().optional(),
-          search_quote_analyzer: z.string().optional(),
-          store: z.boolean().optional(),
-          term_vector: z.enum(["no", "yes", "with_positions", "with_offsets", "with_positions_offsets", "with_positions_payloads", "with_positions_offsets_payloads"]).optional(),
-        }).optional(),
-        date_detection: z.boolean().optional(),
-        dynamic: z.enum(["true", "false", "strict", "runtime"]).optional(),
-        dynamic_date_formats: z.array(z.string()).optional(),
-        dynamic_templates: z.array(z.record(z.any())).optional(),
-        _field_names: z.object({
-          enabled: z.boolean(),
-        }).optional(),
-        _meta: z.record(z.any()).optional(),
-        numeric_detection: z.boolean().optional(),
-        properties: z.record(z.any()).optional(),
-        _routing: z.object({
-          required: z.boolean(),
-        }).optional(),
-        _source: z.object({
-          enabled: z.boolean(),
-          excludes: z.array(z.string()).optional(),
-          includes: z.array(z.string()).optional(),
-        }).optional(),
-        runtime: z.record(z.any()).optional(),
-      }).optional(),
-      settings: z.record(z.any()).optional(),
-      dry_run: z.boolean().optional(),
-      master_timeout: z.string().optional(),
-      timeout: z.string().optional(),
-      wait_for_active_shards: z.union([z.number(), z.enum(["all", "index-setting"])]).optional(),
-      lazy: z.boolean().optional(),
     },
     withReadOnlyCheck(
       "rollover",

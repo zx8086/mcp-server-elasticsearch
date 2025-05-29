@@ -23,24 +23,32 @@ const PutAutoscalingPolicyParams = z.object({
 
 type PutAutoscalingPolicyParamsType = z.infer<typeof PutAutoscalingPolicyParams>;
 
+const putPolicySchema = {
+  name: z.string().min(1, "Policy name is required"),
+  policy: z.any(),
+  masterTimeout: z.string().optional(),
+  timeout: z.string().optional(),
+} as const;
+
 export const registerAutoscalingPutPolicyTool: ToolRegistrationFunction = (
   server: McpServer,
   esClient: Client,
 ) => {
   // Implementation function without read-only checks
   const putAutoscalingPolicyImpl = async (
-    params: PutAutoscalingPolicyParamsType,
+    params: any,
     extra: Record<string, unknown>,
   ): Promise<SearchResult> => {
+    const typedParams = params as PutAutoscalingPolicyParamsType;
     try {
       const result = await esClient.autoscaling.putAutoscalingPolicy({
-        name: params.name,
+        name: typedParams.name,
         policy: {
-          roles: params.policy.roles,
-          deciders: params.policy.deciders
+          roles: typedParams.policy.roles,
+          deciders: typedParams.policy.deciders
         },
-        master_timeout: params.masterTimeout,
-        timeout: params.timeout,
+        master_timeout: typedParams.masterTimeout,
+        timeout: typedParams.timeout,
       });
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
@@ -63,15 +71,7 @@ export const registerAutoscalingPutPolicyTool: ToolRegistrationFunction = (
   server.tool(
     "autoscaling_put_policy",
     "Create or update an autoscaling policy. NOTE: This feature is designed for indirect use by Elasticsearch Service, Elastic Cloud Enterprise, and Elastic Cloud on Kubernetes. Direct use is not supported.",
-    {
-      name: z.string().min(1, "Policy name is required"),
-      policy: z.object({
-        roles: z.array(z.string()),
-        deciders: z.record(z.any())
-      }).strict(),
-      masterTimeout: z.string().optional(),
-      timeout: z.string().optional(),
-    },
+    putPolicySchema,
     withReadOnlyCheck(
       "autoscaling_put_policy",
       putAutoscalingPolicyImpl,

@@ -1,3 +1,5 @@
+// src/tools/types.ts
+
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "@elastic/elasticsearch";
 
