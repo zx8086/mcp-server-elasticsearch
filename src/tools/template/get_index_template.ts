@@ -20,8 +20,8 @@ export const registerGetIndexTemplateTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "get_index_template",
-    "Get an index template from Elasticsearch",
+    "elasticsearch_get_index_template",
+    "Get an index template from Elasticsearch. Best for: template management, configuration review, index pattern analysis. Use when you need to inspect index template definitions, mappings, and settings in Elasticsearch.",
     {
       name: z.string().optional(),
       flatSettings: z.boolean().optional(),

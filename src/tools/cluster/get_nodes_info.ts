@@ -20,8 +20,8 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "get_nodes_info",
-    "Get information about nodes in the Elasticsearch cluster",
+    "elasticsearch_get_nodes_info",
+    "Get information about nodes in the Elasticsearch cluster. Best for: cluster monitoring, node diagnostics, infrastructure analysis. Use when you need to inspect node configuration, hardware details, and cluster topology in Elasticsearch.",
     {
       nodeId: z.string().optional(),
       metric: z.string().optional(),
