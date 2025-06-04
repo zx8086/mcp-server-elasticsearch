@@ -26,7 +26,7 @@ export const registerDeleteIndexTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_delete_index",
-    "Delete an entire index in Elasticsearch. Best for: index cleanup, data lifecycle management, removing obsolete indices. Use when you need to permanently remove complete Elasticsearch indices and all their documents. DESTRUCTIVE OPERATION.",
+    "Delete an entire index in Elasticsearch. Best for index cleanup, data lifecycle management, removing obsolete indices. Use when you need to permanently remove complete Elasticsearch indices and all their documents. DESTRUCTIVE OPERATION.",
     {
       index: z.string().min(1, "Index is required"),
       timeout: z.string().optional(),

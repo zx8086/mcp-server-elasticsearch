@@ -19,7 +19,7 @@ export const registerWatcherGetSettingsTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_watcher_get_settings",
-    "Get Elasticsearch Watcher index settings for .watches index. Best for: configuration review, troubleshooting, system analysis. Use when you need to inspect Watcher internal index settings in Elasticsearch.",
+    "Get Elasticsearch Watcher index settings for .watches index. Best for configuration review, troubleshooting, system analysis. Use when you need to inspect Watcher internal index settings in Elasticsearch.",
     {
       masterTimeout: z.string().optional(),
     },

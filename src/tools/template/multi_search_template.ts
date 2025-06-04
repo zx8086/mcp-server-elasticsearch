@@ -23,7 +23,7 @@ export const registerMultiSearchTemplateTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_multi_search_template",
-    "Execute multiple search templates in Elasticsearch. Best for: batch search operations, templated queries, performance optimization. Use when you need to run multiple parameterized searches efficiently using Elasticsearch search templates.",
+    "Execute multiple search templates in Elasticsearch. Best for batch search operations, templated queries, performance optimization. Use when you need to run multiple parameterized searches efficiently using Elasticsearch search templates.",
     {
       searches: z.array(z.record(z.any())),
       index: z.string().optional(),

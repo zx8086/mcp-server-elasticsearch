@@ -18,7 +18,7 @@ export const registerClearSqlCursorTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_clear_sql_cursor",
-    "Clear a SQL cursor in Elasticsearch to free resources. Best for: resource management, cursor cleanup, memory optimization. Use when you need to explicitly release SQL cursor resources after completing paginated SQL queries in Elasticsearch.",
+    "Clear a SQL cursor in Elasticsearch to free resources. Best for resource management, cursor cleanup, memory optimization. Use when you need to explicitly release SQL cursor resources after completing paginated SQL queries in Elasticsearch.",
     {
       cursor: z.string().min(1, "Cursor is required"),
     },

@@ -56,7 +56,7 @@ export const registerWatcherUpdateSettingsTool: ToolRegistrationFunction = (
 
   server.tool(
     "elasticsearch_watcher_update_settings",
-    "Update Elasticsearch Watcher index settings for .watches index. Best for: configuration management, performance tuning, allocation control. Use when you need to modify Watcher internal index settings like replicas and allocation in Elasticsearch.",
+    "Update Elasticsearch Watcher index settings for .watches index. Best for configuration management, performance tuning, allocation control. Use when you need to modify Watcher internal index settings like replicas and allocation in Elasticsearch.",
     {
       "index.auto_expand_replicas": z.string().optional(),
       "index.number_of_replicas": z.number().optional(),

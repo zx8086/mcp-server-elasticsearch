@@ -25,7 +25,7 @@ export const registerIndexDocumentTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_index_document",
-    "Index a JSON document into Elasticsearch. Best for: adding new documents, bulk data ingestion, real-time indexing. Use when you need to store structured JSON documents in Elasticsearch indices with optional routing and pipeline processing.",
+    "Index a JSON document into Elasticsearch. Best for adding new documents, bulk data ingestion, real-time indexing. Use when you need to store structured JSON documents in Elasticsearch indices with optional routing and pipeline processing.",
     {
       index: z.string().min(1, "Index is required"),
       id: z.string().optional(),
@@ -78,4 +78,4 @@ export const registerIndexDocumentTool: ToolRegistrationFunction = (
       }
     }
   );
-}  
+}    

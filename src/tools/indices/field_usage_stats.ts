@@ -23,7 +23,7 @@ export const registerFieldUsageStatsTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_field_usage_stats",
-    "Get field usage statistics per shard and field in Elasticsearch. Best for: query optimization, field analysis, performance tuning. Use when you need to understand which fields are accessed during queries for Elasticsearch index optimization.",
+    "Get field usage statistics per shard and field in Elasticsearch. Best for query optimization, field analysis, performance tuning. Use when you need to understand which fields are accessed during queries for Elasticsearch index optimization.",
     {
       index: z.union([z.string(), z.array(z.string())]),
       allowNoIndices: z.boolean().optional(),

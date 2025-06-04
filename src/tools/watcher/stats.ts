@@ -23,7 +23,7 @@ export const registerWatcherStatsTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_watcher_stats",
-    "Get Elasticsearch Watcher statistics and metrics. Best for: performance monitoring, service analysis, execution tracking. Use when you need to monitor Watcher service performance and execution statistics in Elasticsearch.",
+    "Get Elasticsearch Watcher statistics and metrics. Best for performance monitoring, service analysis, execution tracking. Use when you need to monitor Watcher service performance and execution statistics in Elasticsearch.",
     {
       metric: z.union([
         z.enum(["_all", "queued_watches", "current_watches", "pending_watches"]),

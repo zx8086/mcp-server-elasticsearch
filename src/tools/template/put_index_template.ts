@@ -27,7 +27,7 @@ export const registerPutIndexTemplateTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_put_index_template",
-    "Create or update an index template in Elasticsearch. Best for: index standardization, mapping management, settings automation. Use when you need to define templates for automatic index configuration in Elasticsearch.",
+    "Create or update an index template in Elasticsearch. Best for index standardization, mapping management, settings automation. Use when you need to define templates for automatic index configuration in Elasticsearch.",
     {
       name: z.string().min(1, "Template name is required"),
       indexPatterns: z.array(z.string()).optional(),

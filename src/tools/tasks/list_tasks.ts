@@ -25,7 +25,7 @@ export const registerListTasksTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_list_tasks",
-    "Get information about tasks currently running on Elasticsearch cluster nodes. Best for: cluster monitoring, performance troubleshooting, operation tracking. Use when you need to monitor long-running operations like reindexing, searches, or bulk operations in Elasticsearch.",
+    "Get information about tasks currently running on Elasticsearch cluster nodes. Best for cluster monitoring, performance troubleshooting, operation tracking. Use when you need to monitor long-running operations like reindexing, searches, or bulk operations in Elasticsearch.",
     {
       actions: z.union([z.string(), z.array(z.string())]).optional(),
       detailed: z.boolean().optional(),

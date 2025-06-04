@@ -50,7 +50,7 @@ export const registerWatcherStartTool: ToolRegistrationFunction = (
 
   server.tool(
     "elasticsearch_watcher_start",
-    "Start the Elasticsearch Watcher service. Best for: service management, monitoring activation, system initialization. Use when you need to enable the Watcher service for Elasticsearch alerting and monitoring capabilities.",
+    "Start the Elasticsearch Watcher service. Best for service management, monitoring activation, system initialization. Use when you need to enable the Watcher service for Elasticsearch alerting and monitoring capabilities.",
     {
       master_timeout: z.string().optional(),
     },

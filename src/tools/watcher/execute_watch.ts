@@ -84,7 +84,7 @@ export const registerWatcherExecuteWatchTool: ToolRegistrationFunction = (
 
   server.tool(
     "elasticsearch_watcher_execute_watch",
-    "Execute a watch in Elasticsearch Watcher for testing or debugging. Best for: watch testing, debugging workflows, manual execution. Use when you need to force watch execution outside normal triggers in Elasticsearch alerting systems.",
+    "Execute a watch in Elasticsearch Watcher for testing or debugging. Best for watch testing, debugging workflows, manual execution. Use when you need to force watch execution outside normal triggers in Elasticsearch alerting systems.",
     {
       id: z.string().optional(),
       action_modes: z.record(z.enum(["simulate", "force_simulate", "execute", "force_execute", "skip"])).optional(),

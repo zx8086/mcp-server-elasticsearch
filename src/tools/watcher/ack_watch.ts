@@ -54,7 +54,7 @@ export const registerWatcherAckWatchTool: ToolRegistrationFunction = (
 
   server.tool(
     "elasticsearch_watcher_ack_watch",
-    "Acknowledge a watch in Elasticsearch Watcher to throttle actions. Best for: alert management, action throttling, notification control. Use when you need to manually acknowledge watch actions to prevent repeated executions in Elasticsearch alerting.",
+    "Acknowledge a watch in Elasticsearch Watcher to throttle actions. Best for alert management, action throttling, notification control. Use when you need to manually acknowledge watch actions to prevent repeated executions in Elasticsearch alerting.",
     {
       watch_id: z.string().min(1, "Watch ID is required"),
       action_id: z.union([z.string(), z.array(z.string())]).optional(),

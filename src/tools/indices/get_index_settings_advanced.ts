@@ -27,7 +27,7 @@ export const registerGetIndexSettingsAdvancedTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_get_index_settings_advanced",
-    "Get comprehensive index settings from Elasticsearch with advanced options. Best for: configuration analysis, performance tuning, troubleshooting. Use when you need detailed index settings including data stream backing indices in Elasticsearch.",
+    "Get comprehensive index settings from Elasticsearch with advanced options. Best for configuration analysis, performance tuning, troubleshooting. Use when you need detailed index settings including data stream backing indices in Elasticsearch.",
     {
       index: z.union([z.string(), z.array(z.string())]).optional(),
       name: z.union([z.string(), z.array(z.string())]).optional(),

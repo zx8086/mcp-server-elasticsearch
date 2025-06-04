@@ -54,7 +54,7 @@ export const registerEnrichExecutePolicyTool: ToolRegistrationFunction = (
 
   server.tool(
     "elasticsearch_enrich_execute_policy",
-    "Execute Elasticsearch enrich policy to create the enrich index. Best for: policy activation, data preparation, enrichment setup. Use when you need to build the enrich index from source data for document enrichment in Elasticsearch.",
+    "Execute Elasticsearch enrich policy to create the enrich index. Best for policy activation, data preparation, enrichment setup. Use when you need to build the enrich index from source data for document enrichment in Elasticsearch.",
     {
       name: z.string().min(1, "Policy name is required"),
       masterTimeout: z.string().optional(),

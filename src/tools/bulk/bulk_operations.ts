@@ -29,7 +29,7 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_bulk_operations",
-    "Perform bulk operations in Elasticsearch for high-throughput data ingestion. Best for: batch indexing, bulk updates, mass data import, performance optimization. Use when you need to efficiently index, update, or delete large volumes of documents in Elasticsearch.",
+    "Perform bulk operations in Elasticsearch for high-throughput data ingestion. Best for batch indexing, bulk updates, mass data import, performance optimization. Use when you need to efficiently index, update, or delete large volumes of documents in Elasticsearch.",
     {
       operations: z.array(z.record(z.any())),
       index: z.string().optional(),

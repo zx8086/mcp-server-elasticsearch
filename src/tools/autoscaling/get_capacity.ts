@@ -19,7 +19,7 @@ export const registerAutoscalingGetCapacityTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_autoscaling_get_capacity",
-    "Get the current autoscaling capacity from Elasticsearch. Best for: capacity planning, resource monitoring, cluster scaling analysis. Use when you need to monitor Elasticsearch cluster autoscaling decisions and capacity recommendations. NOTE: Designed for Elasticsearch Service, ECE, and ECK.",
+    "Get the current autoscaling capacity from Elasticsearch. Best for capacity planning, resource monitoring, cluster scaling analysis. Use when you need to monitor Elasticsearch cluster autoscaling decisions and capacity recommendations. NOTE: Designed for Elasticsearch Service, ECE, and ECK.",
     {
       masterTimeout: z.string().optional(),
     },

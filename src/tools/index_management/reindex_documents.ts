@@ -38,7 +38,7 @@ export const registerReindexDocumentsTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_reindex_documents",
-    "Reindex documents from source to destination index in Elasticsearch. Best for: data migration, index restructuring, mapping changes. Use when you need to copy documents between Elasticsearch indices with optional transformations.",
+    "Reindex documents from source to destination index in Elasticsearch. Best for data migration, index restructuring, mapping changes. Use when you need to copy documents between Elasticsearch indices with optional transformations.",
     {
       source: z.object({
         index: z.string(),

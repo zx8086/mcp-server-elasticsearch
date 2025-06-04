@@ -50,7 +50,7 @@ export const registerWatcherStopTool: ToolRegistrationFunction = (
 
   server.tool(
     "elasticsearch_watcher_stop",
-    "Stop the Elasticsearch Watcher service. Best for: service management, monitoring deactivation, maintenance operations. Use when you need to disable the Watcher service for Elasticsearch maintenance or troubleshooting.",
+    "Stop the Elasticsearch Watcher service. Best for service management, monitoring deactivation, maintenance operations. Use when you need to disable the Watcher service for Elasticsearch maintenance or troubleshooting.",
     {
       master_timeout: z.string().optional(),
     },

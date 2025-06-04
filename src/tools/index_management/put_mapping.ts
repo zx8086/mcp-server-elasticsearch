@@ -32,7 +32,7 @@ export const registerPutMappingTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_put_mapping",
-    "Update index mappings in Elasticsearch. Best for: schema evolution, field addition, mapping modifications. Use when you need to add new fields or update existing field mappings in Elasticsearch indices.",
+    "Update index mappings in Elasticsearch. Best for schema evolution, field addition, mapping modifications. Use when you need to add new fields or update existing field mappings in Elasticsearch indices.",
     {
       index: z.string().min(1, "Index is required"),
       properties: z.record(z.any()).optional(),

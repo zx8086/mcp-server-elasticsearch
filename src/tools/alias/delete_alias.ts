@@ -21,7 +21,7 @@ export const registerDeleteAliasTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_delete_alias",
-    "Delete an alias from an index in Elasticsearch. Best for: alias cleanup, configuration management, removing unused references. Use when you need to remove named references to Elasticsearch indices during maintenance or restructuring.",
+    "Delete an alias from an index in Elasticsearch. Best for alias cleanup, configuration management, removing unused references. Use when you need to remove named references to Elasticsearch indices during maintenance or restructuring.",
     {
       index: z.string().min(1, "Index is required"),
       name: z.string().min(1, "Alias name is required"),

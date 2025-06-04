@@ -21,7 +21,7 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_ilm_get_lifecycle",
-    "Get Index Lifecycle Management (ILM) policies from Elasticsearch. Best for: data lifecycle management, policy inspection, compliance monitoring. Use when you need to retrieve ILM policies that automate index transitions through hot, warm, cold, and delete phases.",
+    "Get Index Lifecycle Management (ILM) policies from Elasticsearch. Best for data lifecycle management, policy inspection, compliance monitoring. Use when you need to retrieve ILM policies that automate index transitions through hot, warm, cold, and delete phases.",
     {
       policy: z.string().optional(),
       masterTimeout: z.string().optional(),

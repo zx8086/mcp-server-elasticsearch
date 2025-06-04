@@ -21,7 +21,7 @@ export const registerRefreshIndexTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_refresh_index",
-    "Refresh an index in Elasticsearch. Best for: data visibility, search consistency, real-time operations. Use when you need to make recently indexed documents immediately searchable in Elasticsearch.",
+    "Refresh an index in Elasticsearch. Best for data visibility, search consistency, real-time operations. Use when you need to make recently indexed documents immediately searchable in Elasticsearch.",
     {
       index: z.string().min(1, "Index is required"),
       ignoreUnavailable: z.boolean().optional(),

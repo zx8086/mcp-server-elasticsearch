@@ -123,7 +123,7 @@ export const registerRolloverTool: ToolRegistrationFunction = (
 
   server.tool(
     "elasticsearch_rollover",
-    "Roll over to a new index in Elasticsearch for data streams or aliases. Best for: index lifecycle management, data stream rotation, automated archiving. Use when you need to create new indices based on size, age, or document count thresholds in Elasticsearch.",
+    "Roll over to a new index in Elasticsearch for data streams or aliases. Best for index lifecycle management, data stream rotation, automated archiving. Use when you need to create new indices based on size, age, or document count thresholds in Elasticsearch.",
     {
       alias: z.string().min(1, "Alias name is required"),
       new_index: z.string().optional(),

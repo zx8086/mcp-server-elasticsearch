@@ -95,7 +95,7 @@ export const registerWatcherPutWatchTool: ToolRegistrationFunction = (
 
   server.tool(
     "elasticsearch_watcher_put_watch",
-    "Create or update a watch in Elasticsearch Watcher. Best for: alerting setup, monitoring automation, notification configuration. Use when you need to define watch triggers and actions for Elasticsearch alerting workflows. IMPORTANT: Use only this API, not direct index operations.",
+    "Create or update a watch in Elasticsearch Watcher. Best for alerting setup, monitoring automation, notification configuration. Use when you need to define watch triggers and actions for Elasticsearch alerting workflows. IMPORTANT: Use only this API, not direct index operations.",
     {
       id: z.string().min(1, "Watch ID is required"),
       actions: z.record(z.object({

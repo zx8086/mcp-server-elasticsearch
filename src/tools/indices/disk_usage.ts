@@ -24,7 +24,7 @@ export const registerDiskUsageTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_disk_usage",
-    "Analyze index disk usage per field in Elasticsearch. Best for: storage optimization, field analysis, capacity planning. Use when you need to understand disk consumption patterns and optimize storage usage for Elasticsearch indices and data streams.",
+    "Analyze index disk usage per field in Elasticsearch. Best for storage optimization, field analysis, capacity planning. Use when you need to understand disk consumption patterns and optimize storage usage for Elasticsearch indices and data streams.",
     {
       index: z.union([z.string(), z.array(z.string())]),
       allowNoIndices: z.boolean().optional(),

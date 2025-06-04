@@ -20,7 +20,7 @@ export const registerTranslateSqlQueryTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_translate_sql_query",
-    "Translate a SQL query to Elasticsearch Query DSL using the SQL Translate API. Best for: SQL-to-DSL conversion, query optimization, learning Elasticsearch Query DSL. Use when you need to convert familiar SQL syntax to native Elasticsearch queries.",
+    "Translate a SQL query to Elasticsearch Query DSL using the SQL Translate API. Best for SQL-to-DSL conversion, query optimization, learning Elasticsearch Query DSL. Use when you need to convert familiar SQL syntax to native Elasticsearch queries.",
     {
       query: z.string().min(1, "SQL query is required"),
       fetchSize: z.number().optional(),

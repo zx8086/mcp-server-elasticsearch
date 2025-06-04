@@ -22,7 +22,7 @@ export const registerGetShardsTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_get_shards",
-    "Get shard information for all or specific indices in Elasticsearch. Best for: cluster monitoring, shard distribution analysis, performance troubleshooting. Use when you need to inspect shard allocation, state, and storage details across Elasticsearch nodes.",
+    "Get shard information for all or specific indices in Elasticsearch. Best for cluster monitoring, shard distribution analysis, performance troubleshooting. Use when you need to inspect shard allocation, state, and storage details across Elasticsearch nodes.",
     {
       index: z
         .string()
@@ -70,4 +70,4 @@ export const registerGetShardsTool: ToolRegistrationFunction = (
       }
     }
   );
-}      
+}            

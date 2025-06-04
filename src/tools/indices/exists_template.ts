@@ -22,7 +22,7 @@ export const registerExistsTemplateTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_exists_template",
-    "Check existence of legacy index templates in Elasticsearch. Best for: legacy template validation, migration planning, compatibility checks. Use when you need to verify legacy index template presence in Elasticsearch (deprecated, use composable templates instead).",
+    "Check existence of legacy index templates in Elasticsearch. Best for legacy template validation, migration planning, compatibility checks. Use when you need to verify legacy index template presence in Elasticsearch (deprecated, use composable templates instead).",
     {
       name: z.union([z.string(), z.array(z.string())]),
       flat_settings: z.boolean().optional(),

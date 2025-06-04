@@ -25,7 +25,7 @@ export const registerFlushIndexTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_flush_index",
-    "Flush an Elasticsearch index to ensure all data is written to disk. Best for: data persistence, index optimization, ensuring durability. Use when you need to force Elasticsearch to write buffered data to storage for consistency.",
+    "Flush an Elasticsearch index to ensure all data is written to disk. Best for data persistence, index optimization, ensuring durability. Use when you need to force Elasticsearch to write buffered data to storage for consistency.",
     {
       index: z.string().min(1, "Index is required"),
       ignoreUnavailable: z.boolean().optional(),

@@ -55,7 +55,7 @@ export const registerDeleteLifecycleTool: ToolRegistrationFunction = (
 
   server.tool(
     "elasticsearch_ilm_delete_lifecycle",
-    "Delete an Index Lifecycle Management policy in Elasticsearch. Best for: policy cleanup, configuration management, lifecycle optimization. Use when you need to remove unused ILM policies from Elasticsearch. Cannot delete policies currently in use.",
+    "Delete an Index Lifecycle Management policy in Elasticsearch. Best for policy cleanup, configuration management, lifecycle optimization. Use when you need to remove unused ILM policies from Elasticsearch. Cannot delete policies currently in use.",
     {
       policy: z.string().min(1, "Policy identifier is required"),
       masterTimeout: z.string().optional(),

@@ -50,7 +50,7 @@ export const registerRemovePolicyTool: ToolRegistrationFunction = (
 
   server.tool(
     "elasticsearch_ilm_remove_policy",
-    "Remove Index Lifecycle Management policy from indices in Elasticsearch. Best for: policy detachment, manual management, lifecycle control. Use when you need to stop ILM management and remove policy assignments from Elasticsearch indices.",
+    "Remove Index Lifecycle Management policy from indices in Elasticsearch. Best for policy detachment, manual management, lifecycle control. Use when you need to stop ILM management and remove policy assignments from Elasticsearch indices.",
     {
       index: z.string().min(1, "Index name is required"),
     },
