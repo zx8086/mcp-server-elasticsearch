@@ -23,8 +23,8 @@ export const registerIndexExistsTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "index_exists",
-    "Check if an index exists in Elasticsearch",
+    "elasticsearch_index_exists",
+    "Check if an index exists in Elasticsearch. Best for: index validation, conditional operations, deployment checks. Use when you need to verify index presence in Elasticsearch clusters before performing operations or creating indices.",
     {
       index: z.string().min(1, "Index is required"),
       ignoreUnavailable: z.boolean().optional(),

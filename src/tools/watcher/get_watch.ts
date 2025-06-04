@@ -18,8 +18,8 @@ export const registerWatcherGetWatchTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "watcher_get_watch",
-    "Get a watch configuration from Elasticsearch Watcher",
+    "elasticsearch_watcher_get_watch",
+    "Get a watch configuration from Elasticsearch Watcher. Best for: monitoring automation, alerting configuration, watch inspection. Use when you need to retrieve watch definitions for Elasticsearch alerting and monitoring workflows.",
     {
       id: z.string().min(1, "Watch ID is required"),
     },

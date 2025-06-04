@@ -43,7 +43,7 @@ export const registerScrollSearchTool: ToolRegistrationFunction = (
               rest_total_hits_as_int: params.restTotalHitsAsInt,
             },
             {
-              opaqueId: "scroll_search",
+              opaqueId: "elasticsearch_scroll_search",
             },
           );
           return {

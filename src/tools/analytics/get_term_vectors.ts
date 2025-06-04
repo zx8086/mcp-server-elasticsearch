@@ -57,7 +57,7 @@ export const registerGetTermVectorsTool: ToolRegistrationFunction = (
             realtime: params.realtime,
           },
           {
-            opaqueId: "get_term_vectors",
+            opaqueId: "elasticsearch_get_term_vectors",
           },
         );
         return {

@@ -53,7 +53,7 @@ export const registerSearchTemplateTool: ToolRegistrationFunction = (
     async (params: SearchTemplateParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.searchTemplate(params, {
-          opaqueId: "search_template",
+          opaqueId: "elasticsearch_search_template",
         });
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],

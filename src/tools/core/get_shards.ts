@@ -11,7 +11,7 @@ const GetShardsParams = z.object({
   index: z
     .string()
     .optional()
-    .describe("Optional index name to get shard information for"),
+    .describe("Optional Elasticsearch index name to get shard information for"),
 });
 
 type GetShardsParamsType = z.infer<typeof GetShardsParams>;
@@ -27,7 +27,7 @@ export const registerGetShardsTool: ToolRegistrationFunction = (
       index: z
         .string()
         .optional()
-        .describe("Optional index name to get shard information for"),
+        .describe("Optional Elasticsearch index name to get shard information for"),
     },
     async (params: GetShardsParamsType): Promise<SearchResult> => {
       const { index } = params;
@@ -70,4 +70,4 @@ export const registerGetShardsTool: ToolRegistrationFunction = (
       }
     }
   );
-} 
+}    

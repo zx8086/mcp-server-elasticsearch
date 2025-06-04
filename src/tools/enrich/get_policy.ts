@@ -19,8 +19,8 @@ export const registerEnrichGetPolicyTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "enrich_get_policy",
-    "Get an enrich policy. Returns information about an enrich policy.",
+    "elasticsearch_enrich_get_policy",
+    "Get an enrich policy from Elasticsearch. Best for: data enrichment configuration, policy inspection, document enhancement workflows. Use when you need to retrieve enrich policies that add reference data to documents during ingestion.",
     {
       name: z.union([z.string(), z.array(z.string())]).optional(),
       masterTimeout: z.string().optional(),

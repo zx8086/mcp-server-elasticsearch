@@ -166,13 +166,13 @@ export const registerListIndicesTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "list_indices",
-    "List Elasticsearch indices with smart filtering to prevent overwhelming responses. Automatically excludes system indices and limits results.",
+    "elasticsearch_list_indices",
+    "List Elasticsearch indices with smart filtering and pattern matching. Best for: index discovery, monitoring index health, analyzing index structure. Use when you need to explore available indices in Elasticsearch clusters with intelligent filtering to prevent overwhelming responses.",
     listIndicesSchema,
     withReadOnlyCheck(
-      "list_indices",
+      "elasticsearch_list_indices",
       listIndicesImpl,
       OperationType.READ
     )
   );
-}; 
+};    

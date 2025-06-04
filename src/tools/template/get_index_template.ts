@@ -38,7 +38,7 @@ export const registerGetIndexTemplateTool: ToolRegistrationFunction = (
             local: params.local,
           },
           {
-            opaqueId: "get_index_template",
+            opaqueId: "elasticsearch_get_index_template",
           },
         );
         return {

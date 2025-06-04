@@ -13,11 +13,11 @@ const IndicesSummaryParams = z.object({
     .trim()
     .min(1, "Index pattern is required")
     .default("*")
-    .describe("Index pattern of Elasticsearch indices to summarize"),
+    .describe("Elasticsearch index pattern to summarize (supports wildcards like logs-*, app-*)"),
   groupBy: z
     .enum(["prefix", "date", "type"])
     .default("prefix")
-    .describe("How to group indices for summary"),
+    .describe("How to group Elasticsearch indices for summary analysis"),
 });
 
 type IndicesSummaryParamsType = z.infer<typeof IndicesSummaryParams>;
@@ -35,11 +35,11 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (
         .trim()
         .min(1, "Index pattern is required")
         .default("*")
-        .describe("Index pattern of Elasticsearch indices to summarize"),
+        .describe("Elasticsearch index pattern to summarize (supports wildcards like logs-*, app-*)"),
       groupBy: z
         .enum(["prefix", "date", "type"])
         .default("prefix")
-        .describe("How to group indices for summary"),
+        .describe("How to group Elasticsearch indices for summary analysis"),
     },
     async (params: IndicesSummaryParamsType): Promise<SearchResult> => {
       const { indexPattern, groupBy } = params;
@@ -188,4 +188,4 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (
       }
     }
   );
-}; 
+};    
