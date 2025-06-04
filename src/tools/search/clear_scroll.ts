@@ -17,8 +17,8 @@ export const registerClearScrollTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "elasticsearch_clear_scroll",
-    "Clear a scroll context in Elasticsearch to free resources. Best for: cleanup operations, memory management, scroll lifecycle management. Use when you need to explicitly release scroll contexts after completing large result set iterations in Elasticsearch.",
+    "clear_scroll",
+    "Clear a scroll context in Elasticsearch",
     {
       scrollId: z.string().min(1, "Scroll ID is required"),
     },

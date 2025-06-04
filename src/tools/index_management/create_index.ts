@@ -47,7 +47,7 @@ export const registerCreateIndexTool: ToolRegistrationFunction = (
             wait_for_active_shards: params.waitForActiveShards,
           },
           {
-            opaqueId: "elasticsearch_create_index",
+            opaqueId: "create_index",
           },
         );
         return {

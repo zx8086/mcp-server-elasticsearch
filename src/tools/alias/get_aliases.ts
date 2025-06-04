@@ -45,7 +45,7 @@ export const registerGetAliasesTool: ToolRegistrationFunction = (
             expand_wildcards: params.expandWildcards,
           },
           {
-            opaqueId: "elasticsearch_get_aliases",
+            opaqueId: "get_aliases",
           },
         );
         return {

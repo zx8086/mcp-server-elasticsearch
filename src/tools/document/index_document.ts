@@ -24,8 +24,8 @@ export const registerIndexDocumentTool: ToolRegistrationFunction = (
   esClient: Client
 ) => {
   server.tool(
-    "elasticsearch_index_document",
-    "Index a JSON document into Elasticsearch. Best for: adding new documents, bulk data ingestion, real-time indexing. Use when you need to store structured JSON documents in Elasticsearch indices with optional routing and pipeline processing.",
+    "index_document",
+    "Index a document into Elasticsearch",
     {
       index: z.string().min(1, "Index is required"),
       id: z.string().optional(),
@@ -36,15 +36,15 @@ export const registerIndexDocumentTool: ToolRegistrationFunction = (
     },
     async (params: IndexDocumentParamsType): Promise<SearchResult> => {
       // Check read-only mode
-      const readOnlyCheck = readOnlyManager.checkOperation("elasticsearch_index_document");
+      const readOnlyCheck = readOnlyManager.checkOperation("index_document");
       if (!readOnlyCheck.allowed) {
-        return readOnlyManager.createBlockedResponse("elasticsearch_index_document");
+        return readOnlyManager.createBlockedResponse("index_document");
       }
 
       try {
         if (readOnlyCheck.warning) {
           logger.warn("Proceeding with document indexing", { 
-            tool: "elasticsearch_index_document", 
+            tool: "index_document", 
             params: { index: params.index, id: params.id }
           });
         }
@@ -57,14 +57,14 @@ export const registerIndexDocumentTool: ToolRegistrationFunction = (
           routing: params.routing,
           pipeline: params.pipeline,
         }, {
-          opaqueId: 'elasticsearch_index_document'
+          opaqueId: 'index_document'
         });
         const response: SearchResult = { 
           content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent] 
         };
         
         if (readOnlyCheck.warning) {
-          return readOnlyManager.createWarningResponse("elasticsearch_index_document", response);
+          return readOnlyManager.createWarningResponse("index_document", response);
         }
         
         return response;
@@ -78,4 +78,4 @@ export const registerIndexDocumentTool: ToolRegistrationFunction = (
       }
     }
   );
-}  
+} 

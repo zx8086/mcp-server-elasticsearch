@@ -56,7 +56,7 @@ export const registerPutIndexTemplateTool: ToolRegistrationFunction = (
             master_timeout: params.masterTimeout,
           },
           {
-            opaqueId: "elasticsearch_put_index_template",
+            opaqueId: "put_index_template",
           },
         );
         return {

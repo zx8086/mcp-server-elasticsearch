@@ -32,8 +32,8 @@ export const registerUpdateDocumentTool: ToolRegistrationFunction = (
   esClient: Client
 ) => {
   server.tool(
-    "elasticsearch_update_document",
-    "Update a JSON document in Elasticsearch by index and id. Best for: partial document updates, scripted updates, upsert operations. Use when you need to modify existing documents in Elasticsearch indices with optimistic concurrency control.",
+    "update_document",
+    "Update a document in Elasticsearch by index and id",
     {
       index: z.string().min(1, "Index is required"),
       id: z.string().min(1, "Document ID is required"),
@@ -52,15 +52,15 @@ export const registerUpdateDocumentTool: ToolRegistrationFunction = (
     },
     async (params: UpdateDocumentParamsType): Promise<SearchResult> => {
       // Check read-only mode
-      const readOnlyCheck = readOnlyManager.checkOperation("elasticsearch_update_document");
+      const readOnlyCheck = readOnlyManager.checkOperation("update_document");
       if (!readOnlyCheck.allowed) {
-        return readOnlyManager.createBlockedResponse("elasticsearch_update_document");
+        return readOnlyManager.createBlockedResponse("update_document");
       }
 
       try {
         if (readOnlyCheck.warning) {
           logger.warn("Proceeding with document update", { 
-            tool: "elasticsearch_update_document", 
+            tool: "update_document", 
             params: { index: params.index, id: params.id }
           });
         }
@@ -81,14 +81,14 @@ export const registerUpdateDocumentTool: ToolRegistrationFunction = (
           if_seq_no: params.ifSeqNo,
           if_primary_term: params.ifPrimaryTerm,
         }, {
-          opaqueId: 'elasticsearch_update_document'
+          opaqueId: 'update_document'
         });
         const response: SearchResult = { 
           content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent] 
         };
         
         if (readOnlyCheck.warning) {
-          return readOnlyManager.createWarningResponse("elasticsearch_update_document", response);
+          return readOnlyManager.createWarningResponse("update_document", response);
         }
         
         return response;
@@ -102,4 +102,4 @@ export const registerUpdateDocumentTool: ToolRegistrationFunction = (
       }
     }
   );
-}  
+} 

@@ -53,7 +53,7 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (
             flat_settings: params.flatSettings,
           },
           {
-            opaqueId: "elasticsearch_update_index_settings",
+            opaqueId: "update_index_settings",
           },
         );
         return {

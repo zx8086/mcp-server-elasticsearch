@@ -25,8 +25,8 @@ export const registerDeleteIndexTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "elasticsearch_delete_index",
-    "Delete an entire index in Elasticsearch. Best for: index cleanup, data lifecycle management, removing obsolete indices. Use when you need to permanently remove complete Elasticsearch indices and all their documents. DESTRUCTIVE OPERATION.",
+    "delete_index",
+    "Delete an index in Elasticsearch",
     {
       index: z.string().min(1, "Index is required"),
       timeout: z.string().optional(),
@@ -37,16 +37,16 @@ export const registerDeleteIndexTool: ToolRegistrationFunction = (
     },
     async (params: DeleteIndexParamsType): Promise<SearchResult> => {
       // Check read-only mode with enhanced warning for destructive operation
-      const readOnlyCheck = readOnlyManager.checkOperation("elasticsearch_delete_index");
+      const readOnlyCheck = readOnlyManager.checkOperation("delete_index");
       if (!readOnlyCheck.allowed) {
-        return readOnlyManager.createBlockedResponse("elasticsearch_delete_index");
+        return readOnlyManager.createBlockedResponse("delete_index");
       }
 
       try {
         // Enhanced warning for particularly destructive operations
         if (readOnlyCheck.warning) {
           logger.warn("🚨 CRITICAL: About to delete entire index", {
-            tool: "elasticsearch_delete_index",
+            tool: "delete_index",
             index: params.index,
             warning: "This will permanently delete all data in the index",
           });
@@ -66,7 +66,7 @@ export const registerDeleteIndexTool: ToolRegistrationFunction = (
 
         if (readOnlyCheck.warning) {
           return readOnlyManager.createWarningResponse(
-            "elasticsearch_delete_index",
+            "delete_index",
             response,
           );
         }

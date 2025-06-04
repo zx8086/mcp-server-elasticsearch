@@ -71,7 +71,7 @@ export const registerCountDocumentsTool: ToolRegistrationFunction = (
             terminate_after: params.terminateAfter,
           },
           {
-            opaqueId: "elasticsearch_count_documents",
+            opaqueId: "count_documents",
           },
         );
         return {

@@ -38,7 +38,7 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (
             timeout: params.timeout,
           },
           {
-            opaqueId: "elasticsearch_get_nodes_info",
+            opaqueId: "get_nodes_info",
           },
         );
         return {

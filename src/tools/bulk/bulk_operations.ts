@@ -96,7 +96,7 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (
             },
           },
           {
-            opaqueId: "elasticsearch_bulk_operations",
+            opaqueId: "bulk_operations",
           },
         );
 

@@ -33,8 +33,8 @@ export const registerMultiGetTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "elasticsearch_multi_get",
-    "Get multiple documents from Elasticsearch in a single request. Best for: batch document retrieval, efficient bulk operations, reducing network overhead. Use when you need to fetch multiple JSON documents by their IDs from Elasticsearch indices in one operation.",
+    "multi_get",
+    "Get multiple documents from Elasticsearch in a single request",
     MultiGetParams.shape,
     async (params: MultiGetParamsType): Promise<SearchResult> => {
       try {

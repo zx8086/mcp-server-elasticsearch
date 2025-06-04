@@ -51,7 +51,7 @@ export const registerGetClusterHealthTool: ToolRegistrationFunction = (
             wait_for_status: params.waitForStatus,
           },
           {
-            opaqueId: "elasticsearch_get_cluster_health",
+            opaqueId: "get_cluster_health",
           },
         );
         return {

@@ -28,8 +28,8 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (
   esClient: Client
 ) => {
   server.tool(
-    "elasticsearch_delete_document",
-    "Delete a document from Elasticsearch by index and id. Best for: removing specific documents, data cleanup, document lifecycle management. Use when you need to permanently remove individual JSON documents from Elasticsearch indices with optimistic concurrency control.",
+    "delete_document",
+    "Delete a document from Elasticsearch by index and id",
     {
       index: z.string().min(1, "Index is required"),
       id: z.string().min(1, "Document ID is required"),
@@ -44,16 +44,16 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (
     },
     async (params: DeleteDocumentParamsType): Promise<SearchResult> => {
       // Check read-only mode FIRST
-      const readOnlyCheck = readOnlyManager.checkOperation("elasticsearch_delete_document");
+      const readOnlyCheck = readOnlyManager.checkOperation("delete_document");
       if (!readOnlyCheck.allowed) {
-        return readOnlyManager.createBlockedResponse("elasticsearch_delete_document");
+        return readOnlyManager.createBlockedResponse("delete_document");
       }
 
       try {
         // Show warning if in warning mode
         if (readOnlyCheck.warning) {
           logger.warn("Proceeding with destructive operation", { 
-            tool: "elasticsearch_delete_document", 
+            tool: "delete_document", 
             params: { index: params.index, id: params.id }
           });
         }
@@ -76,7 +76,7 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (
         
         // Add warning to response if in warning mode
         if (readOnlyCheck.warning) {
-          return readOnlyManager.createWarningResponse("elasticsearch_delete_document", response);
+          return readOnlyManager.createWarningResponse("delete_document", response);
         }
         
         return response;
@@ -90,4 +90,4 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (
       }
     }
   );
-}  
+} 

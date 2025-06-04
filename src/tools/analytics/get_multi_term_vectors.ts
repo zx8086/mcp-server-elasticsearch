@@ -59,7 +59,7 @@ export const registerGetMultiTermVectorsTool: ToolRegistrationFunction = (
             ids: params.ids,
           },
           {
-            opaqueId: "elasticsearch_get_multi_term_vectors",
+            opaqueId: "get_multi_term_vectors",
           },
         );
         return {

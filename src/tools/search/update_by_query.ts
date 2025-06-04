@@ -71,7 +71,7 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (
             slices: params.slices,
           },
           {
-            opaqueId: "elasticsearch_update_by_query",
+            opaqueId: "update_by_query",
           },
         );
         return {

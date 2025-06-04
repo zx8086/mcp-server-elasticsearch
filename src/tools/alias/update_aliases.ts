@@ -35,7 +35,7 @@ export const registerUpdateAliasesTool: ToolRegistrationFunction = (
             master_timeout: params.masterTimeout,
           },
           {
-            opaqueId: "elasticsearch_update_aliases",
+            opaqueId: "update_aliases",
           },
         );
         return {
