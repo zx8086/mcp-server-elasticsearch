@@ -61,7 +61,7 @@ export const registerEnrichExecutePolicyTool: ToolRegistrationFunction = (
       waitForCompletion: z.boolean().optional(),
     },
     withReadOnlyCheck(
-      "enrich_execute_policy",
+      "elasticsearch_enrich_execute_policy",
       executePolicyImpl,
       OperationType.WRITE,
     ),

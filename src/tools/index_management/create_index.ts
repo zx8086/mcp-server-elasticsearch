@@ -23,8 +23,8 @@ export const registerCreateIndexTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "create_index",
-    "Create an index in Elasticsearch",
+    "elasticsearch_create_index",
+    "Create an index in Elasticsearch with custom settings and mappings. Best for: index initialization, schema definition, data structure setup. Use when you need to create new Elasticsearch indices with specific configurations for document storage.",
     {
       index: z.string().min(1, "Index is required"),
       aliases: z.record(z.any()).optional(),

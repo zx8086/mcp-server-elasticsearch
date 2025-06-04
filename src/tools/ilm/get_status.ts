@@ -11,12 +11,14 @@ export const registerGetStatusTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "ilm_get_status",
-    "Get the ILM status. Get the current index lifecycle management status.",
+    "elasticsearch_ilm_get_status",
+    "Get Index Lifecycle Management status in Elasticsearch. Best for: service monitoring, system status checks, troubleshooting. Use when you need to check if ILM is running and operational in Elasticsearch.",
     {},
     async (): Promise<SearchResult> => {
       try {
-        const result = await esClient.ilm.getStatus();
+        const result = await esClient.ilm.getStatus({}, {
+          opaqueId: "elasticsearch_ilm_get_status",
+        });
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
         };

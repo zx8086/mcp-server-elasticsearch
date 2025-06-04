@@ -21,8 +21,8 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "ilm_explain_lifecycle",
-    "Explain the lifecycle state. Get the current lifecycle status for one or more indices. For data streams, the API retrieves the current lifecycle status for the stream's backing indices.",
+    "elasticsearch_ilm_explain_lifecycle",
+    "Explain Index Lifecycle Management status for indices in Elasticsearch. Best for: lifecycle monitoring, troubleshooting, policy analysis. Use when you need to understand ILM execution status and phase transitions for Elasticsearch indices.",
     {
       index: z.string().min(1, "Index is required"),
       onlyErrors: z.boolean().optional(),
@@ -36,6 +36,8 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (
           only_errors: params.onlyErrors,
           only_managed: params.onlyManaged,
           master_timeout: params.masterTimeout,
+        }, {
+          opaqueId: "elasticsearch_ilm_explain_lifecycle",
         });
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],

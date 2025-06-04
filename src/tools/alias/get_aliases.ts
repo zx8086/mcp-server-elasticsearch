@@ -23,8 +23,8 @@ export const registerGetAliasesTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "get_aliases",
-    "Get aliases for indices in Elasticsearch",
+    "elasticsearch_get_aliases",
+    "Get index aliases from Elasticsearch. Best for: alias discovery, configuration review, index mapping analysis. Use when you need to inspect alias configurations and their associated indices in Elasticsearch.",
     {
       index: z.string().optional(),
       name: z.string().optional(),

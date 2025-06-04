@@ -53,14 +53,14 @@ export const registerWatcherAckWatchTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "watcher_ack_watch",
-    "Acknowledge a watch. Acknowledging a watch enables you to manually throttle the execution of the watch's actions. IMPORTANT: If the specified watch is currently being executed, this API will return an error. Acknowledging an action throttles further executions of that action until its ack.state is reset to awaits_successful_execution.",
+    "elasticsearch_watcher_ack_watch",
+    "Acknowledge a watch in Elasticsearch Watcher to throttle actions. Best for: alert management, action throttling, notification control. Use when you need to manually acknowledge watch actions to prevent repeated executions in Elasticsearch alerting.",
     {
       watch_id: z.string().min(1, "Watch ID is required"),
       action_id: z.union([z.string(), z.array(z.string())]).optional(),
     },
     withReadOnlyCheck(
-      "watcher_ack_watch",
+      "elasticsearch_watcher_ack_watch",
       ackWatchImpl,
       OperationType.WRITE,
     ),

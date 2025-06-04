@@ -55,8 +55,8 @@ export const registerWatcherUpdateSettingsTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "watcher_update_settings",
-    "Update Watcher index settings. Update settings for the Watcher internal index (.watches). Only a subset of settings can be modified. This includes index.auto_expand_replicas, index.number_of_replicas, index.routing.allocation.exclude.*, index.routing.allocation.include.* and index.routing.allocation.require.*.",
+    "elasticsearch_watcher_update_settings",
+    "Update Elasticsearch Watcher index settings for .watches index. Best for: configuration management, performance tuning, allocation control. Use when you need to modify Watcher internal index settings like replicas and allocation in Elasticsearch.",
     {
       "index.auto_expand_replicas": z.string().optional(),
       "index.number_of_replicas": z.number().optional(),
@@ -64,7 +64,7 @@ export const registerWatcherUpdateSettingsTool: ToolRegistrationFunction = (
       timeout: z.string().optional(),
     },
     withReadOnlyCheck(
-      "watcher_update_settings",
+      "elasticsearch_watcher_update_settings",
       updateWatcherSettingsImpl,
       OperationType.WRITE,
     ),

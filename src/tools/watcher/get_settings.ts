@@ -18,8 +18,8 @@ export const registerWatcherGetSettingsTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "watcher_get_settings",
-    "Get Watcher index settings. Get settings for the Watcher internal index (.watches). Only a subset of settings are shown, for example index.auto_expand_replicas and index.number_of_replicas.",
+    "elasticsearch_watcher_get_settings",
+    "Get Elasticsearch Watcher index settings for .watches index. Best for: configuration review, troubleshooting, system analysis. Use when you need to inspect Watcher internal index settings in Elasticsearch.",
     {
       masterTimeout: z.string().optional(),
     },

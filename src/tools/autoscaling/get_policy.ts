@@ -19,8 +19,8 @@ export const registerAutoscalingGetPolicyTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "autoscaling_get_policy",
-    "Get an autoscaling policy. NOTE: This feature is designed for indirect use by Elasticsearch Service, Elastic Cloud Enterprise, and Elastic Cloud on Kubernetes. Direct use is not supported.",
+    "elasticsearch_autoscaling_get_policy",
+    "Get an autoscaling policy from Elasticsearch. Best for: policy inspection, capacity planning, configuration review. Use when you need to retrieve autoscaling policies in Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
     {
       name: z.string().min(1, "Policy name is required"),
       masterTimeout: z.string().optional(),
@@ -30,6 +30,8 @@ export const registerAutoscalingGetPolicyTool: ToolRegistrationFunction = (
         const result = await esClient.autoscaling.getAutoscalingPolicy({
           name: params.name,
           master_timeout: params.masterTimeout,
+        }, {
+          opaqueId: "elasticsearch_autoscaling_get_policy",
         });
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],

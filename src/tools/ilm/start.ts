@@ -51,14 +51,14 @@ export const registerStartTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "ilm_start",
-    "Start the ILM plugin. Start the index lifecycle management plugin if it is currently stopped. ILM is started automatically when the cluster is formed. Restarting ILM is necessary only when it has been stopped using the stop ILM API.",
+    "elasticsearch_ilm_start",
+    "Start the Index Lifecycle Management plugin in Elasticsearch. Best for: service management, system initialization, resuming automated operations. Use when you need to start or restart ILM after maintenance in Elasticsearch.",
     {
       masterTimeout: z.string().optional(),
       timeout: z.string().optional(),
     },
     withReadOnlyCheck(
-      "ilm_start",
+      "elasticsearch_ilm_start",
       startImpl,
       OperationType.WRITE,
     ),

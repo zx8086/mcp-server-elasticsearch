@@ -21,8 +21,8 @@ export const registerExistsTemplateTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "exists_template",
-    "Check existence of index templates. Get information about whether index templates exist. Index templates define settings, mappings, and aliases that can be applied automatically to new indices. IMPORTANT: This documentation is about legacy index templates, which are deprecated and will be replaced by the composable templates introduced in Elasticsearch 7.8.",
+    "elasticsearch_exists_template",
+    "Check existence of legacy index templates in Elasticsearch. Best for: legacy template validation, migration planning, compatibility checks. Use when you need to verify legacy index template presence in Elasticsearch (deprecated, use composable templates instead).",
     {
       name: z.union([z.string(), z.array(z.string())]),
       flat_settings: z.boolean().optional(),

@@ -50,13 +50,13 @@ export const registerWatcherActivateWatchTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "watcher_activate_watch",
-    "Activate a watch. A watch can be either active or inactive.",
+    "elasticsearch_watcher_activate_watch",
+    "Activate a watch in Elasticsearch Watcher. Best for: monitoring automation, alerting management, watch lifecycle control. Use when you need to enable watch execution for Elasticsearch alerting and monitoring workflows.",
     {
       watch_id: z.string().min(1, "Watch ID is required"),
     },
     withReadOnlyCheck(
-      "watcher_activate_watch",
+      "elasticsearch_watcher_activate_watch",
       activateWatchImpl,
       OperationType.WRITE,
     ),

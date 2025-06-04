@@ -18,8 +18,8 @@ export const registerEnrichStatsTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "enrich_stats",
-    "Get enrich stats. Returns enrich coordinator statistics and information about enrich policies that are currently executing.",
+    "elasticsearch_enrich_stats",
+    "Get Elasticsearch enrich coordinator statistics and execution status. Best for: performance monitoring, policy tracking, enrichment analysis. Use when you need to monitor enrich policy execution and coordinator performance in Elasticsearch.",
     {
       masterTimeout: z.string().optional(),
     },

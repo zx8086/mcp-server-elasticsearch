@@ -20,8 +20,8 @@ export const registerGetNodesStatsTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "get_nodes_stats",
-    "Get statistics about nodes in the Elasticsearch cluster",
+    "elasticsearch_get_nodes_stats",
+    "Get node statistics from the Elasticsearch cluster. Best for: performance monitoring, resource analysis, cluster diagnostics. Use when you need detailed metrics about node performance, memory usage, and operations in Elasticsearch.",
     {
       nodeId: z.string().optional(),
       metric: z.string().optional(),

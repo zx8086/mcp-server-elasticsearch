@@ -20,8 +20,8 @@ export const registerExplainDataLifecycleTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "explain_data_lifecycle",
-    "Get the status for a data stream lifecycle. Get information about an index or data stream's current data stream lifecycle status, such as time since index creation, time since rollover, the lifecycle configuration managing the index, or any errors encountered during lifecycle execution.",
+    "elasticsearch_explain_data_lifecycle",
+    "Get data stream lifecycle status and execution details in Elasticsearch. Best for: lifecycle monitoring, troubleshooting, policy analysis. Use when you need to understand data stream lifecycle execution status and configuration in Elasticsearch.",
     {
       index: z.union([z.string(), z.array(z.string())]),
       include_defaults: z.boolean().optional(),

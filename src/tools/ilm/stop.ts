@@ -51,14 +51,14 @@ export const registerStopTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "ilm_stop",
-    "Stop the ILM plugin. Halt all lifecycle management operations and stop the index lifecycle management plugin. This is useful when you are performing maintenance on the cluster and need to prevent ILM from performing any actions on your indices.",
+    "elasticsearch_ilm_stop",
+    "Stop the Index Lifecycle Management plugin in Elasticsearch. Best for: maintenance operations, system control, preventing automated actions. Use when you need to halt all ILM operations during Elasticsearch cluster maintenance.",
     {
       masterTimeout: z.string().optional(),
       timeout: z.string().optional(),
     },
     withReadOnlyCheck(
-      "ilm_stop",
+      "elasticsearch_ilm_stop",
       stopImpl,
       OperationType.WRITE,
     ),

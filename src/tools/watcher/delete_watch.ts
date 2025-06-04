@@ -50,13 +50,13 @@ export const registerWatcherDeleteWatchTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "watcher_delete_watch",
-    "Delete a watch. When the watch is removed, the document representing the watch in the .watches index is gone and it will never be run again. IMPORTANT: Deleting a watch must be done by using only this API. Do not delete the watch directly from the .watches index using the Elasticsearch delete document API.",
+    "elasticsearch_watcher_delete_watch",
+    "Delete a watch from Elasticsearch Watcher. Best for: watch cleanup, configuration management, removing unused monitors. Use when you need to permanently remove watch definitions from Elasticsearch alerting system. IMPORTANT: Use only this API, not direct index deletion.",
     {
       id: z.string().min(1, "Watch ID is required"),
     },
     withReadOnlyCheck(
-      "watcher_delete_watch",
+      "elasticsearch_watcher_delete_watch",
       deleteWatchImpl,
       OperationType.DELETE,
     ),

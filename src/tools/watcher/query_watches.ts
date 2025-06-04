@@ -26,8 +26,8 @@ export const registerWatcherQueryWatchesTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "watcher_query_watches",
-    "Query watches. Get all registered watches in a paginated manner and optionally filter watches by a query. Note that only the _id and metadata.* fields are queryable or sortable.",
+    "elasticsearch_watcher_query_watches",
+    "Query and filter watches in Elasticsearch Watcher. Best for: watch discovery, configuration management, monitoring overview. Use when you need to search and paginate through watch definitions in Elasticsearch alerting system.",
     {
       from: z.number().min(0).optional(),
       size: z.number().min(1).max(50).optional(),

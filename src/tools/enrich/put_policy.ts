@@ -35,8 +35,8 @@ export const registerEnrichPutPolicyTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "enrich_put_policy",
-    "Create an enrich policy. Creates an enrich policy.",
+    "elasticsearch_enrich_put_policy",
+    "Create an enrich policy in Elasticsearch. Best for: data enrichment setup, reference data integration, document enhancement workflows. Use when you need to define policies for adding reference data to documents during ingestion in Elasticsearch.",
     PutPolicyParams.shape,
     async (params: PutPolicyParamsType, extra: Record<string, unknown>): Promise<SearchResult> => {
       try {

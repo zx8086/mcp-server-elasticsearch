@@ -83,8 +83,8 @@ export const registerWatcherExecuteWatchTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "watcher_execute_watch",
-    "Run a watch. This API can be used to force execution of the watch outside of its triggering logic or to simulate the watch execution for debugging purposes. You can use the run watch API to run watches that are not yet registered by specifying the watch definition inline.",
+    "elasticsearch_watcher_execute_watch",
+    "Execute a watch in Elasticsearch Watcher for testing or debugging. Best for: watch testing, debugging workflows, manual execution. Use when you need to force watch execution outside normal triggers in Elasticsearch alerting systems.",
     {
       id: z.string().optional(),
       action_modes: z.record(z.enum(["simulate", "force_simulate", "execute", "force_execute", "skip"])).optional(),
@@ -114,7 +114,7 @@ export const registerWatcherExecuteWatchTool: ToolRegistrationFunction = (
       debug: z.boolean().optional(),
     },
     withReadOnlyCheck(
-      "watcher_execute_watch",
+      "elasticsearch_watcher_execute_watch",
       executeWatchImpl,
       OperationType.WRITE,
     ),

@@ -68,7 +68,7 @@ export const registerCancelTaskTool: ToolRegistrationFunction = (
       waitForCompletion: z.boolean().optional(),
     },
     withReadOnlyCheck(
-      "cancel_task",
+      "elasticsearch_tasks_cancel_task",
       cancelTaskImpl,
       OperationType.WRITE,
     ),
