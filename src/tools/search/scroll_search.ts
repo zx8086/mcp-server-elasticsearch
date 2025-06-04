@@ -22,8 +22,8 @@ export const registerScrollSearchTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "scroll_search",
-    "Perform a scroll search in Elasticsearch",
+    "elasticsearch_scroll_search",
+    "Perform scroll search in Elasticsearch for large result sets. Best for: pagination, large dataset retrieval, memory-efficient iteration. Use when you need to retrieve all documents from large result sets without overwhelming memory in Elasticsearch.",
     {
       index: z.string().min(1, "Index is required"),
       query: z.record(z.any()),

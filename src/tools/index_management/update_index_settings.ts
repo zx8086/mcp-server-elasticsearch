@@ -25,8 +25,8 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "update_index_settings",
-    "Update index settings in Elasticsearch",
+    "elasticsearch_update_index_settings",
+    "Update index settings in Elasticsearch. Best for: performance tuning, configuration changes, index optimization. Use when you need to modify index settings for better performance or functionality in Elasticsearch.",
     {
       index: z.string().min(1, "Index is required"),
       settings: z.record(z.any()),
