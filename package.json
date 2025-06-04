@@ -35,18 +35,18 @@
   },
   "dependencies": {
     "@elastic/elasticsearch": "^9.0.2",
-    "@elastic/transport": "^9.0.1",
-    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@elastic/transport": "^9.0.2",
+    "@modelcontextprotocol/sdk": "^1.12.1",
     "@types/bun": "^1.2.15",
-    "zod": "^3.25.0"
+    "zod": "^3.25.51"
   },
   "engines": {
     "bun": ">=1.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.15.24",
+    "@types/node": "^22.15.29",
     "bun-types": "^1.2.15",
-    "eslint": "^9.27.0",
+    "eslint": "^9.28.0",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3"
   },
