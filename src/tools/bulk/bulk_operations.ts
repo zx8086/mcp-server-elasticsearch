@@ -57,8 +57,8 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (
         const content: TextContent[] = [{
           type: "text",
           text: "Error: You must provide an 'index' parameter or ensure every operation document has a '_index' property."
-        }];
-        return { content } as unknown as SearchResult;
+        } as TextContent];
+        return { content };
       }
 
       try {
@@ -113,12 +113,11 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (
             null,
             2,
           )
-        }];
+        } as TextContent];
         const response: SearchResult = { content };
 
         if (readOnlyCheck.warning) {
-          const warningResponse = readOnlyManager.createWarningResponse("elasticsearch_bulk_operations", response);
-          return warningResponse as unknown as SearchResult;
+          return readOnlyManager.createWarningResponse("elasticsearch_bulk_operations", response);
         }
 
         return response;
@@ -129,8 +128,8 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (
         const content: TextContent[] = [{
           type: "text",
           text: `Error: ${error instanceof Error ? error.message : String(error)}`
-        }];
-        return { content } as unknown as SearchResult;
+        } as TextContent];
+        return { content };
       }
     },
   );

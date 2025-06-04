@@ -133,119 +133,119 @@ import {
 } from "./watcher/index.js";
 
 export function registerAllTools(server: McpServer, esClient: Client) {
-  // registerListIndicesTool(server, esClient);
-  // registerGetMappingsTool(server, esClient);
-  // registerSearchTool(server, esClient);
-  // registerGetShardsTool(server, esClient);
-  // registerIndicesSummaryTool(server, esClient);
+  registerListIndicesTool(server, esClient);
+  registerGetMappingsTool(server, esClient);
+  registerSearchTool(server, esClient);
+  registerGetShardsTool(server, esClient);
+  registerIndicesSummaryTool(server, esClient);
 
-  // registerIndexDocumentTool(server, esClient);
-  // registerGetDocumentTool(server, esClient);
-  // registerUpdateDocumentTool(server, esClient);
-  // registerDeleteDocumentTool(server, esClient);
-  // registerDocumentExistsTool(server, esClient);
+  registerIndexDocumentTool(server, esClient);
+  registerGetDocumentTool(server, esClient);
+  registerUpdateDocumentTool(server, esClient);
+  registerDeleteDocumentTool(server, esClient);
+  registerDocumentExistsTool(server, esClient);
 
-  // registerBulkOperationsTool(server, esClient);
-  // registerMultiGetTool(server, esClient);
+  registerBulkOperationsTool(server, esClient);
+  registerMultiGetTool(server, esClient);
 
-  // registerExecuteSqlQueryTool(server, esClient);
-  // registerUpdateByQueryTool(server, esClient);
-  // registerCountDocumentsTool(server, esClient);
-  // registerScrollSearchTool(server, esClient);
-  // registerMultiSearchTool(server, esClient);
-  // registerClearScrollTool(server, esClient);
+  registerExecuteSqlQueryTool(server, esClient);
+  registerUpdateByQueryTool(server, esClient);
+  registerCountDocumentsTool(server, esClient);
+  registerScrollSearchTool(server, esClient);
+  registerMultiSearchTool(server, esClient);
+  registerClearScrollTool(server, esClient);
 
-  // registerCreateIndexTool(server, esClient);
-  // registerDeleteIndexTool(server, esClient);
-  // registerIndexExistsTool(server, esClient);
-  // registerGetIndexTool(server, esClient);
-  // registerUpdateIndexSettingsTool(server, esClient);
-  // registerGetIndexSettingsTool(server, esClient);
-  // registerRefreshIndexTool(server, esClient);
-  // registerFlushIndexTool(server, esClient);
-  // registerReindexDocumentsTool(server, esClient);
-  // registerPutMappingTool(server, esClient);
+  registerCreateIndexTool(server, esClient);
+  registerDeleteIndexTool(server, esClient);
+  registerIndexExistsTool(server, esClient);
+  registerGetIndexTool(server, esClient);
+  registerUpdateIndexSettingsTool(server, esClient);
+  registerGetIndexSettingsTool(server, esClient);
+  registerRefreshIndexTool(server, esClient);
+  registerFlushIndexTool(server, esClient);
+  registerReindexDocumentsTool(server, esClient);
+  registerPutMappingTool(server, esClient);
 
-  // registerDeleteByQueryTool(server, esClient);
-  // registerTranslateSqlQueryTool(server, esClient);
+  registerDeleteByQueryTool(server, esClient);
+  registerTranslateSqlQueryTool(server, esClient);
 
-  // registerSearchTemplateTool(server, esClient);
-  // registerMultiSearchTemplateTool(server, esClient);
-  // registerGetIndexTemplateTool(server, esClient);
-  // registerPutIndexTemplateTool(server, esClient);
-  // registerDeleteIndexTemplateTool(server, esClient);
+  registerSearchTemplateTool(server, esClient);
+  registerMultiSearchTemplateTool(server, esClient);
+  registerGetIndexTemplateTool(server, esClient);
+  registerPutIndexTemplateTool(server, esClient);
+  registerDeleteIndexTemplateTool(server, esClient);
 
-  // registerGetTermVectorsTool(server, esClient);
-  // registerGetMultiTermVectorsTool(server, esClient);
+  registerGetTermVectorsTool(server, esClient);
+  registerGetMultiTermVectorsTool(server, esClient);
 
-  // registerGetAliasesTool(server, esClient);
-  // registerPutAliasTool(server, esClient);
-  // registerDeleteAliasTool(server, esClient);
-  // registerUpdateAliasesTool(server, esClient);
+  registerGetAliasesTool(server, esClient);
+  registerPutAliasTool(server, esClient);
+  registerDeleteAliasTool(server, esClient);
+  registerUpdateAliasesTool(server, esClient);
 
   registerGetClusterHealthTool(server, esClient);
-  // registerGetClusterStatsTool(server, esClient);
-  // registerGetNodesInfoTool(server, esClient);
-  // registerGetNodesStatsTool(server, esClient);
+  registerGetClusterStatsTool(server, esClient);
+  registerGetNodesInfoTool(server, esClient);
+  registerGetNodesStatsTool(server, esClient);
 
-  // registerGetFieldMappingTool(server, esClient);
-  // registerClearSqlCursorTool(server, esClient);
+  registerGetFieldMappingTool(server, esClient);
+  registerClearSqlCursorTool(server, esClient);
 
-  // // Register ILM Tools
-  // registerDeleteLifecycleTool(server, esClient);
-  // registerExplainLifecycleTool(server, esClient);
-  // registerGetLifecycleTool(server, esClient);
-  // registerGetStatusTool(server, esClient);
-  // registerMigrateToDataTiersTool(server, esClient);
-  // registerMoveToStepTool(server, esClient);
-  // registerPutLifecycleTool(server, esClient);
-  // registerRemovePolicyTool(server, esClient);
-  // registerRetryTool(server, esClient);
-  // registerStartTool(server, esClient);
-  // registerStopTool(server, esClient);
+  // Register ILM Tools
+  registerDeleteLifecycleTool(server, esClient);
+  registerExplainLifecycleTool(server, esClient);
+  registerGetLifecycleTool(server, esClient);
+  registerGetStatusTool(server, esClient);
+  registerMigrateToDataTiersTool(server, esClient);
+  registerMoveToStepTool(server, esClient);
+  registerPutLifecycleTool(server, esClient);
+  registerRemovePolicyTool(server, esClient);
+  registerRetryTool(server, esClient);
+  registerStartTool(server, esClient);
+  registerStopTool(server, esClient);
 
-  // // Register Enrich Tools
-  // registerEnrichGetPolicyTool(server, esClient);
-  // registerEnrichPutPolicyTool(server, esClient);
-  // registerEnrichDeletePolicyTool(server, esClient);
-  // registerEnrichExecutePolicyTool(server, esClient);
-  // registerEnrichStatsTool(server, esClient);
+  // Register Enrich Tools
+  registerEnrichGetPolicyTool(server, esClient);
+  registerEnrichPutPolicyTool(server, esClient);
+  registerEnrichDeletePolicyTool(server, esClient);
+  registerEnrichExecutePolicyTool(server, esClient);
+  registerEnrichStatsTool(server, esClient);
 
-  // // Register Autoscaling Tools
-  // registerAutoscalingGetPolicyTool(server, esClient);
-  // registerAutoscalingPutPolicyTool(server, esClient);
-  // registerAutoscalingDeletePolicyTool(server, esClient);
-  // registerAutoscalingGetCapacityTool(server, esClient);
+  // Register Autoscaling Tools
+  registerAutoscalingGetPolicyTool(server, esClient);
+  registerAutoscalingPutPolicyTool(server, esClient);
+  registerAutoscalingDeletePolicyTool(server, esClient);
+  registerAutoscalingGetCapacityTool(server, esClient);
 
-  // // Register Task Tools
-  // registerListTasksTool(server, esClient);
-  // registerGetTaskTool(server, esClient);
-  // registerCancelTaskTool(server, esClient);
+  // Register Task Tools
+  registerListTasksTool(server, esClient);
+  registerGetTaskTool(server, esClient);
+  registerCancelTaskTool(server, esClient);
 
-  // // Register Indices Analysis Tools
-  // registerFieldUsageStatsTool(server, esClient);
-  // registerDiskUsageTool(server, esClient);
-  // registerGetDataLifecycleStatsTool(server, esClient);
-  // registerGetIndexInfoTool(server, esClient);
-  // registerGetIndexSettingsAdvancedTool(server, esClient);
-  // registerRolloverTool(server, esClient);
-  // registerExistsAliasTool(server, esClient);
-  // registerExistsIndexTemplateTool(server, esClient);
-  // registerExistsTemplateTool(server, esClient);
-  // registerExplainDataLifecycleTool(server, esClient);
+  // Register Indices Analysis Tools
+  registerFieldUsageStatsTool(server, esClient);
+  registerDiskUsageTool(server, esClient);
+  registerGetDataLifecycleStatsTool(server, esClient);
+  registerGetIndexInfoTool(server, esClient);
+  registerGetIndexSettingsAdvancedTool(server, esClient);
+  registerRolloverTool(server, esClient);
+  registerExistsAliasTool(server, esClient);
+  registerExistsIndexTemplateTool(server, esClient);
+  registerExistsTemplateTool(server, esClient);
+  registerExplainDataLifecycleTool(server, esClient);
 
-  // // Register Watcher Tools
-  // registerWatcherGetWatchTool(server, esClient);
-  // registerWatcherPutWatchTool(server, esClient);
-  // registerWatcherDeleteWatchTool(server, esClient);
-  // registerWatcherQueryWatchesTool(server, esClient);
-  // registerWatcherActivateWatchTool(server, esClient);
-  // registerWatcherDeactivateWatchTool(server, esClient);
-  // registerWatcherAckWatchTool(server, esClient);
-  // registerWatcherExecuteWatchTool(server, esClient);
-  // registerWatcherStartTool(server, esClient);
-  // registerWatcherStopTool(server, esClient);
-  // registerWatcherGetSettingsTool(server, esClient);
-  // registerWatcherUpdateSettingsTool(server, esClient);
-  // registerWatcherStatsTool(server, esClient);
-} 
+  // Register Watcher Tools
+  registerWatcherGetWatchTool(server, esClient);
+  registerWatcherPutWatchTool(server, esClient);
+  registerWatcherDeleteWatchTool(server, esClient);
+  registerWatcherQueryWatchesTool(server, esClient);
+  registerWatcherActivateWatchTool(server, esClient);
+  registerWatcherDeactivateWatchTool(server, esClient);
+  registerWatcherAckWatchTool(server, esClient);
+  registerWatcherExecuteWatchTool(server, esClient);
+  registerWatcherStartTool(server, esClient);
+  registerWatcherStopTool(server, esClient);
+  registerWatcherGetSettingsTool(server, esClient);
+  registerWatcherUpdateSettingsTool(server, esClient);
+  registerWatcherStatsTool(server, esClient);
+}   
