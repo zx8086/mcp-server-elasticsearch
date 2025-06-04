@@ -41,7 +41,7 @@ export const registerPutAliasTool: ToolRegistrationFunction = (
             is_write_index: params.isWriteIndex,
           },
           {
-            opaqueId: "put_alias",
+            opaqueId: "elasticsearch_put_alias",
           },
         );
         return {

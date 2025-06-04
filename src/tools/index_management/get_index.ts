@@ -26,8 +26,8 @@ export const registerGetIndexTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "get_index",
-    "Get index information from Elasticsearch",
+    "elasticsearch_get_index",
+    "Get comprehensive index information from Elasticsearch including settings, mappings, and aliases. Best for: index inspection, configuration analysis, troubleshooting. Use when you need detailed metadata about Elasticsearch indices structure and configuration.",
     {
       index: z.string().min(1, "Index is required"),
       ignoreUnavailable: z.boolean().optional(),

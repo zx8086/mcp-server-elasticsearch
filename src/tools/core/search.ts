@@ -31,14 +31,14 @@ export const registerSearchTool: ToolFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "search",
-    "Perform an Elasticsearch search with the provided query DSL. Highlights are always enabled.",
+    "elasticsearch_search",
+    "Perform full-text search in Elasticsearch using Query DSL. Best for: text search, fuzzy matching, aggregations, analytics, relevance scoring. Use when you need powerful search and analytics capabilities on JSON documents. Highlights are always enabled.",
     {
       index: z
         .string()
         .trim()
         .min(1, "Index name is required")
-        .describe("Name of the Elasticsearch index to search"),
+        .describe("Name of the Elasticsearch index to search for documents"),
       queryBody: z
         .record(z.any())
         .refine(
@@ -55,7 +55,7 @@ export const registerSearchTool: ToolFunction = (
           },
         )
         .describe(
-          "Complete Elasticsearch query DSL object that can include query, size, from, sort, etc.",
+          "Complete Elasticsearch Query DSL object for full-text search, filtering, aggregations, and sorting. Use this for complex search operations with relevance scoring.",
         ),
     },
     async ({ index, queryBody }: ToolParams): Promise<SearchResult> => {
@@ -99,7 +99,7 @@ export const registerSearchTool: ToolFunction = (
           }
         }
         const result = await esClient.search(searchRequest, {
-          opaqueId: "search",
+          opaqueId: "elasticsearch_search",
         });
         const from = typedQueryBody.from || 0;
         if (typedQueryBody.size === 0 || typedQueryBody.aggs) {

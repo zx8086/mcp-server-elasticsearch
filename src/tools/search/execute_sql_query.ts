@@ -35,7 +35,7 @@ export const registerExecuteSqlQueryTool: ToolRegistrationFunction = (
             fetch_size: params.fetchSize,
           },
           {
-            opaqueId: "execute_sql_query",
+            opaqueId: "elasticsearch_execute_sql_query",
           },
         );
         return {

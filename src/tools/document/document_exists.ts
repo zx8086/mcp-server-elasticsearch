@@ -25,8 +25,8 @@ export const registerDocumentExistsTool: ToolRegistrationFunction = (
   esClient: Client
 ) => {
   server.tool(
-    "document_exists",
-    "Check if a document exists in Elasticsearch by index and id",
+    "elasticsearch_document_exists",
+    "Check if a document exists in Elasticsearch by index and id. Best for: document validation, existence checks, conditional operations. Use when you need to verify document presence in Elasticsearch indices before performing operations.",
     {
       index: z.string().min(1, "Index is required"),
       id: z.string().min(1, "Document ID is required"),
@@ -58,4 +58,4 @@ export const registerDocumentExistsTool: ToolRegistrationFunction = (
       }
     }
   );
-} 
+}  

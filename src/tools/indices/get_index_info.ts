@@ -26,8 +26,8 @@ export const registerGetIndexInfoTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "get_index_info",
-    "Get index information. Get information about one or more indices. For data streams, the API returns information about the stream's backing indices. This enhanced version supports feature filtering.",
+    "elasticsearch_get_index_info",
+    "Get comprehensive index information from Elasticsearch including aliases, mappings, and settings. Best for: index inspection, configuration analysis, data stream monitoring. Use when you need detailed metadata about Elasticsearch indices with feature filtering capabilities for selective information retrieval.",
     {
       index: z.union([z.string(), z.array(z.string())]),
       allowNoIndices: z.boolean().optional(),

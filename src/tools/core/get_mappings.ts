@@ -22,8 +22,8 @@ export const registerGetMappingsTool: ToolRegistrationFunction = (
   esClient: Client
 ) => {
   server.tool(
-    "get_mappings",
-    "Get field mappings for a specific Elasticsearch index",
+    "elasticsearch_get_mappings",
+    "Get field mappings for a specific Elasticsearch index. Best for: understanding document structure, field types, and analyzers. Use when you need to inspect the schema and data types of JSON documents stored in Elasticsearch indices.",
     {
       index: z
         .string()
@@ -55,4 +55,4 @@ export const registerGetMappingsTool: ToolRegistrationFunction = (
       }
     }
   );
-} 
+}  
