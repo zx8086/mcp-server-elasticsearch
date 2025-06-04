@@ -6,7 +6,8 @@ node_modules/
 .env.production
 .env.test
 .env.test.local
-!.env.example 
+!.env.example
+.envrc
 
 # TypeScript
 dist/
