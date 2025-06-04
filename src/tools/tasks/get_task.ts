@@ -20,8 +20,8 @@ export const registerGetTaskTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "get_task",
-    "Get task information. Get information about a task currently running in the cluster.",
+    "elasticsearch_tasks_get_task",
+    "Get information about a specific Elasticsearch task. Best for: task monitoring, operation tracking, performance analysis. Use when you need to inspect the status and details of running or completed tasks in Elasticsearch.",
     {
       taskId: z.string().min(1, "Task ID is required"),
       timeout: z.union([z.string(), z.number(), z.literal(-1), z.literal(0)]).optional(),
