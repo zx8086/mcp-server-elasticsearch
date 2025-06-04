@@ -58,8 +58,8 @@ export const registerCancelTaskTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "cancel_task",
-    "Cancel a task. WARNING: The task management API is new and should still be considered a beta feature. The API may change in ways that are not backwards compatible. A task may continue to run for some time after it has been cancelled because it may not be able to safely stop its current activity straight away.",
+    "elasticsearch_tasks_cancel_task",
+    "Cancel a running Elasticsearch task. Best for: operation control, resource management, stopping long-running operations. Use when you need to terminate tasks that are taking too long or consuming too many resources in Elasticsearch. WARNING: Task management API is beta.",
     {
       taskId: z.string().optional(),
       actions: z.union([z.string(), z.array(z.string())]).optional(),
