@@ -76,8 +76,8 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "delete_by_query",
-    "Delete documents by query in Elasticsearch",
+    "elasticsearch_delete_by_query",
+    "Delete documents by query in Elasticsearch. Best for: bulk document deletion, data cleanup, removing documents matching specific criteria. Use when you need to delete multiple documents based on query conditions rather than individual document IDs.",
     {
       index: z.string().min(1, "Index is required"),
       query: z.record(z.any()),
@@ -97,7 +97,7 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (
       slices: z.number().optional(),
     },
     withReadOnlyCheck(
-      "delete_by_query",
+      "elasticsearch_delete_by_query",
       deleteByQueryImpl,
       OperationType.DELETE,
     ),

@@ -19,8 +19,8 @@ export const registerExecuteSqlQueryTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "execute_sql_query",
-    "Execute a SQL query using Elasticsearch SQL API",
+    "elasticsearch_execute_sql_query",
+    "Execute a SQL query using Elasticsearch SQL API. Best for: familiar SQL syntax, structured queries, data analysis. Use when you need to query Elasticsearch using SQL instead of Query DSL for easier data exploration and reporting.",
     {
       query: z.string().min(1, "SQL query is required"),
       format: z.enum(["json", "csv", "tsv", "txt", "yaml", "cbor", "smile"]).optional(),

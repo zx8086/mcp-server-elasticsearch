@@ -22,8 +22,8 @@ export const registerWatcherStatsTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "watcher_stats",
-    "Get Watcher statistics. This API always returns basic metrics. You retrieve more metrics by using the metric parameter.",
+    "elasticsearch_watcher_stats",
+    "Get Elasticsearch Watcher statistics and monitoring metrics. Best for: alerting monitoring, watch performance analysis, system health checks. Use when you need to monitor Elasticsearch Watcher execution statistics and watch queue status.",
     {
       metric: z.union([
         z.enum(["_all", "queued_watches", "current_watches", "pending_watches"]),

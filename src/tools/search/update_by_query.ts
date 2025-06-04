@@ -31,8 +31,8 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "update_by_query",
-    "Update documents by query in Elasticsearch",
+    "elasticsearch_update_by_query",
+    "Update documents by query in Elasticsearch. Best for: bulk document updates, field modifications, script-based transformations. Use when you need to update multiple documents based on query conditions rather than individual document updates.",
     {
       index: z.string().min(1, "Index is required"),
       query: z.record(z.any()),

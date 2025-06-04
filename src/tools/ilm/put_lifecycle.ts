@@ -56,8 +56,8 @@ export const registerPutLifecycleTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "ilm_put_lifecycle",
-    "Create or update a lifecycle policy. If the specified policy exists, it is replaced and the policy version is incremented. NOTE: Only the latest version of the policy is stored, you cannot revert to previous versions.",
+    "elasticsearch_ilm_put_lifecycle",
+    "Create or update Elasticsearch Index Lifecycle Management (ILM) policy. Best for: automated index management, storage optimization, data retention. Use when you need to define lifecycle policies for automatic index operations in Elasticsearch. NOTE: Only the latest version is stored.",
     {
       policy: z.string().min(1, "Policy identifier is required"),
       body: z.record(z.any()).optional(),
@@ -65,7 +65,7 @@ export const registerPutLifecycleTool: ToolRegistrationFunction = (
       timeout: z.string().optional(),
     },
     withReadOnlyCheck(
-      "ilm_put_lifecycle",
+      "elasticsearch_ilm_put_lifecycle",
       putLifecycleImpl,
       OperationType.WRITE,
     ),

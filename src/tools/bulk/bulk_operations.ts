@@ -28,8 +28,8 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "bulk_operations",
-    "Perform bulk operations in Elasticsearch",
+    "elasticsearch_bulk_operations",
+    "Perform bulk operations in Elasticsearch for high-throughput data ingestion. Best for: batch indexing, bulk updates, mass data import, performance optimization. Use when you need to efficiently index, update, or delete large volumes of documents in Elasticsearch.",
     {
       operations: z.array(z.record(z.any())),
       index: z.string().optional(),
@@ -45,9 +45,9 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (
     },
     async (params: BulkOperationsParamsType): Promise<SearchResult> => {
       // Check read-only mode first
-      const readOnlyCheck = readOnlyManager.checkOperation("bulk_operations");
+      const readOnlyCheck = readOnlyManager.checkOperation("elasticsearch_bulk_operations");
       if (!readOnlyCheck.allowed) {
-        return readOnlyManager.createBlockedResponse("bulk_operations");
+        return readOnlyManager.createBlockedResponse("elasticsearch_bulk_operations");
       }
 
       // Validation: Ensure index is provided globally or per-document
@@ -64,7 +64,7 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (
       try {
         if (readOnlyCheck.warning) {
           logger.warn("🚨 CRITICAL: About to perform bulk operations", {
-            tool: "bulk_operations",
+            tool: "elasticsearch_bulk_operations",
             operationCount: params.operations.length,
             warning: "This may create, update, or delete multiple documents",
           });
@@ -117,7 +117,7 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (
         const response: SearchResult = { content };
 
         if (readOnlyCheck.warning) {
-          const warningResponse = readOnlyManager.createWarningResponse("bulk_operations", response);
+          const warningResponse = readOnlyManager.createWarningResponse("elasticsearch_bulk_operations", response);
           return warningResponse as unknown as SearchResult;
         }
 
