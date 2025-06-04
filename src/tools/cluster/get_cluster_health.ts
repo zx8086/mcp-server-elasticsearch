@@ -116,7 +116,7 @@ export const registerGetClusterHealthTool: ToolRegistrationFunction = (
               {
                 type: "text",
                 text: `Error getting cluster health: ${error instanceof Error ? error.message : String(error)}`,
-              },
+              } as TextContent,
             ],
           };
         }

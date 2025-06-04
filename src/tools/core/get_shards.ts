@@ -64,10 +64,10 @@ export const registerGetShardsTool: ToolRegistrationFunction = (
         });
         return {
           content: [
-            { type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` },
+            { type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` } as TextContent,
           ],
         };
       }
     }
   );
-}            
+}                        
