@@ -55,8 +55,8 @@ export const registerMigrateToDataTiersTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "ilm_migrate_to_data_tiers",
-    "Migrate to data tiers routing. Switch the indices, ILM policies, and legacy, composable, and component templates from using custom node attributes and attribute-based allocation filters to using data tiers. ILM must be stopped before performing the migration.",
+    "elasticsearch_ilm_migrate_to_data_tiers",
+    "Migrate to data tiers routing in Elasticsearch ILM. Best for: cluster modernization, data tier adoption, allocation optimization. Use when you need to migrate from custom node attributes to data tiers in Elasticsearch. Requires ILM to be stopped.",
     {
       legacyTemplateToDelete: z.string().optional(),
       nodeAttribute: z.string().optional(),
@@ -64,7 +64,7 @@ export const registerMigrateToDataTiersTool: ToolRegistrationFunction = (
       masterTimeout: z.string().optional(),
     },
     withReadOnlyCheck(
-      "ilm_migrate_to_data_tiers",
+      "elasticsearch_ilm_migrate_to_data_tiers",
       migrateToDataTiersImpl,
       OperationType.DESTRUCTIVE,
     ),

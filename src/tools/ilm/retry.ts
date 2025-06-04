@@ -49,13 +49,13 @@ export const registerRetryTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "ilm_retry",
-    "Retry running the lifecycle policy for an index that is in the ERROR step. The API sets the policy back to the step where the error occurred and runs the step. Use the explain lifecycle state API to determine whether an index is in the ERROR step.",
+    "elasticsearch_ilm_retry",
+    "Retry Index Lifecycle Management policy execution for failed indices in Elasticsearch. Best for: error recovery, policy troubleshooting, automated remediation. Use when you need to retry ILM policy execution for indices in ERROR state in Elasticsearch.",
     {
       index: z.string().min(1, "Index name is required"),
     },
     withReadOnlyCheck(
-      "ilm_retry",
+      "elasticsearch_ilm_retry",
       retryImpl,
       OperationType.WRITE,
     ),

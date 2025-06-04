@@ -19,8 +19,8 @@ export const registerUpdateAliasesTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "update_aliases",
-    "Update aliases in Elasticsearch using the aliases API",
+    "elasticsearch_update_aliases",
+    "Update index aliases in Elasticsearch using the aliases API. Best for: alias management, index switching, zero-downtime deployments. Use when you need to atomically add, remove, or modify multiple index aliases in Elasticsearch.",
     {
       actions: z.array(z.record(z.any())),
       timeout: z.string().optional(),

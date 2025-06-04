@@ -34,8 +34,8 @@ export const registerGetMultiTermVectorsTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "get_multi_term_vectors",
-    "Get term vectors for multiple documents in Elasticsearch",
+    "elasticsearch_get_multi_term_vectors",
+    "Get term vectors for multiple documents in Elasticsearch. Best for: text analysis, similarity calculations, relevance tuning. Use when you need to analyze term frequency and position data for multiple documents in Elasticsearch indices.",
     GetMultiTermVectorsParams.shape,
     async (params: GetMultiTermVectorsParamsType): Promise<SearchResult> => {
       try {

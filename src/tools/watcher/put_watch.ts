@@ -94,8 +94,8 @@ export const registerWatcherPutWatchTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "watcher_put_watch",
-    "Create or update a watch. When a watch is registered, a new document that represents the watch is added to the .watches index and its trigger is immediately registered with the relevant trigger engine. IMPORTANT: You must use Kibana or this API to create a watch. Do not add a watch directly to the .watches index by using the Elasticsearch index API.",
+    "elasticsearch_watcher_put_watch",
+    "Create or update a watch in Elasticsearch Watcher. Best for: alerting setup, monitoring automation, notification configuration. Use when you need to define watch triggers and actions for Elasticsearch alerting workflows. IMPORTANT: Use only this API, not direct index operations.",
     {
       id: z.string().min(1, "Watch ID is required"),
       actions: z.record(z.object({
@@ -132,7 +132,7 @@ export const registerWatcherPutWatchTool: ToolRegistrationFunction = (
       version: z.number().optional(),
     },
     withReadOnlyCheck(
-      "watcher_put_watch",
+      "elasticsearch_watcher_put_watch",
       putWatchImpl,
       OperationType.WRITE,
     ),

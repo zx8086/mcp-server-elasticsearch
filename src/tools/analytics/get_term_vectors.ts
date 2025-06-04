@@ -32,8 +32,8 @@ export const registerGetTermVectorsTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "get_term_vectors",
-    "Get term vectors for a document in Elasticsearch",
+    "elasticsearch_get_term_vectors",
+    "Get term vectors for a document in Elasticsearch. Best for: text analysis, relevance tuning, similarity calculations. Use when you need to analyze term frequency, positions, and offsets for document text analysis in Elasticsearch.",
     GetTermVectorsParams.shape,
     async (params: GetTermVectorsParamsType): Promise<SearchResult> => {
       try {

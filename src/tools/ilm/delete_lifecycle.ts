@@ -54,15 +54,15 @@ export const registerDeleteLifecycleTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "ilm_delete_lifecycle",
-    "Delete a lifecycle policy. You cannot delete policies that are currently in use. If the policy is being used to manage any indices, the request fails and returns an error.",
+    "elasticsearch_ilm_delete_lifecycle",
+    "Delete an Index Lifecycle Management policy in Elasticsearch. Best for: policy cleanup, configuration management, lifecycle optimization. Use when you need to remove unused ILM policies from Elasticsearch. Cannot delete policies currently in use.",
     {
       policy: z.string().min(1, "Policy identifier is required"),
       masterTimeout: z.string().optional(),
       timeout: z.string().optional(),
     },
     withReadOnlyCheck(
-      "ilm_delete_lifecycle",
+      "elasticsearch_ilm_delete_lifecycle",
       deleteLifecycleImpl,
       OperationType.DELETE,
     ),

@@ -61,8 +61,8 @@ export const registerMoveToStepTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "ilm_move_to_step",
-    "Manually move an index into a specific step in the lifecycle policy and run that step. WARNING: This operation can result in the loss of data. This is a potentially destructive action and should be considered an expert level API.",
+    "elasticsearch_ilm_move_to_step",
+    "Manually move an index to a specific ILM policy step in Elasticsearch. Best for: expert troubleshooting, policy debugging, manual intervention. Use when you need to force index progression in ILM policies. WARNING: Potentially destructive, expert-level operation.",
     {
       index: z.string().min(1, "Index name is required"),
       currentStep: z.object({
@@ -77,7 +77,7 @@ export const registerMoveToStepTool: ToolRegistrationFunction = (
       }),
     },
     withReadOnlyCheck(
-      "ilm_move_to_step",
+      "elasticsearch_ilm_move_to_step",
       moveToStepImpl,
       OperationType.DESTRUCTIVE,
     ),

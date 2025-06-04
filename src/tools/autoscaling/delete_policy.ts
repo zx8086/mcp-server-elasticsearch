@@ -21,8 +21,8 @@ export const registerAutoscalingDeletePolicyTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "autoscaling_delete_policy",
-    "Delete an autoscaling policy. NOTE: This feature is designed for indirect use by Elasticsearch Service, Elastic Cloud Enterprise, and Elastic Cloud on Kubernetes. Direct use is not supported.",
+    "elasticsearch_autoscaling_delete_policy",
+    "Delete an autoscaling policy in Elasticsearch. Best for: policy cleanup, configuration management, resource optimization. Use when you need to remove autoscaling policies in Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
     DeleteAutoscalingPolicyParams.shape,
     async (params: z.infer<typeof DeleteAutoscalingPolicyParams>, extra: Record<string, unknown>): Promise<SearchResult> => {
       try {
@@ -30,6 +30,8 @@ export const registerAutoscalingDeletePolicyTool: ToolRegistrationFunction = (
           name: params.name,
           master_timeout: params.masterTimeout,
           timeout: params.timeout,
+        }, {
+          opaqueId: "elasticsearch_autoscaling_delete_policy",
         });
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],

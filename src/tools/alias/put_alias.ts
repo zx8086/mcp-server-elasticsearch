@@ -21,8 +21,8 @@ export const registerPutAliasTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "put_alias",
-    "Add an alias to an index in Elasticsearch",
+    "elasticsearch_put_alias",
+    "Add an alias to an index in Elasticsearch. Best for: alias creation, index abstraction, application decoupling. Use when you need to create named references to Elasticsearch indices for easier management and zero-downtime operations.",
     {
       index: z.string().min(1, "Index is required"),
       name: z.string().min(1, "Alias name is required"),

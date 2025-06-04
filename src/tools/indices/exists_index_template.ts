@@ -21,8 +21,8 @@ export const registerExistsIndexTemplateTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "exists_index_template",
-    "Check index templates. Check whether index templates exist.",
+    "elasticsearch_exists_index_template",
+    "Check if index templates exist in Elasticsearch. Best for: template validation, deployment verification, configuration checks. Use when you need to verify index template presence before operations in Elasticsearch.",
     {
       name: z.string().min(1, "Template name is required"),
       local: z.boolean().optional(),

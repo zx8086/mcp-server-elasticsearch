@@ -55,8 +55,8 @@ export const registerAutoscalingPutPolicyTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "autoscaling_put_policy",
-    "Create or update an autoscaling policy. NOTE: This feature is designed for indirect use by Elasticsearch Service, Elastic Cloud Enterprise, and Elastic Cloud on Kubernetes. Direct use is not supported.",
+    "elasticsearch_autoscaling_put_policy",
+    "Create or update an autoscaling policy in Elasticsearch. Best for: capacity management, resource automation, cluster scaling. Use when you need to define autoscaling policies for Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
     {
       name: z.string().min(1, "Policy name is required"),
       policy: z.any(),
@@ -64,7 +64,7 @@ export const registerAutoscalingPutPolicyTool: ToolRegistrationFunction = (
       timeout: z.string().optional(),
     },
     withReadOnlyCheck(
-      "autoscaling_put_policy",
+      "elasticsearch_autoscaling_put_policy",
       putAutoscalingPolicyImpl,
       OperationType.WRITE,
     ),

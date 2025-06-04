@@ -50,13 +50,13 @@ export const registerWatcherDeactivateWatchTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "watcher_deactivate_watch",
-    "Deactivate a watch. A watch can be either active or inactive.",
+    "elasticsearch_watcher_deactivate_watch",
+    "Deactivate a watch in Elasticsearch Watcher. Best for: monitoring control, alerting management, watch lifecycle control. Use when you need to disable watch execution while preserving the watch definition in Elasticsearch.",
     {
       watch_id: z.string().min(1, "Watch ID is required"),
     },
     withReadOnlyCheck(
-      "watcher_deactivate_watch",
+      "elasticsearch_watcher_deactivate_watch",
       deactivateWatchImpl,
       OperationType.WRITE,
     ),

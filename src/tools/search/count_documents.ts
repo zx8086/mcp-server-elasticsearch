@@ -31,8 +31,8 @@ export const registerCountDocumentsTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "count_documents",
-    "Count documents in Elasticsearch",
+    "elasticsearch_count_documents",
+    "Count documents in Elasticsearch using query criteria. Best for: data analysis, result set sizing, query validation. Use when you need to get document counts without retrieving actual documents from Elasticsearch indices.",
     {
       index: z.string().optional(),
       query: z.record(z.any()).optional(),

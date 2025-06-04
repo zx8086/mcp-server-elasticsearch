@@ -30,8 +30,8 @@ export const registerGetClusterHealthTool: ToolRegistrationFunction = (
   esClient: Client,
 ) => {
   server.tool(
-    "get_cluster_health",
-    "Get the health status of the Elasticsearch cluster",
+    "elasticsearch_get_cluster_health",
+    "Get the health status of the Elasticsearch cluster. Best for: cluster monitoring, health checks, system diagnostics. Use when you need to assess cluster status, node availability, and overall Elasticsearch system health.",
     GetClusterHealthParams.shape,
     async (params: GetClusterHealthParamsType): Promise<SearchResult> => {
       try {

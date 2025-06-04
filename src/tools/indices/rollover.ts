@@ -122,8 +122,8 @@ export const registerRolloverTool: ToolRegistrationFunction = (
   };
 
   server.tool(
-    "rollover",
-    "Roll over to a new index. TIP: It is recommended to use the index lifecycle rollover action to automate rollovers. The rollover API creates a new index for a data stream or index alias. The API behavior depends on the rollover target.",
+    "elasticsearch_rollover",
+    "Roll over to a new index in Elasticsearch for data streams or aliases. Best for: index lifecycle management, data stream rotation, automated archiving. Use when you need to create new indices based on size, age, or document count thresholds in Elasticsearch.",
     {
       alias: z.string().min(1, "Alias name is required"),
       new_index: z.string().optional(),
@@ -154,7 +154,7 @@ export const registerRolloverTool: ToolRegistrationFunction = (
       }).optional(),
     },
     withReadOnlyCheck(
-      "rollover",
+      "elasticsearch_rollover",
       rolloverImpl,
       OperationType.WRITE,
     ),
