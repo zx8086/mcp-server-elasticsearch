@@ -32,7 +32,7 @@ export const registerSearchTool: ToolFunction = (
 ) => {
   server.tool(
     "elasticsearch_search",
-    "Perform full-text search in Elasticsearch using Query DSL. Best for: text search, fuzzy matching, aggregations, analytics, relevance scoring. Use when you need powerful search and analytics capabilities on JSON documents. Highlights are always enabled.",
+    "Perform full-text search in Elasticsearch using Query DSL. Best for text search, fuzzy matching, aggregations, analytics, relevance scoring. Use when you need powerful search and analytics capabilities on JSON documents. Highlights are always enabled.",
     {
       index: z
         .string()

@@ -19,7 +19,7 @@ export const registerGetClusterStatsTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_get_cluster_stats",
-    "Get comprehensive cluster statistics from Elasticsearch. Best for: cluster monitoring, capacity planning, performance analysis. Use when you need detailed metrics about cluster-wide operations, storage, and resource utilization in Elasticsearch.",
+    "Get comprehensive cluster statistics from Elasticsearch. Best for cluster monitoring, capacity planning, performance analysis. Use when you need detailed metrics about cluster-wide operations, storage, and resource utilization in Elasticsearch.",
     {
       nodeId: z.string().optional(),
       timeout: z.string().optional(),

@@ -29,7 +29,7 @@ export const registerGetDocumentTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_get_document",
-    "Get a document from Elasticsearch by index and id. Best for: retrieving specific JSON documents, document validation, real-time data access. Use when you need to fetch individual documents by their unique identifier from Elasticsearch indices.",
+    "Get a document from Elasticsearch by index and id. Best for retrieving specific JSON documents, document validation, real-time data access. Use when you need to fetch individual documents by their unique identifier from Elasticsearch indices.",
     {
       index: z.string().min(1, "Index is required").describe("Name of the Elasticsearch index containing the document"),
       id: z.string().min(1, "Document ID is required").describe("Unique identifier of the document in the Elasticsearch index"),
@@ -67,4 +67,4 @@ export const registerGetDocumentTool: ToolRegistrationFunction = (
       }
     }
   );
-}  
+}    

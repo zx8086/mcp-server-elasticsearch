@@ -20,7 +20,7 @@ export const registerAutoscalingGetPolicyTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_autoscaling_get_policy",
-    "Get an autoscaling policy from Elasticsearch. Best for: policy inspection, capacity planning, configuration review. Use when you need to retrieve autoscaling policies in Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
+    "Get an autoscaling policy from Elasticsearch. Best for policy inspection, capacity planning, configuration review. Use when you need to retrieve autoscaling policies in Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
     {
       name: z.string().min(1, "Policy name is required"),
       masterTimeout: z.string().optional(),

@@ -24,7 +24,7 @@ export const registerGetFieldMappingTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_get_field_mapping",
-    "Get field mapping for a specific field in an Elasticsearch index. Best for: schema inspection, field analysis, mapping troubleshooting. Use when you need to examine how specific fields are mapped and analyzed in Elasticsearch indices for search optimization.",
+    "Get field mapping for a specific field in an Elasticsearch index. Best for schema inspection, field analysis, mapping troubleshooting. Use when you need to examine how specific fields are mapped and analyzed in Elasticsearch indices for search optimization.",
     {
       index: z.string().min(1, "Index is required"),
       field: z.string().min(1, "Field name is required"),

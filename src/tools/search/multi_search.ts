@@ -23,7 +23,7 @@ export const registerMultiSearchTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_multi_search",
-    "Perform multiple searches in Elasticsearch in a single request. Best for: batch search operations, dashboard queries, parallel search execution. Use when you need to execute multiple Query DSL searches across different Elasticsearch indices efficiently.",
+    "Perform multiple searches in Elasticsearch in a single request. Best for batch search operations, dashboard queries, parallel search execution. Use when you need to execute multiple Query DSL searches across different Elasticsearch indices efficiently.",
     {
       searches: z.array(z.record(z.any())),
       index: z.string().optional(),

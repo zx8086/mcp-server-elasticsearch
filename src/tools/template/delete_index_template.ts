@@ -19,7 +19,7 @@ export const registerDeleteIndexTemplateTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_delete_index_template",
-    "Delete an index template in Elasticsearch. Best for: template management, configuration cleanup, removing unused templates. Use when you need to remove Elasticsearch index templates that define settings and mappings for new indices.",
+    "Delete an index template in Elasticsearch. Best for template management, configuration cleanup, removing unused templates. Use when you need to remove Elasticsearch index templates that define settings and mappings for new indices.",
     {
       name: z.string().min(1, "Template name is required"),
       masterTimeout: z.string().optional(),

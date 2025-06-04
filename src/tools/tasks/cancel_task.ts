@@ -59,7 +59,7 @@ export const registerCancelTaskTool: ToolRegistrationFunction = (
 
   server.tool(
     "elasticsearch_tasks_cancel_task",
-    "Cancel a running Elasticsearch task. Best for: operation control, resource management, stopping long-running operations. Use when you need to terminate tasks that are taking too long or consuming too many resources in Elasticsearch. WARNING: Task management API is beta.",
+    "Cancel a running Elasticsearch task. Best for operation control, resource management, stopping long-running operations. Use when you need to terminate tasks that are taking too long or consuming too many resources in Elasticsearch. WARNING: Task management API is beta.",
     {
       taskId: z.string().optional(),
       actions: z.union([z.string(), z.array(z.string())]).optional(),

@@ -167,7 +167,7 @@ export const registerListIndicesTool: ToolRegistrationFunction = (
 
   server.tool(
     "elasticsearch_list_indices",
-    "List Elasticsearch indices with smart filtering and pattern matching. Best for: index discovery, monitoring index health, analyzing index structure. Use when you need to explore available indices in Elasticsearch clusters with intelligent filtering to prevent overwhelming responses.",
+    "List Elasticsearch indices with smart filtering and pattern matching. Best for index discovery, monitoring index health, analyzing index structure. Use when you need to explore available indices in Elasticsearch clusters with intelligent filtering to prevent overwhelming responses.",
     listIndicesSchema,
     withReadOnlyCheck(
       "elasticsearch_list_indices",
@@ -175,4 +175,4 @@ export const registerListIndicesTool: ToolRegistrationFunction = (
       OperationType.READ
     )
   );
-};    
+};        

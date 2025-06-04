@@ -22,7 +22,7 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_ilm_explain_lifecycle",
-    "Explain Index Lifecycle Management status for indices in Elasticsearch. Best for: lifecycle monitoring, troubleshooting, policy analysis. Use when you need to understand ILM execution status and phase transitions for Elasticsearch indices.",
+    "Explain Index Lifecycle Management status for indices in Elasticsearch. Best for lifecycle monitoring, troubleshooting, policy analysis. Use when you need to understand ILM execution status and phase transitions for Elasticsearch indices.",
     {
       index: z.string().min(1, "Index is required"),
       onlyErrors: z.boolean().optional(),

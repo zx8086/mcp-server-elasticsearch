@@ -32,7 +32,7 @@ export const registerSearchTemplateTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_search_template",
-    "Execute a search template in Elasticsearch. Best for: parameterized queries, reusable search patterns, query standardization. Use when you need to run templated searches with dynamic parameters in Elasticsearch.",
+    "Execute a search template in Elasticsearch. Best for parameterized queries, reusable search patterns, query standardization. Use when you need to run templated searches with dynamic parameters in Elasticsearch.",
     {
       index: z.string().optional(),
       id: z.string().optional(),

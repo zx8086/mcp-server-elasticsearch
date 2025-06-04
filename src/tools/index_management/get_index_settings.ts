@@ -26,7 +26,7 @@ export const registerGetIndexSettingsTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_get_index_settings",
-    "Get index settings from Elasticsearch. Best for: configuration review, performance analysis, troubleshooting. Use when you need to inspect index-level settings and configurations in Elasticsearch.",
+    "Get index settings from Elasticsearch. Best for configuration review, performance analysis, troubleshooting. Use when you need to inspect index-level settings and configurations in Elasticsearch.",
     {
       index: z.string().min(1, "Index is required"),
       name: z.string().optional(),

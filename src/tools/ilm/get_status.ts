@@ -12,7 +12,7 @@ export const registerGetStatusTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_ilm_get_status",
-    "Get Index Lifecycle Management status in Elasticsearch. Best for: service monitoring, system status checks, troubleshooting. Use when you need to check if ILM is running and operational in Elasticsearch.",
+    "Get Index Lifecycle Management status in Elasticsearch. Best for service monitoring, system status checks, troubleshooting. Use when you need to check if ILM is running and operational in Elasticsearch.",
     {},
     async (): Promise<SearchResult> => {
       try {

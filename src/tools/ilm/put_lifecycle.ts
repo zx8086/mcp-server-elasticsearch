@@ -57,7 +57,7 @@ export const registerPutLifecycleTool: ToolRegistrationFunction = (
 
   server.tool(
     "elasticsearch_ilm_put_lifecycle",
-    "Create or update an Index Lifecycle Management policy in Elasticsearch. Best for: data lifecycle automation, policy configuration, index management. Use when you need to define automated transitions through hot, warm, cold, and delete phases in Elasticsearch.",
+    "Create or update an Index Lifecycle Management policy in Elasticsearch. Best for data lifecycle automation, policy configuration, index management. Use when you need to define automated transitions through hot, warm, cold, and delete phases in Elasticsearch.",
     {
       policy: z.string().min(1, "Policy identifier is required"),
       body: z.record(z.any()).optional(),

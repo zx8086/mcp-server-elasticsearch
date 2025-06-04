@@ -28,7 +28,7 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_indices_summary",
-    "Get a high-level summary of indices without overwhelming detail in Elasticsearch. Best for: cluster overview, index organization analysis, storage planning. Use when you need to understand index patterns, health distribution, and storage usage across your Elasticsearch cluster.",
+    "Get a high-level summary of indices without overwhelming detail in Elasticsearch. Best for cluster overview, index organization analysis, storage planning. Use when you need to understand index patterns, health distribution, and storage usage across your Elasticsearch cluster.",
     {
       indexPattern: z
         .string()
@@ -188,4 +188,4 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (
       }
     }
   );
-};      
+};            

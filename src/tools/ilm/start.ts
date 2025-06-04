@@ -52,7 +52,7 @@ export const registerStartTool: ToolRegistrationFunction = (
 
   server.tool(
     "elasticsearch_ilm_start",
-    "Start the Index Lifecycle Management plugin in Elasticsearch. Best for: service management, system initialization, resuming automated operations. Use when you need to start or restart ILM after maintenance in Elasticsearch.",
+    "Start the Index Lifecycle Management plugin in Elasticsearch. Best for service management, system initialization, resuming automated operations. Use when you need to start or restart ILM after maintenance in Elasticsearch.",
     {
       masterTimeout: z.string().optional(),
       timeout: z.string().optional(),

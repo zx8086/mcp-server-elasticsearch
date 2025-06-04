@@ -24,7 +24,7 @@ export const registerExistsAliasTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_exists_alias",
-    "Check if index or data stream aliases exist in Elasticsearch. Best for: alias validation, deployment verification, configuration checks. Use when you need to verify alias presence before operations in Elasticsearch.",
+    "Check if index or data stream aliases exist in Elasticsearch. Best for alias validation, deployment verification, configuration checks. Use when you need to verify alias presence before operations in Elasticsearch.",
     {
       name: z.union([z.string(), z.array(z.string())]),
       index: z.union([z.string(), z.array(z.string())]).optional(),

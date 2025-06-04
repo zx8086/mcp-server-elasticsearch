@@ -56,7 +56,7 @@ export const registerMigrateToDataTiersTool: ToolRegistrationFunction = (
 
   server.tool(
     "elasticsearch_ilm_migrate_to_data_tiers",
-    "Migrate to data tiers routing in Elasticsearch ILM. Best for: cluster modernization, data tier adoption, allocation optimization. Use when you need to migrate from custom node attributes to data tiers in Elasticsearch. Requires ILM to be stopped.",
+    "Migrate to data tiers routing in Elasticsearch ILM. Best for cluster modernization, data tier adoption, allocation optimization. Use when you need to migrate from custom node attributes to data tiers in Elasticsearch. Requires ILM to be stopped.",
     {
       legacyTemplateToDelete: z.string().optional(),
       nodeAttribute: z.string().optional(),

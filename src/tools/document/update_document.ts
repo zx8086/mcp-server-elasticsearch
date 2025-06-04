@@ -33,7 +33,7 @@ export const registerUpdateDocumentTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_update_document",
-    "Update a JSON document in Elasticsearch by index and id. Best for: partial document updates, scripted updates, upsert operations. Use when you need to modify existing documents in Elasticsearch indices with optimistic concurrency control.",
+    "Update a JSON document in Elasticsearch by index and id. Best for partial document updates, scripted updates, upsert operations. Use when you need to modify existing documents in Elasticsearch indices with optimistic concurrency control.",
     {
       index: z.string().min(1, "Index is required"),
       id: z.string().min(1, "Document ID is required"),
@@ -102,4 +102,4 @@ export const registerUpdateDocumentTool: ToolRegistrationFunction = (
       }
     }
   );
-}  
+}    

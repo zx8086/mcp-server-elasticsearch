@@ -29,7 +29,7 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_delete_document",
-    "Delete a document from Elasticsearch by index and id. Best for: removing specific documents, data cleanup, document lifecycle management. Use when you need to permanently remove individual JSON documents from Elasticsearch indices with optimistic concurrency control.",
+    "Delete a document from Elasticsearch by index and id. Best for removing specific documents, data cleanup, document lifecycle management. Use when you need to permanently remove individual JSON documents from Elasticsearch indices with optimistic concurrency control.",
     {
       index: z.string().min(1, "Index is required"),
       id: z.string().min(1, "Document ID is required"),
@@ -90,4 +90,4 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (
       }
     }
   );
-}  
+}    

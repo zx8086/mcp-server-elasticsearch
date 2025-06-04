@@ -21,7 +21,7 @@ export const registerExplainDataLifecycleTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_explain_data_lifecycle",
-    "Get data stream lifecycle status and execution details in Elasticsearch. Best for: lifecycle monitoring, troubleshooting, policy analysis. Use when you need to understand data stream lifecycle execution status and configuration in Elasticsearch.",
+    "Get data stream lifecycle status and execution details in Elasticsearch. Best for lifecycle monitoring, troubleshooting, policy analysis. Use when you need to understand data stream lifecycle execution status and configuration in Elasticsearch.",
     {
       index: z.union([z.string(), z.array(z.string())]),
       include_defaults: z.boolean().optional(),

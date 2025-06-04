@@ -13,7 +13,7 @@ export const registerGetDataLifecycleStatsTool: ToolRegistrationFunction = (
 ) => {
   server.tool(
     "elasticsearch_get_data_lifecycle_stats",
-    "Get data stream lifecycle statistics from Elasticsearch. Best for: data stream monitoring, lifecycle analysis, storage planning. Use when you need to track data stream lifecycle management and retention policies in Elasticsearch.",
+    "Get data stream lifecycle statistics from Elasticsearch. Best for data stream monitoring, lifecycle analysis, storage planning. Use when you need to track data stream lifecycle management and retention policies in Elasticsearch.",
     {},
     async (): Promise<SearchResult> => {
       try {
