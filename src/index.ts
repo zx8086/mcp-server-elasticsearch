@@ -42,7 +42,10 @@ async function main() {
         if (req.url?.startsWith('/sse')) {
           // Handle SSE connection (GET request)
           if (req.method === 'GET') {
-            logger.info(`New SSE connection from ${req.socket.remoteAddress}`);
+            const clientIP = req.socket.remoteAddress;
+            const userAgent = req.headers['user-agent'] || 'Unknown';
+            logger.info(`New SSE connection from ${clientIP}, User-Agent: ${userAgent}`);
+            logger.info(`Request headers: ${JSON.stringify(req.headers)}`);
             
             // Set up CORS headers
             res.setHeader('Access-Control-Allow-Origin', '*');
@@ -56,7 +59,7 @@ async function main() {
             await server.connect(transport);
             
             // Log successful connection
-            logger.info(`SSE connection established, endpoint: ${sseEndpoint}`);
+            logger.info(`SSE connection established, endpoint: ${sseEndpoint}, sessionId: ${transport.sessionId}`);
           } else {
             // Handle preflight requests
             if (req.method === 'OPTIONS') {
