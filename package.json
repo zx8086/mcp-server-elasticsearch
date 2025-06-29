@@ -25,6 +25,8 @@
     "start": "bun run dist/index.js",
     "inspector": "bun x --bun @modelcontextprotocol/inspector bun ./dist/index.js",
     "build:inspector": "bun run build && bun run inspector",
+    "inspector:sse": "bun run scripts/run-inspector.js",
+    "proxy:sse": "bun run scripts/sse-inspector-proxy.js",
     "dev": "bun run src/index.ts",
     "test": "bun test",
     "lint": "eslint . --ext .ts",
@@ -38,6 +40,9 @@
     "@elastic/transport": "^9.0.2",
     "@modelcontextprotocol/sdk": "^1.12.1",
     "@types/bun": "^1.2.15",
+    "content-type": "^1.0.5",
+    "http-proxy": "^1.18.1",
+    "raw-body": "^2.5.2",
     "zod": "^3.25.51"
   },
   "engines": {
