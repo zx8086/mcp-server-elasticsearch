@@ -75,7 +75,7 @@ import { registerClearSqlCursorTool } from "./mapping/clear_sql_cursor.js";
 // ILM Tools (Index Lifecycle Management)
 import { registerDeleteLifecycleTool } from "./ilm/delete_lifecycle.js";
 import { registerExplainLifecycleTool } from "./ilm/explain_lifecycle.js";
-import { registerGetLifecycleTool } from "./ilm/get_lifecycle.js";
+import { registerGetLifecycleImprovedTool } from "./ilm/get_lifecycle_improved.js";
 import { registerGetStatusTool } from "./ilm/get_status.js";
 import { registerMigrateToDataTiersTool } from "./ilm/migrate_to_data_tiers.js";
 import { registerMoveToStepTool } from "./ilm/move_to_step.js";
@@ -194,7 +194,7 @@ export function registerAllTools(server: McpServer, esClient: Client) {
   // Register ILM Tools
   registerDeleteLifecycleTool(server, esClient);
   registerExplainLifecycleTool(server, esClient);
-  registerGetLifecycleTool(server, esClient);
+  registerGetLifecycleImprovedTool(server, esClient);
   registerGetStatusTool(server, esClient);
   registerMigrateToDataTiersTool(server, esClient);
   registerMoveToStepTool(server, esClient);

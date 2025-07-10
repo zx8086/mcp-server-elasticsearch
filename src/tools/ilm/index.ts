@@ -2,7 +2,7 @@
 
 export { registerDeleteLifecycleTool } from "./delete_lifecycle.js";
 export { registerExplainLifecycleTool } from "./explain_lifecycle.js";
-export { registerGetLifecycleTool } from "./get_lifecycle.js";
+export { registerGetLifecycleImprovedTool } from "./get_lifecycle_improved.js";
 export { registerGetStatusTool } from "./get_status.js";
 export { registerMigrateToDataTiersTool } from "./migrate_to_data_tiers.js";
 export { registerMoveToStepTool } from "./move_to_step.js";
