@@ -1,14 +1,11 @@
 /* src/tools/watcher/update_settings.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import type {
-  ToolRegistrationFunction,
-  SearchResult,
-} from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const UpdateWatcherSettingsParams = z.object({
@@ -20,14 +17,11 @@ const UpdateWatcherSettingsParams = z.object({
 
 type UpdateWatcherSettingsParamsType = z.infer<typeof UpdateWatcherSettingsParams>;
 
-export const registerWatcherUpdateSettingsTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerWatcherUpdateSettingsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   // Implementation function without read-only checks
   const updateWatcherSettingsImpl = async (
     params: UpdateWatcherSettingsParamsType,
-    extra: Record<string, unknown>,
+    _extra: Record<string, unknown>,
   ): Promise<SearchResult> => {
     try {
       const result = await esClient.watcher.updateSettings({
@@ -63,10 +57,6 @@ export const registerWatcherUpdateSettingsTool: ToolRegistrationFunction = (
       master_timeout: z.string().optional(),
       timeout: z.string().optional(),
     },
-    withReadOnlyCheck(
-      "elasticsearch_watcher_update_settings",
-      updateWatcherSettingsImpl,
-      OperationType.WRITE,
-    ),
+    withReadOnlyCheck("elasticsearch_watcher_update_settings", updateWatcherSettingsImpl, OperationType.WRITE),
   );
 };

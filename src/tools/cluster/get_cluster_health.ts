@@ -1,17 +1,17 @@
 /* src/tools/cluster/get_cluster_health.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { registerTracedTool } from "../../utils/toolWrapper.js";
+import { traceElasticsearchCall } from "../../utils/toolWrapper.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetClusterHealthParams = z.object({
   index: z.string().optional(),
-  expandWildcards: z
-    .enum(["all", "open", "closed", "hidden", "none"])
-    .optional(),
+  expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
   level: z.enum(["cluster", "indices", "shards"]).optional(),
   local: z.boolean().optional(),
   masterTimeout: z.string().optional(),
@@ -26,24 +26,23 @@ const GetClusterHealthParams = z.object({
 
 type GetClusterHealthParamsType = z.infer<typeof GetClusterHealthParams>;
 
-export const registerGetClusterHealthTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
-  logger.info("Registering cluster health tool...");
-  
+export const registerGetClusterHealthTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
+  logger.info("Registering cluster health tool with tracing...");
+
   try {
-    server.tool(
-      "elasticsearch_get_cluster_health",
-      "Get the health status of the Elasticsearch cluster. Best for cluster monitoring, health checks, system diagnostics. Use when you need to assess cluster status, node availability, and overall Elasticsearch system health.",
-      GetClusterHealthParams.shape,
-      async (params: GetClusterHealthParamsType): Promise<SearchResult> => {
+    registerTracedTool(server, esClient, {
+      name: "elasticsearch_get_cluster_health",
+      description:
+        "Get the health status of the Elasticsearch cluster. Best for cluster monitoring, health checks, system diagnostics. Use when you need to assess cluster status, node availability, and overall Elasticsearch system health.",
+      inputSchema: GetClusterHealthParams,
+      operationType: "read",
+      handler: async (esClient: Client, params: GetClusterHealthParamsType): Promise<SearchResult> => {
         const requestId = Math.random().toString(36).substring(7);
-        logger.info(`[${requestId}] Cluster health request received`, { 
+        logger.info(`[${requestId}] Cluster health request received`, {
           params: {
             ...params,
-            index: params.index ? '[REDACTED]' : undefined
-          }
+            index: params.index ? "[REDACTED]" : undefined,
+          },
         });
 
         try {
@@ -62,15 +61,18 @@ export const registerGetClusterHealthTool: ToolRegistrationFunction = (
             wait_for_nodes: params.waitForNodes,
             wait_for_status: params.waitForStatus,
           };
-          
+
           logger.debug(`[${requestId}] Request parameters:`, requestParams);
 
           logger.info(`[${requestId}] Executing cluster.health()...`);
-          const result = await esClient.cluster.health(
-            requestParams,
-            {
-              opaqueId: "elasticsearch_get_cluster_health",
-            },
+          const result = await traceElasticsearchCall(
+            "cluster.health",
+            params.index,
+            async () =>
+              esClient.cluster.health(requestParams, {
+                opaqueId: "elasticsearch_get_cluster_health",
+              }),
+            { requestId, waitForStatus: params.waitForStatus },
           );
 
           logger.info(`[${requestId}] Successfully retrieved cluster health`, {
@@ -93,21 +95,20 @@ export const registerGetClusterHealthTool: ToolRegistrationFunction = (
 
           logger.info(`[${requestId}] Returning response...`);
           return response;
-
         } catch (error) {
           // Enhanced error logging with request context
           logger.error(`[${requestId}] Failed to get cluster health:`, {
             error: error instanceof Error ? error.message : String(error),
             stack: error instanceof Error ? error.stack : undefined,
-            name: error instanceof Error ? error.name : 'Unknown',
+            name: error instanceof Error ? error.name : "Unknown",
             cause: error instanceof Error ? error.cause : undefined,
             params: {
               ...params,
-              index: params.index ? '[REDACTED]' : undefined
+              index: params.index ? "[REDACTED]" : undefined,
             },
             // Add Elasticsearch specific error details if available
-            elasticsearchError: error instanceof Error && 'meta' in error ? error.meta : undefined,
-            statusCode: error instanceof Error && 'statusCode' in error ? error.statusCode : undefined,
+            elasticsearchError: error instanceof Error && "meta" in error ? error.meta : undefined,
+            statusCode: error instanceof Error && "statusCode" in error ? error.statusCode : undefined,
           });
 
           // Return a more detailed error response
@@ -121,14 +122,14 @@ export const registerGetClusterHealthTool: ToolRegistrationFunction = (
           };
         }
       },
-    );
-    
-    logger.info("✅ Cluster health tool registered successfully");
+    });
+
+    logger.info("✅ Cluster health tool registered successfully with tracing");
   } catch (registrationError) {
     logger.error("Failed to register cluster health tool:", {
       error: registrationError instanceof Error ? registrationError.message : String(registrationError),
       stack: registrationError instanceof Error ? registrationError.stack : undefined,
-      name: registrationError instanceof Error ? registrationError.name : 'Unknown',
+      name: registrationError instanceof Error ? registrationError.name : "Unknown",
     });
     throw registrationError;
   }

@@ -1,10 +1,10 @@
 /* src/tools/cluster/get_nodes_stats.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetNodesStatsParams = z.object({
@@ -15,10 +15,7 @@ const GetNodesStatsParams = z.object({
 });
 
 type GetNodesStatsParamsType = z.infer<typeof GetNodesStatsParams>;
-export const registerGetNodesStatsTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerGetNodesStatsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_get_nodes_stats",
     "Get node statistics from the Elasticsearch cluster. Best for performance monitoring, resource analysis, cluster diagnostics. Use when you need detailed metrics about node performance, memory usage, and operations in Elasticsearch.",

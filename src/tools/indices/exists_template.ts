@@ -1,10 +1,10 @@
 /* src/tools/indices/exists_template.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const ExistsTemplateParams = z.object({
@@ -16,10 +16,7 @@ const ExistsTemplateParams = z.object({
 
 type ExistsTemplateParamsType = z.infer<typeof ExistsTemplateParams>;
 
-export const registerExistsTemplateTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerExistsTemplateTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_exists_template",
     "Check existence of legacy index templates in Elasticsearch. Best for legacy template validation, migration planning, compatibility checks. Use when you need to verify legacy index template presence in Elasticsearch (deprecated, use composable templates instead).",

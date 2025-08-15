@@ -1,10 +1,10 @@
 /* src/tools/ilm/explain_lifecycle.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const ExplainLifecycleParams = z.object({
@@ -16,10 +16,7 @@ const ExplainLifecycleParams = z.object({
 
 type ExplainLifecycleParamsType = z.infer<typeof ExplainLifecycleParams>;
 
-export const registerExplainLifecycleTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_ilm_explain_lifecycle",
     "Explain Index Lifecycle Management status for indices in Elasticsearch. Best for lifecycle monitoring, troubleshooting, policy analysis. Use when you need to understand ILM execution status and phase transitions for Elasticsearch indices.",
@@ -31,14 +28,17 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (
     },
     async (params: ExplainLifecycleParamsType): Promise<SearchResult> => {
       try {
-        const result = await esClient.ilm.explainLifecycle({
-          index: params.index,
-          only_errors: params.onlyErrors,
-          only_managed: params.onlyManaged,
-          master_timeout: params.masterTimeout,
-        }, {
-          opaqueId: "elasticsearch_ilm_explain_lifecycle",
-        });
+        const result = await esClient.ilm.explainLifecycle(
+          {
+            index: params.index,
+            only_errors: params.onlyErrors,
+            only_managed: params.onlyManaged,
+            master_timeout: params.masterTimeout,
+          },
+          {
+            opaqueId: "elasticsearch_ilm_explain_lifecycle",
+          },
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
         };

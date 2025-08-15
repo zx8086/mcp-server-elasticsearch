@@ -1,10 +1,10 @@
 /* src/tools/search/count_documents.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const CountDocumentsParams = z.object({
@@ -26,10 +26,7 @@ const CountDocumentsParams = z.object({
 });
 
 type CountDocumentsParamsType = z.infer<typeof CountDocumentsParams>;
-export const registerCountDocumentsTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerCountDocumentsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_count_documents",
     "Count documents in Elasticsearch using query criteria. Best for data analysis, result set sizing, query validation. Use when you need to get document counts without retrieving actual documents from Elasticsearch indices.",

@@ -119,9 +119,35 @@ elasticsearch_ilm_get_lifecycle --limit 5 --includeUsage true
 ]
 ```
 
+## Additional Tools Updated
+
+### 2. Enhanced Alias Tool (`src/tools/alias/get_aliases_improved.ts` → `get_aliases.ts`)
+
+**Key Improvements:**
+- **Proper Alias Filtering**: Handles large alias mappings efficiently
+- **Smart Aggregation**: Groups aliases by index count and configuration
+- **Summary Mode**: Shows alias-to-index relationships clearly
+- **Statistics**: Provides overview of write aliases, filtered aliases, and usage patterns
+
+### 3. Enhanced Index Template Tool (`src/tools/template/get_index_template_improved.ts` → `get_index_template.ts`)
+
+**Key Improvements:**
+- **Template Filtering**: Returns specific templates when requested by name
+- **Priority Sorting**: Sorts by template priority, usage, or name
+- **Composable Template Support**: Shows component template relationships
+- **Template Statistics**: Displays priority distribution and data stream usage
+
+### 4. Enhanced Enrich Policy Tool (`src/tools/enrich/get_policy_improved.ts` → `get_policy.ts`)
+
+**Key Improvements:**
+- **Policy Type Detection**: Automatically identifies match, geo_match, and range policies
+- **Source Index Tracking**: Shows which indices are used for enrichment
+- **Field Analysis**: Lists enrich fields and match fields clearly
+- **Policy Statistics**: Displays type distribution and usage patterns
+
 ## Future Improvements
 
-1. **Apply to Other Tools**: Use utilities in tools that return large lists
+1. ✅ **Apply to Other Tools**: Applied pagination utilities to alias, template, and enrich tools
 2. **Streaming Responses**: For very large datasets, implement streaming
 3. **Caching**: Cache responses for frequently accessed data
 4. **Compression**: Implement response compression for large payloads

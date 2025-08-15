@@ -1,43 +1,52 @@
 /* src/tools/indices/get_index_info.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const GetIndexInfoParams = z.object({
   index: z.union([z.string(), z.array(z.string())]),
   allowNoIndices: z.boolean().optional(),
-  expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).or(z.array(z.enum(["all", "open", "closed", "hidden", "none"]))).optional(),
+  expandWildcards: z
+    .enum(["all", "open", "closed", "hidden", "none"])
+    .or(z.array(z.enum(["all", "open", "closed", "hidden", "none"])))
+    .optional(),
   flatSettings: z.boolean().optional(),
   ignoreUnavailable: z.boolean().optional(),
   includeDefaults: z.boolean().optional(),
   local: z.boolean().optional(),
   masterTimeout: z.string().optional(),
-  features: z.enum(["aliases", "mappings", "settings"]).or(z.array(z.enum(["aliases", "mappings", "settings"]))).optional(),
+  features: z
+    .enum(["aliases", "mappings", "settings"])
+    .or(z.array(z.enum(["aliases", "mappings", "settings"])))
+    .optional(),
 });
 
 type GetIndexInfoParamsType = z.infer<typeof GetIndexInfoParams>;
 
-export const registerGetIndexInfoTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerGetIndexInfoTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_get_index_info",
     "Get comprehensive index information from Elasticsearch including aliases, mappings, and settings. Best for index inspection, configuration analysis, data stream monitoring. Use when you need detailed metadata about Elasticsearch indices with feature filtering capabilities for selective information retrieval.",
     {
       index: z.union([z.string(), z.array(z.string())]),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).or(z.array(z.enum(["all", "open", "closed", "hidden", "none"]))).optional(),
+      expandWildcards: z
+        .enum(["all", "open", "closed", "hidden", "none"])
+        .or(z.array(z.enum(["all", "open", "closed", "hidden", "none"])))
+        .optional(),
       flatSettings: z.boolean().optional(),
       ignoreUnavailable: z.boolean().optional(),
       includeDefaults: z.boolean().optional(),
       local: z.boolean().optional(),
       masterTimeout: z.string().optional(),
-      features: z.enum(["aliases", "mappings", "settings"]).or(z.array(z.enum(["aliases", "mappings", "settings"]))).optional(),
+      features: z
+        .enum(["aliases", "mappings", "settings"])
+        .or(z.array(z.enum(["aliases", "mappings", "settings"])))
+        .optional(),
     },
     async (params: GetIndexInfoParamsType): Promise<SearchResult> => {
       try {

@@ -1,10 +1,10 @@
 /* src/tools/template/multi_search_template.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const MultiSearchTemplateParams = z.object({
@@ -17,10 +17,7 @@ const MultiSearchTemplateParams = z.object({
 });
 
 type MultiSearchTemplateParamsType = z.infer<typeof MultiSearchTemplateParams>;
-export const registerMultiSearchTemplateTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerMultiSearchTemplateTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_multi_search_template",
     "Execute multiple search templates in Elasticsearch. Best for batch search operations, templated queries, performance optimization. Use when you need to run multiple parameterized searches efficiently using Elasticsearch search templates.",

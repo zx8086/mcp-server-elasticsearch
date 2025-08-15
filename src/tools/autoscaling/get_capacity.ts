@@ -1,10 +1,10 @@
 /* src/tools/autoscaling/get_capacity.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const GetAutoscalingCapacityParams = z.object({
@@ -13,10 +13,7 @@ const GetAutoscalingCapacityParams = z.object({
 
 type GetAutoscalingCapacityParamsType = z.infer<typeof GetAutoscalingCapacityParams>;
 
-export const registerAutoscalingGetCapacityTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerAutoscalingGetCapacityTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_autoscaling_get_capacity",
     "Get the current autoscaling capacity from Elasticsearch. Best for capacity planning, resource monitoring, cluster scaling analysis. Use when you need to monitor Elasticsearch cluster autoscaling decisions and capacity recommendations. NOTE: Designed for Elasticsearch Service, ECE, and ECK.",

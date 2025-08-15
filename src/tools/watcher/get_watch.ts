@@ -1,10 +1,10 @@
 /* src/tools/watcher/get_watch.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const GetWatchParams = z.object({
@@ -13,10 +13,7 @@ const GetWatchParams = z.object({
 
 type GetWatchParamsType = z.infer<typeof GetWatchParams>;
 
-export const registerWatcherGetWatchTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerWatcherGetWatchTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_watcher_get_watch",
     "Get a watch configuration from Elasticsearch Watcher. Best for monitoring automation, alerting configuration, watch inspection. Use when you need to retrieve watch definitions for Elasticsearch alerting and monitoring workflows.",

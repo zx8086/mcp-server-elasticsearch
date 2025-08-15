@@ -1,30 +1,23 @@
 /* src/tools/watcher/query_watches.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const QueryWatchesParams = z.object({
   from: z.number().min(0).optional(),
   size: z.number().min(1).max(50).optional(),
   query: z.record(z.any()).optional(),
-  sort: z.union([
-    z.string(),
-    z.record(z.any()),
-    z.array(z.union([z.string(), z.record(z.any())]))
-  ]).optional(),
+  sort: z.union([z.string(), z.record(z.any()), z.array(z.union([z.string(), z.record(z.any())]))]).optional(),
   search_after: z.array(z.union([z.number(), z.string(), z.boolean(), z.null()])).optional(),
 });
 
 type QueryWatchesParamsType = z.infer<typeof QueryWatchesParams>;
 
-export const registerWatcherQueryWatchesTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerWatcherQueryWatchesTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_watcher_query_watches",
     "Query and filter watches in Elasticsearch Watcher. Best for watch discovery, configuration management, monitoring overview. Use when you need to search and paginate through watch definitions in Elasticsearch alerting system.",
@@ -32,11 +25,7 @@ export const registerWatcherQueryWatchesTool: ToolRegistrationFunction = (
       from: z.number().min(0).optional(),
       size: z.number().min(1).max(50).optional(),
       query: z.record(z.any()).optional(),
-      sort: z.union([
-        z.string(),
-        z.record(z.any()),
-        z.array(z.union([z.string(), z.record(z.any())]))
-      ]).optional(),
+      sort: z.union([z.string(), z.record(z.any()), z.array(z.union([z.string(), z.record(z.any())]))]).optional(),
       search_after: z.array(z.union([z.number(), z.string(), z.boolean(), z.null()])).optional(),
     },
     async (params: QueryWatchesParamsType): Promise<SearchResult> => {

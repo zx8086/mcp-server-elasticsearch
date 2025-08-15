@@ -1,15 +1,11 @@
 /* src/tools/ilm/put_lifecycle.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import type {
-  ToolRegistrationFunction,
-  SearchResult,
-  TextContent,
-} from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const PutLifecycleParams = z.object({
@@ -21,14 +17,11 @@ const PutLifecycleParams = z.object({
 
 type PutLifecycleParamsType = z.infer<typeof PutLifecycleParams>;
 
-export const registerPutLifecycleTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerPutLifecycleTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   // Implementation function without read-only checks
   const putLifecycleImpl = async (
     params: PutLifecycleParamsType,
-    extra: Record<string, unknown>,
+    _extra: Record<string, unknown>,
   ): Promise<SearchResult> => {
     try {
       const result = await esClient.ilm.putLifecycle({
@@ -64,10 +57,6 @@ export const registerPutLifecycleTool: ToolRegistrationFunction = (
       masterTimeout: z.string().optional(),
       timeout: z.string().optional(),
     },
-    withReadOnlyCheck(
-      "elasticsearch_ilm_put_lifecycle",
-      putLifecycleImpl,
-      OperationType.WRITE,
-    ),
+    withReadOnlyCheck("elasticsearch_ilm_put_lifecycle", putLifecycleImpl, OperationType.WRITE),
   );
 };

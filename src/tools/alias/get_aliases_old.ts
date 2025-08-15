@@ -1,10 +1,10 @@
 /* src/tools/alias/get_aliases.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetAliasesParams = z.object({
@@ -12,16 +12,11 @@ const GetAliasesParams = z.object({
   name: z.string().optional(),
   ignoreUnavailable: z.boolean().optional(),
   allowNoIndices: z.boolean().optional(),
-  expandWildcards: z
-    .enum(["all", "open", "closed", "hidden", "none"])
-    .optional(),
+  expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
 });
 
 type GetAliasesParamsType = z.infer<typeof GetAliasesParams>;
-export const registerGetAliasesTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerGetAliasesTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_get_aliases",
     "Get index aliases from Elasticsearch. Best for alias discovery, configuration review, index mapping analysis. Use when you need to inspect alias configurations and their associated indices in Elasticsearch.",
@@ -30,9 +25,7 @@ export const registerGetAliasesTool: ToolRegistrationFunction = (
       name: z.string().optional(),
       ignoreUnavailable: z.boolean().optional(),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z
-        .enum(["all", "open", "closed", "hidden", "none"])
-        .optional(),
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
     },
     async (params: GetAliasesParamsType): Promise<SearchResult> => {
       try {

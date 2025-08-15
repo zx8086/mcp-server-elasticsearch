@@ -11,15 +11,8 @@
   "bin": {
     "mcp-server-elasticsearch": "./dist/index.js"
   },
-  "keywords": [
-    "elasticsearch",
-    "search",
-    "mcp",
-    "mcp-server"
-  ],
-  "files": [
-    "README.md"
-  ],
+  "keywords": ["elasticsearch", "search", "mcp", "mcp-server"],
+  "files": ["README.md"],
   "scripts": {
     "build": "bun build ./src/index.ts --outdir ./dist --target bun",
     "start": "bun run dist/index.js",
@@ -32,31 +25,36 @@
     "connectivity-test": "bun run scripts/connectivity-test.js",
     "dev": "bun run src/index.ts",
     "test": "bun test",
-    "lint": "eslint . --ext .ts",
-    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
     "validate-config": "bun run scripts/validate-config.ts",
     "validate-config:full": "bun run scripts/validate-config.ts --check-connection --show-all",
-    "test-connection": "bun run scripts/test-connection.ts"
+    "test-connection": "bun run scripts/test-connection.ts",
+    "validate-schemas": "bun run scripts/validate-schemas.ts",
+    "pre-commit": "bun run lint && bun run validate-schemas"
   },
   "dependencies": {
-    "@elastic/elasticsearch": "^9.0.2",
-    "@elastic/transport": "^9.0.2",
-    "@modelcontextprotocol/sdk": "^1.12.1",
-    "@types/bun": "^1.2.15",
+    "@elastic/elasticsearch": "^9.1.1",
+    "@elastic/transport": "^9.1.1",
+    "@langchain/core": "^0.3.70",
+    "@modelcontextprotocol/sdk": "^1.17.3",
+    "@types/bun": "^1.2.20",
     "content-type": "^1.0.5",
     "http-proxy": "^1.18.1",
-    "raw-body": "^2.5.2",
-    "zod": "^3.25.51"
+    "langsmith": "^0.3.60",
+    "raw-body": "^3.0.0",
+    "zod": "3.23.8",
+    "zod-to-json-schema": "3.23.5"
   },
   "engines": {
     "bun": ">=1.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.15.29",
-    "bun-types": "^1.2.15",
-    "eslint": "^9.28.0",
-    "prettier": "^3.5.3",
-    "typescript": "^5.8.3"
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.17.1",
+    "bun-types": "^1.2.20",
+    "typescript": "^5.9.2"
   },
   "publishConfig": {
     "access": "public"

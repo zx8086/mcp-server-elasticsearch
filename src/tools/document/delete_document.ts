@@ -1,11 +1,11 @@
 /* src/tools/document/delete_document.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const DeleteDocumentParams = z.object({
@@ -23,10 +23,7 @@ const DeleteDocumentParams = z.object({
 
 type DeleteDocumentParamsType = z.infer<typeof DeleteDocumentParams>;
 
-export const registerDeleteDocumentTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
-) => {
+export const registerDeleteDocumentTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_delete_document",
     "Delete a document from Elasticsearch by index and id. Best for removing specific documents, data cleanup, document lifecycle management. Use when you need to permanently remove individual JSON documents from Elasticsearch indices with optimistic concurrency control.",
@@ -52,9 +49,9 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (
       try {
         // Show warning if in warning mode
         if (readOnlyCheck.warning) {
-          logger.warn("Proceeding with destructive operation", { 
-            tool: "elasticsearch_delete_document", 
-            params: { index: params.index, id: params.id }
+          logger.warn("Proceeding with destructive operation", {
+            tool: "elasticsearch_delete_document",
+            params: { index: params.index, id: params.id },
           });
         }
 
@@ -70,24 +67,26 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (
           timeout: params.timeout,
           wait_for_active_shards: params.waitForActiveShards,
         });
-        const response: SearchResult = { 
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent] 
+        const response: SearchResult = {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
         };
-        
+
         // Add warning to response if in warning mode
         if (readOnlyCheck.warning) {
           return readOnlyManager.createWarningResponse("elasticsearch_delete_document", response);
         }
-        
+
         return response;
       } catch (error) {
         logger.error("Failed to delete document:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { 
-          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` } as TextContent] 
+        return {
+          content: [
+            { type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` } as TextContent,
+          ],
         };
       }
-    }
+    },
   );
-}    
+};

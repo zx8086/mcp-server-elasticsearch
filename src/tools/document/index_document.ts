@@ -1,11 +1,11 @@
 /* src/tools/document/index_document.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const IndexDocumentParams = z.object({
@@ -19,10 +19,7 @@ const IndexDocumentParams = z.object({
 
 type IndexDocumentParamsType = z.infer<typeof IndexDocumentParams>;
 
-export const registerIndexDocumentTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
-) => {
+export const registerIndexDocumentTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_index_document",
     "Index a JSON document into Elasticsearch. Best for adding new documents, bulk data ingestion, real-time indexing. Use when you need to store structured JSON documents in Elasticsearch indices with optional routing and pipeline processing.",
@@ -43,39 +40,44 @@ export const registerIndexDocumentTool: ToolRegistrationFunction = (
 
       try {
         if (readOnlyCheck.warning) {
-          logger.warn("Proceeding with document indexing", { 
-            tool: "elasticsearch_index_document", 
-            params: { index: params.index, id: params.id }
+          logger.warn("Proceeding with document indexing", {
+            tool: "elasticsearch_index_document",
+            params: { index: params.index, id: params.id },
           });
         }
 
-        const result = await esClient.index({
-          index: params.index,
-          id: params.id,
-          document: params.document,
-          refresh: params.refresh,
-          routing: params.routing,
-          pipeline: params.pipeline,
-        }, {
-          opaqueId: 'elasticsearch_index_document'
-        });
-        const response: SearchResult = { 
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent] 
+        const result = await esClient.index(
+          {
+            index: params.index,
+            id: params.id,
+            document: params.document,
+            refresh: params.refresh,
+            routing: params.routing,
+            pipeline: params.pipeline,
+          },
+          {
+            opaqueId: "elasticsearch_index_document",
+          },
+        );
+        const response: SearchResult = {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
         };
-        
+
         if (readOnlyCheck.warning) {
           return readOnlyManager.createWarningResponse("elasticsearch_index_document", response);
         }
-        
+
         return response;
       } catch (error) {
         logger.error("Failed to index document:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { 
-          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` } as TextContent] 
+        return {
+          content: [
+            { type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` } as TextContent,
+          ],
         };
       }
-    }
+    },
   );
-}    
+};

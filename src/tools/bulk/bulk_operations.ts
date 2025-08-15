@@ -1,11 +1,11 @@
 /* src/tools/bulk/bulk_operations.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const BulkOperationsParams = z.object({
@@ -23,10 +23,7 @@ const BulkOperationsParams = z.object({
 });
 
 type BulkOperationsParamsType = z.infer<typeof BulkOperationsParams>;
-export const registerBulkOperationsTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerBulkOperationsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_bulk_operations",
     "Perform bulk operations in Elasticsearch for high-throughput data ingestion. Best for batch indexing, bulk updates, mass data import, performance optimization. Use when you need to efficiently index, update, or delete large volumes of documents in Elasticsearch.",
@@ -54,10 +51,12 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (
       const hasGlobalIndex = !!params.index;
       const allDocsHaveIndex = params.operations.every((doc) => doc._index);
       if (!hasGlobalIndex && !allDocsHaveIndex) {
-        const content: TextContent[] = [{
-          type: "text",
-          text: "Error: You must provide an 'index' parameter or ensure every operation document has a '_index' property."
-        } as TextContent];
+        const content: TextContent[] = [
+          {
+            type: "text",
+            text: "Error: You must provide an 'index' parameter or ensure every operation document has a '_index' property.",
+          } as TextContent,
+        ];
         return { content };
       }
 
@@ -100,20 +99,22 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (
           },
         );
 
-        const content: TextContent[] = [{
-          type: "text",
-          text: JSON.stringify(
-            {
-              total: result.total,
-              successful: result.successful,
-              failed: result.failed,
-              time: result.time,
-              bytes: result.bytes,
-            },
-            null,
-            2,
-          )
-        } as TextContent];
+        const content: TextContent[] = [
+          {
+            type: "text",
+            text: JSON.stringify(
+              {
+                total: result.total,
+                successful: result.successful,
+                failed: result.failed,
+                time: result.time,
+                bytes: result.bytes,
+              },
+              null,
+              2,
+            ),
+          } as TextContent,
+        ];
         const response: SearchResult = { content };
 
         if (readOnlyCheck.warning) {
@@ -125,10 +126,12 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (
         logger.error("Failed to perform bulk operations:", {
           error: error instanceof Error ? error.message : String(error),
         });
-        const content: TextContent[] = [{
-          type: "text",
-          text: `Error: ${error instanceof Error ? error.message : String(error)}`
-        } as TextContent];
+        const content: TextContent[] = [
+          {
+            type: "text",
+            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+          } as TextContent,
+        ];
         return { content };
       }
     },

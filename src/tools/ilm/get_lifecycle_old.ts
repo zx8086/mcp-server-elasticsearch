@@ -1,10 +1,10 @@
 /* src/tools/ilm/get_lifecycle.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const GetLifecycleParams = z.object({
@@ -15,10 +15,7 @@ const GetLifecycleParams = z.object({
 
 type GetLifecycleParamsType = z.infer<typeof GetLifecycleParams>;
 
-export const registerGetLifecycleTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_ilm_get_lifecycle",
     "Get Index Lifecycle Management (ILM) policies from Elasticsearch. Best for data lifecycle management, policy inspection, compliance monitoring. Use when you need to retrieve ILM policies that automate index transitions through hot, warm, cold, and delete phases.",

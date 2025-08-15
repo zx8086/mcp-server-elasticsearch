@@ -1,15 +1,11 @@
 /* src/tools/ilm/delete_lifecycle.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import type {
-  ToolRegistrationFunction,
-  SearchResult,
-  TextContent,
-} from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const DeleteLifecycleParams = z.object({
@@ -20,14 +16,11 @@ const DeleteLifecycleParams = z.object({
 
 type DeleteLifecycleParamsType = z.infer<typeof DeleteLifecycleParams>;
 
-export const registerDeleteLifecycleTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerDeleteLifecycleTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   // Implementation function without read-only checks
   const deleteLifecycleImpl = async (
     params: DeleteLifecycleParamsType,
-    extra: Record<string, unknown>,
+    _extra: Record<string, unknown>,
   ): Promise<SearchResult> => {
     try {
       const result = await esClient.ilm.deleteLifecycle({
@@ -61,10 +54,6 @@ export const registerDeleteLifecycleTool: ToolRegistrationFunction = (
       masterTimeout: z.string().optional(),
       timeout: z.string().optional(),
     },
-    withReadOnlyCheck(
-      "elasticsearch_ilm_delete_lifecycle",
-      deleteLifecycleImpl,
-      OperationType.DELETE,
-    ),
+    withReadOnlyCheck("elasticsearch_ilm_delete_lifecycle", deleteLifecycleImpl, OperationType.DELETE),
   );
 };

@@ -1,14 +1,11 @@
 /* src/tools/ilm/remove_policy.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import type {
-  ToolRegistrationFunction,
-  SearchResult,
-} from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const RemovePolicyParams = z.object({
@@ -17,14 +14,11 @@ const RemovePolicyParams = z.object({
 
 type RemovePolicyParamsType = z.infer<typeof RemovePolicyParams>;
 
-export const registerRemovePolicyTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerRemovePolicyTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   // Implementation function without read-only checks
   const removePolicyImpl = async (
     params: RemovePolicyParamsType,
-    extra: Record<string, unknown>,
+    _extra: Record<string, unknown>,
   ): Promise<SearchResult> => {
     try {
       const result = await esClient.ilm.removePolicy({
@@ -54,10 +48,6 @@ export const registerRemovePolicyTool: ToolRegistrationFunction = (
     {
       index: z.string().min(1, "Index name is required"),
     },
-    withReadOnlyCheck(
-      "elasticsearch_ilm_remove_policy",
-      removePolicyImpl,
-      OperationType.WRITE,
-    ),
+    withReadOnlyCheck("elasticsearch_ilm_remove_policy", removePolicyImpl, OperationType.WRITE),
   );
 };

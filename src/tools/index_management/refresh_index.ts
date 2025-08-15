@@ -1,10 +1,10 @@
 /* src/tools/index_management/refresh_index.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const RefreshIndexParams = z.object({
@@ -15,10 +15,7 @@ const RefreshIndexParams = z.object({
 });
 
 type RefreshIndexParamsType = z.infer<typeof RefreshIndexParams>;
-export const registerRefreshIndexTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerRefreshIndexTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_refresh_index",
     "Refresh an index in Elasticsearch. Best for data visibility, search consistency, real-time operations. Use when you need to make recently indexed documents immediately searchable in Elasticsearch.",

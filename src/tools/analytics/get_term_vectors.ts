@@ -1,10 +1,10 @@
 /* src/tools/analytics/get_term_vectors.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetTermVectorsParams = z.object({
@@ -19,7 +19,7 @@ const GetTermVectorsParams = z.object({
   term_statistics: z.boolean().optional(),
   routing: z.string().optional(),
   version: z.number().optional(),
-  version_type: z.enum(['internal', 'external', 'external_gte', 'force']).optional(),
+  version_type: z.enum(["internal", "external", "external_gte", "force"]).optional(),
   filter: z.record(z.unknown()).optional(),
   per_field_analyzer: z.record(z.string()).optional(),
   preference: z.string().optional(),
@@ -27,10 +27,7 @@ const GetTermVectorsParams = z.object({
 });
 
 type GetTermVectorsParamsType = z.infer<typeof GetTermVectorsParams>;
-export const registerGetTermVectorsTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerGetTermVectorsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_get_term_vectors",
     "Get term vectors for a document in Elasticsearch. Best for text analysis, relevance tuning, similarity calculations. Use when you need to analyze term frequency, positions, and offsets for document text analysis in Elasticsearch.",

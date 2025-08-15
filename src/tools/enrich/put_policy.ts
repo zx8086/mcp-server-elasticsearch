@@ -1,14 +1,11 @@
 /* src/tools/enrich/put_policy.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import type {
-  ToolRegistrationFunction,
-  SearchResult,
-} from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define Zod schema for validation
 const enrichSourceSchema = z.object({
@@ -30,42 +27,45 @@ const PutPolicyParams = z.object({
 
 type PutPolicyParamsType = z.infer<typeof PutPolicyParams>;
 
-export const registerEnrichPutPolicyTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerEnrichPutPolicyTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_enrich_put_policy",
     "Create an enrich policy in Elasticsearch. Best for data enrichment setup, reference data integration, document enhancement workflows. Use when you need to define policies for adding reference data to documents during ingestion in Elasticsearch.",
     PutPolicyParams.shape,
-    async (params: PutPolicyParamsType, extra: Record<string, unknown>): Promise<SearchResult> => {
+    async (params: PutPolicyParamsType, _extra: Record<string, unknown>): Promise<SearchResult> => {
       try {
         const result = await esClient.enrich.putPolicy({
           name: params.name,
-          geo_match: params.geoMatch ? {
-            enrich_fields: params.geoMatch.enrichFields,
-            indices: params.geoMatch.indices,
-            match_field: params.geoMatch.matchField,
-            query: params.geoMatch.query,
-            name: params.geoMatch.name,
-            elasticsearch_version: params.geoMatch.elasticsearchVersion,
-          } : undefined,
-          match: params.match ? {
-            enrich_fields: params.match.enrichFields,
-            indices: params.match.indices,
-            match_field: params.match.matchField,
-            query: params.match.query,
-            name: params.match.name,
-            elasticsearch_version: params.match.elasticsearchVersion,
-          } : undefined,
-          range: params.range ? {
-            enrich_fields: params.range.enrichFields,
-            indices: params.range.indices,
-            match_field: params.range.matchField,
-            query: params.range.query,
-            name: params.range.name,
-            elasticsearch_version: params.range.elasticsearchVersion,
-          } : undefined,
+          geo_match: params.geoMatch
+            ? {
+                enrich_fields: params.geoMatch.enrichFields,
+                indices: params.geoMatch.indices,
+                match_field: params.geoMatch.matchField,
+                query: params.geoMatch.query,
+                name: params.geoMatch.name,
+                elasticsearch_version: params.geoMatch.elasticsearchVersion,
+              }
+            : undefined,
+          match: params.match
+            ? {
+                enrich_fields: params.match.enrichFields,
+                indices: params.match.indices,
+                match_field: params.match.matchField,
+                query: params.match.query,
+                name: params.match.name,
+                elasticsearch_version: params.match.elasticsearchVersion,
+              }
+            : undefined,
+          range: params.range
+            ? {
+                enrich_fields: params.range.enrichFields,
+                indices: params.range.indices,
+                match_field: params.range.matchField,
+                query: params.range.query,
+                name: params.range.name,
+                elasticsearch_version: params.range.elasticsearchVersion,
+              }
+            : undefined,
           master_timeout: params.masterTimeout,
         });
         return {
@@ -84,6 +84,6 @@ export const registerEnrichPutPolicyTool: ToolRegistrationFunction = (
           ],
         };
       }
-    }
+    },
   );
 };

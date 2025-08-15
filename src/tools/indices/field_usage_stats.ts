@@ -1,33 +1,36 @@
 /* src/tools/indices/field_usage_stats.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const FieldUsageStatsParams = z.object({
   index: z.union([z.string(), z.array(z.string())]),
   allowNoIndices: z.boolean().optional(),
-  expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).or(z.array(z.enum(["all", "open", "closed", "hidden", "none"]))).optional(),
+  expandWildcards: z
+    .enum(["all", "open", "closed", "hidden", "none"])
+    .or(z.array(z.enum(["all", "open", "closed", "hidden", "none"])))
+    .optional(),
   ignoreUnavailable: z.boolean().optional(),
   fields: z.union([z.string(), z.array(z.string())]).optional(),
 });
 
 type FieldUsageStatsParamsType = z.infer<typeof FieldUsageStatsParams>;
 
-export const registerFieldUsageStatsTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerFieldUsageStatsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_field_usage_stats",
     "Get field usage statistics per shard and field in Elasticsearch. Best for query optimization, field analysis, performance tuning. Use when you need to understand which fields are accessed during queries for Elasticsearch index optimization.",
     {
       index: z.union([z.string(), z.array(z.string())]),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).or(z.array(z.enum(["all", "open", "closed", "hidden", "none"]))).optional(),
+      expandWildcards: z
+        .enum(["all", "open", "closed", "hidden", "none"])
+        .or(z.array(z.enum(["all", "open", "closed", "hidden", "none"])))
+        .optional(),
       ignoreUnavailable: z.boolean().optional(),
       fields: z.union([z.string(), z.array(z.string())]).optional(),
     },

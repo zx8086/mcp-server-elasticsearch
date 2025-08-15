@@ -1,19 +1,17 @@
 /* src/tools/index_management/get_index.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetIndexParams = z.object({
   index: z.string().min(1, "Index is required"),
   ignoreUnavailable: z.boolean().optional(),
   allowNoIndices: z.boolean().optional(),
-  expandWildcards: z
-    .enum(["all", "open", "closed", "hidden", "none"])
-    .optional(),
+  expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
   flatSettings: z.boolean().optional(),
   includeDefaults: z.boolean().optional(),
   local: z.boolean().optional(),
@@ -21,10 +19,7 @@ const GetIndexParams = z.object({
 });
 
 type GetIndexParamsType = z.infer<typeof GetIndexParams>;
-export const registerGetIndexTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerGetIndexTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_get_index",
     "Get comprehensive index information from Elasticsearch including settings, mappings, and aliases. Best for index inspection, configuration analysis, troubleshooting. Use when you need detailed metadata about Elasticsearch indices structure and configuration.",

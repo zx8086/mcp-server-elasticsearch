@@ -1,34 +1,35 @@
 /* src/tools/watcher/stats.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const WatcherStatsParams = z.object({
-  metric: z.union([
-    z.enum(["_all", "queued_watches", "current_watches", "pending_watches"]),
-    z.array(z.enum(["_all", "queued_watches", "current_watches", "pending_watches"]))
-  ]).optional(),
+  metric: z
+    .union([
+      z.enum(["_all", "queued_watches", "current_watches", "pending_watches"]),
+      z.array(z.enum(["_all", "queued_watches", "current_watches", "pending_watches"])),
+    ])
+    .optional(),
   emit_stacktraces: z.boolean().optional(),
 });
 
 type WatcherStatsParamsType = z.infer<typeof WatcherStatsParams>;
 
-export const registerWatcherStatsTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerWatcherStatsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_watcher_stats",
     "Get Elasticsearch Watcher statistics and metrics. Best for performance monitoring, service analysis, execution tracking. Use when you need to monitor Watcher service performance and execution statistics in Elasticsearch.",
     {
-      metric: z.union([
-        z.enum(["_all", "queued_watches", "current_watches", "pending_watches"]),
-        z.array(z.enum(["_all", "queued_watches", "current_watches", "pending_watches"]))
-      ]).optional(),
+      metric: z
+        .union([
+          z.enum(["_all", "queued_watches", "current_watches", "pending_watches"]),
+          z.array(z.enum(["_all", "queued_watches", "current_watches", "pending_watches"])),
+        ])
+        .optional(),
       emit_stacktraces: z.boolean().optional(),
     },
     async (params: WatcherStatsParamsType): Promise<SearchResult> => {

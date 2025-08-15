@@ -1,10 +1,10 @@
 /* src/tools/indices/exists_index_template.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const ExistsIndexTemplateParams = z.object({
@@ -16,10 +16,7 @@ const ExistsIndexTemplateParams = z.object({
 
 type ExistsIndexTemplateParamsType = z.infer<typeof ExistsIndexTemplateParams>;
 
-export const registerExistsIndexTemplateTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerExistsIndexTemplateTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_exists_index_template",
     "Check if index templates exist in Elasticsearch. Best for template validation, deployment verification, configuration checks. Use when you need to verify index template presence before operations in Elasticsearch.",

@@ -1,10 +1,10 @@
 /* src/tools/template/put_index_template.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const PutIndexTemplateParams = z.object({
@@ -21,10 +21,7 @@ const PutIndexTemplateParams = z.object({
 });
 
 type PutIndexTemplateParamsType = z.infer<typeof PutIndexTemplateParams>;
-export const registerPutIndexTemplateTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerPutIndexTemplateTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_put_index_template",
     "Create or update an index template in Elasticsearch. Best for index standardization, mapping management, settings automation. Use when you need to define templates for automatic index configuration in Elasticsearch.",

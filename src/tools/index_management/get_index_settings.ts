@@ -1,10 +1,10 @@
 /* src/tools/index_management/get_index_settings.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetIndexSettingsParams = z.object({
@@ -20,10 +20,7 @@ const GetIndexSettingsParams = z.object({
 });
 
 type GetIndexSettingsParamsType = z.infer<typeof GetIndexSettingsParams>;
-export const registerGetIndexSettingsTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerGetIndexSettingsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_get_index_settings",
     "Get index settings from Elasticsearch. Best for configuration review, performance analysis, troubleshooting. Use when you need to inspect index-level settings and configurations in Elasticsearch.",

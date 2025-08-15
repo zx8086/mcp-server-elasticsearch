@@ -1,38 +1,37 @@
 /* src/tools/analytics/get_multi_term_vectors.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetMultiTermVectorsParams = z.object({
   index: z.string().optional(),
-  docs: z.array(
-    z.object({
-      _id: z.string(),
-      _index: z.string().optional(),
-      _source: z.boolean().optional(),
-      fields: z.array(z.string()).optional(),
-      field_statistics: z.boolean().optional(),
-      offsets: z.boolean().optional(),
-      payloads: z.boolean().optional(),
-      positions: z.boolean().optional(),
-      term_statistics: z.boolean().optional(),
-      routing: z.string().optional(),
-      version: z.number().optional(),
-      version_type: z.enum(['internal', 'external', 'external_gte', 'force']).optional(),
-    })
-  ).optional(),
+  docs: z
+    .array(
+      z.object({
+        _id: z.string(),
+        _index: z.string().optional(),
+        _source: z.boolean().optional(),
+        fields: z.array(z.string()).optional(),
+        field_statistics: z.boolean().optional(),
+        offsets: z.boolean().optional(),
+        payloads: z.boolean().optional(),
+        positions: z.boolean().optional(),
+        term_statistics: z.boolean().optional(),
+        routing: z.string().optional(),
+        version: z.number().optional(),
+        version_type: z.enum(["internal", "external", "external_gte", "force"]).optional(),
+      }),
+    )
+    .optional(),
   ids: z.array(z.string()).optional(),
 });
 
 type GetMultiTermVectorsParamsType = z.infer<typeof GetMultiTermVectorsParams>;
-export const registerGetMultiTermVectorsTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerGetMultiTermVectorsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_get_multi_term_vectors",
     "Get term vectors for multiple documents in Elasticsearch. Best for text analysis, similarity calculations, relevance tuning. Use when you need to analyze term frequency and position data for multiple documents in Elasticsearch indices.",
@@ -42,7 +41,7 @@ export const registerGetMultiTermVectorsTool: ToolRegistrationFunction = (
         const result = await esClient.mtermvectors(
           {
             index: params.index,
-            docs: params.docs?.map(doc => ({
+            docs: params.docs?.map((doc) => ({
               _id: doc._id,
               _index: doc._index,
               _source: doc._source,

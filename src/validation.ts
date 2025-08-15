@@ -1,6 +1,6 @@
 /* src/validation.ts */
 
-import { Client } from "@elastic/elasticsearch";
+import type { Client } from "@elastic/elasticsearch";
 
 interface ValidationResult {
   valid: boolean;
@@ -22,9 +22,9 @@ export function validateEnvironment(): ValidationResult {
   // Check READ_ONLY_MODE configuration
   if (process.env.READ_ONLY_MODE) {
     const readOnlyValue = process.env.READ_ONLY_MODE.toLowerCase();
-    if (!['true', 'false', '1', '0'].includes(readOnlyValue)) {
+    if (!["true", "false", "1", "0"].includes(readOnlyValue)) {
       warnings.push("READ_ONLY_MODE should be 'true', 'false', '1', or '0'. Defaulting to false.");
-    } else if (['true', '1'].includes(readOnlyValue)) {
+    } else if (["true", "1"].includes(readOnlyValue)) {
       warnings.push("READ_ONLY_MODE is enabled - destructive operations will be restricted");
     }
   }
@@ -32,7 +32,7 @@ export function validateEnvironment(): ValidationResult {
   // Check READ_ONLY_STRICT_MODE
   if (process.env.READ_ONLY_STRICT_MODE) {
     const strictValue = process.env.READ_ONLY_STRICT_MODE.toLowerCase();
-    if (!['true', 'false', '1', '0'].includes(strictValue)) {
+    if (!["true", "false", "1", "0"].includes(strictValue)) {
       warnings.push("READ_ONLY_STRICT_MODE should be 'true', 'false', '1', or '0'. Defaulting to true.");
     }
   }
@@ -41,15 +41,15 @@ export function validateEnvironment(): ValidationResult {
   if (process.env.ES_URL) {
     try {
       const url = new URL(process.env.ES_URL);
-      if (!url.protocol.startsWith('http')) {
+      if (!url.protocol.startsWith("http")) {
         errors.push("ES_URL must use http or https protocol");
       }
-      
+
       // Check if it's an Elastic Cloud URL
-      if (url.hostname.includes('.es.') && url.hostname.includes('.aws.cloud.es.io')) {
+      if (url.hostname.includes(".es.") && url.hostname.includes(".aws.cloud.es.io")) {
         warnings.push("Detected Elastic Cloud URL - ensure API key authentication is used");
       }
-    } catch (e) {
+    } catch (_e) {
       errors.push("ES_URL is not a valid URL format");
     }
   }
@@ -79,7 +79,7 @@ export function validateConfig(config: any): ValidationResult {
   }
 
   // Check for Elastic Cloud specific requirements
-  if (config.url && config.url.includes('.es.') && config.url.includes('.aws.cloud.es.io')) {
+  if (config.url?.includes(".es.") && config.url.includes(".aws.cloud.es.io")) {
     if (!config.apiKey) {
       warnings.push("Elastic Cloud detected but no API key provided - API key authentication is recommended");
     }
@@ -109,13 +109,13 @@ export async function checkElasticsearchConnection(client: Client): Promise<Vali
 
     // Enhanced version compatibility checking
     const serverVersion = info.version.number;
-    const majorVersion = parseInt(serverVersion.split('.')[0]);
-    const minorVersion = parseInt(serverVersion.split('.')[1] || '0');
-    
+    const majorVersion = Number.parseInt(serverVersion.split(".")[0]);
+    const minorVersion = Number.parseInt(serverVersion.split(".")[1] || "0");
+
     if (majorVersion >= 9) {
       warnings.push(`Server version ${serverVersion} detected - using modern Elasticsearch features`);
     }
-    
+
     if (majorVersion === 8 && minorVersion >= 11) {
       warnings.push(`Server version ${serverVersion} supports enhanced security features`);
     }
@@ -124,7 +124,7 @@ export async function checkElasticsearchConnection(client: Client): Promise<Vali
     try {
       await client.security.authenticate();
       warnings.push("Authentication successful");
-    } catch (authError) {
+    } catch (_authError) {
       // Authentication might not be available or configured
       warnings.push("Could not verify authentication details");
     }
@@ -136,10 +136,10 @@ export async function checkElasticsearchConnection(client: Client): Promise<Vali
     };
   } catch (error) {
     let errorMessage = "Unknown error occurred";
-    
+
     if (error instanceof Error) {
       errorMessage = error.message;
-      
+
       // Enhanced error detection and guidance
       if (errorMessage.includes("response.headers") || errorMessage.includes("Cannot read properties")) {
         errors.push("Client/server version compatibility issue detected");
@@ -188,47 +188,47 @@ export async function testBasicOperations(client: Client): Promise<ValidationRes
       name: "Cluster Health",
       test: async () => {
         try {
-          return await client.cluster.health({ timeout: '5s' });
-        } catch (error) {
+          return await client.cluster.health({ timeout: "5s" });
+        } catch (_error) {
           // For modern clients, try alternative approach
-          return await client.cat.health({ format: 'json' });
+          return await client.cat.health({ format: "json" });
         }
-      }
+      },
     },
     {
-      name: "List Indices", 
+      name: "List Indices",
       test: async () => {
         try {
-          return await client.cat.indices({ format: 'json' });
-        } catch (error) {
+          return await client.cat.indices({ format: "json" });
+        } catch (_error) {
           // Fallback for compatibility issues
-          return await client.indices.get({ index: '*' });
+          return await client.indices.get({ index: "*" });
         }
-      }
+      },
     },
     {
       name: "Cluster Stats",
       test: async () => {
         try {
           return await client.cluster.stats();
-        } catch (error) {
+        } catch (_error) {
           // Try a simpler operation for compatibility
           return await client.info();
         }
-      }
+      },
     },
     {
       name: "Node Info",
       test: async () => {
         try {
           return await client.nodes.info();
-        } catch (error) {
+        } catch (_error) {
           // This might fail on some configurations, not critical
           warnings.push("Node info not accessible - this is normal for managed services");
           return null;
         }
-      }
-    }
+      },
+    },
   ];
 
   let successfulTests = 0;
@@ -243,7 +243,7 @@ export async function testBasicOperations(client: Client): Promise<ValidationRes
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      
+
       if (errorMsg.includes("response.headers") || errorMsg.includes("Cannot read properties")) {
         errors.push(`${name} failed: Client compatibility issue - this should resolve automatically`);
       } else if (errorMsg.includes("security_exception") || errorMsg.includes("403")) {
@@ -258,13 +258,15 @@ export async function testBasicOperations(client: Client): Promise<ValidationRes
 
   // Determine overall health
   const successRate = successfulTests / totalTests;
-  
+
   if (successRate >= 0.75) {
     warnings.push(`Basic operations: ${successfulTests}/${totalTests} successful - client is functional`);
   } else if (successRate >= 0.5) {
     warnings.push(`Basic operations: ${successfulTests}/${totalTests} successful - some limitations detected`);
   } else {
-    errors.push(`Basic operations: Only ${successfulTests}/${totalTests} successful - significant compatibility issues`);
+    errors.push(
+      `Basic operations: Only ${successfulTests}/${totalTests} successful - significant compatibility issues`,
+    );
   }
 
   return {
@@ -285,19 +287,19 @@ export async function testModernFeatures(client: Client): Promise<ValidationResu
       test: async () => {
         try {
           await client.searchTemplate({
-            index: '_all',
+            index: "_all",
             source: '{"query":{"match_all":{}},"size":0}',
-            params: {}
+            params: {},
           });
           return true;
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
           if (errorMsg.includes("index_not_found") || errorMsg.includes("no such index")) {
-            return true; 
+            return true;
           }
           return false;
         }
-      }
+      },
     },
     {
       name: "SQL API",
@@ -305,13 +307,13 @@ export async function testModernFeatures(client: Client): Promise<ValidationResu
         try {
           await client.sql.query({
             query: "SHOW TABLES",
-            format: 'json'
+            format: "json",
           });
           return true;
-        } catch (error) {
+        } catch (_error) {
           return false;
         }
-      }
+      },
     },
     {
       name: "Security API",
@@ -319,11 +321,11 @@ export async function testModernFeatures(client: Client): Promise<ValidationResu
         try {
           await client.security.authenticate();
           return true;
-        } catch (error) {
+        } catch (_error) {
           return false;
         }
-      }
-    }
+      },
+    },
   ];
 
   for (const { name, test } of modernTests) {
@@ -342,6 +344,6 @@ export async function testModernFeatures(client: Client): Promise<ValidationResu
   return {
     valid: true,
     errors,
-    warnings
+    warnings,
   };
-} 
+}

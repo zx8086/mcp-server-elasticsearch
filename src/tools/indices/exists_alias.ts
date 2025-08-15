@@ -1,27 +1,27 @@
 /* src/tools/indices/exists_alias.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const ExistsAliasParams = z.object({
   name: z.union([z.string(), z.array(z.string())]),
   index: z.union([z.string(), z.array(z.string())]).optional(),
   allow_no_indices: z.boolean().optional(),
-  expand_wildcards: z.enum(["all", "open", "closed", "hidden", "none"]).or(z.array(z.enum(["all", "open", "closed", "hidden", "none"]))).optional(),
+  expand_wildcards: z
+    .enum(["all", "open", "closed", "hidden", "none"])
+    .or(z.array(z.enum(["all", "open", "closed", "hidden", "none"])))
+    .optional(),
   ignore_unavailable: z.boolean().optional(),
   master_timeout: z.string().optional(),
 });
 
 type ExistsAliasParamsType = z.infer<typeof ExistsAliasParams>;
 
-export const registerExistsAliasTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerExistsAliasTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_exists_alias",
     "Check if index or data stream aliases exist in Elasticsearch. Best for alias validation, deployment verification, configuration checks. Use when you need to verify alias presence before operations in Elasticsearch.",
@@ -29,7 +29,10 @@ export const registerExistsAliasTool: ToolRegistrationFunction = (
       name: z.union([z.string(), z.array(z.string())]),
       index: z.union([z.string(), z.array(z.string())]).optional(),
       allow_no_indices: z.boolean().optional(),
-      expand_wildcards: z.enum(["all", "open", "closed", "hidden", "none"]).or(z.array(z.enum(["all", "open", "closed", "hidden", "none"]))).optional(),
+      expand_wildcards: z
+        .enum(["all", "open", "closed", "hidden", "none"])
+        .or(z.array(z.enum(["all", "open", "closed", "hidden", "none"])))
+        .optional(),
       ignore_unavailable: z.boolean().optional(),
       master_timeout: z.string().optional(),
     },

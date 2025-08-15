@@ -36,5 +36,10 @@ Thumbs.db
 # Documentation
 docs/
 
-# Scripts
-scripts
+# Test scripts with sensitive data
+scripts/test-*.ts
+scripts/test-*.js
+
+# Local testing scripts
+scripts/local-*
+scripts/*-local.*

@@ -1,15 +1,11 @@
 /* src/tools/advanced/delete_by_query.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import type {
-  ToolRegistrationFunction,
-  SearchResult,
-  WaitForActiveShards,
-} from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import type { SearchResult, ToolRegistrationFunction, WaitForActiveShards } from "../types.js";
 
 // Define the parameter schema
 const DeleteByQueryParams = z.object({
@@ -31,14 +27,11 @@ const DeleteByQueryParams = z.object({
 
 type DeleteByQueryParamsType = z.infer<typeof DeleteByQueryParams>;
 
-export const registerDeleteByQueryTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   // Implementation function without read-only checks
   const deleteByQueryImpl = async (
     params: DeleteByQueryParamsType,
-    extra: Record<string, unknown>,
+    _extra: Record<string, unknown>,
   ): Promise<SearchResult> => {
     try {
       const result = await esClient.deleteByQuery({
@@ -90,16 +83,10 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (
       requestsPerSecond: z.number().optional(),
       scroll: z.string().optional(),
       scrollSize: z.number().optional(),
-      searchType: z
-        .enum(["query_then_fetch", "dfs_query_then_fetch"])
-        .optional(),
+      searchType: z.enum(["query_then_fetch", "dfs_query_then_fetch"]).optional(),
       searchTimeout: z.string().optional(),
       slices: z.number().optional(),
     },
-    withReadOnlyCheck(
-      "elasticsearch_delete_by_query",
-      deleteByQueryImpl,
-      OperationType.DELETE,
-    ),
+    withReadOnlyCheck("elasticsearch_delete_by_query", deleteByQueryImpl, OperationType.DELETE),
   );
 };

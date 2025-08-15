@@ -1,10 +1,10 @@
 /* src/tools/ilm/get_lifecycle_improved.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema with new options
 const GetLifecycleParams = z.object({
@@ -18,14 +18,8 @@ const GetLifecycleParams = z.object({
     .max(100)
     .default(20)
     .describe("Maximum number of policies to return (default: 20, max: 100)"),
-  summary: z
-    .boolean()
-    .default(true)
-    .describe("Return summarized policy information instead of full details"),
-  includeIndices: z
-    .boolean()
-    .default(false)
-    .describe("Include list of indices using each policy"),
+  summary: z.boolean().default(true).describe("Return summarized policy information instead of full details"),
+  includeIndices: z.boolean().default(false).describe("Include list of indices using each policy"),
   sortBy: z
     .enum(["name", "modified_date", "version", "indices_count"])
     .default("name")
@@ -55,10 +49,7 @@ interface PolicyDetail {
   };
 }
 
-export const registerGetLifecycleImprovedTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerGetLifecycleImprovedTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_ilm_get_lifecycle",
     "Get Index Lifecycle Management (ILM) policies from Elasticsearch with smart response handling. Supports server-side field filtering via filter_path to prevent large responses. Returns summarized or detailed policy information with configurable limits. Best for data lifecycle management, policy inspection, compliance monitoring.",
@@ -80,19 +71,19 @@ export const registerGetLifecycleImprovedTool: ToolRegistrationFunction = (
 
         // If a specific policy was requested, filter results
         if (params.policy) {
-          policies = policies.filter(policy => policy.name === params.policy);
+          policies = policies.filter((policy) => policy.name === params.policy);
         }
 
         // Calculate retention days for each policy (if delete phase exists)
-        const policiesWithRetention = policies.map(policy => {
+        const policiesWithRetention = policies.map((policy) => {
           const deletePhase = policy.policy?.phases?.delete;
           let retentionDays: number | undefined;
-          
+
           if (deletePhase?.min_age) {
             const minAge = deletePhase.min_age;
             const match = minAge.match(/(\d+)d/);
             if (match) {
-              retentionDays = parseInt(match[1]);
+              retentionDays = Number.parseInt(match[1]);
             }
           }
 
@@ -113,7 +104,6 @@ export const registerGetLifecycleImprovedTool: ToolRegistrationFunction = (
               return (b.version || 0) - (a.version || 0);
             case "indices_count":
               return b.indices_count - a.indices_count;
-            case "name":
             default:
               return a.name.localeCompare(b.name);
           }
@@ -128,7 +118,7 @@ export const registerGetLifecycleImprovedTool: ToolRegistrationFunction = (
         const responseContent: string[] = [];
 
         // Add header with summary stats
-        responseContent.push(`## ILM Policies (${limitedPolicies.length}${isLimited ? ` of ${totalPolicies}` : ''})\n`);
+        responseContent.push(`## ILM Policies (${limitedPolicies.length}${isLimited ? ` of ${totalPolicies}` : ""})\n`);
 
         if (isLimited) {
           responseContent.push(`⚠️ Showing first ${params.limit} policies. Use 'limit' parameter to see more.\n`);
@@ -151,7 +141,7 @@ export const registerGetLifecycleImprovedTool: ToolRegistrationFunction = (
 
             responseContent.push(`### ${summary.name}`);
             responseContent.push(`- **Version**: ${summary.version}`);
-            responseContent.push(`- **Modified**: ${new Date(summary.modified_date).toISOString().split('T')[0]}`);
+            responseContent.push(`- **Modified**: ${new Date(summary.modified_date).toISOString().split("T")[0]}`);
             responseContent.push(`- **Phases**: ${summary.phases.join(" → ")}`);
             if (summary.retention_days) {
               responseContent.push(`- **Retention**: ${summary.retention_days} days`);
@@ -198,17 +188,15 @@ export const registerGetLifecycleImprovedTool: ToolRegistrationFunction = (
         if (params.summary && limitedPolicies.length > 5) {
           responseContent.push("\n## Phase Distribution");
           const phaseCount: Record<string, number> = {};
-          limitedPolicies.forEach(policy => {
-            Object.keys(policy.policy?.phases || {}).forEach(phase => {
+          for (const policy of limitedPolicies) {
+            for (const phase of Object.keys(policy.policy?.phases || {})) {
               phaseCount[phase] = (phaseCount[phase] || 0) + 1;
-            });
-          });
-          
-          Object.entries(phaseCount)
-            .sort(([, a], [, b]) => b - a)
-            .forEach(([phase, count]) => {
-              responseContent.push(`- **${phase}**: ${count} policies`);
-            });
+            }
+          }
+
+          for (const [phase, count] of Object.entries(phaseCount).sort(([, a], [, b]) => b - a)) {
+            responseContent.push(`- **${phase}**: ${count} policies`);
+          }
         }
 
         return {

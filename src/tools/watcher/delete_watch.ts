@@ -1,14 +1,11 @@
 /* src/tools/watcher/delete_watch.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import type {
-  ToolRegistrationFunction,
-  SearchResult,
-} from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const DeleteWatchParams = z.object({
@@ -17,14 +14,11 @@ const DeleteWatchParams = z.object({
 
 type DeleteWatchParamsType = z.infer<typeof DeleteWatchParams>;
 
-export const registerWatcherDeleteWatchTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerWatcherDeleteWatchTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   // Implementation function without read-only checks
   const deleteWatchImpl = async (
     params: DeleteWatchParamsType,
-    extra: Record<string, unknown>,
+    _extra: Record<string, unknown>,
   ): Promise<SearchResult> => {
     try {
       const result = await esClient.watcher.deleteWatch({
@@ -55,10 +49,6 @@ export const registerWatcherDeleteWatchTool: ToolRegistrationFunction = (
     {
       id: z.string().min(1, "Watch ID is required"),
     },
-    withReadOnlyCheck(
-      "elasticsearch_watcher_delete_watch",
-      deleteWatchImpl,
-      OperationType.DELETE,
-    ),
+    withReadOnlyCheck("elasticsearch_watcher_delete_watch", deleteWatchImpl, OperationType.DELETE),
   );
 };

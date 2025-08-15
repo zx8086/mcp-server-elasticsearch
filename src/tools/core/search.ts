@@ -1,10 +1,12 @@
 /* src/tools/core/search.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolFunction, ToolParams, SearchResult, TextContent } from "../types.js";
+import { registerTracedTool } from "../../utils/toolWrapper.js";
+import { traceSearchOperation } from "../../utils/toolWrapper.js";
+import type { SearchResult, TextContent, ToolFunction, ToolParams } from "../types.js";
 
 interface MappingResponse {
   [key: string]: {
@@ -26,44 +28,45 @@ interface SearchQueryBody {
   [key: string]: unknown;
 }
 
-export const registerSearchTool: ToolFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
-  server.tool(
-    "elasticsearch_search",
-    "Perform full-text search in Elasticsearch using Query DSL. Best for text search, fuzzy matching, aggregations, analytics, relevance scoring. Use when you need powerful search and analytics capabilities on JSON documents. Highlights are always enabled.",
-    {
-      index: z
-        .string()
-        .trim()
-        .min(1, "Index name is required")
-        .describe("Name of the Elasticsearch index to search for documents"),
-      queryBody: z
-        .record(z.any())
-        .refine(
-          (val) => {
-            try {
-              JSON.parse(JSON.stringify(val));
-              return true;
-            } catch (e) {
-              return false;
-            }
-          },
-          {
-            message: "queryBody must be a valid Elasticsearch query DSL object",
-          },
-        )
-        .describe(
-          "Complete Elasticsearch Query DSL object for full-text search, filtering, aggregations, and sorting. Use this for complex search operations with relevance scoring.",
-        ),
-    },
-    async ({ index, queryBody }: ToolParams): Promise<SearchResult> => {
+export const registerSearchTool: ToolFunction = (server: McpServer, esClient: Client) => {
+  const inputSchema = z.object({
+    index: z
+      .string()
+      .trim()
+      .min(1, "Index name is required")
+      .describe("Name of the Elasticsearch index to search for documents"),
+    queryBody: z
+      .record(z.any())
+      .refine(
+        (val) => {
+          try {
+            JSON.parse(JSON.stringify(val));
+            return true;
+          } catch (_e) {
+            return false;
+          }
+        },
+        {
+          message: "queryBody must be a valid Elasticsearch query DSL object",
+        },
+      )
+      .describe(
+        "Complete Elasticsearch Query DSL object for full-text search, filtering, aggregations, and sorting. Use this for complex search operations with relevance scoring.",
+      ),
+  });
+
+  registerTracedTool(server, esClient, {
+    name: "elasticsearch_search",
+    description:
+      "Perform full-text search in Elasticsearch using Query DSL. Best for text search, fuzzy matching, aggregations, analytics, relevance scoring. Use when you need powerful search and analytics capabilities on JSON documents. Highlights are always enabled.",
+    inputSchema,
+    operationType: "read",
+    handler: async (esClient: Client, { index, queryBody }: ToolParams): Promise<SearchResult> => {
       try {
         logger.debug("Searching index", { index, queryBody } as const);
         let indexMappings: { properties?: Record<string, { type: string }> } = {};
         try {
-          const mappingResponse = await esClient.indices.getMapping({ index }) as MappingResponse;
+          const mappingResponse = (await esClient.indices.getMapping({ index })) as MappingResponse;
           indexMappings = mappingResponse[index as string]?.mappings || {};
         } catch (mappingError) {
           logger.warn("Could not retrieve mappings for highlighting", {
@@ -71,12 +74,10 @@ export const registerSearchTool: ToolFunction = (
           });
         }
         const typedQueryBody = queryBody as SearchQueryBody;
-        let searchRequest = { index, ...typedQueryBody };
+        const searchRequest = { index, ...typedQueryBody };
         if (indexMappings.properties) {
           const textFields: Record<string, any> = {};
-          for (const [fieldName, fieldData] of Object.entries(
-            indexMappings.properties,
-          )) {
+          for (const [fieldName, fieldData] of Object.entries(indexMappings.properties)) {
             if (
               fieldData.type === "text" ||
               fieldData.type === "search_as_you_type" ||
@@ -98,14 +99,20 @@ export const registerSearchTool: ToolFunction = (
             };
           }
         }
-        const result = await esClient.search(searchRequest, {
-          opaqueId: "elasticsearch_search",
-        });
+        const result = await traceSearchOperation(
+          index,
+          "query_dsl",
+          async () =>
+            esClient.search(searchRequest, {
+              opaqueId: "elasticsearch_search",
+            }),
+          queryBody,
+        );
         const from = typedQueryBody.from || 0;
         if (typedQueryBody.size === 0 || typedQueryBody.aggs) {
           return {
             content: [
-              { type: "text", text: `Search results with aggregations:` } as TextContent,
+              { type: "text", text: "Search results with aggregations:" } as TextContent,
               {
                 type: "text",
                 text: JSON.stringify(result.aggregations || {}, null, 2),
@@ -118,11 +125,7 @@ export const registerSearchTool: ToolFunction = (
           const sourceData = hit._source || {};
           let content = `Document ID: ${hit._id}\nScore: ${hit._score}\n\n`;
           for (const [field, highlights] of Object.entries(highlightedFields)) {
-            if (
-              highlights &&
-              Array.isArray(highlights) &&
-              highlights.length > 0
-            ) {
+            if (highlights && Array.isArray(highlights) && highlights.length > 0) {
               content += `${field} (highlighted): ${highlights.join(" ... ")}\n`;
             }
           }
@@ -133,10 +136,7 @@ export const registerSearchTool: ToolFunction = (
           }
           return { type: "text", text: content.trim() } as TextContent;
         });
-        const totalHits =
-          typeof result.hits.total === "number"
-            ? result.hits.total
-            : result.hits.total?.value || 0;
+        const totalHits = typeof result.hits.total === "number" ? result.hits.total : result.hits.total?.value || 0;
         const metadataFragment: TextContent = {
           type: "text",
           text: `Total results: ${totalHits}, showing ${result.hits.hits.length} from position ${from}`,
@@ -158,5 +158,5 @@ export const registerSearchTool: ToolFunction = (
         };
       }
     },
-  );
+  });
 };

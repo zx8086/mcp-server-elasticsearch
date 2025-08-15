@@ -1,14 +1,11 @@
 /* src/tools/enrich/execute_policy.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import type {
-  ToolRegistrationFunction,
-  SearchResult,
-} from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const ExecutePolicyParams = z.object({
@@ -19,14 +16,11 @@ const ExecutePolicyParams = z.object({
 
 type ExecutePolicyParamsType = z.infer<typeof ExecutePolicyParams>;
 
-export const registerEnrichExecutePolicyTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerEnrichExecutePolicyTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   // Implementation function without read-only checks
   const executePolicyImpl = async (
     params: ExecutePolicyParamsType,
-    extra: Record<string, unknown>,
+    _extra: Record<string, unknown>,
   ): Promise<SearchResult> => {
     try {
       const result = await esClient.enrich.executePolicy({
@@ -60,10 +54,6 @@ export const registerEnrichExecutePolicyTool: ToolRegistrationFunction = (
       masterTimeout: z.string().optional(),
       waitForCompletion: z.boolean().optional(),
     },
-    withReadOnlyCheck(
-      "elasticsearch_enrich_execute_policy",
-      executePolicyImpl,
-      OperationType.WRITE,
-    ),
+    withReadOnlyCheck("elasticsearch_enrich_execute_policy", executePolicyImpl, OperationType.WRITE),
   );
 };

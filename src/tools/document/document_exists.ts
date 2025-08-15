@@ -1,10 +1,10 @@
 /* src/tools/document/document_exists.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const DocumentExistsParams = z.object({
@@ -20,10 +20,7 @@ const DocumentExistsParams = z.object({
 
 type DocumentExistsParamsType = z.infer<typeof DocumentExistsParams>;
 
-export const registerDocumentExistsTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
-) => {
+export const registerDocumentExistsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_document_exists",
     "Check if a document exists in Elasticsearch by index and id. Best for document validation, existence checks, conditional operations. Use when you need to verify document presence in Elasticsearch indices before performing operations.",
@@ -52,10 +49,14 @@ export const registerDocumentExistsTool: ToolRegistrationFunction = (
         return { content: [{ type: "text", text: `Exists: ${exists}` } as TextContent] };
       } catch (error) {
         logger.error("Failed to check if document exists:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
-        return { content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` } as TextContent] };
+        return {
+          content: [
+            { type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` } as TextContent,
+          ],
+        };
       }
-    }
+    },
   );
-}    
+};

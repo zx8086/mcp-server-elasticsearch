@@ -1,11 +1,11 @@
 /* src/tools/index_management/delete_index.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const DeleteIndexParams = z.object({
@@ -14,16 +14,11 @@ const DeleteIndexParams = z.object({
   masterTimeout: z.string().optional(),
   ignoreUnavailable: z.boolean().optional(),
   allowNoIndices: z.boolean().optional(),
-  expandWildcards: z
-    .enum(["all", "open", "closed", "hidden", "none"])
-    .optional(),
+  expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
 });
 
 type DeleteIndexParamsType = z.infer<typeof DeleteIndexParams>;
-export const registerDeleteIndexTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerDeleteIndexTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_delete_index",
     "Delete an entire index in Elasticsearch. Best for index cleanup, data lifecycle management, removing obsolete indices. Use when you need to permanently remove complete Elasticsearch indices and all their documents. DESTRUCTIVE OPERATION.",
@@ -65,10 +60,7 @@ export const registerDeleteIndexTool: ToolRegistrationFunction = (
         };
 
         if (readOnlyCheck.warning) {
-          return readOnlyManager.createWarningResponse(
-            "elasticsearch_delete_index",
-            response,
-          );
+          return readOnlyManager.createWarningResponse("elasticsearch_delete_index", response);
         }
 
         return response;

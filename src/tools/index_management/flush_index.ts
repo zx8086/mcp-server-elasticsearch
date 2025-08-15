@@ -1,28 +1,23 @@
 /* src/tools/index_management/flush_index.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const FlushIndexParams = z.object({
   index: z.string().min(1, "Index is required"),
   ignoreUnavailable: z.boolean().optional(),
   allowNoIndices: z.boolean().optional(),
-  expandWildcards: z
-    .enum(["all", "open", "closed", "hidden", "none"])
-    .optional(),
+  expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
   force: z.boolean().optional(),
   waitIfOngoing: z.boolean().optional(),
 });
 
 type FlushIndexParamsType = z.infer<typeof FlushIndexParams>;
-export const registerFlushIndexTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerFlushIndexTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_flush_index",
     "Flush an Elasticsearch index to ensure all data is written to disk. Best for data persistence, index optimization, ensuring durability. Use when you need to force Elasticsearch to write buffered data to storage for consistency.",

@@ -1,14 +1,11 @@
 /* src/tools/watcher/ack_watch.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import type {
-  ToolRegistrationFunction,
-  SearchResult,
-} from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const AckWatchParams = z.object({
@@ -18,15 +15,9 @@ const AckWatchParams = z.object({
 
 type AckWatchParamsType = z.infer<typeof AckWatchParams>;
 
-export const registerWatcherAckWatchTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerWatcherAckWatchTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   // Implementation function without read-only checks
-  const ackWatchImpl = async (
-    params: AckWatchParamsType,
-    extra: Record<string, unknown>,
-  ): Promise<SearchResult> => {
+  const ackWatchImpl = async (params: AckWatchParamsType, _extra: Record<string, unknown>): Promise<SearchResult> => {
     try {
       const result = await esClient.watcher.ackWatch({
         watch_id: params.watch_id,
@@ -59,10 +50,6 @@ export const registerWatcherAckWatchTool: ToolRegistrationFunction = (
       watch_id: z.string().min(1, "Watch ID is required"),
       action_id: z.union([z.string(), z.array(z.string())]).optional(),
     },
-    withReadOnlyCheck(
-      "elasticsearch_watcher_ack_watch",
-      ackWatchImpl,
-      OperationType.WRITE,
-    ),
+    withReadOnlyCheck("elasticsearch_watcher_ack_watch", ackWatchImpl, OperationType.WRITE),
   );
 };

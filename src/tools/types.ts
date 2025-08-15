@@ -1,13 +1,13 @@
 // src/tools/types.ts
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 // Common Elasticsearch parameter types
-export type ExpandWildcards = 'open' | 'closed' | 'hidden' | 'none' | 'all';
-export type WaitForActiveShards = 'all' | number;
-export type Conflicts = 'abort' | 'proceed';
-export type SearchType = 'query_then_fetch' | 'dfs_query_then_fetch';
+export type ExpandWildcards = "open" | "closed" | "hidden" | "none" | "all";
+export type WaitForActiveShards = "all" | number;
+export type Conflicts = "abort" | "proceed";
+export type SearchType = "query_then_fetch" | "dfs_query_then_fetch";
 
 // Common request parameters
 export interface CommonRequestParams {
@@ -48,17 +48,19 @@ export interface AudioContent {
 
 export interface ResourceContent {
   type: "resource";
-  resource: {
-    text: string;
-    uri: string;
-    mimeType?: string;
-    [key: string]: unknown;
-  } | {
-    uri: string;
-    blob: string;
-    mimeType?: string;
-    [key: string]: unknown;
-  };
+  resource:
+    | {
+        text: string;
+        uri: string;
+        mimeType?: string;
+        [key: string]: unknown;
+      }
+    | {
+        uri: string;
+        blob: string;
+        mimeType?: string;
+        [key: string]: unknown;
+      };
   [key: string]: unknown;
 }
 
@@ -96,19 +98,10 @@ export interface ElasticsearchError {
   };
 }
 
-export type ToolFunction = (
-  server: McpServer,
-  esClient: Client
-) => void;
+export type ToolFunction = (server: McpServer, esClient: Client) => void;
 
 // Tool handler type
-export type ToolHandler = (
-  params: ToolParams,
-  extra: Record<string, unknown>
-) => Promise<SearchResult>;
+export type ToolHandler = (params: ToolParams, extra: Record<string, unknown>) => Promise<SearchResult>;
 
 // Tool registration function type
-export type ToolRegistrationFunction = (
-  server: any,
-  esClient: any
-) => void;
+export type ToolRegistrationFunction = (server: any, esClient: any) => void;

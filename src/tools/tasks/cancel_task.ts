@@ -1,14 +1,11 @@
 /* src/tools/tasks/cancel_task.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import type {
-  ToolRegistrationFunction,
-  SearchResult,
-} from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const CancelTaskParams = z.object({
@@ -21,14 +18,11 @@ const CancelTaskParams = z.object({
 
 type CancelTaskParamsType = z.infer<typeof CancelTaskParams>;
 
-export const registerCancelTaskTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerCancelTaskTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   // Implementation function without read-only checks
   const cancelTaskImpl = async (
     params: CancelTaskParamsType,
-    extra: Record<string, unknown>,
+    _extra: Record<string, unknown>,
   ): Promise<SearchResult> => {
     try {
       const result = await esClient.tasks.cancel({
@@ -67,10 +61,6 @@ export const registerCancelTaskTool: ToolRegistrationFunction = (
       parentTaskId: z.string().optional(),
       waitForCompletion: z.boolean().optional(),
     },
-    withReadOnlyCheck(
-      "elasticsearch_tasks_cancel_task",
-      cancelTaskImpl,
-      OperationType.WRITE,
-    ),
+    withReadOnlyCheck("elasticsearch_tasks_cancel_task", cancelTaskImpl, OperationType.WRITE),
   );
 };

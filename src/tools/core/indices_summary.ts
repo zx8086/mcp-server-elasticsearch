@@ -1,10 +1,10 @@
 /* src/tools/core/indices_summary.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const IndicesSummaryParams = z.object({
@@ -22,10 +22,7 @@ const IndicesSummaryParams = z.object({
 
 type IndicesSummaryParamsType = z.infer<typeof IndicesSummaryParams>;
 
-export const registerIndicesSummaryTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
-) => {
+export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_indices_summary",
     "Get a high-level summary of indices without overwhelming detail in Elasticsearch. Best for cluster overview, index organization analysis, storage planning. Use when you need to understand index patterns, health distribution, and storage usage across your Elasticsearch cluster.",
@@ -43,14 +40,14 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (
     },
     async (params: IndicesSummaryParamsType): Promise<SearchResult> => {
       const { indexPattern, groupBy } = params;
-      
+
       logger.debug("Getting indices summary", { pattern: indexPattern, groupBy });
-      
+
       try {
         const response = await esClient.cat.indices({
           index: indexPattern,
-          format: 'json',
-          h: 'index,health,status,docs.count,store.size'
+          format: "json",
+          h: "index,health,status,docs.count,store.size",
         });
 
         // Categorize indices
@@ -60,7 +57,7 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (
           application: [],
           logs: [],
           metrics: [],
-          other: []
+          other: [],
         };
 
         const stats = {
@@ -69,74 +66,73 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (
           yellow: 0,
           red: 0,
           totalDocs: 0,
-          totalSize: 0
+          totalSize: 0,
         };
 
-        response.forEach((index: any) => {
+        for (const index of response) {
           // Health stats
-          if (index.health === 'green') stats.healthy++;
-          else if (index.health === 'yellow') stats.yellow++;
-          else if (index.health === 'red') stats.red++;
+          if (index.health === "green") stats.healthy++;
+          else if (index.health === "yellow") stats.yellow++;
+          else if (index.health === "red") stats.red++;
 
           // Document count
-          const docCount = parseInt(index['docs.count'] || '0');
+          const docCount = Number.parseInt(index["docs.count"] || "0");
           stats.totalDocs += docCount;
 
           // Categorize
           const indexName = index.index;
-          if (indexName.startsWith('.')) {
+          if (indexName.startsWith(".")) {
             categories.system.push({ name: indexName, docs: docCount });
-          } else if (indexName.includes('.ds-')) {
+          } else if (indexName.includes(".ds-")) {
             categories.dataStreams.push({ name: indexName, docs: docCount });
-          } else if (indexName.includes('log')) {
+          } else if (indexName.includes("log")) {
             categories.logs.push({ name: indexName, docs: docCount });
-          } else if (indexName.includes('metric')) {
+          } else if (indexName.includes("metric")) {
             categories.metrics.push({ name: indexName, docs: docCount });
           } else if (indexName.match(/^[a-zA-Z]+$/)) {
             categories.application.push({ name: indexName, docs: docCount });
           } else {
             categories.other.push({ name: indexName, docs: docCount });
           }
-        });
+        }
 
         // Group by pattern for detailed view
         const patterns = new Map<string, any[]>();
-        response.forEach((index: any) => {
-          let pattern;
+        for (const index of response) {
+          let pattern: string;
           switch (groupBy) {
-            case 'date':
-              pattern = index.index.replace(/\d{4}\.\d{2}\.\d{2}.*$/, 'YYYY.MM.DD*');
+            case "date":
+              pattern = index.index.replace(/\d{4}\.\d{2}\.\d{2}.*$/, "YYYY.MM.DD*");
               break;
-            case 'type':
-              if (index.index.startsWith('.')) pattern = 'system';
-              else if (index.index.includes('log')) pattern = 'logs';
-              else if (index.index.includes('metric')) pattern = 'metrics';
-              else pattern = 'application';
+            case "type":
+              if (index.index.startsWith(".")) pattern = "system";
+              else if (index.index.includes("log")) pattern = "logs";
+              else if (index.index.includes("metric")) pattern = "metrics";
+              else pattern = "application";
               break;
-            case 'prefix':
             default:
-              pattern = index.index.replace(/[-_]\d.*$/, '*').replace(/\d+$/, '*');
+              pattern = index.index.replace(/[-_]\d.*$/, "*").replace(/\d+$/, "*");
               break;
           }
-          
+
           if (!patterns.has(pattern)) {
             patterns.set(pattern, []);
           }
           patterns.get(pattern)!.push(index);
-        });
+        }
 
         // Create summary by pattern
         const patternSummary = Array.from(patterns.entries())
           .map(([pattern, indices]) => ({
             pattern,
             count: indices.length,
-            total_docs: indices.reduce((sum, idx) => sum + parseInt(idx['docs.count'] || '0'), 0),
+            total_docs: indices.reduce((sum, idx) => sum + Number.parseInt(idx["docs.count"] || "0"), 0),
             health_status: {
-              green: indices.filter(i => i.health === 'green').length,
-              yellow: indices.filter(i => i.health === 'yellow').length,
-              red: indices.filter(i => i.health === 'red').length,
+              green: indices.filter((i) => i.health === "green").length,
+              yellow: indices.filter((i) => i.health === "yellow").length,
+              red: indices.filter((i) => i.health === "red").length,
             },
-            example_indices: indices.slice(0, 3).map(i => i.index)
+            example_indices: indices.slice(0, 3).map((i) => i.index),
           }))
           .sort((a, b) => b.count - a.count)
           .slice(0, 20);
@@ -148,8 +144,8 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (
             health_distribution: {
               green: stats.healthy,
               yellow: stats.yellow,
-              red: stats.red
-            }
+              red: stats.red,
+            },
           },
           categories: {
             system_indices: categories.system.length,
@@ -157,17 +153,17 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (
             application_indices: categories.application.length,
             log_indices: categories.logs.length,
             metric_indices: categories.metrics.length,
-            other_indices: categories.other.length
+            other_indices: categories.other.length,
           },
           patterns: patternSummary,
           largest_indices: response
-            .sort((a, b) => parseInt(b['docs.count'] || '0') - parseInt(a['docs.count'] || '0'))
+            .sort((a, b) => Number.parseInt(b["docs.count"] || "0") - Number.parseInt(a["docs.count"] || "0"))
             .slice(0, 10)
-            .map(i => ({
+            .map((i) => ({
               index: i.index,
-              docs: i['docs.count'],
-              health: i.health
-            }))
+              docs: i["docs.count"],
+              health: i.health,
+            })),
         };
 
         return {
@@ -181,11 +177,9 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (
           error: error instanceof Error ? error.message : String(error),
         });
         return {
-          content: [
-            { type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` },
-          ],
+          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
         };
       }
-    }
+    },
   );
-};                        
+};

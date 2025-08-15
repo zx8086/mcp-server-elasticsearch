@@ -1,10 +1,10 @@
 /* src/tools/search/clear_scroll.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const ClearScrollParams = z.object({
@@ -12,10 +12,7 @@ const ClearScrollParams = z.object({
 });
 
 type ClearScrollParamsType = z.infer<typeof ClearScrollParams>;
-export const registerClearScrollTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerClearScrollTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_clear_scroll",
     "Clear a scroll context in Elasticsearch to free resources. Best for cleanup operations, memory management, scroll lifecycle management. Use when you need to explicitly release scroll contexts after completing large result set iterations in Elasticsearch.",

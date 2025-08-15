@@ -1,10 +1,10 @@
 /* src/tools/search/scroll_search.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const ScrollSearchParams = z.object({
@@ -17,10 +17,7 @@ const ScrollSearchParams = z.object({
 });
 
 type ScrollSearchParamsType = z.infer<typeof ScrollSearchParams>;
-export const registerScrollSearchTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerScrollSearchTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_scroll_search",
     "Perform scroll search in Elasticsearch for large result sets. Best for pagination, large dataset retrieval, memory-efficient iteration. Use when you need to retrieve all documents from large result sets without overwhelming memory in Elasticsearch.",

@@ -1,10 +1,10 @@
 /* src/tools/core/get_mappings.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetMappingsParams = z.object({
@@ -17,10 +17,7 @@ const GetMappingsParams = z.object({
 
 type GetMappingsParamsType = z.infer<typeof GetMappingsParams>;
 
-export const registerGetMappingsTool: ToolRegistrationFunction = (
-  server: McpServer, 
-  esClient: Client
-) => {
+export const registerGetMappingsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_get_mappings",
     "Get field mappings for a specific Elasticsearch index. Best for understanding document structure, field types, and analyzers. Use when you need to inspect the schema and data types of JSON documents stored in Elasticsearch indices.",
@@ -45,14 +42,12 @@ export const registerGetMappingsTool: ToolRegistrationFunction = (
         };
       } catch (error) {
         logger.error("Failed to get mappings:", {
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
         return {
-          content: [
-            { type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` },
-          ],
+          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
         };
       }
-    }
+    },
   );
-}        
+};

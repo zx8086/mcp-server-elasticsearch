@@ -1,10 +1,10 @@
 /* src/tools/alias/update_aliases.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const UpdateAliasesParams = z.object({
@@ -14,10 +14,7 @@ const UpdateAliasesParams = z.object({
 });
 
 type UpdateAliasesParamsType = z.infer<typeof UpdateAliasesParams>;
-export const registerUpdateAliasesTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerUpdateAliasesTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_update_aliases",
     "Update index aliases in Elasticsearch using the aliases API. Best for alias management, index switching, zero-downtime deployments. Use when you need to atomically add, remove, or modify multiple index aliases in Elasticsearch.",

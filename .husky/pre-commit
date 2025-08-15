@@ -1,0 +1,23 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run linting
+echo "📝 Checking code style..."
+bun run lint
+if [ $? -ne 0 ]; then
+  echo "❌ Linting failed. Please fix the issues before committing."
+  exit 1
+fi
+
+# Validate MCP schemas
+echo "🔧 Validating MCP tool schemas..."
+bun run validate-schemas
+if [ $? -ne 0 ]; then
+  echo "❌ Schema validation failed. Please fix the issues before committing."
+  echo "💡 See guides/ZOD_MCP_IMPLEMENTATION_GUIDE.md for help"
+  exit 1
+fi
+
+echo "✅ All pre-commit checks passed!"

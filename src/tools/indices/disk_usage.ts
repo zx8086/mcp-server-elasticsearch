@@ -1,16 +1,19 @@
 /* src/tools/indices/disk_usage.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const DiskUsageParams = z.object({
   index: z.union([z.string(), z.array(z.string())]),
   allowNoIndices: z.boolean().optional(),
-  expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).or(z.array(z.enum(["all", "open", "closed", "hidden", "none"]))).optional(),
+  expandWildcards: z
+    .enum(["all", "open", "closed", "hidden", "none"])
+    .or(z.array(z.enum(["all", "open", "closed", "hidden", "none"])))
+    .optional(),
   flush: z.boolean().optional(),
   ignoreUnavailable: z.boolean().optional(),
   runExpensiveTasks: z.boolean().optional(),
@@ -18,17 +21,17 @@ const DiskUsageParams = z.object({
 
 type DiskUsageParamsType = z.infer<typeof DiskUsageParams>;
 
-export const registerDiskUsageTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerDiskUsageTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_disk_usage",
     "Analyze index disk usage per field in Elasticsearch. Best for storage optimization, field analysis, capacity planning. Use when you need to understand disk consumption patterns and optimize storage usage for Elasticsearch indices and data streams.",
     {
       index: z.union([z.string(), z.array(z.string())]),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).or(z.array(z.enum(["all", "open", "closed", "hidden", "none"]))).optional(),
+      expandWildcards: z
+        .enum(["all", "open", "closed", "hidden", "none"])
+        .or(z.array(z.enum(["all", "open", "closed", "hidden", "none"])))
+        .optional(),
       flush: z.boolean().optional(),
       ignoreUnavailable: z.boolean().optional(),
       runExpensiveTasks: z.boolean().optional(),

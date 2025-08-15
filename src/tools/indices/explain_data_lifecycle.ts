@@ -1,10 +1,10 @@
 /* src/tools/indices/explain_data_lifecycle.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const ExplainDataLifecycleParams = z.object({
@@ -15,10 +15,7 @@ const ExplainDataLifecycleParams = z.object({
 
 type ExplainDataLifecycleParamsType = z.infer<typeof ExplainDataLifecycleParams>;
 
-export const registerExplainDataLifecycleTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerExplainDataLifecycleTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_explain_data_lifecycle",
     "Get data stream lifecycle status and execution details in Elasticsearch. Best for lifecycle monitoring, troubleshooting, policy analysis. Use when you need to understand data stream lifecycle execution status and configuration in Elasticsearch.",

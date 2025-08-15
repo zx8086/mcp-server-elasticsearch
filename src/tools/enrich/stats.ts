@@ -1,10 +1,10 @@
 /* src/tools/enrich/stats.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const StatsParams = z.object({
@@ -13,10 +13,7 @@ const StatsParams = z.object({
 
 type StatsParamsType = z.infer<typeof StatsParams>;
 
-export const registerEnrichStatsTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerEnrichStatsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_enrich_stats",
     "Get Elasticsearch enrich coordinator statistics and execution status. Best for performance monitoring, policy tracking, enrichment analysis. Use when you need to monitor enrich policy execution and coordinator performance in Elasticsearch.",

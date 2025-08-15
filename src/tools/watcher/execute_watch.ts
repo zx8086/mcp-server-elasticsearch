@@ -1,14 +1,11 @@
 /* src/tools/watcher/execute_watch.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import type {
-  ToolRegistrationFunction,
-  SearchResult,
-} from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const ExecuteWatchParams = z.object({
@@ -17,39 +14,42 @@ const ExecuteWatchParams = z.object({
   alternative_input: z.record(z.any()).optional(),
   ignore_condition: z.boolean().optional(),
   record_execution: z.boolean().optional(),
-  simulated_actions: z.object({
-    actions: z.array(z.string()).optional(),
-    all: z.boolean().optional(),
-    use_all: z.boolean().optional(),
-  }).optional(),
-  trigger_data: z.object({
-    scheduled_time: z.string().optional(),
-    triggered_time: z.string().optional(),
-  }).optional(),
-  watch: z.object({
-    actions: z.record(z.any()).optional(),
-    condition: z.record(z.any()).optional(),
-    input: z.record(z.any()).optional(),
-    metadata: z.record(z.any()).optional(),
-    status: z.record(z.any()).optional(),
-    throttle_period: z.string().optional(),
-    throttle_period_in_millis: z.number().optional(),
-    transform: z.record(z.any()).optional(),
-    trigger: z.record(z.any()).optional(),
-  }).optional(),
+  simulated_actions: z
+    .object({
+      actions: z.array(z.string()).optional(),
+      all: z.boolean().optional(),
+      use_all: z.boolean().optional(),
+    })
+    .optional(),
+  trigger_data: z
+    .object({
+      scheduled_time: z.string().optional(),
+      triggered_time: z.string().optional(),
+    })
+    .optional(),
+  watch: z
+    .object({
+      actions: z.record(z.any()).optional(),
+      condition: z.record(z.any()).optional(),
+      input: z.record(z.any()).optional(),
+      metadata: z.record(z.any()).optional(),
+      status: z.record(z.any()).optional(),
+      throttle_period: z.string().optional(),
+      throttle_period_in_millis: z.number().optional(),
+      transform: z.record(z.any()).optional(),
+      trigger: z.record(z.any()).optional(),
+    })
+    .optional(),
   debug: z.boolean().optional(),
 });
 
 type ExecuteWatchParamsType = z.infer<typeof ExecuteWatchParams>;
 
-export const registerWatcherExecuteWatchTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerWatcherExecuteWatchTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   // Implementation function without read-only checks
   const executeWatchImpl = async (
     params: ExecuteWatchParamsType,
-    extra: Record<string, unknown>,
+    _extra: Record<string, unknown>,
   ): Promise<SearchResult> => {
     try {
       const result = await esClient.watcher.executeWatch({
@@ -91,32 +91,34 @@ export const registerWatcherExecuteWatchTool: ToolRegistrationFunction = (
       alternative_input: z.record(z.any()).optional(),
       ignore_condition: z.boolean().optional(),
       record_execution: z.boolean().optional(),
-      simulated_actions: z.object({
-        actions: z.array(z.string()).optional(),
-        all: z.boolean().optional(),
-        use_all: z.boolean().optional(),
-      }).optional(),
-      trigger_data: z.object({
-        scheduled_time: z.string().optional(),
-        triggered_time: z.string().optional(),
-      }).optional(),
-      watch: z.object({
-        actions: z.record(z.any()).optional(),
-        condition: z.record(z.any()).optional(),
-        input: z.record(z.any()).optional(),
-        metadata: z.record(z.any()).optional(),
-        status: z.record(z.any()).optional(),
-        throttle_period: z.string().optional(),
-        throttle_period_in_millis: z.number().optional(),
-        transform: z.record(z.any()).optional(),
-        trigger: z.record(z.any()).optional(),
-      }).optional(),
+      simulated_actions: z
+        .object({
+          actions: z.array(z.string()).optional(),
+          all: z.boolean().optional(),
+          use_all: z.boolean().optional(),
+        })
+        .optional(),
+      trigger_data: z
+        .object({
+          scheduled_time: z.string().optional(),
+          triggered_time: z.string().optional(),
+        })
+        .optional(),
+      watch: z
+        .object({
+          actions: z.record(z.any()).optional(),
+          condition: z.record(z.any()).optional(),
+          input: z.record(z.any()).optional(),
+          metadata: z.record(z.any()).optional(),
+          status: z.record(z.any()).optional(),
+          throttle_period: z.string().optional(),
+          throttle_period_in_millis: z.number().optional(),
+          transform: z.record(z.any()).optional(),
+          trigger: z.record(z.any()).optional(),
+        })
+        .optional(),
       debug: z.boolean().optional(),
     },
-    withReadOnlyCheck(
-      "elasticsearch_watcher_execute_watch",
-      executeWatchImpl,
-      OperationType.WRITE,
-    ),
+    withReadOnlyCheck("elasticsearch_watcher_execute_watch", executeWatchImpl, OperationType.WRITE),
   );
 };

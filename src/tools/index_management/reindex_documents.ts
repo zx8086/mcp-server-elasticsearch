@@ -1,10 +1,10 @@
 /* src/tools/index_management/reindex_documents.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const ReindexDocumentsParams = z.object({
@@ -32,10 +32,7 @@ const ReindexDocumentsParams = z.object({
 });
 
 type ReindexDocumentsParamsType = z.infer<typeof ReindexDocumentsParams>;
-export const registerReindexDocumentsTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerReindexDocumentsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_reindex_documents",
     "Reindex documents from source to destination index in Elasticsearch. Best for data migration, index restructuring, mapping changes. Use when you need to copy documents between Elasticsearch indices with optional transformations.",

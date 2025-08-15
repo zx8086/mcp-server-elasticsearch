@@ -1,14 +1,11 @@
 /* src/tools/ilm/migrate_to_data_tiers.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import type {
-  ToolRegistrationFunction,
-  SearchResult,
-} from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const MigrateToDataTiersParams = z.object({
@@ -20,14 +17,11 @@ const MigrateToDataTiersParams = z.object({
 
 type MigrateToDataTiersParamsType = z.infer<typeof MigrateToDataTiersParams>;
 
-export const registerMigrateToDataTiersTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerMigrateToDataTiersTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   // Implementation function without read-only checks
   const migrateToDataTiersImpl = async (
     params: MigrateToDataTiersParamsType,
-    extra: Record<string, unknown>,
+    _extra: Record<string, unknown>,
   ): Promise<SearchResult> => {
     try {
       const result = await esClient.ilm.migrateToDataTiers({
@@ -63,10 +57,6 @@ export const registerMigrateToDataTiersTool: ToolRegistrationFunction = (
       dryRun: z.boolean().optional(),
       masterTimeout: z.string().optional(),
     },
-    withReadOnlyCheck(
-      "elasticsearch_ilm_migrate_to_data_tiers",
-      migrateToDataTiersImpl,
-      OperationType.DESTRUCTIVE,
-    ),
+    withReadOnlyCheck("elasticsearch_ilm_migrate_to_data_tiers", migrateToDataTiersImpl, OperationType.DESTRUCTIVE),
   );
 };

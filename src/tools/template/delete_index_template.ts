@@ -1,10 +1,10 @@
 /* src/tools/template/delete_index_template.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const DeleteIndexTemplateParams = z.object({
@@ -13,10 +13,7 @@ const DeleteIndexTemplateParams = z.object({
 });
 
 type DeleteIndexTemplateParamsType = z.infer<typeof DeleteIndexTemplateParams>;
-export const registerDeleteIndexTemplateTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerDeleteIndexTemplateTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_delete_index_template",
     "Delete an index template in Elasticsearch. Best for template management, configuration cleanup, removing unused templates. Use when you need to remove Elasticsearch index templates that define settings and mappings for new indices.",

@@ -1,10 +1,10 @@
 /* src/tools/alias/put_alias.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const PutAliasParams = z.object({
@@ -16,10 +16,7 @@ const PutAliasParams = z.object({
 });
 
 type PutAliasParamsType = z.infer<typeof PutAliasParams>;
-export const registerPutAliasTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerPutAliasTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_put_alias",
     "Add an alias to an index in Elasticsearch. Best for alias creation, index abstraction, application decoupling. Use when you need to create named references to Elasticsearch indices for easier management and zero-downtime operations.",

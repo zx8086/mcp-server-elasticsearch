@@ -1,10 +1,10 @@
 /* src/tools/enrich/get_policy.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const GetPolicyParams = z.object({
@@ -14,10 +14,7 @@ const GetPolicyParams = z.object({
 
 type GetPolicyParamsType = z.infer<typeof GetPolicyParams>;
 
-export const registerEnrichGetPolicyTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerEnrichGetPolicyTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_enrich_get_policy",
     "Get an enrich policy from Elasticsearch. Best for data enrichment configuration, policy inspection, document enhancement workflows. Use when you need to retrieve enrich policies that add reference data to documents during ingestion.",

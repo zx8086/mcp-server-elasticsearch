@@ -1,17 +1,20 @@
 /* src/tools/indices/get_index_settings_advanced.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const GetIndexSettingsAdvancedParams = z.object({
   index: z.union([z.string(), z.array(z.string())]).optional(),
   name: z.union([z.string(), z.array(z.string())]).optional(),
   allowNoIndices: z.boolean().optional(),
-  expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).or(z.array(z.enum(["all", "open", "closed", "hidden", "none"]))).optional(),
+  expandWildcards: z
+    .enum(["all", "open", "closed", "hidden", "none"])
+    .or(z.array(z.enum(["all", "open", "closed", "hidden", "none"])))
+    .optional(),
   flatSettings: z.boolean().optional(),
   ignoreUnavailable: z.boolean().optional(),
   includeDefaults: z.boolean().optional(),
@@ -21,10 +24,7 @@ const GetIndexSettingsAdvancedParams = z.object({
 
 type GetIndexSettingsAdvancedParamsType = z.infer<typeof GetIndexSettingsAdvancedParams>;
 
-export const registerGetIndexSettingsAdvancedTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerGetIndexSettingsAdvancedTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_get_index_settings_advanced",
     "Get comprehensive index settings from Elasticsearch with advanced options. Best for configuration analysis, performance tuning, troubleshooting. Use when you need detailed index settings including data stream backing indices in Elasticsearch.",
@@ -32,7 +32,10 @@ export const registerGetIndexSettingsAdvancedTool: ToolRegistrationFunction = (
       index: z.union([z.string(), z.array(z.string())]).optional(),
       name: z.union([z.string(), z.array(z.string())]).optional(),
       allowNoIndices: z.boolean().optional(),
-      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).or(z.array(z.enum(["all", "open", "closed", "hidden", "none"]))).optional(),
+      expandWildcards: z
+        .enum(["all", "open", "closed", "hidden", "none"])
+        .or(z.array(z.enum(["all", "open", "closed", "hidden", "none"])))
+        .optional(),
       flatSettings: z.boolean().optional(),
       ignoreUnavailable: z.boolean().optional(),
       includeDefaults: z.boolean().optional(),

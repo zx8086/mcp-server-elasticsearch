@@ -1,14 +1,11 @@
 /* src/tools/ilm/stop.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import type {
-  ToolRegistrationFunction,
-  SearchResult,
-} from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const StopParams = z.object({
@@ -18,15 +15,9 @@ const StopParams = z.object({
 
 type StopParamsType = z.infer<typeof StopParams>;
 
-export const registerStopTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerStopTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   // Implementation function without read-only checks
-  const stopImpl = async (
-    params: StopParamsType,
-    extra: Record<string, unknown>,
-  ): Promise<SearchResult> => {
+  const stopImpl = async (params: StopParamsType, _extra: Record<string, unknown>): Promise<SearchResult> => {
     try {
       const result = await esClient.ilm.stop({
         master_timeout: params.masterTimeout,
@@ -57,10 +48,6 @@ export const registerStopTool: ToolRegistrationFunction = (
       masterTimeout: z.string().optional(),
       timeout: z.string().optional(),
     },
-    withReadOnlyCheck(
-      "elasticsearch_ilm_stop",
-      stopImpl,
-      OperationType.WRITE,
-    ),
+    withReadOnlyCheck("elasticsearch_ilm_stop", stopImpl, OperationType.WRITE),
   );
 };

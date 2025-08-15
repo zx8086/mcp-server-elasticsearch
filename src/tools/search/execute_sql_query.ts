@@ -1,10 +1,10 @@
 /* src/tools/search/execute_sql_query.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const ExecuteSqlQueryParams = z.object({
@@ -14,10 +14,7 @@ const ExecuteSqlQueryParams = z.object({
 });
 
 type ExecuteSqlQueryParamsType = z.infer<typeof ExecuteSqlQueryParams>;
-export const registerExecuteSqlQueryTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerExecuteSqlQueryTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_execute_sql_query",
     "Execute a SQL query using Elasticsearch SQL API. Best for familiar SQL syntax, structured queries, data analysis. Use when you need to query Elasticsearch using SQL instead of Query DSL for easier data exploration and reporting.",

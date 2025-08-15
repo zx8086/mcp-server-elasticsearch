@@ -1,14 +1,11 @@
 /* src/tools/ilm/move_to_step.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import type {
-  ToolRegistrationFunction,
-  SearchResult,
-} from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const MoveToStepParams = z.object({
@@ -27,14 +24,11 @@ const MoveToStepParams = z.object({
 
 type MoveToStepParamsType = z.infer<typeof MoveToStepParams>;
 
-export const registerMoveToStepTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerMoveToStepTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   // Implementation function without read-only checks
   const moveToStepImpl = async (
     params: MoveToStepParamsType,
-    extra: Record<string, unknown>,
+    _extra: Record<string, unknown>,
   ): Promise<SearchResult> => {
     try {
       const result = await esClient.ilm.moveToStep({
@@ -76,10 +70,6 @@ export const registerMoveToStepTool: ToolRegistrationFunction = (
         name: z.string().optional(),
       }),
     },
-    withReadOnlyCheck(
-      "elasticsearch_ilm_move_to_step",
-      moveToStepImpl,
-      OperationType.DESTRUCTIVE,
-    ),
+    withReadOnlyCheck("elasticsearch_ilm_move_to_step", moveToStepImpl, OperationType.DESTRUCTIVE),
   );
 };

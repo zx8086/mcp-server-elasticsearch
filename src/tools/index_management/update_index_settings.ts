@@ -1,10 +1,10 @@
 /* src/tools/index_management/update_index_settings.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const UpdateIndexSettingsParams = z.object({
@@ -20,10 +20,7 @@ const UpdateIndexSettingsParams = z.object({
 });
 
 type UpdateIndexSettingsParamsType = z.infer<typeof UpdateIndexSettingsParams>;
-export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_update_index_settings",
     "Update index settings in Elasticsearch. Best for performance tuning, configuration changes, index optimization. Use when you need to modify index settings for better performance or functionality in Elasticsearch.",

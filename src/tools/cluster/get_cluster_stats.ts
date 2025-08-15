@@ -1,10 +1,10 @@
 /* src/tools/cluster/get_cluster_stats.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetClusterStatsParams = z.object({
@@ -13,10 +13,7 @@ const GetClusterStatsParams = z.object({
 });
 
 type GetClusterStatsParamsType = z.infer<typeof GetClusterStatsParams>;
-export const registerGetClusterStatsTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerGetClusterStatsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_get_cluster_stats",
     "Get comprehensive cluster statistics from Elasticsearch. Best for cluster monitoring, capacity planning, performance analysis. Use when you need detailed metrics about cluster-wide operations, storage, and resource utilization in Elasticsearch.",

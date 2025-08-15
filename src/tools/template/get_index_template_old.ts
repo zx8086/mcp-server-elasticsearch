@@ -1,10 +1,10 @@
 /* src/tools/template/get_index_template.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetIndexTemplateParams = z.object({
@@ -15,10 +15,7 @@ const GetIndexTemplateParams = z.object({
 });
 
 type GetIndexTemplateParamsType = z.infer<typeof GetIndexTemplateParams>;
-export const registerGetIndexTemplateTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerGetIndexTemplateTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_get_index_template",
     "Get an index template from Elasticsearch. Best for template management, configuration review, index pattern analysis. Use when you need to inspect index template definitions, mappings, and settings in Elasticsearch.",

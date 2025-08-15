@@ -1,10 +1,10 @@
 /* src/tools/watcher/get_settings.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const GetWatcherSettingsParams = z.object({
@@ -13,10 +13,7 @@ const GetWatcherSettingsParams = z.object({
 
 type GetWatcherSettingsParamsType = z.infer<typeof GetWatcherSettingsParams>;
 
-export const registerWatcherGetSettingsTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerWatcherGetSettingsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_watcher_get_settings",
     "Get Elasticsearch Watcher index settings for .watches index. Best for configuration review, troubleshooting, system analysis. Use when you need to inspect Watcher internal index settings in Elasticsearch.",

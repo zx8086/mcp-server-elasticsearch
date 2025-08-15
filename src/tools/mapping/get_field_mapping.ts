@@ -1,10 +1,10 @@
 /* src/tools/mapping/get_field_mapping.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetFieldMappingParams = z.object({
@@ -18,10 +18,7 @@ const GetFieldMappingParams = z.object({
 });
 
 type GetFieldMappingParamsType = z.infer<typeof GetFieldMappingParams>;
-export const registerGetFieldMappingTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerGetFieldMappingTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_get_field_mapping",
     "Get field mapping for a specific field in an Elasticsearch index. Best for schema inspection, field analysis, mapping troubleshooting. Use when you need to examine how specific fields are mapped and analyzed in Elasticsearch indices for search optimization.",

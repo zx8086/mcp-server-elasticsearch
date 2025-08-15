@@ -16,7 +16,7 @@ export class MCPCompatibleLogger {
   private context: string;
   private metadata: LogMetadata;
 
-  constructor(context: string = "elasticsearch-mcp-server", metadata: LogMetadata = {}) {
+  constructor(context = "elasticsearch-mcp-server", metadata: LogMetadata = {}) {
     this.context = context;
     this.metadata = metadata;
   }
@@ -33,11 +33,11 @@ export class MCPCompatibleLogger {
     };
 
     // Remove undefined values
-    Object.keys(logData).forEach(key => {
+    for (const key of Object.keys(logData)) {
       if (logData[key] === undefined) {
         delete logData[key];
       }
-    });
+    }
 
     // Return formatted JSON string
     return JSON.stringify(logData);
@@ -53,7 +53,7 @@ export class MCPCompatibleLogger {
   private writeToStderr(message: string): void {
     // Always write to stderr, but ensure it's properly formatted JSON
     // This matches the behavior of other MCP servers
-    process.stderr.write(message + "\n");
+    process.stderr.write(`${message}\n`);
   }
 
   debug(message: string, metadata: LogMetadata = {}): void {
@@ -99,4 +99,4 @@ export const logger = new MCPCompatibleLogger();
 // Helper function to create a child logger with a specific context
 export function createContextLogger(context: string, metadata: LogMetadata = {}): MCPCompatibleLogger {
   return new MCPCompatibleLogger(context, metadata);
-} 
+}

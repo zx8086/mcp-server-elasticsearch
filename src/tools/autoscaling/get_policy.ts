@@ -1,10 +1,10 @@
 /* src/tools/autoscaling/get_policy.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import { ToolRegistrationFunction, SearchResult, TextContent } from "../types.js";
+import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const GetAutoscalingPolicyParams = z.object({
@@ -14,10 +14,7 @@ const GetAutoscalingPolicyParams = z.object({
 
 type GetAutoscalingPolicyParamsType = z.infer<typeof GetAutoscalingPolicyParams>;
 
-export const registerAutoscalingGetPolicyTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerAutoscalingGetPolicyTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_autoscaling_get_policy",
     "Get an autoscaling policy from Elasticsearch. Best for policy inspection, capacity planning, configuration review. Use when you need to retrieve autoscaling policies in Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
@@ -27,12 +24,15 @@ export const registerAutoscalingGetPolicyTool: ToolRegistrationFunction = (
     },
     async (params: GetAutoscalingPolicyParamsType): Promise<SearchResult> => {
       try {
-        const result = await esClient.autoscaling.getAutoscalingPolicy({
-          name: params.name,
-          master_timeout: params.masterTimeout,
-        }, {
-          opaqueId: "elasticsearch_autoscaling_get_policy",
-        });
+        const result = await esClient.autoscaling.getAutoscalingPolicy(
+          {
+            name: params.name,
+            master_timeout: params.masterTimeout,
+          },
+          {
+            opaqueId: "elasticsearch_autoscaling_get_policy",
+          },
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
         };

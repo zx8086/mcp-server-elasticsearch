@@ -1,14 +1,11 @@
 /* src/tools/enrich/delete_policy.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import type {
-  ToolRegistrationFunction,
-  SearchResult,
-} from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const DeletePolicyParams = z.object({
@@ -18,14 +15,11 @@ const DeletePolicyParams = z.object({
 
 type DeletePolicyParamsType = z.infer<typeof DeletePolicyParams>;
 
-export const registerEnrichDeletePolicyTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerEnrichDeletePolicyTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   // Implementation function without read-only checks
   const deletePolicyImpl = async (
     params: DeletePolicyParamsType,
-    extra: Record<string, unknown>,
+    _extra: Record<string, unknown>,
   ): Promise<SearchResult> => {
     try {
       const result = await esClient.enrich.deletePolicy({
@@ -57,10 +51,6 @@ export const registerEnrichDeletePolicyTool: ToolRegistrationFunction = (
       name: z.string().min(1, "Policy name is required"),
       masterTimeout: z.string().optional(),
     },
-    withReadOnlyCheck(
-      "elasticsearch_enrich_delete_policy",
-      deletePolicyImpl,
-      OperationType.DELETE,
-    ),
+    withReadOnlyCheck("elasticsearch_enrich_delete_policy", deletePolicyImpl, OperationType.DELETE),
   );
 };

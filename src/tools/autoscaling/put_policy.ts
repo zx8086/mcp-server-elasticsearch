@@ -1,14 +1,11 @@
 /* src/tools/autoscaling/put_policy.ts */
 
+import type { Client } from "@elastic/elasticsearch";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { withReadOnlyCheck, OperationType } from "../../utils/readOnlyMode.js";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { Client } from "@elastic/elasticsearch";
-import type {
-  ToolRegistrationFunction,
-  SearchResult,
-} from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const PutAutoscalingPolicyParams = z.object({
@@ -20,14 +17,11 @@ const PutAutoscalingPolicyParams = z.object({
 
 type PutAutoscalingPolicyParamsType = z.infer<typeof PutAutoscalingPolicyParams>;
 
-export const registerAutoscalingPutPolicyTool: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client,
-) => {
+export const registerAutoscalingPutPolicyTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   // Implementation function without read-only checks
   const putAutoscalingPolicyImpl = async (
     params: PutAutoscalingPolicyParamsType,
-    extra: Record<string, unknown>,
+    _extra: Record<string, unknown>,
   ): Promise<SearchResult> => {
     try {
       const result = await esClient.autoscaling.putAutoscalingPolicy({
@@ -63,10 +57,6 @@ export const registerAutoscalingPutPolicyTool: ToolRegistrationFunction = (
       masterTimeout: z.string().optional(),
       timeout: z.string().optional(),
     },
-    withReadOnlyCheck(
-      "elasticsearch_autoscaling_put_policy",
-      putAutoscalingPolicyImpl,
-      OperationType.WRITE,
-    ),
+    withReadOnlyCheck("elasticsearch_autoscaling_put_policy", putAutoscalingPolicyImpl, OperationType.WRITE),
   );
 };

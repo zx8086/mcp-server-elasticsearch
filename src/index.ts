@@ -2,16 +2,31 @@
 
 /* src/index.ts */
 
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import http from "node:http";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import getRawBody from "raw-body";
+import { clearConfigWarnings, config, getConfigWarnings } from "./config.js";
 import { createElasticsearchMcpServer } from "./server.js";
 import { logger } from "./utils/logger.js";
-import { config } from "./config.js";
-import http from "http";
-import getRawBody from "raw-body";
+import { createSessionContext, runWithSession } from "./utils/sessionContext.js";
+import { createConnectionMetadata, initializeTracing, traceMcpConnection } from "./utils/tracing.js";
+import { detectClient, generateSessionId, traceNamedMcpConnection } from "./utils/tracingEnhanced.js";
 
 async function main() {
   try {
+    // Initialize tracing first
+    initializeTracing();
+
+    // Log any configuration warnings now that logger is available
+    const configWarnings = getConfigWarnings();
+    if (configWarnings.length > 0) {
+      for (const warning of configWarnings) {
+        logger.warn(warning);
+      }
+      clearConfigWarnings(); // Clear warnings after logging
+    }
+
     // Configuration is already loaded and validated in config.ts
     logger.info("Starting Elasticsearch MCP server with validated configuration", {
       url: config.elasticsearch.url,
@@ -31,83 +46,119 @@ async function main() {
     const server = await createElasticsearchMcpServer(config);
 
     // Create transport based on configuration
-    if (config.server.transportMode === 'sse') {
+    if (config.server.transportMode === "sse") {
       logger.info("Using SSE transport mode");
-      
+
       const PORT = config.server.port;
       const sseEndpoint = "/mcp";
-      
+
+      // Track active SSE connections for graceful shutdown
+      const activeConnections = new Set<http.ServerResponse>();
+
       // Create HTTP server to handle both SSE connection and POST requests
       const httpServer = http.createServer(async (req, res) => {
-        if (req.url?.startsWith('/sse')) {
+        if (req.url?.startsWith("/sse")) {
           // Handle SSE connection (GET request)
-          if (req.method === 'GET') {
+          if (req.method === "GET") {
             const clientIP = req.socket.remoteAddress;
-            const userAgent = req.headers['user-agent'] || 'Unknown';
+            const userAgent = req.headers["user-agent"] || "Unknown";
             logger.info(`New SSE connection from ${clientIP}, User-Agent: ${userAgent}`);
             logger.info(`Request headers: ${JSON.stringify(req.headers)}`);
-            
+
             // Set up CORS headers
-            res.setHeader('Access-Control-Allow-Origin', '*');
-            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-            res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-            
+            res.setHeader("Access-Control-Allow-Origin", "*");
+            res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+            res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+            // Track this connection for graceful shutdown
+            activeConnections.add(res);
+
+            // Remove connection when it closes
+            res.on("close", () => {
+              activeConnections.delete(res);
+              logger.debug("SSE connection closed", {
+                activeConnections: activeConnections.size,
+              });
+            });
+
             // Create a new SSE transport for this connection
             const transport = new SSEServerTransport(sseEndpoint, res);
-            
-            // Connect the server to this transport
-            await server.connect(transport);
-            
+
+            // Generate connection ID for tracing
+            const connectionId = `sse-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+            const sessionId = transport.sessionId || connectionId;
+
+            // Detect client information
+            const clientInfo = detectClient("sse", req.headers as Record<string, string>, userAgent);
+
+            // Connect the server to this transport with enhanced tracing
+            if (config.langsmith.tracing) {
+              const tracedConnection = traceNamedMcpConnection({
+                connectionId,
+                transportMode: "sse",
+                clientInfo,
+                sessionId,
+              });
+              await tracedConnection(async () => server.connect(transport));
+            } else {
+              await server.connect(transport);
+            }
+
             // Log successful connection
-            logger.info(`SSE connection established, endpoint: ${sseEndpoint}, sessionId: ${transport.sessionId}`);
+            logger.info("SSE connection established", {
+              endpoint: sseEndpoint,
+              sessionId,
+              connectionId,
+              client: clientInfo.name,
+            });
           } else {
             // Handle preflight requests
-            if (req.method === 'OPTIONS') {
+            if (req.method === "OPTIONS") {
               res.writeHead(204, {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type'
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
               });
               res.end();
             } else {
               // Method not allowed
               res.writeHead(405);
-              res.end('Method not allowed');
+              res.end("Method not allowed");
             }
           }
         } else if (req.url === sseEndpoint) {
           // Handle POST requests with session routing
-          if (req.method === 'POST') {
+          if (req.method === "POST") {
             // Set CORS headers
-            res.setHeader('Access-Control-Allow-Origin', '*');
-            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-            res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-            
+            res.setHeader("Access-Control-Allow-Origin", "*");
+            res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+            res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
             try {
               // Get session ID from URL query
-              const sessionId = new URL(req.url, `http://${req.headers.host}`).searchParams.get('sessionId');
-              
+              const sessionId = new URL(req.url, `http://${req.headers.host}`).searchParams.get("sessionId");
+
               if (!sessionId) {
                 res.writeHead(400);
-                res.end('Missing sessionId parameter');
+                res.end("Missing sessionId parameter");
                 return;
               }
-              
+
               // Find the transport for this session
               const connection = server.getConnectionBySessionId(sessionId);
-              
+
               if (!connection) {
                 res.writeHead(404);
-                res.end('Session not found');
+                res.end("Session not found");
                 return;
               }
-              
+
               // Parse the body
               const body = await getRawBody(req, {
-                limit: '4mb',
-                encoding: 'utf-8'
+                limit: "4mb",
+                encoding: "utf-8",
               });
-              
+
               // Handle the message
               await connection.transport.handlePostMessage(req, res, body.toString());
             } catch (error) {
@@ -115,54 +166,79 @@ async function main() {
                 error: error instanceof Error ? error.message : String(error),
               });
               res.writeHead(500);
-              res.end('Internal server error');
+              res.end("Internal server error");
             }
-          } else if (req.method === 'OPTIONS') {
+          } else if (req.method === "OPTIONS") {
             // Handle preflight requests
             res.writeHead(204, {
-              'Access-Control-Allow-Origin': '*',
-              'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-              'Access-Control-Allow-Headers': 'Content-Type'
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+              "Access-Control-Allow-Headers": "Content-Type",
             });
             res.end();
           } else {
             // Method not allowed
             res.writeHead(405);
-            res.end('Method not allowed');
+            res.end("Method not allowed");
           }
         } else {
           // Not found
           res.writeHead(404);
-          res.end('Not found');
+          res.end("Not found");
         }
       });
-      
+
       // Start the HTTP server
-      httpServer.listen(PORT, '0.0.0.0', () => {
+      httpServer.listen(PORT, "0.0.0.0", () => {
         logger.info(`SSE HTTP server listening on port ${PORT}`);
         logger.info(`SSE endpoint: http://localhost:${PORT}/sse`);
         logger.info(`MCP endpoint: http://localhost:${PORT}${sseEndpoint}?sessionId=<SESSION_ID>`);
       });
-      
-      // Set up graceful shutdown
+
+      // Set up graceful shutdown for SSE mode
       const shutdown = async () => {
-        logger.info("Shutting down server gracefully...");
+        logger.info("Shutting down SSE server gracefully...", {
+          activeConnections: activeConnections.size,
+        });
+
         try {
-          server.disconnectAll();
-          httpServer.close();
-          logger.info("Server shutdown completed");
+          // First, close all active SSE connections
+          for (const connection of activeConnections) {
+            try {
+              connection.end();
+            } catch (err) {
+              logger.debug("Error closing SSE connection:", {
+                error: err instanceof Error ? err.message : String(err),
+              });
+            }
+          }
+          activeConnections.clear();
+
+          // Close the HTTP server to stop accepting new connections
+          httpServer.close(() => {
+            logger.info("HTTP server closed successfully");
+            process.exit(0);
+          });
+
+          logger.info("Server shutdown initiated");
+
+          // Force exit after timeout if server doesn't close gracefully
+          setTimeout(() => {
+            logger.warn("Forcing server shutdown after timeout");
+            process.exit(0);
+          }, 5000);
         } catch (error) {
           logger.error("Error during shutdown:", {
             error: error instanceof Error ? error.message : String(error),
           });
+          process.exit(1);
         }
-        process.exit(0);
       };
-      
+
       // Handle signals
       process.on("SIGINT", shutdown);
       process.on("SIGTERM", shutdown);
-      
+
       // Handle uncaught errors
       process.on("uncaughtException", (error) => {
         logger.error("Uncaught exception - shutting down:", {
@@ -172,7 +248,7 @@ async function main() {
         });
         shutdown();
       });
-      
+
       process.on("unhandledRejection", (reason) => {
         logger.error("Unhandled promise rejection - shutting down:", {
           reason: reason instanceof Error ? reason.message : String(reason),
@@ -180,7 +256,7 @@ async function main() {
         });
         shutdown();
       });
-      
+
       const modeInfo = `🌐 SSE on port ${config.server.port}`;
       logger.info(`🚀 Elasticsearch MCP Server started successfully with ${modeInfo}`, {
         mode: config.server.readOnlyMode ? "READ-ONLY" : "FULL-ACCESS",
@@ -191,8 +267,31 @@ async function main() {
       // Use stdio transport
       logger.info("Using stdio transport mode");
       const transport = new StdioServerTransport();
-      
-      await server.connect(transport);
+
+      // Generate connection ID for tracing
+      const connectionId = `stdio-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+
+      // Detect client information (Claude Desktop for stdio)
+      const clientInfo = detectClient("stdio");
+      const sessionId = generateSessionId(connectionId, clientInfo);
+
+      // Create session context
+      const sessionContext = createSessionContext(connectionId, "stdio", sessionId, clientInfo);
+
+      // Connect with session context and enhanced tracing if enabled
+      await runWithSession(sessionContext, async () => {
+        if (config.langsmith.tracing) {
+          const tracedConnection = traceNamedMcpConnection({
+            connectionId,
+            transportMode: "stdio",
+            clientInfo,
+            sessionId,
+          });
+          await tracedConnection(async () => server.connect(transport));
+        } else {
+          await server.connect(transport);
+        }
+      });
 
       // Set up graceful shutdown
       const shutdown = async () => {
@@ -230,7 +329,7 @@ async function main() {
         shutdown();
       });
 
-      const modeInfo = '📝 STDIO';
+      const modeInfo = "📝 STDIO";
       logger.info(`🚀 Elasticsearch MCP Server started successfully with ${modeInfo}`, {
         mode: config.server.readOnlyMode ? "READ-ONLY" : "FULL-ACCESS",
         strictMode: config.server.readOnlyStrictMode,
