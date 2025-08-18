@@ -15,6 +15,12 @@ const ServerConfigSchema = z.object({
   maxResultsPerQuery: z.number().min(1).max(10000).default(1000),
   transportMode: z.enum(["stdio", "sse"]).default("stdio"),
   port: z.number().default(8080),
+  // Enhanced response handling configuration
+  maxResponseSizeBytes: z.number().min(1000).max(10000000).default(1000000), // 1MB default
+  defaultPageSize: z.number().min(1).max(1000).default(20),
+  maxPageSize: z.number().min(10).max(10000).default(100),
+  enableResponseCompression: z.boolean().default(true),
+  autoSummarizeLargeResponses: z.boolean().default(true),
 });
 
 const ElasticsearchConfigSchema = z
@@ -101,6 +107,11 @@ const defaultConfig: Config = {
     maxResultsPerQuery: 1000,
     transportMode: "stdio",
     port: 8080,
+    maxResponseSizeBytes: 1000000,
+    defaultPageSize: 20,
+    maxPageSize: 100,
+    enableResponseCompression: true,
+    autoSummarizeLargeResponses: true,
   },
   elasticsearch: {
     url: "http://localhost:9200",
@@ -142,6 +153,11 @@ const envVarMapping = {
     maxResultsPerQuery: "MCP_MAX_RESULTS_PER_QUERY",
     transportMode: "MCP_TRANSPORT",
     port: "MCP_PORT",
+    maxResponseSizeBytes: "MCP_MAX_RESPONSE_SIZE_BYTES",
+    defaultPageSize: "MCP_DEFAULT_PAGE_SIZE",
+    maxPageSize: "MCP_MAX_PAGE_SIZE",
+    enableResponseCompression: "MCP_ENABLE_RESPONSE_COMPRESSION",
+    autoSummarizeLargeResponses: "MCP_AUTO_SUMMARIZE_LARGE_RESPONSES",
   },
   elasticsearch: {
     url: "ES_URL",

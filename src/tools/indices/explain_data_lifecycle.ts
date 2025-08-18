@@ -4,12 +4,13 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const ExplainDataLifecycleParams = z.object({
   index: z.union([z.string(), z.array(z.string())]),
-  include_defaults: z.boolean().optional(),
+  include_defaults: booleanField().optional(),
   master_timeout: z.string().optional(),
 });
 
@@ -21,7 +22,7 @@ export const registerExplainDataLifecycleTool: ToolRegistrationFunction = (serve
     "Get data stream lifecycle status and execution details in Elasticsearch. Best for lifecycle monitoring, troubleshooting, policy analysis. Use when you need to understand data stream lifecycle execution status and configuration in Elasticsearch.",
     {
       index: z.union([z.string(), z.array(z.string())]),
-      include_defaults: z.boolean().optional(),
+      include_defaults: booleanField().optional(),
       master_timeout: z.string().optional(),
     },
     async (params: ExplainDataLifecycleParamsType): Promise<SearchResult> => {

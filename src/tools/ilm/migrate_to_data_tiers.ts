@@ -5,13 +5,14 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const MigrateToDataTiersParams = z.object({
   legacyTemplateToDelete: z.string().optional(),
   nodeAttribute: z.string().optional(),
-  dryRun: z.boolean().optional(),
+  dryRun: booleanField().optional(),
   masterTimeout: z.string().optional(),
 });
 
@@ -54,7 +55,7 @@ export const registerMigrateToDataTiersTool: ToolRegistrationFunction = (server:
     {
       legacyTemplateToDelete: z.string().optional(),
       nodeAttribute: z.string().optional(),
-      dryRun: z.boolean().optional(),
+      dryRun: booleanField().optional(),
       masterTimeout: z.string().optional(),
     },
     withReadOnlyCheck("elasticsearch_ilm_migrate_to_data_tiers", migrateToDataTiersImpl, OperationType.DESTRUCTIVE),

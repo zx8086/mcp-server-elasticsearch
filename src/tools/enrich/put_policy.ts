@@ -12,13 +12,13 @@ const enrichSourceSchema = z.object({
   enrichFields: z.array(z.string()),
   indices: z.union([z.string(), z.array(z.string())]),
   matchField: z.string(),
-  query: z.record(z.any()).optional(),
+  query: z.object({}).passthrough().optional(),
   name: z.string().optional(),
   elasticsearchVersion: z.string().optional(),
 });
 
 const PutPolicyParams = z.object({
-  name: z.string().min(1, "Policy name is required"),
+  name: z.string().min(1, "Policy name cannot be empty"),
   geoMatch: enrichSourceSchema.optional(),
   match: enrichSourceSchema.optional(),
   range: enrichSourceSchema.optional(),

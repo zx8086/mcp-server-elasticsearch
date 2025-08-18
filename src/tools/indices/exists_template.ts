@@ -4,13 +4,14 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const ExistsTemplateParams = z.object({
   name: z.union([z.string(), z.array(z.string())]),
-  flat_settings: z.boolean().optional(),
-  local: z.boolean().optional(),
+  flat_settings: booleanField().optional(),
+  local: booleanField().optional(),
   master_timeout: z.string().optional(),
 });
 
@@ -22,8 +23,8 @@ export const registerExistsTemplateTool: ToolRegistrationFunction = (server: Mcp
     "Check existence of legacy index templates in Elasticsearch. Best for legacy template validation, migration planning, compatibility checks. Use when you need to verify legacy index template presence in Elasticsearch (deprecated, use composable templates instead).",
     {
       name: z.union([z.string(), z.array(z.string())]),
-      flat_settings: z.boolean().optional(),
-      local: z.boolean().optional(),
+      flat_settings: booleanField().optional(),
+      local: booleanField().optional(),
       master_timeout: z.string().optional(),
     },
     async (params: ExistsTemplateParamsType): Promise<SearchResult> => {

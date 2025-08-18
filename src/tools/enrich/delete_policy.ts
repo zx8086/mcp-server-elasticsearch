@@ -9,7 +9,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const DeletePolicyParams = z.object({
-  name: z.string().min(1, "Policy name is required"),
+  name: z.string().min(1, "Policy name cannot be empty"),
   masterTimeout: z.string().optional(),
 });
 
@@ -48,7 +48,7 @@ export const registerEnrichDeletePolicyTool: ToolRegistrationFunction = (server:
     "elasticsearch_enrich_delete_policy",
     "Delete an enrich policy and its index in Elasticsearch. Best for policy cleanup, configuration management, removing unused enrichment. Use when you need to remove enrich policies and their associated indices from Elasticsearch.",
     {
-      name: z.string().min(1, "Policy name is required"),
+      name: z.string().min(1, "Policy name cannot be empty"),
       masterTimeout: z.string().optional(),
     },
     withReadOnlyCheck("elasticsearch_enrich_delete_policy", deletePolicyImpl, OperationType.DELETE),

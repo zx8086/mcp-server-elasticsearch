@@ -4,13 +4,14 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const ExistsIndexTemplateParams = z.object({
-  name: z.string().min(1, "Template name is required"),
-  local: z.boolean().optional(),
-  flat_settings: z.boolean().optional(),
+  name: z.string().min(1, "Template name cannot be empty"),
+  local: booleanField().optional(),
+  flat_settings: booleanField().optional(),
   master_timeout: z.string().optional(),
 });
 
@@ -21,9 +22,9 @@ export const registerExistsIndexTemplateTool: ToolRegistrationFunction = (server
     "elasticsearch_exists_index_template",
     "Check if index templates exist in Elasticsearch. Best for template validation, deployment verification, configuration checks. Use when you need to verify index template presence before operations in Elasticsearch.",
     {
-      name: z.string().min(1, "Template name is required"),
-      local: z.boolean().optional(),
-      flat_settings: z.boolean().optional(),
+      name: z.string().min(1, "Template name cannot be empty"),
+      local: booleanField().optional(),
+      flat_settings: booleanField().optional(),
       master_timeout: z.string().optional(),
     },
     async (params: ExistsIndexTemplateParamsType): Promise<SearchResult> => {

@@ -4,16 +4,17 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const MultiSearchTemplateParams = z.object({
-  searches: z.array(z.record(z.any())),
+  searches: z.array(z.object({}).passthrough()),
   index: z.string().optional(),
   maxConcurrentSearches: z.number().optional(),
-  ccsMinimizeRoundtrips: z.boolean().optional(),
-  restTotalHitsAsInt: z.boolean().optional(),
-  typedKeys: z.boolean().optional(),
+  ccsMinimizeRoundtrips: booleanField().optional(),
+  restTotalHitsAsInt: booleanField().optional(),
+  typedKeys: booleanField().optional(),
 });
 
 type MultiSearchTemplateParamsType = z.infer<typeof MultiSearchTemplateParams>;
@@ -22,12 +23,12 @@ export const registerMultiSearchTemplateTool: ToolRegistrationFunction = (server
     "elasticsearch_multi_search_template",
     "Execute multiple search templates in Elasticsearch. Best for batch search operations, templated queries, performance optimization. Use when you need to run multiple parameterized searches efficiently using Elasticsearch search templates.",
     {
-      searches: z.array(z.record(z.any())),
+      searches: z.array(z.object({}).passthrough()),
       index: z.string().optional(),
       maxConcurrentSearches: z.number().optional(),
-      ccsMinimizeRoundtrips: z.boolean().optional(),
-      restTotalHitsAsInt: z.boolean().optional(),
-      typedKeys: z.boolean().optional(),
+      ccsMinimizeRoundtrips: booleanField().optional(),
+      restTotalHitsAsInt: booleanField().optional(),
+      typedKeys: booleanField().optional(),
     },
     async (params: MultiSearchTemplateParamsType): Promise<SearchResult> => {
       try {

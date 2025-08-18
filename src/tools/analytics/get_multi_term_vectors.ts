@@ -4,6 +4,7 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
@@ -14,13 +15,13 @@ const GetMultiTermVectorsParams = z.object({
       z.object({
         _id: z.string(),
         _index: z.string().optional(),
-        _source: z.boolean().optional(),
+        _source: booleanField().optional(),
         fields: z.array(z.string()).optional(),
-        field_statistics: z.boolean().optional(),
-        offsets: z.boolean().optional(),
-        payloads: z.boolean().optional(),
-        positions: z.boolean().optional(),
-        term_statistics: z.boolean().optional(),
+        field_statistics: booleanField().optional(),
+        offsets: booleanField().optional(),
+        payloads: booleanField().optional(),
+        positions: booleanField().optional(),
+        term_statistics: booleanField().optional(),
         routing: z.string().optional(),
         version: z.number().optional(),
         version_type: z.enum(["internal", "external", "external_gte", "force"]).optional(),

@@ -5,52 +5,53 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const PutWatchParams = z.object({
-  id: z.string().min(1, "Watch ID is required"),
+  id: z.string().min(1, "Watch ID cannot be empty"),
   actions: z
     .record(
       z.object({
-        add_backing_index: z.record(z.any()).optional(),
-        remove_backing_index: z.record(z.any()).optional(),
+        add_backing_index: z.object({}).passthrough().optional(),
+        remove_backing_index: z.object({}).passthrough().optional(),
       }),
     )
     .optional(),
   condition: z
     .object({
-      always: z.record(z.any()).optional(),
-      array_compare: z.record(z.any()).optional(),
-      compare: z.record(z.any()).optional(),
-      never: z.record(z.any()).optional(),
-      script: z.record(z.any()).optional(),
+      always: z.object({}).passthrough().optional(),
+      array_compare: z.object({}).passthrough().optional(),
+      compare: z.object({}).passthrough().optional(),
+      never: z.object({}).passthrough().optional(),
+      script: z.object({}).passthrough().optional(),
     })
     .optional(),
   input: z
     .object({
-      chain: z.record(z.any()).optional(),
-      http: z.record(z.any()).optional(),
-      search: z.record(z.any()).optional(),
-      simple: z.record(z.any()).optional(),
+      chain: z.object({}).passthrough().optional(),
+      http: z.object({}).passthrough().optional(),
+      search: z.object({}).passthrough().optional(),
+      simple: z.object({}).passthrough().optional(),
     })
     .optional(),
-  metadata: z.record(z.any()).optional(),
+  metadata: z.object({}).passthrough().optional(),
   throttle_period: z.string().optional(),
   throttle_period_in_millis: z.number().optional(),
   transform: z
     .object({
-      chain: z.record(z.any()).optional(),
-      script: z.record(z.any()).optional(),
-      search: z.record(z.any()).optional(),
+      chain: z.object({}).passthrough().optional(),
+      script: z.object({}).passthrough().optional(),
+      search: z.object({}).passthrough().optional(),
     })
     .optional(),
   trigger: z
     .object({
-      schedule: z.record(z.any()).optional(),
+      schedule: z.object({}).passthrough().optional(),
     })
     .optional(),
-  active: z.boolean().optional(),
+  active: booleanField().optional(),
   if_primary_term: z.number().optional(),
   if_seq_no: z.number().optional(),
   version: z.number().optional(),
@@ -100,48 +101,48 @@ export const registerWatcherPutWatchTool: ToolRegistrationFunction = (server: Mc
     "elasticsearch_watcher_put_watch",
     "Create or update a watch in Elasticsearch Watcher. Best for alerting setup, monitoring automation, notification configuration. Use when you need to define watch triggers and actions for Elasticsearch alerting workflows. IMPORTANT: Use only this API, not direct index operations.",
     {
-      id: z.string().min(1, "Watch ID is required"),
+      id: z.string().min(1, "Watch ID cannot be empty"),
       actions: z
         .record(
           z.object({
-            add_backing_index: z.record(z.any()).optional(),
-            remove_backing_index: z.record(z.any()).optional(),
+            add_backing_index: z.object({}).passthrough().optional(),
+            remove_backing_index: z.object({}).passthrough().optional(),
           }),
         )
         .optional(),
       condition: z
         .object({
-          always: z.record(z.any()).optional(),
-          array_compare: z.record(z.any()).optional(),
-          compare: z.record(z.any()).optional(),
-          never: z.record(z.any()).optional(),
-          script: z.record(z.any()).optional(),
+          always: z.object({}).passthrough().optional(),
+          array_compare: z.object({}).passthrough().optional(),
+          compare: z.object({}).passthrough().optional(),
+          never: z.object({}).passthrough().optional(),
+          script: z.object({}).passthrough().optional(),
         })
         .optional(),
       input: z
         .object({
-          chain: z.record(z.any()).optional(),
-          http: z.record(z.any()).optional(),
-          search: z.record(z.any()).optional(),
-          simple: z.record(z.any()).optional(),
+          chain: z.object({}).passthrough().optional(),
+          http: z.object({}).passthrough().optional(),
+          search: z.object({}).passthrough().optional(),
+          simple: z.object({}).passthrough().optional(),
         })
         .optional(),
-      metadata: z.record(z.any()).optional(),
+      metadata: z.object({}).passthrough().optional(),
       throttle_period: z.string().optional(),
       throttle_period_in_millis: z.number().optional(),
       transform: z
         .object({
-          chain: z.record(z.any()).optional(),
-          script: z.record(z.any()).optional(),
-          search: z.record(z.any()).optional(),
+          chain: z.object({}).passthrough().optional(),
+          script: z.object({}).passthrough().optional(),
+          search: z.object({}).passthrough().optional(),
         })
         .optional(),
       trigger: z
         .object({
-          schedule: z.record(z.any()).optional(),
+          schedule: z.object({}).passthrough().optional(),
         })
         .optional(),
-      active: z.boolean().optional(),
+      active: booleanField().optional(),
       if_primary_term: z.number().optional(),
       if_seq_no: z.number().optional(),
       version: z.number().optional(),

@@ -4,14 +4,15 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetAliasesParams = z.object({
   index: z.string().optional(),
   name: z.string().optional(),
-  ignoreUnavailable: z.boolean().optional(),
-  allowNoIndices: z.boolean().optional(),
+  ignoreUnavailable: booleanField().optional(),
+  allowNoIndices: booleanField().optional(),
   expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
 });
 
@@ -23,8 +24,8 @@ export const registerGetAliasesTool: ToolRegistrationFunction = (server: McpServ
     {
       index: z.string().optional(),
       name: z.string().optional(),
-      ignoreUnavailable: z.boolean().optional(),
-      allowNoIndices: z.boolean().optional(),
+      ignoreUnavailable: booleanField().optional(),
+      allowNoIndices: booleanField().optional(),
       expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
     },
     async (params: GetAliasesParamsType): Promise<SearchResult> => {

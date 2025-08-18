@@ -20,7 +20,7 @@ export const registerListIndicesTracedTool = (server: McpServer, esClient: Clien
     sortBy: z
       .enum(["name", "size", "docs", "creation"])
       .optional()
-      .default("name")
+      .optional()
       .describe("Sort indices by name, size, document count, or creation date"),
     limit: z
       .number()
@@ -28,11 +28,11 @@ export const registerListIndicesTracedTool = (server: McpServer, esClient: Clien
       .min(1)
       .max(1000)
       .optional()
-      .default(DEFAULT_LIMIT)
+      .optional()
       .describe("Maximum number of indices to return"),
-    includeSize: z.boolean().optional().default(false).describe("Include index size information (slower)"),
-    excludeSystemIndices: z.boolean().optional().default(true).describe("Exclude system indices (starting with .)"),
-    excludeDataStreams: z.boolean().optional().default(false).describe("Exclude data stream backing indices"),
+    includeSize: booleanField().optional().describe("Include index size information (slower)"),
+    excludeSystemIndices: booleanField().optional().describe("Exclude system indices (starting with .)"),
+    excludeDataStreams: booleanField().optional().describe("Exclude data stream backing indices"),
   });
 
   registerTracedTool(server, esClient, {

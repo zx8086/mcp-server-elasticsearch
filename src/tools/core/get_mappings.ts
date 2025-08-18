@@ -12,7 +12,8 @@ const GetMappingsParams = z.object({
     .string()
     .trim()
     .min(1, "Index name is required")
-    .describe("Name of the Elasticsearch index to get mappings for"),
+    .optional()
+    .describe("Name of the Elasticsearch index to get mappings for. Use '*' for all indices"),
 });
 
 type GetMappingsParamsType = z.infer<typeof GetMappingsParams>;
@@ -20,13 +21,14 @@ type GetMappingsParamsType = z.infer<typeof GetMappingsParams>;
 export const registerGetMappingsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_get_mappings",
-    "Get field mappings for a specific Elasticsearch index. Best for understanding document structure, field types, and analyzers. Use when you need to inspect the schema and data types of JSON documents stored in Elasticsearch indices.",
+    "Get field mappings for Elasticsearch indices. PARAMETER: 'index' (string, default '*'). Best for understanding document structure, field types, and analyzers. Example: {index: 'logs-*'}",
     {
       index: z
         .string()
         .trim()
         .min(1, "Index name is required")
-        .describe("Name of the Elasticsearch index to get mappings for"),
+        .optional()
+        .describe("Index pattern to get mappings for. Use '*' for all indices. Examples: 'logs-*', 'metrics-*'"),
     },
     async (params: GetMappingsParamsType): Promise<SearchResult> => {
       const { index } = params;

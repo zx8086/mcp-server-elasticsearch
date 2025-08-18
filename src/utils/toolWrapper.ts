@@ -3,7 +3,7 @@
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { zodToJsonSchemaCompat as zodToJsonSchema } from "./zodToJsonSchema.js";
 import { logger } from "./logger.js";
 import {
   PerformanceMonitor,
@@ -41,22 +41,67 @@ export function registerTracedTool(server: McpServer, esClient: Client, options:
   // Log the converted schema for debugging
   logger.debug(`Converted schema for ${name}:`, JSON.stringify(jsonSchema, null, 2));
 
-  server.tool(name, description, jsonSchema, async (args: any) => {
+  // Parse and validate arguments manually since Zod 4 doesn't have _parse
+  // IMPORTANT: MCP SDK behavior varies - handle both parameter passing patterns
+  server.tool(name, description, jsonSchema, async (args: any, extra?: any) => {
     // Create performance monitor
     const perfMonitor = new PerformanceMonitor();
 
     try {
+      // Extract actual parameters from arguments (handle MCP SDK variations)
+      let actualArgs: any = args;
+      
+      // Check if args looks like metadata (has signal, requestId, etc.)
+      // To avoid false positives, require multiple metadata indicators AND no obvious user data
+      const hasMetadataFields = args && typeof args === "object" && 
+        ("signal" in args || "requestId" in args || "sessionId" in args);
+      
+      const hasNestedParams = args && typeof args === "object" &&
+        ("arguments" in args || "params" in args || "input" in args);
+      
+      // Only treat as metadata if it has metadata fields AND either:
+      // 1. Has nested parameter objects, OR 
+      // 2. Has ONLY metadata fields (no other user-looking data)
+      const onlyMetadataFields = hasMetadataFields && Object.keys(args).every(key => 
+        ["signal", "requestId", "sessionId", "sendNotification", "sendRequest", "_meta", "authInfo", "requestInfo"].includes(key)
+      );
+      
+      const isMetadata = hasMetadataFields && (hasNestedParams || onlyMetadataFields);
+      
+      if (isMetadata) {
+        // This is metadata, look for parameters in different places
+        if (args.arguments && typeof args.arguments === "object") {
+          actualArgs = args.arguments;
+        } else if (args.params && typeof args.params === "object") {
+          actualArgs = args.params;
+        } else if (args.input && typeof args.input === "object") {
+          actualArgs = args.input;
+        } else if (extra && typeof extra === "object" && !("signal" in extra)) {
+          actualArgs = extra;
+        } else {
+          actualArgs = {};
+        }
+        
+        logger.debug(`Tool ${name} detected metadata first, extracted parameters:`, {
+          metadataKeys: Object.keys(args),
+          extractedArgs: actualArgs,
+        });
+      }
+      
+      // Validate arguments using Zod schema
+      const validatedArgs = inputSchema.parse(actualArgs);
+      
       // If tracing is not active, execute directly
       if (!isTracingActive()) {
-        logger.debug(`Executing tool without tracing: ${name}`, { args });
-        const result = await handler(esClient, args);
+        logger.debug(`Executing tool without tracing: ${name}`, { args: validatedArgs });
+        const result = await handler(esClient, validatedArgs);
 
         // Log performance even without tracing
         const metrics = perfMonitor.end();
         if (metrics.duration && metrics.duration > 5000) {
           logger.warn(`Slow tool execution: ${name}`, {
             duration: metrics.duration,
-            args,
+            args: validatedArgs,
           });
         }
 
@@ -65,7 +110,7 @@ export function registerTracedTool(server: McpServer, esClient: Client, options:
 
       // Execute with enhanced tracing
       logger.info(`🔍 Executing tool WITH TRACING: ${name}`, {
-        args,
+        args: validatedArgs,
         tracingActive: isTracingActive(),
       });
 
@@ -77,13 +122,13 @@ export function registerTracedTool(server: McpServer, esClient: Client, options:
       };
 
       const tracedTool = traceNamedToolExecution(toolContext);
-      const result = await tracedTool(args, async () => {
+      const result = await tracedTool(validatedArgs, async () => {
         // Create tool metadata
-        const metadata = createToolMetadata(name, args);
+        const metadata = createToolMetadata(name, validatedArgs);
         metadata.operationType = operationType;
 
         // Execute the tool handler
-        const toolResult = await handler(esClient, args);
+        const toolResult = await handler(esClient, validatedArgs);
 
         // Add execution metrics
         const metrics = perfMonitor.end();

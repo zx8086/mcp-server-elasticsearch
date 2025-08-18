@@ -4,13 +4,14 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const GetTaskParams = z.object({
-  taskId: z.string().min(1, "Task ID is required"),
+  taskId: z.string().min(1, "Task ID cannot be empty"),
   timeout: z.union([z.string(), z.number(), z.literal(-1), z.literal(0)]).optional(),
-  waitForCompletion: z.boolean().optional(),
+  waitForCompletion: booleanField().optional(),
 });
 
 type GetTaskParamsType = z.infer<typeof GetTaskParams>;
@@ -20,9 +21,9 @@ export const registerGetTaskTool: ToolRegistrationFunction = (server: McpServer,
     "elasticsearch_tasks_get_task",
     "Get information about a specific Elasticsearch task. Best for task monitoring, operation tracking, performance analysis. Use when you need to inspect the status and details of running or completed tasks in Elasticsearch.",
     {
-      taskId: z.string().min(1, "Task ID is required"),
+      taskId: z.string().min(1, "Task ID cannot be empty"),
       timeout: z.union([z.string(), z.number(), z.literal(-1), z.literal(0)]).optional(),
-      waitForCompletion: z.boolean().optional(),
+      waitForCompletion: booleanField().optional(),
     },
     async (params: GetTaskParamsType): Promise<SearchResult> => {
       try {

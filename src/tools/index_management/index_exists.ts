@@ -4,17 +4,18 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const IndexExistsParams = z.object({
-  index: z.string().min(1, "Index is required"),
-  ignoreUnavailable: z.boolean().optional(),
-  allowNoIndices: z.boolean().optional(),
+  index: z.string().min(1, "Index cannot be empty"),
+  ignoreUnavailable: booleanField().optional(),
+  allowNoIndices: booleanField().optional(),
   expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
-  flatSettings: z.boolean().optional(),
-  includeDefaults: z.boolean().optional(),
-  local: z.boolean().optional(),
+  flatSettings: booleanField().optional(),
+  includeDefaults: booleanField().optional(),
+  local: booleanField().optional(),
 });
 
 type IndexExistsParamsType = z.infer<typeof IndexExistsParams>;
@@ -23,13 +24,13 @@ export const registerIndexExistsTool: ToolRegistrationFunction = (server: McpSer
     "elasticsearch_index_exists",
     "Check if an index exists in Elasticsearch. Best for index validation, conditional operations, deployment checks. Use when you need to verify index presence in Elasticsearch clusters before performing operations or creating indices.",
     {
-      index: z.string().min(1, "Index is required"),
-      ignoreUnavailable: z.boolean().optional(),
-      allowNoIndices: z.boolean().optional(),
+      index: z.string().min(1, "Index cannot be empty"),
+      ignoreUnavailable: booleanField().optional(),
+      allowNoIndices: booleanField().optional(),
       expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
-      flatSettings: z.boolean().optional(),
-      includeDefaults: z.boolean().optional(),
-      local: z.boolean().optional(),
+      flatSettings: booleanField().optional(),
+      includeDefaults: booleanField().optional(),
+      local: booleanField().optional(),
     },
     async (params: IndexExistsParamsType): Promise<SearchResult> => {
       try {

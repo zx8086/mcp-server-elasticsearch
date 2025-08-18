@@ -8,7 +8,7 @@ import { type SearchResult, TextContent, type ToolRegistrationFunction } from ".
 
 // Define the parameter schema
 const GetWatchParams = z.object({
-  id: z.string().min(1, "Watch ID is required"),
+  id: z.string().min(1, "Watch ID cannot be empty"),
 });
 
 type GetWatchParamsType = z.infer<typeof GetWatchParams>;
@@ -18,7 +18,7 @@ export const registerWatcherGetWatchTool: ToolRegistrationFunction = (server: Mc
     "elasticsearch_watcher_get_watch",
     "Get a watch configuration from Elasticsearch Watcher. Best for monitoring automation, alerting configuration, watch inspection. Use when you need to retrieve watch definitions for Elasticsearch alerting and monitoring workflows.",
     {
-      id: z.string().min(1, "Watch ID is required"),
+      id: z.string().min(1, "Watch ID cannot be empty"),
     },
     async (params: GetWatchParamsType): Promise<SearchResult> => {
       try {

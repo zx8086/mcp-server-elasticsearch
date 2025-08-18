@@ -21,9 +21,13 @@ const GetAliasesParams = z.object({
   allowNoIndices: z.boolean().optional(),
   expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
   // New pagination and response control parameters
-  limit: z.number().min(1).max(100).default(20).describe("Maximum number of aliases to return (default: 20, max: 100)"),
-  summary: z.boolean().default(true).describe("Return summarized alias information instead of full details"),
-  sortBy: z.enum(["name", "index_count", "alias_name"]).default("name").describe("Sort aliases by specified field"),
+  limit: z
+    .union([z.number(), z.string().regex(/^\d+$/).transform(val => parseInt(val, 10))])
+    .pipe(z.number().min(1).max(100))
+    .optional()
+    .describe("Maximum number of aliases to return. Range: 1-100"),
+  summary: z.boolean().optional().describe("Return summarized alias information instead of full details"),
+  sortBy: z.enum(["name", "index_count", "alias_name"]).optional().describe("Sort aliases by specified field"),
 });
 
 type GetAliasesParamsType = z.infer<typeof GetAliasesParams>;

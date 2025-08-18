@@ -4,6 +4,7 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
@@ -14,7 +15,7 @@ const WatcherStatsParams = z.object({
       z.array(z.enum(["_all", "queued_watches", "current_watches", "pending_watches"])),
     ])
     .optional(),
-  emit_stacktraces: z.boolean().optional(),
+  emit_stacktraces: booleanField().optional(),
 });
 
 type WatcherStatsParamsType = z.infer<typeof WatcherStatsParams>;
@@ -30,7 +31,7 @@ export const registerWatcherStatsTool: ToolRegistrationFunction = (server: McpSe
           z.array(z.enum(["_all", "queued_watches", "current_watches", "pending_watches"])),
         ])
         .optional(),
-      emit_stacktraces: z.boolean().optional(),
+      emit_stacktraces: booleanField().optional(),
     },
     async (params: WatcherStatsParamsType): Promise<SearchResult> => {
       try {

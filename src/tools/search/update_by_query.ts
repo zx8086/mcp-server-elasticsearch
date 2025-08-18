@@ -4,19 +4,20 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const UpdateByQueryParams = z.object({
-  index: z.string().min(1, "Index is required"),
-  query: z.record(z.any()),
-  script: z.record(z.any()).optional(),
+  index: z.string().min(1, "Index cannot be empty"),
+  query: z.object({}).passthrough(),
+  script: z.object({}).passthrough().optional(),
   maxDocs: z.number().optional(),
   conflicts: z.enum(["abort", "proceed"]).optional(),
-  refresh: z.boolean().optional(),
+  refresh: booleanField().optional(),
   timeout: z.string().optional(),
   waitForActiveShards: z.union([z.literal("all"), z.number().min(1).max(9)]).optional(),
-  waitForCompletion: z.boolean().optional(),
+  waitForCompletion: booleanField().optional(),
   requestsPerSecond: z.number().optional(),
   scroll: z.string().optional(),
   scrollSize: z.number().optional(),
@@ -31,15 +32,15 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpS
     "elasticsearch_update_by_query",
     "Update documents by query in Elasticsearch. Best for bulk document updates, field modifications, script-based transformations. Use when you need to update multiple documents based on query conditions rather than individual document updates.",
     {
-      index: z.string().min(1, "Index is required"),
-      query: z.record(z.any()),
-      script: z.record(z.any()).optional(),
+      index: z.string().min(1, "Index cannot be empty"),
+      query: z.object({}).passthrough(),
+      script: z.object({}).passthrough().optional(),
       maxDocs: z.number().optional(),
       conflicts: z.enum(["abort", "proceed"]).optional(),
-      refresh: z.boolean().optional(),
+      refresh: booleanField().optional(),
       timeout: z.string().optional(),
       waitForActiveShards: z.union([z.literal("all"), z.number().min(1).max(9)]).optional(),
-      waitForCompletion: z.boolean().optional(),
+      waitForCompletion: booleanField().optional(),
       requestsPerSecond: z.number().optional(),
       scroll: z.string().optional(),
       scrollSize: z.number().optional(),

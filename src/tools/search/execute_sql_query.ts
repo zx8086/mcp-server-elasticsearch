@@ -8,7 +8,7 @@ import type { SearchResult, TextContent, ToolRegistrationFunction } from "../typ
 
 // Define the parameter schema type
 const ExecuteSqlQueryParams = z.object({
-  query: z.string().min(1, "SQL query is required"),
+  query: z.string().optional(),
   format: z.enum(["json", "csv", "tsv", "txt", "yaml", "cbor", "smile"]).optional(),
   fetchSize: z.number().optional(),
 });
@@ -17,9 +17,9 @@ type ExecuteSqlQueryParamsType = z.infer<typeof ExecuteSqlQueryParams>;
 export const registerExecuteSqlQueryTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_execute_sql_query",
-    "Execute a SQL query using Elasticsearch SQL API. Best for familiar SQL syntax, structured queries, data analysis. Use when you need to query Elasticsearch using SQL instead of Query DSL for easier data exploration and reporting.",
+    "Execute a SQL query using Elasticsearch SQL API. PARAMETER: 'query' (SQL string). Best for familiar SQL syntax, structured queries, data analysis. Example: {query: 'SELECT * FROM logs-* WHERE status = 500 LIMIT 100'}",
     {
-      query: z.string().min(1, "SQL query is required"),
+      query: z.string().optional().describe("SQL query to execute. Example: 'SELECT * FROM logs-* LIMIT 10'"),
       format: z.enum(["json", "csv", "tsv", "txt", "yaml", "cbor", "smile"]).optional(),
       fetchSize: z.number().optional(),
     },

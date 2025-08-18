@@ -5,18 +5,19 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const UpdateDocumentParams = z.object({
-  index: z.string().min(1, "Index is required"),
-  id: z.string().min(1, "Document ID is required"),
-  doc: z.record(z.any()).optional(),
-  script: z.record(z.any()).optional(),
-  upsert: z.record(z.any()).optional(),
-  docAsUpsert: z.boolean().optional(),
-  detectNoop: z.boolean().optional(),
-  scriptedUpsert: z.boolean().optional(),
+  index: z.string().min(1, "Index cannot be empty"),
+  id: z.string().min(1, "Document ID cannot be empty"),
+  doc: z.object({}).passthrough().optional(),
+  script: z.object({}).passthrough().optional(),
+  upsert: z.object({}).passthrough().optional(),
+  docAsUpsert: booleanField().optional(),
+  detectNoop: booleanField().optional(),
+  scriptedUpsert: booleanField().optional(),
   refresh: z.enum(["true", "false", "wait_for"]).optional(),
   routing: z.string().optional(),
   timeout: z.string().optional(),
@@ -32,14 +33,14 @@ export const registerUpdateDocumentTool: ToolRegistrationFunction = (server: Mcp
     "elasticsearch_update_document",
     "Update a JSON document in Elasticsearch by index and id. Best for partial document updates, scripted updates, upsert operations. Use when you need to modify existing documents in Elasticsearch indices with optimistic concurrency control.",
     {
-      index: z.string().min(1, "Index is required"),
-      id: z.string().min(1, "Document ID is required"),
-      doc: z.record(z.any()).optional(),
-      script: z.record(z.any()).optional(),
-      upsert: z.record(z.any()).optional(),
-      docAsUpsert: z.boolean().optional(),
-      detectNoop: z.boolean().optional(),
-      scriptedUpsert: z.boolean().optional(),
+      index: z.string().min(1, "Index cannot be empty"),
+      id: z.string().min(1, "Document ID cannot be empty"),
+      doc: z.object({}).passthrough().optional(),
+      script: z.object({}).passthrough().optional(),
+      upsert: z.object({}).passthrough().optional(),
+      docAsUpsert: booleanField().optional(),
+      detectNoop: booleanField().optional(),
+      scriptedUpsert: booleanField().optional(),
       refresh: z.enum(["true", "false", "wait_for"]).optional(),
       routing: z.string().optional(),
       timeout: z.string().optional(),

@@ -8,10 +8,10 @@ import type { SearchResult, TextContent, ToolRegistrationFunction } from "../typ
 
 // Define the parameter schema type
 const CreateIndexParams = z.object({
-  index: z.string().min(1, "Index is required"),
-  aliases: z.record(z.any()).optional(),
-  mappings: z.record(z.any()).optional(),
-  settings: z.record(z.any()).optional(),
+  index: z.string().min(1, "Index cannot be empty"),
+  aliases: z.object({}).passthrough().optional(),
+  mappings: z.object({}).passthrough().optional(),
+  settings: z.object({}).passthrough().optional(),
   timeout: z.string().optional(),
   masterTimeout: z.string().optional(),
   waitForActiveShards: z.union([z.literal("all"), z.number().min(1).max(9)]).optional(),
@@ -23,10 +23,10 @@ export const registerCreateIndexTool: ToolRegistrationFunction = (server: McpSer
     "elasticsearch_create_index",
     "Create an index in Elasticsearch with custom settings and mappings. Best for index initialization, schema definition, data structure setup. Use when you need to create new Elasticsearch indices with specific configurations for document storage.",
     {
-      index: z.string().min(1, "Index is required"),
-      aliases: z.record(z.any()).optional(),
-      mappings: z.record(z.any()).optional(),
-      settings: z.record(z.any()).optional(),
+      index: z.string().min(1, "Index cannot be empty"),
+      aliases: z.object({}).passthrough().optional(),
+      mappings: z.object({}).passthrough().optional(),
+      settings: z.object({}).passthrough().optional(),
       timeout: z.string().optional(),
       masterTimeout: z.string().optional(),
       waitForActiveShards: z.union([z.literal("all"), z.number().min(1).max(9)]).optional(),

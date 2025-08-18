@@ -4,19 +4,20 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const PutIndexTemplateParams = z.object({
-  name: z.string().min(1, "Template name is required"),
+  name: z.string().min(1, "Template name cannot be empty"),
   indexPatterns: z.array(z.string()).optional(),
-  template: z.record(z.any()).optional(),
+  template: z.object({}).passthrough().optional(),
   composedOf: z.array(z.string()).optional(),
   priority: z.number().optional(),
   version: z.number().optional(),
-  meta: z.record(z.any()).optional(),
-  allowAutoCreate: z.boolean().optional(),
-  create: z.boolean().optional(),
+  meta: z.object({}).passthrough().optional(),
+  allowAutoCreate: booleanField().optional(),
+  create: booleanField().optional(),
   masterTimeout: z.string().optional(),
 });
 
@@ -26,15 +27,15 @@ export const registerPutIndexTemplateTool: ToolRegistrationFunction = (server: M
     "elasticsearch_put_index_template",
     "Create or update an index template in Elasticsearch. Best for index standardization, mapping management, settings automation. Use when you need to define templates for automatic index configuration in Elasticsearch.",
     {
-      name: z.string().min(1, "Template name is required"),
+      name: z.string().min(1, "Template name cannot be empty"),
       indexPatterns: z.array(z.string()).optional(),
-      template: z.record(z.any()).optional(),
+      template: z.object({}).passthrough().optional(),
       composedOf: z.array(z.string()).optional(),
       priority: z.number().optional(),
       version: z.number().optional(),
-      meta: z.record(z.any()).optional(),
-      allowAutoCreate: z.boolean().optional(),
-      create: z.boolean().optional(),
+      meta: z.object({}).passthrough().optional(),
+      allowAutoCreate: booleanField().optional(),
+      create: booleanField().optional(),
       masterTimeout: z.string().optional(),
     },
     async (params: PutIndexTemplateParamsType): Promise<SearchResult> => {

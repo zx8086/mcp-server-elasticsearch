@@ -9,8 +9,8 @@ import type { SearchResult, TextContent, ToolRegistrationFunction } from "../typ
 
 // Define the parameter schema type
 const DeleteDocumentParams = z.object({
-  index: z.string().min(1, "Index is required"),
-  id: z.string().min(1, "Document ID is required"),
+  index: z.string().min(1, "Index cannot be empty"),
+  id: z.string().min(1, "Document ID cannot be empty"),
   routing: z.string().optional(),
   refresh: z.enum(["true", "false", "wait_for"]).optional(),
   version: z.number().optional(),
@@ -28,8 +28,8 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (server: Mcp
     "elasticsearch_delete_document",
     "Delete a document from Elasticsearch by index and id. Best for removing specific documents, data cleanup, document lifecycle management. Use when you need to permanently remove individual JSON documents from Elasticsearch indices with optimistic concurrency control.",
     {
-      index: z.string().min(1, "Index is required"),
-      id: z.string().min(1, "Document ID is required"),
+      index: z.string().min(1, "Index cannot be empty"),
+      id: z.string().min(1, "Document ID cannot be empty"),
       routing: z.string().optional(),
       refresh: z.enum(["true", "false", "wait_for"]).optional(),
       version: z.number().optional(),

@@ -4,15 +4,16 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const PutAliasParams = z.object({
-  index: z.string().min(1, "Index is required"),
-  name: z.string().min(1, "Alias name is required"),
-  filter: z.record(z.any()).optional(),
+  index: z.string().min(1, "Index cannot be empty"),
+  name: z.string().min(1, "Alias name cannot be empty"),
+  filter: z.object({}).passthrough().optional(),
   routing: z.string().optional(),
-  isWriteIndex: z.boolean().optional(),
+  isWriteIndex: booleanField().optional(),
 });
 
 type PutAliasParamsType = z.infer<typeof PutAliasParams>;
@@ -21,11 +22,11 @@ export const registerPutAliasTool: ToolRegistrationFunction = (server: McpServer
     "elasticsearch_put_alias",
     "Add an alias to an index in Elasticsearch. Best for alias creation, index abstraction, application decoupling. Use when you need to create named references to Elasticsearch indices for easier management and zero-downtime operations.",
     {
-      index: z.string().min(1, "Index is required"),
-      name: z.string().min(1, "Alias name is required"),
-      filter: z.record(z.any()).optional(),
+      index: z.string().min(1, "Index cannot be empty"),
+      name: z.string().min(1, "Alias name cannot be empty"),
+      filter: z.object({}).passthrough().optional(),
       routing: z.string().optional(),
-      isWriteIndex: z.boolean().optional(),
+      isWriteIndex: booleanField().optional(),
     },
     async (params: PutAliasParamsType): Promise<SearchResult> => {
       try {

@@ -4,16 +4,17 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const MultiSearchParams = z.object({
-  searches: z.array(z.record(z.any())),
+  searches: z.array(z.object({}).passthrough()),
   index: z.string().optional(),
   maxConcurrentSearches: z.number().optional(),
-  ccsMinimizeRoundtrips: z.boolean().optional(),
-  restTotalHitsAsInt: z.boolean().optional(),
-  typedKeys: z.boolean().optional(),
+  ccsMinimizeRoundtrips: booleanField().optional(),
+  restTotalHitsAsInt: booleanField().optional(),
+  typedKeys: booleanField().optional(),
 });
 
 type MultiSearchParamsType = z.infer<typeof MultiSearchParams>;
@@ -22,12 +23,12 @@ export const registerMultiSearchTool: ToolRegistrationFunction = (server: McpSer
     "elasticsearch_multi_search",
     "Perform multiple searches in Elasticsearch in a single request. Best for batch search operations, dashboard queries, parallel search execution. Use when you need to execute multiple Query DSL searches across different Elasticsearch indices efficiently.",
     {
-      searches: z.array(z.record(z.any())),
+      searches: z.array(z.object({}).passthrough()),
       index: z.string().optional(),
       maxConcurrentSearches: z.number().optional(),
-      ccsMinimizeRoundtrips: z.boolean().optional(),
-      restTotalHitsAsInt: z.boolean().optional(),
-      typedKeys: z.boolean().optional(),
+      ccsMinimizeRoundtrips: booleanField().optional(),
+      restTotalHitsAsInt: booleanField().optional(),
+      typedKeys: booleanField().optional(),
     },
     async (params: MultiSearchParamsType): Promise<SearchResult> => {
       try {

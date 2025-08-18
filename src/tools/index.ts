@@ -11,6 +11,7 @@ import { registerIndicesSummaryTool } from "./core/indices_summary.js";
 // Core Tools (List Indices, Get Mappings, Search, Get Shards)
 import { registerListIndicesTool } from "./core/list_indices.js";
 import { registerSearchTool } from "./core/search.js";
+// import { registerEnhancedSearchTool } from "./core/search_enhanced.js";
 
 import { registerDeleteDocumentTool } from "./document/delete_document.js";
 import { registerDocumentExistsTool } from "./document/document_exists.js";
@@ -147,6 +148,7 @@ export function registerAllTools(server: McpServer, esClient: Client) {
   registerListIndicesTool(wrappedServer, esClient);
   registerGetMappingsTool(wrappedServer, esClient);
   registerSearchTool(wrappedServer, esClient);
+  // registerEnhancedSearchTool(wrappedServer, esClient);
   registerGetShardsTool(wrappedServer, esClient);
   registerIndicesSummaryTool(wrappedServer, esClient);
 
@@ -259,6 +261,99 @@ export function registerAllTools(server: McpServer, esClient: Client) {
   registerWatcherGetSettingsTool(wrappedServer, esClient);
   registerWatcherUpdateSettingsTool(wrappedServer, esClient);
   registerWatcherStatsTool(wrappedServer, esClient);
+
+  // EXPERIMENTAL: Register a plain JSON Schema tool for testing
+  logger.info("🧪 Registering experimental plain JSON Schema tool for comparison...");
+  
+  // Plain JSON Schema tool (no Zod conversion)
+  wrappedServer.tool(
+    "plain_elasticsearch_list_indices",
+    "EXPERIMENTAL: List indices using plain JSON Schema (no Zod conversion)",
+    {
+      type: "object",
+      properties: {
+        indexPattern: {
+          type: "string",
+          description: "Index pattern to match. Use '*' to list all indices.",
+          default: "*"
+        },
+        limit: {
+          type: "integer",
+          minimum: 1,
+          maximum: 1000,
+          default: 50,
+          description: "Maximum number of indices to return"
+        },
+        excludeSystemIndices: {
+          type: "boolean",
+          default: true,
+          description: "Exclude system indices starting with '.'"
+        }
+      },
+      additionalProperties: false
+    },
+    async (args: any) => {
+      logger.debug("Plain JSON Schema tool called", { args });
+      
+      // Apply defaults manually 
+      const indexPattern = args?.indexPattern || '*';
+      const limit = args?.limit || 50;
+      const excludeSystemIndices = args?.excludeSystemIndices !== undefined ? args.excludeSystemIndices : true;
+      
+      logger.info("Plain tool processing with params:", {
+        indexPattern,
+        limit, 
+        excludeSystemIndices,
+        receivedArgs: args
+      });
+      
+      try {
+        const catParams = {
+          index: indexPattern,
+          format: "json" as const,
+          h: "index,health,status,docs.count",
+        };
+
+        const response = await esClient.cat.indices(catParams);
+        
+        let filteredIndices = response.filter((index: any) => {
+          if (excludeSystemIndices && index.index.startsWith(".")) return false;
+          return true;
+        });
+
+        const totalFound = filteredIndices.length;
+        filteredIndices = filteredIndices.slice(0, limit);
+
+        const summary = {
+          approach: "PLAIN_JSON_SCHEMA",
+          parameters_received: args,
+          parameters_processed: { indexPattern, limit, excludeSystemIndices },
+          total_found: totalFound,
+          displayed: filteredIndices.length,
+          success: true
+        };
+
+        return {
+          content: [
+            { 
+              type: "text", 
+              text: `✅ PLAIN JSON SCHEMA SUCCESS!\n${JSON.stringify(summary, null, 2)}\n\nFirst 3 indices:\n${JSON.stringify(filteredIndices.slice(0, 3), null, 2)}`
+            }
+          ]
+        };
+        
+      } catch (error) {
+        return {
+          content: [
+            { 
+              type: "text", 
+              text: `❌ Plain schema error: ${error instanceof Error ? error.message : String(error)}`
+            }
+          ]
+        };
+      }
+    }
+  );
 
   logger.info("✅ All tools registered with automatic tracing wrapper");
 }

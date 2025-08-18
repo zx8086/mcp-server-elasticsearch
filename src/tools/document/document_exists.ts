@@ -4,16 +4,17 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const DocumentExistsParams = z.object({
-  index: z.string().min(1, "Index is required"),
-  id: z.string().min(1, "Document ID is required"),
+  index: z.string().min(1, "Index cannot be empty"),
+  id: z.string().min(1, "Document ID cannot be empty"),
   routing: z.string().optional(),
   preference: z.string().optional(),
-  realtime: z.boolean().optional(),
-  refresh: z.boolean().optional(),
+  realtime: booleanField().optional(),
+  refresh: booleanField().optional(),
   version: z.number().optional(),
   versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(),
 });
@@ -25,12 +26,12 @@ export const registerDocumentExistsTool: ToolRegistrationFunction = (server: Mcp
     "elasticsearch_document_exists",
     "Check if a document exists in Elasticsearch by index and id. Best for document validation, existence checks, conditional operations. Use when you need to verify document presence in Elasticsearch indices before performing operations.",
     {
-      index: z.string().min(1, "Index is required"),
-      id: z.string().min(1, "Document ID is required"),
+      index: z.string().min(1, "Index cannot be empty"),
+      id: z.string().min(1, "Document ID cannot be empty"),
       routing: z.string().optional(),
       preference: z.string().optional(),
-      realtime: z.boolean().optional(),
-      refresh: z.boolean().optional(),
+      realtime: booleanField().optional(),
+      refresh: booleanField().optional(),
       version: z.number().optional(),
       versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(),
     },

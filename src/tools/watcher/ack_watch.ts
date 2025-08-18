@@ -9,7 +9,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const AckWatchParams = z.object({
-  watch_id: z.string().min(1, "Watch ID is required"),
+  watch_id: z.string().min(1, "Watch ID cannot be empty"),
   action_id: z.union([z.string(), z.array(z.string())]).optional(),
 });
 
@@ -47,7 +47,7 @@ export const registerWatcherAckWatchTool: ToolRegistrationFunction = (server: Mc
     "elasticsearch_watcher_ack_watch",
     "Acknowledge a watch in Elasticsearch Watcher to throttle actions. Best for alert management, action throttling, notification control. Use when you need to manually acknowledge watch actions to prevent repeated executions in Elasticsearch alerting.",
     {
-      watch_id: z.string().min(1, "Watch ID is required"),
+      watch_id: z.string().min(1, "Watch ID cannot be empty"),
       action_id: z.union([z.string(), z.array(z.string())]).optional(),
     },
     withReadOnlyCheck("elasticsearch_watcher_ack_watch", ackWatchImpl, OperationType.WRITE),

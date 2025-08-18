@@ -9,8 +9,8 @@ import type { SearchResult, TextContent, ToolRegistrationFunction } from "../typ
 
 // Define the parameter schema
 const PutLifecycleParams = z.object({
-  policy: z.string().min(1, "Policy identifier is required"),
-  body: z.record(z.any()).optional(),
+  policy: z.string().min(1, "Policy identifier cannot be empty"),
+  body: z.object({}).passthrough().optional(),
   masterTimeout: z.string().optional(),
   timeout: z.string().optional(),
 });
@@ -52,8 +52,8 @@ export const registerPutLifecycleTool: ToolRegistrationFunction = (server: McpSe
     "elasticsearch_ilm_put_lifecycle",
     "Create or update an Index Lifecycle Management policy in Elasticsearch. Best for data lifecycle automation, policy configuration, index management. Use when you need to define automated transitions through hot, warm, cold, and delete phases in Elasticsearch.",
     {
-      policy: z.string().min(1, "Policy identifier is required"),
-      body: z.record(z.any()).optional(),
+      policy: z.string().min(1, "Policy identifier cannot be empty"),
+      body: z.object({}).passthrough().optional(),
       masterTimeout: z.string().optional(),
       timeout: z.string().optional(),
     },

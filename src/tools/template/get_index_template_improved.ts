@@ -20,12 +20,16 @@ const GetIndexTemplateParams = z.object({
   masterTimeout: z.string().optional(),
   local: z.boolean().optional(),
   // New pagination and response control parameters
-  limit: z.number().min(1).max(50).default(10).describe("Maximum number of templates to return (default: 10, max: 50)"),
-  summary: z.boolean().default(true).describe("Return summarized template information instead of full details"),
-  includeComposed: z.boolean().default(false).describe("Include composed_of templates in the response"),
+  limit: z
+    .union([z.number(), z.string().regex(/^\d+$/).transform(val => parseInt(val, 10))])
+    .pipe(z.number().min(1).max(50))
+    .optional()
+    .describe("Maximum number of templates to return. Range: 1-50"),
+  summary: z.boolean().optional().describe("Return summarized template information instead of full details"),
+  includeComposed: z.boolean().optional().describe("Include composed_of templates in the response"),
   sortBy: z
     .enum(["name", "priority", "index_patterns", "version"])
-    .default("name")
+    .optional()
     .describe("Sort templates by specified field"),
 });
 

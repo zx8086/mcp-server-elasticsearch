@@ -5,19 +5,20 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const RolloverParams = z.object({
-  alias: z.string().min(1, "Alias name is required"),
+  alias: z.string().min(1, "Alias name cannot be empty"),
   new_index: z.string().optional(),
   aliases: z
     .record(
       z.object({
-        filter: z.record(z.any()).optional(),
+        filter: z.object({}).passthrough().optional(),
         index_routing: z.string().optional(),
-        is_hidden: z.boolean().optional(),
-        is_write_index: z.boolean().optional(),
+        is_hidden: booleanField().optional(),
+        is_write_index: booleanField().optional(),
         routing: z.string().optional(),
         search_routing: z.string().optional(),
       }),
@@ -47,11 +48,11 @@ const RolloverParams = z.object({
       _all: z
         .object({
           analyzer: z.string().optional(),
-          enabled: z.boolean(),
-          omit_norms: z.boolean().optional(),
+          enabled: booleanField(),
+          omit_norms: booleanField().optional(),
           search_analyzer: z.string().optional(),
           search_quote_analyzer: z.string().optional(),
-          store: z.boolean().optional(),
+          store: booleanField().optional(),
           term_vector: z
             .enum([
               "no",
@@ -65,39 +66,39 @@ const RolloverParams = z.object({
             .optional(),
         })
         .optional(),
-      date_detection: z.boolean().optional(),
+      date_detection: booleanField().optional(),
       dynamic: z.enum(["true", "false", "strict", "runtime"]).optional(),
       dynamic_date_formats: z.array(z.string()).optional(),
-      dynamic_templates: z.array(z.record(z.any())).optional(),
+      dynamic_templates: z.array(z.object({}).passthrough()).optional(),
       _field_names: z
         .object({
-          enabled: z.boolean(),
+          enabled: booleanField(),
         })
         .optional(),
-      _meta: z.record(z.any()).optional(),
-      numeric_detection: z.boolean().optional(),
-      properties: z.record(z.any()).optional(),
+      _meta: z.object({}).passthrough().optional(),
+      numeric_detection: booleanField().optional(),
+      properties: z.object({}).passthrough().optional(),
       _routing: z
         .object({
-          required: z.boolean(),
+          required: booleanField(),
         })
         .optional(),
       _source: z
         .object({
-          enabled: z.boolean(),
+          enabled: booleanField(),
           excludes: z.array(z.string()).optional(),
           includes: z.array(z.string()).optional(),
         })
         .optional(),
-      runtime: z.record(z.any()).optional(),
+      runtime: z.object({}).passthrough().optional(),
     })
     .optional(),
-  settings: z.record(z.any()).optional(),
-  dry_run: z.boolean().optional(),
+  settings: z.object({}).passthrough().optional(),
+  dry_run: booleanField().optional(),
   master_timeout: z.string().optional(),
   timeout: z.string().optional(),
   wait_for_active_shards: z.union([z.number(), z.enum(["all", "index-setting"])]).optional(),
-  lazy: z.boolean().optional(),
+  lazy: booleanField().optional(),
 });
 
 type RolloverParamsType = z.infer<typeof RolloverParams>;
@@ -142,15 +143,15 @@ export const registerRolloverTool: ToolRegistrationFunction = (server: McpServer
     "elasticsearch_rollover",
     "Roll over to a new index in Elasticsearch for data streams or aliases. Best for index lifecycle management, data stream rotation, automated archiving. Use when you need to create new indices based on size, age, or document count thresholds in Elasticsearch.",
     {
-      alias: z.string().min(1, "Alias name is required"),
+      alias: z.string().min(1, "Alias name cannot be empty"),
       new_index: z.string().optional(),
       aliases: z
         .record(
           z.object({
-            filter: z.record(z.any()).optional(),
+            filter: z.object({}).passthrough().optional(),
             index_routing: z.string().optional(),
-            is_hidden: z.boolean().optional(),
-            is_write_index: z.boolean().optional(),
+            is_hidden: booleanField().optional(),
+            is_write_index: booleanField().optional(),
             routing: z.string().optional(),
             search_routing: z.string().optional(),
           }),

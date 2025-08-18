@@ -4,6 +4,7 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
@@ -13,7 +14,7 @@ const MultiGetParams = z.object({
       z.object({
         _id: z.string(),
         _index: z.string().optional(),
-        _source: z.union([z.boolean(), z.array(z.string())]).optional(),
+        _source: z.union([booleanField(), z.array(z.string())]).optional(),
         routing: z.string().optional(),
         stored_fields: z.array(z.string()).optional(),
         version: z.number().optional(),
@@ -23,10 +24,10 @@ const MultiGetParams = z.object({
     .optional(),
   index: z.string().optional(),
   preference: z.string().optional(),
-  realtime: z.boolean().optional(),
-  refresh: z.boolean().optional(),
+  realtime: booleanField().optional(),
+  refresh: booleanField().optional(),
   routing: z.string().optional(),
-  _source: z.boolean().optional(),
+  _source: booleanField().optional(),
   _source_excludes: z.array(z.string()).optional(),
   _source_includes: z.array(z.string()).optional(),
 });

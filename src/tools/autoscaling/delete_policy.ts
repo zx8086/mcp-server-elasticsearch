@@ -8,7 +8,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define Zod schema for validation
 const DeleteAutoscalingPolicyParams = z.object({
-  name: z.string().min(1, "Policy name is required"),
+  name: z.string().min(1, "Policy name cannot be empty"),
   masterTimeout: z.string().optional(),
   timeout: z.string().optional(),
 });

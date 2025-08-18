@@ -4,19 +4,20 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const DiskUsageParams = z.object({
   index: z.union([z.string(), z.array(z.string())]),
-  allowNoIndices: z.boolean().optional(),
+  allowNoIndices: booleanField().optional(),
   expandWildcards: z
     .enum(["all", "open", "closed", "hidden", "none"])
     .or(z.array(z.enum(["all", "open", "closed", "hidden", "none"])))
     .optional(),
-  flush: z.boolean().optional(),
-  ignoreUnavailable: z.boolean().optional(),
-  runExpensiveTasks: z.boolean().optional(),
+  flush: booleanField().optional(),
+  ignoreUnavailable: booleanField().optional(),
+  runExpensiveTasks: booleanField().optional(),
 });
 
 type DiskUsageParamsType = z.infer<typeof DiskUsageParams>;
@@ -27,14 +28,14 @@ export const registerDiskUsageTool: ToolRegistrationFunction = (server: McpServe
     "Analyze index disk usage per field in Elasticsearch. Best for storage optimization, field analysis, capacity planning. Use when you need to understand disk consumption patterns and optimize storage usage for Elasticsearch indices and data streams.",
     {
       index: z.union([z.string(), z.array(z.string())]),
-      allowNoIndices: z.boolean().optional(),
+      allowNoIndices: booleanField().optional(),
       expandWildcards: z
         .enum(["all", "open", "closed", "hidden", "none"])
         .or(z.array(z.enum(["all", "open", "closed", "hidden", "none"])))
         .optional(),
-      flush: z.boolean().optional(),
-      ignoreUnavailable: z.boolean().optional(),
-      runExpensiveTasks: z.boolean().optional(),
+      flush: booleanField().optional(),
+      ignoreUnavailable: booleanField().optional(),
+      runExpensiveTasks: booleanField().optional(),
     },
     async (params: DiskUsageParamsType): Promise<SearchResult> => {
       try {

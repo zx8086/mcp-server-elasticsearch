@@ -9,24 +9,24 @@ import { type SearchResult, TextContent, type ToolRegistrationFunction } from ".
 
 // Define the parameter schema
 const ListIndicesParams = z.object({
-  indexPattern: z.string().min(1, "Index pattern is required"),
-  limit: z.number().min(1).max(1000).default(50),
-  excludeSystemIndices: z.boolean().default(true),
-  excludeDataStreams: z.boolean().default(false),
-  sortBy: z.enum(["name", "size", "docs", "creation"]).default("name"),
-  includeSize: z.boolean().default(false),
+  indexPattern: z.string().optional()
+    .describe("Index pattern to match. Use '*' for all indices. Supports wildcards like 'logs-*' or 'app-*'"),
+  limit: z
+    .union([z.number(), z.string().regex(/^\d+$/).transform(val => parseInt(val, 10))])
+    .pipe(z.number().min(1).max(1000))
+    .optional()
+    .describe("Maximum number of indices to return (1-1000). Required for large clusters"),
+  excludeSystemIndices: z.boolean().optional()
+    .describe("Exclude system indices starting with '.'"),
+  excludeDataStreams: z.boolean().optional()
+    .describe("Exclude data stream backing indices"),
+  sortBy: z.enum(["name", "size", "docs", "creation"]).optional()
+    .describe("Sort order for results: 'name', 'size', 'docs', or 'creation'"),
+  includeSize: z.boolean().optional()
+    .describe("Include storage size and creation date information"),
 });
 
 type ListIndicesParamsType = z.infer<typeof ListIndicesParams>;
-
-const listIndicesSchema = {
-  indexPattern: z.string().min(1, "Index pattern is required"),
-  limit: z.number().min(1).max(1000).default(50),
-  excludeSystemIndices: z.boolean().default(true),
-  excludeDataStreams: z.boolean().default(false),
-  sortBy: z.enum(["name", "size", "docs", "creation"]).default("name"),
-  includeSize: z.boolean().default(false),
-} as const;
 
 export const registerListIndicesTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const listIndicesImpl = async (params: any, _extra: Record<string, unknown>): Promise<SearchResult> => {
@@ -163,8 +163,8 @@ export const registerListIndicesTool: ToolRegistrationFunction = (server: McpSer
 
   server.tool(
     "elasticsearch_list_indices",
-    "List Elasticsearch indices with smart filtering and pattern matching. Best for index discovery, monitoring index health, analyzing index structure. Use when you need to explore available indices in Elasticsearch clusters with intelligent filtering to prevent overwhelming responses.",
-    listIndicesSchema,
+    "List indices with filtering. TIP: Use this FIRST to check cluster size before other tools. Common patterns: {limit: 50, excludeSystemIndices: true} for overview, {indexPattern: 'logs-*', limit: 100} for specific indices. Large clusters (>1000 indices) require 'limit' parameter or response will be truncated.",
+    ListIndicesParams,
     withReadOnlyCheck("elasticsearch_list_indices", listIndicesImpl, OperationType.READ),
   );
 };

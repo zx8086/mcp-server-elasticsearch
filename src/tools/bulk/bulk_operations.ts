@@ -5,21 +5,22 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const BulkOperationsParams = z.object({
-  operations: z.array(z.record(z.any())),
+  operations: z.array(z.object({}).passthrough()),
   index: z.string().optional(),
   routing: z.string().optional(),
   pipeline: z.string().optional(),
   refresh: z.string().optional(),
-  requireAlias: z.boolean().optional(),
+  requireAlias: booleanField().optional(),
   timeout: z.string().optional(),
   waitForActiveShards: z.string().optional(),
-  flushBytes: z.number().default(5000000),
-  concurrency: z.number().default(5),
-  retries: z.number().default(3),
+  flushBytes: z.number().optional(),
+  concurrency: z.number().optional(),
+  retries: z.number().optional(),
 });
 
 type BulkOperationsParamsType = z.infer<typeof BulkOperationsParams>;
@@ -28,17 +29,17 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (server: Mcp
     "elasticsearch_bulk_operations",
     "Perform bulk operations in Elasticsearch for high-throughput data ingestion. Best for batch indexing, bulk updates, mass data import, performance optimization. Use when you need to efficiently index, update, or delete large volumes of documents in Elasticsearch.",
     {
-      operations: z.array(z.record(z.any())),
+      operations: z.array(z.object({}).passthrough()),
       index: z.string().optional(),
       routing: z.string().optional(),
       pipeline: z.string().optional(),
       refresh: z.string().optional(),
-      requireAlias: z.boolean().optional(),
+      requireAlias: booleanField().optional(),
       timeout: z.string().optional(),
       waitForActiveShards: z.string().optional(),
-      flushBytes: z.number().default(5000000),
-      concurrency: z.number().default(5),
-      retries: z.number().default(3),
+      flushBytes: z.number().optional(),
+      concurrency: z.number().optional(),
+      retries: z.number().optional(),
     },
     async (params: BulkOperationsParamsType): Promise<SearchResult> => {
       // Check read-only mode first

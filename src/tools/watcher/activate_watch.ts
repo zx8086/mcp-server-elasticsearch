@@ -9,7 +9,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const ActivateWatchParams = z.object({
-  watch_id: z.string().min(1, "Watch ID is required"),
+  watch_id: z.string().min(1, "Watch ID cannot be empty"),
 });
 
 type ActivateWatchParamsType = z.infer<typeof ActivateWatchParams>;
@@ -47,7 +47,7 @@ export const registerWatcherActivateWatchTool: ToolRegistrationFunction = (serve
     "elasticsearch_watcher_activate_watch",
     "Activate a watch in Elasticsearch Watcher. Best for monitoring automation, alerting management, watch lifecycle control. Use when you need to enable watch execution for Elasticsearch alerting and monitoring workflows.",
     {
-      watch_id: z.string().min(1, "Watch ID is required"),
+      watch_id: z.string().min(1, "Watch ID cannot be empty"),
     },
     withReadOnlyCheck("elasticsearch_watcher_activate_watch", activateWatchImpl, OperationType.WRITE),
   );

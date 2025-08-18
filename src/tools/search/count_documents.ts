@@ -9,7 +9,7 @@ import type { SearchResult, TextContent, ToolRegistrationFunction } from "../typ
 // Define the parameter schema type
 const CountDocumentsParams = z.object({
   index: z.string().optional(),
-  query: z.record(z.any()).optional(),
+  query: z.object({}).passthrough().optional(),
   analyzer: z.string().optional(),
   analyzeWildcard: z.boolean().optional(),
   defaultOperator: z.enum(["AND", "OR"]).optional(),
@@ -29,10 +29,10 @@ type CountDocumentsParamsType = z.infer<typeof CountDocumentsParams>;
 export const registerCountDocumentsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_count_documents",
-    "Count documents in Elasticsearch using query criteria. Best for data analysis, result set sizing, query validation. Use when you need to get document counts without retrieving actual documents from Elasticsearch indices.",
+    "Count documents in Elasticsearch. PARAMETERS: 'index' (string, default '*'), 'query' (object, default match_all). Best for data analysis, result set sizing. Example: {index: 'logs-*', query: {match: {status: 'error'}}}",
     {
-      index: z.string().optional(),
-      query: z.record(z.any()).optional(),
+      index: z.string().optional().describe("Index pattern to count documents in. Use '*' for all indices"),
+      query: z.object({}).passthrough().optional().describe("Query DSL to filter documents. Default matches all"),
       analyzer: z.string().optional(),
       analyzeWildcard: z.boolean().optional(),
       defaultOperator: z.enum(["AND", "OR"]).optional(),

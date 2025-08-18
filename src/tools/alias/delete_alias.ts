@@ -8,8 +8,8 @@ import { type SearchResult, TextContent, type ToolRegistrationFunction } from ".
 
 // Define the parameter schema type
 const DeleteAliasParams = z.object({
-  index: z.string().min(1, "Index is required"),
-  name: z.string().min(1, "Alias name is required"),
+  index: z.string().min(1, "Index cannot be empty"),
+  name: z.string().min(1, "Alias name cannot be empty"),
   timeout: z.string().optional(),
   masterTimeout: z.string().optional(),
 });
@@ -20,8 +20,8 @@ export const registerDeleteAliasTool: ToolRegistrationFunction = (server: McpSer
     "elasticsearch_delete_alias",
     "Delete an alias from an index in Elasticsearch. Best for alias cleanup, configuration management, removing unused references. Use when you need to remove named references to Elasticsearch indices during maintenance or restructuring.",
     {
-      index: z.string().min(1, "Index is required"),
-      name: z.string().min(1, "Alias name is required"),
+      index: z.string().min(1, "Index cannot be empty"),
+      name: z.string().min(1, "Alias name cannot be empty"),
       timeout: z.string().optional(),
       masterTimeout: z.string().optional(),
     },

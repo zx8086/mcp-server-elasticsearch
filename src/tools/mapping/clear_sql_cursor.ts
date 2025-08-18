@@ -8,7 +8,7 @@ import { type SearchResult, TextContent, type ToolRegistrationFunction } from ".
 
 // Define the parameter schema type
 const ClearSqlCursorParams = z.object({
-  cursor: z.string().min(1, "Cursor is required"),
+  cursor: z.string().min(1, "Cursor cannot be empty"),
 });
 
 type ClearSqlCursorParamsType = z.infer<typeof ClearSqlCursorParams>;
@@ -17,7 +17,7 @@ export const registerClearSqlCursorTool: ToolRegistrationFunction = (server: Mcp
     "elasticsearch_clear_sql_cursor",
     "Clear a SQL cursor in Elasticsearch to free resources. Best for resource management, cursor cleanup, memory optimization. Use when you need to explicitly release SQL cursor resources after completing paginated SQL queries in Elasticsearch.",
     {
-      cursor: z.string().min(1, "Cursor is required"),
+      cursor: z.string().min(1, "Cursor cannot be empty"),
     },
     async (params: ClearSqlCursorParamsType): Promise<SearchResult> => {
       try {

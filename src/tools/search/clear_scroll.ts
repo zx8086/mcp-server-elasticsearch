@@ -8,7 +8,7 @@ import { type SearchResult, TextContent, type ToolRegistrationFunction } from ".
 
 // Define the parameter schema type
 const ClearScrollParams = z.object({
-  scrollId: z.string().min(1, "Scroll ID is required"),
+  scrollId: z.string().min(1, "Scroll ID cannot be empty"),
 });
 
 type ClearScrollParamsType = z.infer<typeof ClearScrollParams>;
@@ -17,7 +17,7 @@ export const registerClearScrollTool: ToolRegistrationFunction = (server: McpSer
     "elasticsearch_clear_scroll",
     "Clear a scroll context in Elasticsearch to free resources. Best for cleanup operations, memory management, scroll lifecycle management. Use when you need to explicitly release scroll contexts after completing large result set iterations in Elasticsearch.",
     {
-      scrollId: z.string().min(1, "Scroll ID is required"),
+      scrollId: z.string().min(1, "Scroll ID cannot be empty"),
     },
     async (params: ClearScrollParamsType): Promise<SearchResult> => {
       try {

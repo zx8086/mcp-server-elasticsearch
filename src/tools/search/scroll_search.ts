@@ -4,16 +4,17 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const ScrollSearchParams = z.object({
-  index: z.string().min(1, "Index is required"),
-  query: z.record(z.any()),
-  scroll: z.string().default("30s"),
+  index: z.string().min(1, "Index cannot be empty"),
+  query: z.object({}).passthrough(),
+  scroll: z.string().optional(),
   scrollId: z.string().optional(),
   maxDocuments: z.number().optional(),
-  restTotalHitsAsInt: z.boolean().optional(),
+  restTotalHitsAsInt: booleanField().optional(),
 });
 
 type ScrollSearchParamsType = z.infer<typeof ScrollSearchParams>;
@@ -22,12 +23,12 @@ export const registerScrollSearchTool: ToolRegistrationFunction = (server: McpSe
     "elasticsearch_scroll_search",
     "Perform scroll search in Elasticsearch for large result sets. Best for pagination, large dataset retrieval, memory-efficient iteration. Use when you need to retrieve all documents from large result sets without overwhelming memory in Elasticsearch.",
     {
-      index: z.string().min(1, "Index is required"),
-      query: z.record(z.any()),
-      scroll: z.string().default("30s"),
+      index: z.string().min(1, "Index cannot be empty"),
+      query: z.object({}).passthrough(),
+      scroll: z.string().optional(),
       scrollId: z.string().optional(),
       maxDocuments: z.number().optional(),
-      restTotalHitsAsInt: z.boolean().optional(),
+      restTotalHitsAsInt: booleanField().optional(),
     },
     async (params: ScrollSearchParamsType): Promise<SearchResult> => {
       try {

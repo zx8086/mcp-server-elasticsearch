@@ -4,8 +4,6 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { registerTracedTool } from "../../utils/toolWrapper.js";
-import { traceElasticsearchCall } from "../../utils/toolWrapper.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
@@ -27,16 +25,12 @@ const GetClusterHealthParams = z.object({
 type GetClusterHealthParamsType = z.infer<typeof GetClusterHealthParams>;
 
 export const registerGetClusterHealthTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  logger.info("Registering cluster health tool with tracing...");
-
-  try {
-    registerTracedTool(server, esClient, {
-      name: "elasticsearch_get_cluster_health",
-      description:
-        "Get the health status of the Elasticsearch cluster. Best for cluster monitoring, health checks, system diagnostics. Use when you need to assess cluster status, node availability, and overall Elasticsearch system health.",
-      inputSchema: GetClusterHealthParams,
-      operationType: "read",
-      handler: async (esClient: Client, params: GetClusterHealthParamsType): Promise<SearchResult> => {
+  server.tool(
+    "elasticsearch_get_cluster_health",
+    "Get the health status of the Elasticsearch cluster. Best for cluster monitoring, health checks, system diagnostics. Use when you need to assess cluster status, node availability, and overall Elasticsearch system health.",
+    GetClusterHealthParams,
+    async (params: GetClusterHealthParamsType): Promise<SearchResult> => {
+      try {
         const requestId = Math.random().toString(36).substring(7);
         logger.info(`[${requestId}] Cluster health request received`, {
           params: {
@@ -45,92 +39,76 @@ export const registerGetClusterHealthTool: ToolRegistrationFunction = (server: M
           },
         });
 
-        try {
-          logger.info(`[${requestId}] Preparing cluster health request...`);
-          const requestParams = {
-            index: params.index,
-            expand_wildcards: params.expandWildcards,
-            level: params.level,
-            local: params.local,
-            master_timeout: params.masterTimeout,
-            timeout: params.timeout,
-            wait_for_active_shards: params.waitForActiveShards,
-            wait_for_events: params.waitForEvents,
-            wait_for_no_initializing_shards: params.waitForNoInitializingShards,
-            wait_for_no_relocating_shards: params.waitForNoRelocatingShards,
-            wait_for_nodes: params.waitForNodes,
-            wait_for_status: params.waitForStatus,
-          };
+        logger.info(`[${requestId}] Preparing cluster health request...`);
+        const requestParams = {
+          index: params.index,
+          expand_wildcards: params.expandWildcards,
+          level: params.level,
+          local: params.local,
+          master_timeout: params.masterTimeout,
+          timeout: params.timeout,
+          wait_for_active_shards: params.waitForActiveShards,
+          wait_for_events: params.waitForEvents,
+          wait_for_no_initializing_shards: params.waitForNoInitializingShards,
+          wait_for_no_relocating_shards: params.waitForNoRelocatingShards,
+          wait_for_nodes: params.waitForNodes,
+          wait_for_status: params.waitForStatus,
+        };
 
-          logger.debug(`[${requestId}] Request parameters:`, requestParams);
+        logger.debug(`[${requestId}] Request parameters:`, requestParams);
 
-          logger.info(`[${requestId}] Executing cluster.health()...`);
-          const result = await traceElasticsearchCall(
-            "cluster.health",
-            params.index,
-            async () =>
-              esClient.cluster.health(requestParams, {
-                opaqueId: "elasticsearch_get_cluster_health",
-              }),
-            { requestId, waitForStatus: params.waitForStatus },
-          );
+        logger.info(`[${requestId}] Executing cluster.health()...`);
+        const result = await esClient.cluster.health(requestParams, {
+          opaqueId: "elasticsearch_get_cluster_health",
+        });
 
-          logger.info(`[${requestId}] Successfully retrieved cluster health`, {
-            status: result.status,
-            numberOfNodes: result.number_of_nodes,
-            activeShards: result.active_shards,
-            clusterName: result.cluster_name,
-            taskMaxWaitingInQueueMillis: result.task_max_waiting_in_queue_millis,
-            numberOfPendingTasks: result.number_of_pending_tasks,
-            numberOfInFlightFetch: result.number_of_in_flight_fetch,
-            initializingShards: result.initializing_shards,
-            unassignedShards: result.unassigned_shards,
-            delayedUnassignedShards: result.delayed_unassigned_shards,
-            activeShardsPercentAsNumber: result.active_shards_percent_as_number,
-          });
+        logger.info(`[${requestId}] Successfully retrieved cluster health`, {
+          status: result.status,
+          numberOfNodes: result.number_of_nodes,
+          activeShards: result.active_shards,
+          clusterName: result.cluster_name,
+          taskMaxWaitingInQueueMillis: result.task_max_waiting_in_queue_millis,
+          numberOfPendingTasks: result.number_of_pending_tasks,
+          numberOfInFlightFetch: result.number_of_in_flight_fetch,
+          initializingShards: result.initializing_shards,
+          unassignedShards: result.unassigned_shards,
+          delayedUnassignedShards: result.delayed_unassigned_shards,
+          activeShardsPercentAsNumber: result.active_shards_percent_as_number,
+        });
 
-          const response: SearchResult = {
-            content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
-          };
+        const response: SearchResult = {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
+        };
 
-          logger.info(`[${requestId}] Returning response...`);
-          return response;
-        } catch (error) {
-          // Enhanced error logging with request context
-          logger.error(`[${requestId}] Failed to get cluster health:`, {
-            error: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined,
-            name: error instanceof Error ? error.name : "Unknown",
-            cause: error instanceof Error ? error.cause : undefined,
-            params: {
-              ...params,
-              index: params.index ? "[REDACTED]" : undefined,
-            },
-            // Add Elasticsearch specific error details if available
-            elasticsearchError: error instanceof Error && "meta" in error ? error.meta : undefined,
-            statusCode: error instanceof Error && "statusCode" in error ? error.statusCode : undefined,
-          });
+        logger.info(`[${requestId}] Returning response...`);
+        return response;
+      } catch (error) {
+        // Enhanced error logging with request context
+        const requestId = Math.random().toString(36).substring(7);
+        logger.error(`[${requestId}] Failed to get cluster health:`, {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          name: error instanceof Error ? error.name : "Unknown",
+          cause: error instanceof Error ? error.cause : undefined,
+          params: {
+            ...params,
+            index: params.index ? "[REDACTED]" : undefined,
+          },
+          // Add Elasticsearch specific error details if available
+          elasticsearchError: error instanceof Error && "meta" in error ? error.meta : undefined,
+          statusCode: error instanceof Error && "statusCode" in error ? error.statusCode : undefined,
+        });
 
-          // Return a more detailed error response
-          return {
-            content: [
-              {
-                type: "text",
-                text: `Error getting cluster health: ${error instanceof Error ? error.message : String(error)}`,
-              } as TextContent,
-            ],
-          };
-        }
-      },
-    });
-
-    logger.info("✅ Cluster health tool registered successfully with tracing");
-  } catch (registrationError) {
-    logger.error("Failed to register cluster health tool:", {
-      error: registrationError instanceof Error ? registrationError.message : String(registrationError),
-      stack: registrationError instanceof Error ? registrationError.stack : undefined,
-      name: registrationError instanceof Error ? registrationError.name : "Unknown",
-    });
-    throw registrationError;
-  }
+        // Return a more detailed error response
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error getting cluster health: ${error instanceof Error ? error.message : String(error)}`,
+            } as TextContent,
+          ],
+        };
+      }
+    },
+  );
 };

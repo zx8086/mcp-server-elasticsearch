@@ -8,7 +8,7 @@ import { type SearchResult, TextContent, type ToolRegistrationFunction } from ".
 
 // Define the parameter schema type
 const UpdateAliasesParams = z.object({
-  actions: z.array(z.record(z.any())),
+  actions: z.array(z.object({}).passthrough()),
   timeout: z.string().optional(),
   masterTimeout: z.string().optional(),
 });
@@ -19,7 +19,7 @@ export const registerUpdateAliasesTool: ToolRegistrationFunction = (server: McpS
     "elasticsearch_update_aliases",
     "Update index aliases in Elasticsearch using the aliases API. Best for alias management, index switching, zero-downtime deployments. Use when you need to atomically add, remove, or modify multiple index aliases in Elasticsearch.",
     {
-      actions: z.array(z.record(z.any())),
+      actions: z.array(z.object({}).passthrough()),
       timeout: z.string().optional(),
       masterTimeout: z.string().optional(),
     },

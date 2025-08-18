@@ -9,7 +9,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const RetryParams = z.object({
-  index: z.string().min(1, "Index name is required"),
+  index: z.string().min(1, "Index name cannot be empty"),
 });
 
 type RetryParamsType = z.infer<typeof RetryParams>;
@@ -43,7 +43,7 @@ export const registerRetryTool: ToolRegistrationFunction = (server: McpServer, e
     "elasticsearch_ilm_retry",
     "Retry Index Lifecycle Management policy execution for failed indices in Elasticsearch. Best for error recovery, policy troubleshooting, automated remediation. Use when you need to retry ILM policy execution for indices in ERROR state in Elasticsearch.",
     {
-      index: z.string().min(1, "Index name is required"),
+      index: z.string().min(1, "Index name cannot be empty"),
     },
     withReadOnlyCheck("elasticsearch_ilm_retry", retryImpl, OperationType.WRITE),
   );

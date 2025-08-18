@@ -10,32 +10,25 @@
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
+import { zodToJsonSchemaCompat as zodToJsonSchema } from "../src/utils/zodToJsonSchema.js";
 
 // Check version compatibility
 async function checkVersionCompatibility() {
   const packageJson = JSON.parse(await readFile("package.json", "utf-8"));
   const zodVersion = packageJson.dependencies?.zod || "";
-  const zodToJsonSchemaVersion = packageJson.dependencies?.["zod-to-json-schema"] || "";
 
   // Extract major version numbers
   const zodMajor = Number.parseInt(zodVersion.replace(/[\^~]/, "").split(".")[0]);
-  const z2jsMajor = Number.parseInt(zodToJsonSchemaVersion.replace(/[\^~]/, "").split(".")[0]);
 
-  if (zodMajor === 4 && z2jsMajor === 3) {
-    console.error("❌ CRITICAL VERSION MISMATCH DETECTED!");
-    console.error("   Zod 4.x is NOT compatible with zod-to-json-schema 3.x");
-    console.error("   This will cause tools to fail in Claude Desktop!");
-    console.error("");
-    console.error("   To fix, run:");
-    console.error("   bun add zod@3.23.8 zod-to-json-schema@3.23.5");
-    console.error("");
-    return false;
+  if (zodMajor < 4) {
+    console.warn("⚠️  Using Zod 3.x - consider upgrading to Zod 4.x");
+    console.log(`   Zod: ${zodVersion}`);
+  } else {
+    console.log("✅ Using Zod 4.x with custom compatibility wrapper");
+    console.log(`   Zod: ${zodVersion}`);
+    console.log("   Compatibility wrapper: src/utils/zodToJsonSchema.ts");
   }
-
-  console.log("✅ Version compatibility check passed");
-  console.log(`   Zod: ${zodVersion}`);
-  console.log(`   zod-to-json-schema: ${zodToJsonSchemaVersion}`);
+  
   return true;
 }
 

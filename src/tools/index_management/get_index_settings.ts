@@ -4,18 +4,19 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetIndexSettingsParams = z.object({
-  index: z.string().min(1, "Index is required"),
+  index: z.string().min(1, "Index cannot be empty"),
   name: z.string().optional(),
-  ignoreUnavailable: z.boolean().optional(),
-  allowNoIndices: z.boolean().optional(),
+  ignoreUnavailable: booleanField().optional(),
+  allowNoIndices: booleanField().optional(),
   expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
-  flatSettings: z.boolean().optional(),
-  includeDefaults: z.boolean().optional(),
-  local: z.boolean().optional(),
+  flatSettings: booleanField().optional(),
+  includeDefaults: booleanField().optional(),
+  local: booleanField().optional(),
   masterTimeout: z.string().optional(),
 });
 
@@ -25,14 +26,14 @@ export const registerGetIndexSettingsTool: ToolRegistrationFunction = (server: M
     "elasticsearch_get_index_settings",
     "Get index settings from Elasticsearch. Best for configuration review, performance analysis, troubleshooting. Use when you need to inspect index-level settings and configurations in Elasticsearch.",
     {
-      index: z.string().min(1, "Index is required"),
+      index: z.string().min(1, "Index cannot be empty"),
       name: z.string().optional(),
-      ignoreUnavailable: z.boolean().optional(),
-      allowNoIndices: z.boolean().optional(),
+      ignoreUnavailable: booleanField().optional(),
+      allowNoIndices: booleanField().optional(),
       expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
-      flatSettings: z.boolean().optional(),
-      includeDefaults: z.boolean().optional(),
-      local: z.boolean().optional(),
+      flatSettings: booleanField().optional(),
+      includeDefaults: booleanField().optional(),
+      local: booleanField().optional(),
       masterTimeout: z.string().optional(),
     },
     async (params: GetIndexSettingsParamsType): Promise<SearchResult> => {

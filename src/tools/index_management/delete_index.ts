@@ -5,15 +5,16 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { readOnlyManager } from "../../utils/readOnlyMode.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const DeleteIndexParams = z.object({
-  index: z.string().min(1, "Index is required"),
+  index: z.string().min(1, "Index cannot be empty"),
   timeout: z.string().optional(),
   masterTimeout: z.string().optional(),
-  ignoreUnavailable: z.boolean().optional(),
-  allowNoIndices: z.boolean().optional(),
+  ignoreUnavailable: booleanField().optional(),
+  allowNoIndices: booleanField().optional(),
   expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
 });
 
@@ -23,11 +24,11 @@ export const registerDeleteIndexTool: ToolRegistrationFunction = (server: McpSer
     "elasticsearch_delete_index",
     "Delete an entire index in Elasticsearch. Best for index cleanup, data lifecycle management, removing obsolete indices. Use when you need to permanently remove complete Elasticsearch indices and all their documents. DESTRUCTIVE OPERATION.",
     {
-      index: z.string().min(1, "Index is required"),
+      index: z.string().min(1, "Index cannot be empty"),
       timeout: z.string().optional(),
       masterTimeout: z.string().optional(),
-      ignoreUnavailable: z.boolean().optional(),
-      allowNoIndices: z.boolean().optional(),
+      ignoreUnavailable: booleanField().optional(),
+      allowNoIndices: booleanField().optional(),
       expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
     },
     async (params: DeleteIndexParamsType): Promise<SearchResult> => {

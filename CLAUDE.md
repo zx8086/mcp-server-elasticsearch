@@ -97,6 +97,22 @@ MCP-compatible logging in `src/utils/logger.ts`:
 
 ## Development Workflow
 
+### Important: Always Check Existing Code First
+**Before creating any new files or modifying existing ones:**
+1. Search for existing implementations using `Grep` or `Glob`
+2. Check if tests already exist in the `tests/` directory
+3. Review related files to understand existing patterns
+4. Avoid creating duplicate functionality
+5. Run existing tests with `bun test` to understand current coverage
+
+### Critical: Always Create Validation Tests
+**After making any code changes or fixes:**
+1. Create specific tests to validate the fix works as expected
+2. Test edge cases and error conditions
+3. Verify the fix handles real-world data correctly
+4. Run the new tests to confirm they pass
+5. Include tests that would have caught the original bug
+
 ### Adding New Tools
 1. Create tool file in appropriate category under `src/tools/`
 2. Implement using existing patterns (see `src/tools/core/search.ts` as reference)
@@ -136,12 +152,19 @@ MCP-compatible logging in `src/utils/logger.ts`:
 
 ## Critical Dependencies
 
-### ⚠️ Version Compatibility Required
-The project requires specific versions of Zod and zod-to-json-schema for compatibility:
-- **zod**: 3.23.8 (NOT 4.x)
-- **zod-to-json-schema**: 3.23.5
+### Zod 4.x Support
+The project now supports Zod 4.x through a custom compatibility wrapper:
+- **zod**: 4.0.17+ (Zod 4 with native JSON Schema support)
+- **Compatibility wrapper**: `src/utils/zodToJsonSchema.ts`
 
-**Important**: Zod 4.x is incompatible with zod-to-json-schema 3.x and will cause tools to fail silently in Claude Desktop.
+The compatibility wrapper handles:
+- Zod 4's native `toJSONSchema` method
+- Transform schemas (coercion helpers from `zodHelpers.ts`)
+- Special cases like `z.record()`, `z.object({}).passthrough()`
+- Conversion to JSON Schema Draft 7 format
+- Proper handling of required/optional fields with defaults
+
+**Note**: The project no longer depends on `zod-to-json-schema` package.
 
 ## Common Patterns
 

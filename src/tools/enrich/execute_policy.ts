@@ -5,13 +5,14 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const ExecutePolicyParams = z.object({
-  name: z.string().min(1, "Policy name is required"),
+  name: z.string().min(1, "Policy name cannot be empty"),
   masterTimeout: z.string().optional(),
-  waitForCompletion: z.boolean().optional(),
+  waitForCompletion: booleanField().optional(),
 });
 
 type ExecutePolicyParamsType = z.infer<typeof ExecutePolicyParams>;
@@ -50,9 +51,9 @@ export const registerEnrichExecutePolicyTool: ToolRegistrationFunction = (server
     "elasticsearch_enrich_execute_policy",
     "Execute Elasticsearch enrich policy to create the enrich index. Best for policy activation, data preparation, enrichment setup. Use when you need to build the enrich index from source data for document enrichment in Elasticsearch.",
     {
-      name: z.string().min(1, "Policy name is required"),
+      name: z.string().min(1, "Policy name cannot be empty"),
       masterTimeout: z.string().optional(),
-      waitForCompletion: z.boolean().optional(),
+      waitForCompletion: booleanField().optional(),
     },
     withReadOnlyCheck("elasticsearch_enrich_execute_policy", executePolicyImpl, OperationType.WRITE),
   );

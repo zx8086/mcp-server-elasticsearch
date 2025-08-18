@@ -4,19 +4,20 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const UpdateIndexSettingsParams = z.object({
-  index: z.string().min(1, "Index is required"),
-  settings: z.record(z.any()),
-  preserveExisting: z.boolean().optional(),
+  index: z.string().min(1, "Index cannot be empty"),
+  settings: z.object({}).passthrough(),
+  preserveExisting: booleanField().optional(),
   timeout: z.string().optional(),
   masterTimeout: z.string().optional(),
-  ignoreUnavailable: z.boolean().optional(),
-  allowNoIndices: z.boolean().optional(),
+  ignoreUnavailable: booleanField().optional(),
+  allowNoIndices: booleanField().optional(),
   expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
-  flatSettings: z.boolean().optional(),
+  flatSettings: booleanField().optional(),
 });
 
 type UpdateIndexSettingsParamsType = z.infer<typeof UpdateIndexSettingsParams>;
@@ -25,15 +26,15 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (server
     "elasticsearch_update_index_settings",
     "Update index settings in Elasticsearch. Best for performance tuning, configuration changes, index optimization. Use when you need to modify index settings for better performance or functionality in Elasticsearch.",
     {
-      index: z.string().min(1, "Index is required"),
-      settings: z.record(z.any()),
-      preserveExisting: z.boolean().optional(),
+      index: z.string().min(1, "Index cannot be empty"),
+      settings: z.object({}).passthrough(),
+      preserveExisting: booleanField().optional(),
       timeout: z.string().optional(),
       masterTimeout: z.string().optional(),
-      ignoreUnavailable: z.boolean().optional(),
-      allowNoIndices: z.boolean().optional(),
+      ignoreUnavailable: booleanField().optional(),
+      allowNoIndices: booleanField().optional(),
       expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
-      flatSettings: z.boolean().optional(),
+      flatSettings: booleanField().optional(),
     },
     async (params: UpdateIndexSettingsParamsType): Promise<SearchResult> => {
       try {

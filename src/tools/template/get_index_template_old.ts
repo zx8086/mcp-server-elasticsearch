@@ -4,14 +4,15 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetIndexTemplateParams = z.object({
   name: z.string().optional(),
-  flatSettings: z.boolean().optional(),
+  flatSettings: booleanField().optional(),
   masterTimeout: z.string().optional(),
-  local: z.boolean().optional(),
+  local: booleanField().optional(),
 });
 
 type GetIndexTemplateParamsType = z.infer<typeof GetIndexTemplateParams>;
@@ -21,9 +22,9 @@ export const registerGetIndexTemplateTool: ToolRegistrationFunction = (server: M
     "Get an index template from Elasticsearch. Best for template management, configuration review, index pattern analysis. Use when you need to inspect index template definitions, mappings, and settings in Elasticsearch.",
     {
       name: z.string().optional(),
-      flatSettings: z.boolean().optional(),
+      flatSettings: booleanField().optional(),
       masterTimeout: z.string().optional(),
-      local: z.boolean().optional(),
+      local: booleanField().optional(),
     },
     async (params: GetIndexTemplateParamsType): Promise<SearchResult> => {
       try {

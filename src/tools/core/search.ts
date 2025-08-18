@@ -4,8 +4,6 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { registerTracedTool } from "../../utils/toolWrapper.js";
-import { traceSearchOperation } from "../../utils/toolWrapper.js";
 import type { SearchResult, TextContent, ToolFunction, ToolParams } from "../types.js";
 
 interface MappingResponse {
@@ -28,40 +26,30 @@ interface SearchQueryBody {
   [key: string]: unknown;
 }
 
-export const registerSearchTool: ToolFunction = (server: McpServer, esClient: Client) => {
-  const inputSchema = z.object({
-    index: z
-      .string()
-      .trim()
-      .min(1, "Index name is required")
-      .describe("Name of the Elasticsearch index to search for documents"),
-    queryBody: z
-      .record(z.any())
-      .refine(
-        (val) => {
-          try {
-            JSON.parse(JSON.stringify(val));
-            return true;
-          } catch (_e) {
-            return false;
-          }
-        },
-        {
-          message: "queryBody must be a valid Elasticsearch query DSL object",
-        },
-      )
-      .describe(
-        "Complete Elasticsearch Query DSL object for full-text search, filtering, aggregations, and sorting. Use this for complex search operations with relevance scoring.",
-      ),
-  });
+const SearchParams = z.object({
+  index: z
+    .string()
+    .trim()
+    .min(1, "Index name is required")
+    .optional()
+    .describe("Name of the Elasticsearch index to search for documents. Use '*' to search all indices. Examples: 'logs-*', 'metrics-*', '*2025.08.16*'"),
+  queryBody: z
+    .object({})
+    .passthrough()
+    .optional()
+    .describe(
+      "Complete Elasticsearch Query DSL object (not 'body', use 'queryBody'). Include query, size, from, aggs, sort, etc. Example: { query: { match_all: {} }, size: 10 }",
+    ),
+});
 
-  registerTracedTool(server, esClient, {
-    name: "elasticsearch_search",
-    description:
-      "Perform full-text search in Elasticsearch using Query DSL. Best for text search, fuzzy matching, aggregations, analytics, relevance scoring. Use when you need powerful search and analytics capabilities on JSON documents. Highlights are always enabled.",
-    inputSchema,
-    operationType: "read",
-    handler: async (esClient: Client, { index, queryBody }: ToolParams): Promise<SearchResult> => {
+type SearchParamsType = z.infer<typeof SearchParams>;
+
+export const registerSearchTool: ToolFunction = (server: McpServer, esClient: Client) => {
+  server.tool(
+    "elasticsearch_search",
+    "Search Elasticsearch with Query DSL. TIP: Always set 'size' in queryBody (default is only 10). For aggregations use {size: 0, aggs: {...}}. For large result sets (>100), consider pagination with 'from' and 'size'. Example: {index: 'logs-*', queryBody: {query: {match_all: {}}, size: 50, from: 0}}",
+    SearchParams,
+    async ({ index, queryBody }: SearchParamsType): Promise<SearchResult> => {
       try {
         logger.debug("Searching index", { index, queryBody } as const);
         let indexMappings: { properties?: Record<string, { type: string }> } = {};
@@ -73,8 +61,9 @@ export const registerSearchTool: ToolFunction = (server: McpServer, esClient: Cl
             mappingError,
           });
         }
-        const typedQueryBody = queryBody as SearchQueryBody;
-        const searchRequest = { index, ...typedQueryBody };
+        // Handle undefined queryBody - provide default
+        const typedQueryBody = (queryBody || { query: { match_all: {} }, size: 10 }) as SearchQueryBody;
+        const searchRequest = { index: index || "*", ...typedQueryBody };
         if (indexMappings.properties) {
           const textFields: Record<string, any> = {};
           for (const [fieldName, fieldData] of Object.entries(indexMappings.properties)) {
@@ -99,17 +88,16 @@ export const registerSearchTool: ToolFunction = (server: McpServer, esClient: Cl
             };
           }
         }
-        const result = await traceSearchOperation(
-          index,
-          "query_dsl",
-          async () =>
-            esClient.search(searchRequest, {
-              opaqueId: "elasticsearch_search",
-            }),
-          queryBody,
-        );
-        const from = typedQueryBody.from || 0;
-        if (typedQueryBody.size === 0 || typedQueryBody.aggs) {
+        const result = await esClient.search(searchRequest, {
+          opaqueId: "elasticsearch_search",
+        });
+        // Safe property access to avoid undefined errors
+        const from = typedQueryBody?.from ?? 0;
+        const size = typedQueryBody?.size;
+        const hasAggregations = typedQueryBody?.aggs || result.aggregations;
+        
+        // Handle aggregation-only queries (size=0) or queries with aggregations
+        if (size === 0 || hasAggregations) {
           return {
             content: [
               { type: "text", text: "Search results with aggregations:" } as TextContent,
@@ -131,7 +119,17 @@ export const registerSearchTool: ToolFunction = (server: McpServer, esClient: Cl
           }
           for (const [field, value] of Object.entries(sourceData)) {
             if (!(field in highlightedFields)) {
-              content += `${field}: ${JSON.stringify(value)}\n`;
+              // Format value based on type - avoid double-stringifying
+              let formattedValue: string;
+              if (typeof value === 'string') {
+                formattedValue = value;
+              } else if (typeof value === 'object' && value !== null) {
+                // For objects/arrays, pretty print without extra escaping
+                formattedValue = JSON.stringify(value, null, 2);
+              } else {
+                formattedValue = String(value);
+              }
+              content += `${field}: ${formattedValue}\n`;
             }
           }
           return { type: "text", text: content.trim() } as TextContent;
@@ -158,5 +156,5 @@ export const registerSearchTool: ToolFunction = (server: McpServer, esClient: Cl
         };
       }
     },
-  });
+  );
 };

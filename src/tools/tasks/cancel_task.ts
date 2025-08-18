@@ -5,6 +5,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
@@ -13,7 +14,7 @@ const CancelTaskParams = z.object({
   actions: z.union([z.string(), z.array(z.string())]).optional(),
   nodes: z.array(z.string()).optional(),
   parentTaskId: z.string().optional(),
-  waitForCompletion: z.boolean().optional(),
+  waitForCompletion: booleanField().optional(),
 });
 
 type CancelTaskParamsType = z.infer<typeof CancelTaskParams>;
@@ -59,7 +60,7 @@ export const registerCancelTaskTool: ToolRegistrationFunction = (server: McpServ
       actions: z.union([z.string(), z.array(z.string())]).optional(),
       nodes: z.array(z.string()).optional(),
       parentTaskId: z.string().optional(),
-      waitForCompletion: z.boolean().optional(),
+      waitForCompletion: booleanField().optional(),
     },
     withReadOnlyCheck("elasticsearch_tasks_cancel_task", cancelTaskImpl, OperationType.WRITE),
   );

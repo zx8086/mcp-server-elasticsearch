@@ -9,7 +9,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const DeactivateWatchParams = z.object({
-  watch_id: z.string().min(1, "Watch ID is required"),
+  watch_id: z.string().min(1, "Watch ID cannot be empty"),
 });
 
 type DeactivateWatchParamsType = z.infer<typeof DeactivateWatchParams>;
@@ -47,7 +47,7 @@ export const registerWatcherDeactivateWatchTool: ToolRegistrationFunction = (ser
     "elasticsearch_watcher_deactivate_watch",
     "Deactivate a watch in Elasticsearch Watcher. Best for monitoring control, alerting management, watch lifecycle control. Use when you need to disable watch execution while preserving the watch definition in Elasticsearch.",
     {
-      watch_id: z.string().min(1, "Watch ID is required"),
+      watch_id: z.string().min(1, "Watch ID cannot be empty"),
     },
     withReadOnlyCheck("elasticsearch_watcher_deactivate_watch", deactivateWatchImpl, OperationType.WRITE),
   );

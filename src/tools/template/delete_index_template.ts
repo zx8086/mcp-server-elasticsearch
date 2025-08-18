@@ -8,7 +8,7 @@ import { type SearchResult, TextContent, type ToolRegistrationFunction } from ".
 
 // Define the parameter schema type
 const DeleteIndexTemplateParams = z.object({
-  name: z.string().min(1, "Template name is required"),
+  name: z.string().min(1, "Template name cannot be empty"),
   masterTimeout: z.string().optional(),
 });
 
@@ -18,7 +18,7 @@ export const registerDeleteIndexTemplateTool: ToolRegistrationFunction = (server
     "elasticsearch_delete_index_template",
     "Delete an index template in Elasticsearch. Best for template management, configuration cleanup, removing unused templates. Use when you need to remove Elasticsearch index templates that define settings and mappings for new indices.",
     {
-      name: z.string().min(1, "Template name is required"),
+      name: z.string().min(1, "Template name cannot be empty"),
       masterTimeout: z.string().optional(),
     },
     async (params: DeleteIndexTemplateParamsType): Promise<SearchResult> => {

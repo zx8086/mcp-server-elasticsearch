@@ -4,25 +4,26 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const PutMappingParams = z.object({
-  index: z.string().min(1, "Index is required"),
-  properties: z.record(z.any()).optional(),
-  runtime: z.record(z.any()).optional(),
-  meta: z.record(z.any()).optional(),
+  index: z.string().min(1, "Index cannot be empty"),
+  properties: z.object({}).passthrough().optional(),
+  runtime: z.object({}).passthrough().optional(),
+  meta: z.object({}).passthrough().optional(),
   dynamic: z.enum(["true", "false", "strict", "runtime"]).optional(),
-  dateDetection: z.boolean().optional(),
+  dateDetection: booleanField().optional(),
   dynamicDateFormats: z.array(z.string()).optional(),
-  dynamicTemplates: z.array(z.record(z.any())).optional(),
-  numericDetection: z.boolean().optional(),
+  dynamicTemplates: z.array(z.object({}).passthrough()).optional(),
+  numericDetection: booleanField().optional(),
   timeout: z.string().optional(),
   masterTimeout: z.string().optional(),
-  ignoreUnavailable: z.boolean().optional(),
-  allowNoIndices: z.boolean().optional(),
+  ignoreUnavailable: booleanField().optional(),
+  allowNoIndices: booleanField().optional(),
   expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
-  writeIndexOnly: z.boolean().optional(),
+  writeIndexOnly: booleanField().optional(),
 });
 
 type PutMappingParamsType = z.infer<typeof PutMappingParams>;
@@ -31,21 +32,21 @@ export const registerPutMappingTool: ToolRegistrationFunction = (server: McpServ
     "elasticsearch_put_mapping",
     "Update index mappings in Elasticsearch. Best for schema evolution, field addition, mapping modifications. Use when you need to add new fields or update existing field mappings in Elasticsearch indices.",
     {
-      index: z.string().min(1, "Index is required"),
-      properties: z.record(z.any()).optional(),
-      runtime: z.record(z.any()).optional(),
-      meta: z.record(z.any()).optional(),
+      index: z.string().min(1, "Index cannot be empty"),
+      properties: z.object({}).passthrough().optional(),
+      runtime: z.object({}).passthrough().optional(),
+      meta: z.object({}).passthrough().optional(),
       dynamic: z.enum(["true", "false", "strict", "runtime"]).optional(),
-      dateDetection: z.boolean().optional(),
+      dateDetection: booleanField().optional(),
       dynamicDateFormats: z.array(z.string()).optional(),
-      dynamicTemplates: z.array(z.record(z.any())).optional(),
-      numericDetection: z.boolean().optional(),
+      dynamicTemplates: z.array(z.object({}).passthrough()).optional(),
+      numericDetection: booleanField().optional(),
       timeout: z.string().optional(),
       masterTimeout: z.string().optional(),
-      ignoreUnavailable: z.boolean().optional(),
-      allowNoIndices: z.boolean().optional(),
+      ignoreUnavailable: booleanField().optional(),
+      allowNoIndices: booleanField().optional(),
       expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
-      writeIndexOnly: z.boolean().optional(),
+      writeIndexOnly: booleanField().optional(),
     },
     async (params: PutMappingParamsType): Promise<SearchResult> => {
       try {

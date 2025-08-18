@@ -9,7 +9,7 @@ import type { SearchResult, TextContent, ToolRegistrationFunction } from "../typ
 
 // Define the parameter schema
 const DeleteLifecycleParams = z.object({
-  policy: z.string().min(1, "Policy identifier is required"),
+  policy: z.string().min(1, "Policy identifier cannot be empty"),
   masterTimeout: z.string().optional(),
   timeout: z.string().optional(),
 });
@@ -50,7 +50,7 @@ export const registerDeleteLifecycleTool: ToolRegistrationFunction = (server: Mc
     "elasticsearch_ilm_delete_lifecycle",
     "Delete an Index Lifecycle Management policy in Elasticsearch. Best for policy cleanup, configuration management, lifecycle optimization. Use when you need to remove unused ILM policies from Elasticsearch. Cannot delete policies currently in use.",
     {
-      policy: z.string().min(1, "Policy identifier is required"),
+      policy: z.string().min(1, "Policy identifier cannot be empty"),
       masterTimeout: z.string().optional(),
       timeout: z.string().optional(),
     },

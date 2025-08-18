@@ -4,13 +4,14 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const RefreshIndexParams = z.object({
-  index: z.string().min(1, "Index is required"),
-  ignoreUnavailable: z.boolean().optional(),
-  allowNoIndices: z.boolean().optional(),
+  index: z.string().min(1, "Index cannot be empty"),
+  ignoreUnavailable: booleanField().optional(),
+  allowNoIndices: booleanField().optional(),
   expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
 });
 
@@ -20,9 +21,9 @@ export const registerRefreshIndexTool: ToolRegistrationFunction = (server: McpSe
     "elasticsearch_refresh_index",
     "Refresh an index in Elasticsearch. Best for data visibility, search consistency, real-time operations. Use when you need to make recently indexed documents immediately searchable in Elasticsearch.",
     {
-      index: z.string().min(1, "Index is required"),
-      ignoreUnavailable: z.boolean().optional(),
-      allowNoIndices: z.boolean().optional(),
+      index: z.string().min(1, "Index cannot be empty"),
+      ignoreUnavailable: booleanField().optional(),
+      allowNoIndices: booleanField().optional(),
       expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
     },
     async (params: RefreshIndexParamsType): Promise<SearchResult> => {

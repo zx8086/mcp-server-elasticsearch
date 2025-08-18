@@ -9,7 +9,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const RemovePolicyParams = z.object({
-  index: z.string().min(1, "Index name is required"),
+  index: z.string().min(1, "Index name cannot be empty"),
 });
 
 type RemovePolicyParamsType = z.infer<typeof RemovePolicyParams>;
@@ -46,7 +46,7 @@ export const registerRemovePolicyTool: ToolRegistrationFunction = (server: McpSe
     "elasticsearch_ilm_remove_policy",
     "Remove Index Lifecycle Management policy from indices in Elasticsearch. Best for policy detachment, manual management, lifecycle control. Use when you need to stop ILM management and remove policy assignments from Elasticsearch indices.",
     {
-      index: z.string().min(1, "Index name is required"),
+      index: z.string().min(1, "Index name cannot be empty"),
     },
     withReadOnlyCheck("elasticsearch_ilm_remove_policy", removePolicyImpl, OperationType.WRITE),
   );

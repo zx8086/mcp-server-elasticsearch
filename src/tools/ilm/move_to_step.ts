@@ -9,7 +9,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const MoveToStepParams = z.object({
-  index: z.string().min(1, "Index name is required"),
+  index: z.string().min(1, "Index name cannot be empty"),
   currentStep: z.object({
     phase: z.string(),
     action: z.string(),
@@ -58,7 +58,7 @@ export const registerMoveToStepTool: ToolRegistrationFunction = (server: McpServ
     "elasticsearch_ilm_move_to_step",
     "Manually move an index to a specific ILM policy step in Elasticsearch. Best for expert troubleshooting, policy debugging, manual intervention. Use when you need to force index progression in ILM policies. WARNING: Potentially destructive, expert-level operation.",
     {
-      index: z.string().min(1, "Index name is required"),
+      index: z.string().min(1, "Index name cannot be empty"),
       currentStep: z.object({
         phase: z.string(),
         action: z.string(),

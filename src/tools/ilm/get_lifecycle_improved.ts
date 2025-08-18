@@ -13,16 +13,15 @@ const GetLifecycleParams = z.object({
   timeout: z.string().optional(),
   // New parameters for handling large responses
   limit: z
-    .number()
-    .min(1)
-    .max(100)
-    .default(20)
-    .describe("Maximum number of policies to return (default: 20, max: 100)"),
-  summary: z.boolean().default(true).describe("Return summarized policy information instead of full details"),
-  includeIndices: z.boolean().default(false).describe("Include list of indices using each policy"),
+    .union([z.number(), z.string().regex(/^\d+$/).transform(val => parseInt(val, 10))])
+    .pipe(z.number().min(1).max(100))
+    .optional()
+    .describe("Maximum number of policies to return. Range: 1-100"),
+  summary: z.boolean().optional().describe("Return summarized policy information instead of full details"),
+  includeIndices: z.boolean().optional().describe("Include list of indices using each policy"),
   sortBy: z
     .enum(["name", "modified_date", "version", "indices_count"])
-    .default("name")
+    .optional()
     .describe("Sort policies by specified field"),
 });
 
@@ -52,10 +51,14 @@ interface PolicyDetail {
 export const registerGetLifecycleImprovedTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   server.tool(
     "elasticsearch_ilm_get_lifecycle",
-    "Get Index Lifecycle Management (ILM) policies from Elasticsearch with smart response handling. Supports server-side field filtering via filter_path to prevent large responses. Returns summarized or detailed policy information with configurable limits. Best for data lifecycle management, policy inspection, compliance monitoring.",
+    "Get ILM policies. PARAMETERS (flat object, NO 'query' wrapper): 'policy' (string, optional), 'limit' (number 1-100), 'summary' (boolean). Example: {limit: 50, summary: true}. DO NOT wrap parameters in 'query' object.",
     GetLifecycleParams,
     async (params: GetLifecycleParamsType): Promise<SearchResult> => {
       try {
+        // Debug logging
+        logger.debug(`get_lifecycle called with params:`, params);
+        logger.debug(`Limit value: ${params.limit}, type: ${typeof params.limit}`);
+        
         // Fetch policies from Elasticsearch
         const result = await esClient.ilm.getLifecycle({
           name: params.policy,

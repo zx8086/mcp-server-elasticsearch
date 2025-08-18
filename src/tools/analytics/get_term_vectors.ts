@@ -4,26 +4,27 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetTermVectorsParams = z.object({
-  index: z.string().min(1, "Index is required"),
+  index: z.string().min(1, "Index cannot be empty"),
   id: z.string().optional(),
-  doc: z.record(z.unknown()).optional(),
+  doc: z.object({}).passthrough().optional(),
   fields: z.array(z.string()).optional(),
-  field_statistics: z.boolean().optional(),
-  offsets: z.boolean().optional(),
-  payloads: z.boolean().optional(),
-  positions: z.boolean().optional(),
-  term_statistics: z.boolean().optional(),
+  field_statistics: booleanField().optional(),
+  offsets: booleanField().optional(),
+  payloads: booleanField().optional(),
+  positions: booleanField().optional(),
+  term_statistics: booleanField().optional(),
   routing: z.string().optional(),
   version: z.number().optional(),
   version_type: z.enum(["internal", "external", "external_gte", "force"]).optional(),
-  filter: z.record(z.unknown()).optional(),
+  filter: z.object({}).passthrough().optional(),
   per_field_analyzer: z.record(z.string()).optional(),
   preference: z.string().optional(),
-  realtime: z.boolean().optional(),
+  realtime: booleanField().optional(),
 });
 
 type GetTermVectorsParamsType = z.infer<typeof GetTermVectorsParams>;

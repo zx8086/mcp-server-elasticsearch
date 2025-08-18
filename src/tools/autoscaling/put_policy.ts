@@ -9,7 +9,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const PutAutoscalingPolicyParams = z.object({
-  name: z.string().min(1, "Policy name is required"),
+  name: z.string().min(1, "Policy name cannot be empty"),
   policy: z.any(),
   masterTimeout: z.string().optional(),
   timeout: z.string().optional(),
@@ -52,7 +52,7 @@ export const registerAutoscalingPutPolicyTool: ToolRegistrationFunction = (serve
     "elasticsearch_autoscaling_put_policy",
     "Create or update an autoscaling policy in Elasticsearch. Best for capacity management, resource automation, cluster scaling. Use when you need to define autoscaling policies for Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
     {
-      name: z.string().min(1, "Policy name is required"),
+      name: z.string().min(1, "Policy name cannot be empty"),
       policy: z.any(),
       masterTimeout: z.string().optional(),
       timeout: z.string().optional(),

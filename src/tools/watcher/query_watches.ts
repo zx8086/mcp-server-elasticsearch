@@ -4,15 +4,18 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const QueryWatchesParams = z.object({
   from: z.number().min(0).optional(),
   size: z.number().min(1).max(50).optional(),
-  query: z.record(z.any()).optional(),
-  sort: z.union([z.string(), z.record(z.any()), z.array(z.union([z.string(), z.record(z.any())]))]).optional(),
-  search_after: z.array(z.union([z.number(), z.string(), z.boolean(), z.null()])).optional(),
+  query: z.object({}).passthrough().optional(),
+  sort: z
+    .union([z.string(), z.object({}).passthrough(), z.array(z.union([z.string(), z.object({}).passthrough()]))])
+    .optional(),
+  search_after: z.array(z.union([z.number(), z.string(), booleanField(), z.null()])).optional(),
 });
 
 type QueryWatchesParamsType = z.infer<typeof QueryWatchesParams>;
@@ -24,9 +27,11 @@ export const registerWatcherQueryWatchesTool: ToolRegistrationFunction = (server
     {
       from: z.number().min(0).optional(),
       size: z.number().min(1).max(50).optional(),
-      query: z.record(z.any()).optional(),
-      sort: z.union([z.string(), z.record(z.any()), z.array(z.union([z.string(), z.record(z.any())]))]).optional(),
-      search_after: z.array(z.union([z.number(), z.string(), z.boolean(), z.null()])).optional(),
+      query: z.object({}).passthrough().optional(),
+      sort: z
+        .union([z.string(), z.object({}).passthrough(), z.array(z.union([z.string(), z.object({}).passthrough()]))])
+        .optional(),
+      search_after: z.array(z.union([z.number(), z.string(), booleanField(), z.null()])).optional(),
     },
     async (params: QueryWatchesParamsType): Promise<SearchResult> => {
       try {

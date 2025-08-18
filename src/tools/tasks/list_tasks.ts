@@ -4,17 +4,18 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const ListTasksParams = z.object({
   actions: z.union([z.string(), z.array(z.string())]).optional(),
-  detailed: z.boolean().optional(),
+  detailed: booleanField().optional(),
   groupBy: z.enum(["nodes", "parents", "none"]).optional(),
   nodes: z.union([z.string(), z.array(z.string())]).optional(),
   parentTaskId: z.string().optional(),
   timeout: z.union([z.string(), z.number(), z.literal(-1), z.literal(0)]).optional(),
-  waitForCompletion: z.boolean().optional(),
+  waitForCompletion: booleanField().optional(),
 });
 
 type ListTasksParamsType = z.infer<typeof ListTasksParams>;
@@ -25,12 +26,12 @@ export const registerListTasksTool: ToolRegistrationFunction = (server: McpServe
     "Get information about tasks currently running on Elasticsearch cluster nodes. Best for cluster monitoring, performance troubleshooting, operation tracking. Use when you need to monitor long-running operations like reindexing, searches, or bulk operations in Elasticsearch.",
     {
       actions: z.union([z.string(), z.array(z.string())]).optional(),
-      detailed: z.boolean().optional(),
+      detailed: booleanField().optional(),
       groupBy: z.enum(["nodes", "parents", "none"]).optional(),
       nodes: z.union([z.string(), z.array(z.string())]).optional(),
       parentTaskId: z.string().optional(),
       timeout: z.union([z.string(), z.number(), z.literal(-1), z.literal(0)]).optional(),
-      waitForCompletion: z.boolean().optional(),
+      waitForCompletion: booleanField().optional(),
     },
     async (params: ListTasksParamsType): Promise<SearchResult> => {
       try {

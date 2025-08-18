@@ -5,18 +5,19 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction, WaitForActiveShards } from "../types.js";
 
 // Define the parameter schema
 const DeleteByQueryParams = z.object({
-  index: z.string().min(1, "Index is required"),
-  query: z.record(z.any()),
+  index: z.string().min(1, "Index cannot be empty"),
+  query: z.object({}).passthrough(),
   maxDocs: z.number().optional(),
   conflicts: z.enum(["abort", "proceed"]).optional(),
-  refresh: z.boolean().optional(),
+  refresh: booleanField().optional(),
   timeout: z.string().optional(),
   waitForActiveShards: z.custom<WaitForActiveShards>().optional(),
-  waitForCompletion: z.boolean().optional(),
+  waitForCompletion: booleanField().optional(),
   requestsPerSecond: z.number().optional(),
   scroll: z.string().optional(),
   scrollSize: z.number().optional(),
@@ -72,14 +73,14 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpS
     "elasticsearch_delete_by_query",
     "Delete documents by query in Elasticsearch. Best for bulk document deletion, data cleanup, removing documents matching specific criteria. Use when you need to delete multiple documents based on query conditions rather than individual document IDs in Elasticsearch.",
     {
-      index: z.string().min(1, "Index is required"),
-      query: z.record(z.any()),
+      index: z.string().min(1, "Index cannot be empty"),
+      query: z.object({}).passthrough(),
       maxDocs: z.number().optional(),
       conflicts: z.enum(["abort", "proceed"]).optional(),
-      refresh: z.boolean().optional(),
+      refresh: booleanField().optional(),
       timeout: z.string().optional(),
       waitForActiveShards: z.custom<WaitForActiveShards>().optional(),
-      waitForCompletion: z.boolean().optional(),
+      waitForCompletion: booleanField().optional(),
       requestsPerSecond: z.number().optional(),
       scroll: z.string().optional(),
       scrollSize: z.number().optional(),

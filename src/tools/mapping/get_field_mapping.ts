@@ -4,16 +4,17 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetFieldMappingParams = z.object({
-  index: z.string().min(1, "Index is required"),
-  field: z.string().min(1, "Field name is required"),
-  includeDefaults: z.boolean().optional(),
-  local: z.boolean().optional(),
-  ignoreUnavailable: z.boolean().optional(),
-  allowNoIndices: z.boolean().optional(),
+  index: z.string().min(1, "Index cannot be empty"),
+  field: z.string().min(1, "Field name cannot be empty"),
+  includeDefaults: booleanField().optional(),
+  local: booleanField().optional(),
+  ignoreUnavailable: booleanField().optional(),
+  allowNoIndices: booleanField().optional(),
   expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
 });
 
@@ -23,12 +24,12 @@ export const registerGetFieldMappingTool: ToolRegistrationFunction = (server: Mc
     "elasticsearch_get_field_mapping",
     "Get field mapping for a specific field in an Elasticsearch index. Best for schema inspection, field analysis, mapping troubleshooting. Use when you need to examine how specific fields are mapped and analyzed in Elasticsearch indices for search optimization.",
     {
-      index: z.string().min(1, "Index is required"),
-      field: z.string().min(1, "Field name is required"),
-      includeDefaults: z.boolean().optional(),
-      local: z.boolean().optional(),
-      ignoreUnavailable: z.boolean().optional(),
-      allowNoIndices: z.boolean().optional(),
+      index: z.string().min(1, "Index cannot be empty"),
+      field: z.string().min(1, "Field name cannot be empty"),
+      includeDefaults: booleanField().optional(),
+      local: booleanField().optional(),
+      ignoreUnavailable: booleanField().optional(),
+      allowNoIndices: booleanField().optional(),
       expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
     },
     async (params: GetFieldMappingParamsType): Promise<SearchResult> => {

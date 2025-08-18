@@ -12,11 +12,11 @@ const IndicesSummaryParams = z.object({
     .string()
     .trim()
     .min(1, "Index pattern is required")
-    .default("*")
+    .optional()
     .describe("Elasticsearch index pattern to summarize (supports wildcards like logs-*, app-*)"),
   groupBy: z
     .enum(["prefix", "date", "type"])
-    .default("prefix")
+    .optional()
     .describe("How to group Elasticsearch indices for summary analysis"),
 });
 
@@ -31,11 +31,11 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: Mcp
         .string()
         .trim()
         .min(1, "Index pattern is required")
-        .default("*")
+        .optional()
         .describe("Elasticsearch index pattern to summarize (supports wildcards like logs-*, app-*)"),
       groupBy: z
         .enum(["prefix", "date", "type"])
-        .default("prefix")
+        .optional()
         .describe("How to group Elasticsearch indices for summary analysis"),
     },
     async (params: IndicesSummaryParamsType): Promise<SearchResult> => {
@@ -70,6 +70,9 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: Mcp
         };
 
         for (const index of response) {
+          // Skip indices with missing index name
+          if (!index.index) continue;
+          
           // Health stats
           if (index.health === "green") stats.healthy++;
           else if (index.health === "yellow") stats.yellow++;
@@ -99,6 +102,9 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: Mcp
         // Group by pattern for detailed view
         const patterns = new Map<string, any[]>();
         for (const index of response) {
+          // Skip indices with missing index name
+          if (!index.index) continue;
+          
           let pattern: string;
           switch (groupBy) {
             case "date":

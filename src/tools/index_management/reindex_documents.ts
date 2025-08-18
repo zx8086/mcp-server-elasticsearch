@@ -4,28 +4,29 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const ReindexDocumentsParams = z.object({
   source: z.object({
     index: z.string(),
-    query: z.record(z.any()).optional(),
+    query: z.object({}).passthrough().optional(),
     size: z.number().optional(),
-    sort: z.array(z.record(z.any())).optional(),
+    sort: z.array(z.object({}).passthrough()).optional(),
   }),
   dest: z.object({
     index: z.string(),
     version_type: z.enum(["internal", "external", "external_gte"]).optional(),
     op_type: z.enum(["index", "create"]).optional(),
   }),
-  script: z.record(z.any()).optional(),
+  script: z.object({}).passthrough().optional(),
   conflicts: z.enum(["abort", "proceed"]).optional(),
   maxDocs: z.number().optional(),
-  refresh: z.boolean().optional(),
+  refresh: booleanField().optional(),
   timeout: z.string().optional(),
   waitForActiveShards: z.union([z.literal("all"), z.number().min(1).max(9)]).optional(),
-  waitForCompletion: z.boolean().optional(),
+  waitForCompletion: booleanField().optional(),
   requestsPerSecond: z.number().optional(),
   scroll: z.string().optional(),
   slices: z.number().optional(),
@@ -39,22 +40,22 @@ export const registerReindexDocumentsTool: ToolRegistrationFunction = (server: M
     {
       source: z.object({
         index: z.string(),
-        query: z.record(z.any()).optional(),
+        query: z.object({}).passthrough().optional(),
         size: z.number().optional(),
-        sort: z.array(z.record(z.any())).optional(),
+        sort: z.array(z.object({}).passthrough()).optional(),
       }),
       dest: z.object({
         index: z.string(),
         version_type: z.enum(["internal", "external", "external_gte"]).optional(),
         op_type: z.enum(["index", "create"]).optional(),
       }),
-      script: z.record(z.any()).optional(),
+      script: z.object({}).passthrough().optional(),
       conflicts: z.enum(["abort", "proceed"]).optional(),
       maxDocs: z.number().optional(),
-      refresh: z.boolean().optional(),
+      refresh: booleanField().optional(),
       timeout: z.string().optional(),
       waitForActiveShards: z.union([z.literal("all"), z.number().min(1).max(9)]).optional(),
-      waitForCompletion: z.boolean().optional(),
+      waitForCompletion: booleanField().optional(),
       requestsPerSecond: z.number().optional(),
       scroll: z.string().optional(),
       slices: z.number().optional(),

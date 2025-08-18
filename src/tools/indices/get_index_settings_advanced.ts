@@ -4,21 +4,22 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const GetIndexSettingsAdvancedParams = z.object({
   index: z.union([z.string(), z.array(z.string())]).optional(),
   name: z.union([z.string(), z.array(z.string())]).optional(),
-  allowNoIndices: z.boolean().optional(),
+  allowNoIndices: booleanField().optional(),
   expandWildcards: z
     .enum(["all", "open", "closed", "hidden", "none"])
     .or(z.array(z.enum(["all", "open", "closed", "hidden", "none"])))
     .optional(),
-  flatSettings: z.boolean().optional(),
-  ignoreUnavailable: z.boolean().optional(),
-  includeDefaults: z.boolean().optional(),
-  local: z.boolean().optional(),
+  flatSettings: booleanField().optional(),
+  ignoreUnavailable: booleanField().optional(),
+  includeDefaults: booleanField().optional(),
+  local: booleanField().optional(),
   masterTimeout: z.string().optional(),
 });
 
@@ -31,15 +32,15 @@ export const registerGetIndexSettingsAdvancedTool: ToolRegistrationFunction = (s
     {
       index: z.union([z.string(), z.array(z.string())]).optional(),
       name: z.union([z.string(), z.array(z.string())]).optional(),
-      allowNoIndices: z.boolean().optional(),
+      allowNoIndices: booleanField().optional(),
       expandWildcards: z
         .enum(["all", "open", "closed", "hidden", "none"])
         .or(z.array(z.enum(["all", "open", "closed", "hidden", "none"])))
         .optional(),
-      flatSettings: z.boolean().optional(),
-      ignoreUnavailable: z.boolean().optional(),
-      includeDefaults: z.boolean().optional(),
-      local: z.boolean().optional(),
+      flatSettings: booleanField().optional(),
+      ignoreUnavailable: booleanField().optional(),
+      includeDefaults: booleanField().optional(),
+      local: booleanField().optional(),
       masterTimeout: z.string().optional(),
     },
     async (params: GetIndexSettingsAdvancedParamsType): Promise<SearchResult> => {

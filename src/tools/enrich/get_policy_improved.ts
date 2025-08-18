@@ -20,9 +20,13 @@ const GetPolicyParams = z.object({
     .describe("Policy name(s) to retrieve"),
   masterTimeout: z.string().optional(),
   // New pagination and response control parameters
-  limit: z.number().min(1).max(50).default(20).describe("Maximum number of policies to return (default: 20, max: 50)"),
-  summary: z.boolean().default(true).describe("Return summarized policy information instead of full details"),
-  sortBy: z.enum(["name", "type", "indices_count"]).default("name").describe("Sort policies by specified field"),
+  limit: z
+    .union([z.number(), z.string().regex(/^\d+$/).transform(val => parseInt(val, 10))])
+    .pipe(z.number().min(1).max(50))
+    .optional()
+    .describe("Maximum number of policies to return. Range: 1-50"),
+  summary: z.boolean().optional().describe("Return summarized policy information instead of full details"),
+  sortBy: z.enum(["name", "type", "indices_count"]).optional().describe("Sort policies by specified field"),
 });
 
 type GetPolicyParamsType = z.infer<typeof GetPolicyParams>;

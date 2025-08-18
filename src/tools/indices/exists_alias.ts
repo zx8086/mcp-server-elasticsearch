@@ -4,18 +4,19 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { booleanField } from "../../utils/zodHelpers.js";
 import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const ExistsAliasParams = z.object({
   name: z.union([z.string(), z.array(z.string())]),
   index: z.union([z.string(), z.array(z.string())]).optional(),
-  allow_no_indices: z.boolean().optional(),
+  allow_no_indices: booleanField().optional(),
   expand_wildcards: z
     .enum(["all", "open", "closed", "hidden", "none"])
     .or(z.array(z.enum(["all", "open", "closed", "hidden", "none"])))
     .optional(),
-  ignore_unavailable: z.boolean().optional(),
+  ignore_unavailable: booleanField().optional(),
   master_timeout: z.string().optional(),
 });
 
@@ -28,12 +29,12 @@ export const registerExistsAliasTool: ToolRegistrationFunction = (server: McpSer
     {
       name: z.union([z.string(), z.array(z.string())]),
       index: z.union([z.string(), z.array(z.string())]).optional(),
-      allow_no_indices: z.boolean().optional(),
+      allow_no_indices: booleanField().optional(),
       expand_wildcards: z
         .enum(["all", "open", "closed", "hidden", "none"])
         .or(z.array(z.enum(["all", "open", "closed", "hidden", "none"])))
         .optional(),
-      ignore_unavailable: z.boolean().optional(),
+      ignore_unavailable: booleanField().optional(),
       master_timeout: z.string().optional(),
     },
     async (params: ExistsAliasParamsType): Promise<SearchResult> => {
