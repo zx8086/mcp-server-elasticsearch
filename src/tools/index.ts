@@ -264,7 +264,7 @@ export function registerAllTools(server: McpServer, esClient: Client) {
 
   // EXPERIMENTAL: Register a plain JSON Schema tool for testing
   logger.info("🧪 Registering experimental plain JSON Schema tool for comparison...");
-  
+
   // Plain JSON Schema tool (no Zod conversion)
   wrappedServer.tool(
     "plain_elasticsearch_list_indices",
@@ -275,38 +275,38 @@ export function registerAllTools(server: McpServer, esClient: Client) {
         indexPattern: {
           type: "string",
           description: "Index pattern to match. Use '*' to list all indices.",
-          default: "*"
+          default: "*",
         },
         limit: {
           type: "integer",
           minimum: 1,
           maximum: 1000,
           default: 50,
-          description: "Maximum number of indices to return"
+          description: "Maximum number of indices to return",
         },
         excludeSystemIndices: {
           type: "boolean",
           default: true,
-          description: "Exclude system indices starting with '.'"
-        }
+          description: "Exclude system indices starting with '.'",
+        },
       },
-      additionalProperties: false
+      additionalProperties: false,
     },
     async (args: any) => {
       logger.debug("Plain JSON Schema tool called", { args });
-      
-      // Apply defaults manually 
-      const indexPattern = args?.indexPattern || '*';
+
+      // Apply defaults manually
+      const indexPattern = args?.indexPattern || "*";
       const limit = args?.limit || 50;
       const excludeSystemIndices = args?.excludeSystemIndices !== undefined ? args.excludeSystemIndices : true;
-      
+
       logger.info("Plain tool processing with params:", {
         indexPattern,
-        limit, 
+        limit,
         excludeSystemIndices,
-        receivedArgs: args
+        receivedArgs: args,
       });
-      
+
       try {
         const catParams = {
           index: indexPattern,
@@ -315,7 +315,7 @@ export function registerAllTools(server: McpServer, esClient: Client) {
         };
 
         const response = await esClient.cat.indices(catParams);
-        
+
         let filteredIndices = response.filter((index: any) => {
           if (excludeSystemIndices && index.index.startsWith(".")) return false;
           return true;
@@ -330,29 +330,28 @@ export function registerAllTools(server: McpServer, esClient: Client) {
           parameters_processed: { indexPattern, limit, excludeSystemIndices },
           total_found: totalFound,
           displayed: filteredIndices.length,
-          success: true
+          success: true,
         };
 
         return {
           content: [
-            { 
-              type: "text", 
-              text: `✅ PLAIN JSON SCHEMA SUCCESS!\n${JSON.stringify(summary, null, 2)}\n\nFirst 3 indices:\n${JSON.stringify(filteredIndices.slice(0, 3), null, 2)}`
-            }
-          ]
+            {
+              type: "text",
+              text: `✅ PLAIN JSON SCHEMA SUCCESS!\n${JSON.stringify(summary, null, 2)}\n\nFirst 3 indices:\n${JSON.stringify(filteredIndices.slice(0, 3), null, 2)}`,
+            },
+          ],
         };
-        
       } catch (error) {
         return {
           content: [
-            { 
-              type: "text", 
-              text: `❌ Plain schema error: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            {
+              type: "text",
+              text: `❌ Plain schema error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
         };
       }
-    }
+    },
   );
 
   logger.info("✅ All tools registered with automatic tracing wrapper");

@@ -32,7 +32,9 @@ const SearchParams = z.object({
     .trim()
     .min(1, "Index name is required")
     .optional()
-    .describe("Name of the Elasticsearch index to search for documents. Use '*' to search all indices. Examples: 'logs-*', 'metrics-*', '*2025.08.16*'"),
+    .describe(
+      "Name of the Elasticsearch index to search for documents. Use '*' to search all indices. Examples: 'logs-*', 'metrics-*', '*2025.08.16*'",
+    ),
   queryBody: z
     .object({})
     .passthrough()
@@ -95,7 +97,7 @@ export const registerSearchTool: ToolFunction = (server: McpServer, esClient: Cl
         const from = typedQueryBody?.from ?? 0;
         const size = typedQueryBody?.size;
         const hasAggregations = typedQueryBody?.aggs || result.aggregations;
-        
+
         // Handle aggregation-only queries (size=0) or queries with aggregations
         if (size === 0 || hasAggregations) {
           return {
@@ -121,9 +123,9 @@ export const registerSearchTool: ToolFunction = (server: McpServer, esClient: Cl
             if (!(field in highlightedFields)) {
               // Format value based on type - avoid double-stringifying
               let formattedValue: string;
-              if (typeof value === 'string') {
+              if (typeof value === "string") {
                 formattedValue = value;
-              } else if (typeof value === 'object' && value !== null) {
+              } else if (typeof value === "object" && value !== null) {
                 // For objects/arrays, pretty print without extra escaping
                 formattedValue = JSON.stringify(value, null, 2);
               } else {

@@ -22,7 +22,13 @@ const GetAliasesParams = z.object({
   expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
   // New pagination and response control parameters
   limit: z
-    .union([z.number(), z.string().regex(/^\d+$/).transform(val => parseInt(val, 10))])
+    .union([
+      z.number(),
+      z
+        .string()
+        .regex(/^\d+$/)
+        .transform((val) => parseInt(val, 10)),
+    ])
     .pipe(z.number().min(1).max(100))
     .optional()
     .describe("Maximum number of aliases to return. Range: 1-100"),

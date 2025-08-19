@@ -24,10 +24,10 @@ export interface ParameterInfo {
  */
 export function extractParameterInfo(schema: z.ZodTypeAny): ParameterInfo[] {
   const params: ParameterInfo[] = [];
-  
+
   if (schema instanceof z.ZodObject) {
     const shape = schema.shape;
-    
+
     for (const [key, fieldSchema] of Object.entries(shape)) {
       const info = extractFieldInfo(key, fieldSchema as z.ZodTypeAny);
       if (info) {
@@ -35,7 +35,7 @@ export function extractParameterInfo(schema: z.ZodTypeAny): ParameterInfo[] {
       }
     }
   }
-  
+
   return params;
 }
 
@@ -46,18 +46,18 @@ function extractFieldInfo(name: string, schema: z.ZodTypeAny): ParameterInfo | n
   if (!schema || typeof schema !== "object") {
     return null;
   }
-  
+
   const def = (schema as any)._def;
   if (!def) {
     return null;
   }
-  
+
   const info: ParameterInfo = {
     name,
     type: getSchemaType(schema),
     required: !isOptional(schema),
   };
-  
+
   // In Zod 4, description is stored directly on the schema object
   if ((schema as any).description) {
     info.description = (schema as any).description;
@@ -71,20 +71,20 @@ function extractFieldInfo(name: string, schema: z.ZodTypeAny): ParameterInfo | n
       info.description = descCheck.description;
     }
   }
-  
+
   // Extract default value
   const defaultValue = getDefaultValue(schema);
   if (defaultValue !== undefined) {
     info.defaultValue = defaultValue;
   }
-  
+
   // Extract enum values
   const type = def.type || def.typeName;
   if ((type === "enum" || type === "ZodEnum") && (def.entries || def.values)) {
     // Zod 4 uses 'entries', Zod 3 uses 'values'
     info.enumValues = def.entries ? Object.values(def.entries) : def.values;
   }
-  
+
   return info;
 }
 
@@ -93,14 +93,14 @@ function extractFieldInfo(name: string, schema: z.ZodTypeAny): ParameterInfo | n
  */
 function getSchemaType(schema: z.ZodTypeAny): string {
   const def = (schema as any)._def;
-  
+
   if (!def) {
     return "unknown";
   }
-  
+
   // Zod 4 uses 'type' instead of 'typeName'
   const type = def.type || def.typeName;
-  
+
   switch (type) {
     case "string":
     case "ZodString":
@@ -179,24 +179,24 @@ function getSchemaType(schema: z.ZodTypeAny): string {
  */
 function isOptional(schema: z.ZodTypeAny): boolean {
   const def = (schema as any)._def;
-  
+
   if (!def) {
     return false;
   }
-  
+
   // Zod 4 uses 'type' instead of 'typeName'
   const type = def.type || def.typeName;
-  
+
   // Check if it's directly optional
   if (type === "optional" || type === "ZodOptional") {
     return true;
   }
-  
+
   // Check if it has a default value
   if (type === "default" || type === "ZodDefault") {
     return true;
   }
-  
+
   // Check using the isOptional method
   if (typeof (schema as any).isOptional === "function") {
     try {
@@ -205,7 +205,7 @@ function isOptional(schema: z.ZodTypeAny): boolean {
       return false;
     }
   }
-  
+
   return false;
 }
 
@@ -214,14 +214,14 @@ function isOptional(schema: z.ZodTypeAny): boolean {
  */
 function getDefaultValue(schema: z.ZodTypeAny): any {
   const def = (schema as any)._def;
-  
+
   if (!def) {
     return undefined;
   }
-  
+
   // Zod 4 uses 'type' instead of 'typeName'
   const type = def.type || def.typeName;
-  
+
   if ((type === "default" || type === "ZodDefault") && def.defaultValue !== undefined) {
     // In Zod 4, defaultValue might be a getter
     if (typeof def.defaultValue === "function" || def.defaultValue instanceof Function) {
@@ -233,12 +233,12 @@ function getDefaultValue(schema: z.ZodTypeAny): any {
     }
     return def.defaultValue;
   }
-  
+
   // Check for inner default
   if (def.innerType) {
     return getDefaultValue(def.innerType);
   }
-  
+
   return undefined;
 }
 
@@ -248,36 +248,36 @@ function getDefaultValue(schema: z.ZodTypeAny): any {
 export function validateParameters(
   toolName: string,
   schema: z.ZodTypeAny,
-  params: any
+  params: any,
 ): { valid: boolean; errors: ValidationError[]; suggestions: string[] } {
   const errors: ValidationError[] = [];
   const suggestions: string[] = [];
-  
+
   // Check if params is undefined or null
   if (params === undefined || params === null) {
     const paramInfo = extractParameterInfo(schema);
-    const requiredParams = paramInfo.filter(p => p.required);
-    
+    const requiredParams = paramInfo.filter((p) => p.required);
+
     if (requiredParams.length > 0) {
       errors.push({
         field: "[root]",
         message: "No parameters provided but required parameters exist",
         required: true,
       });
-      
+
       suggestions.push(
-        `Please provide the following required parameters: ${requiredParams.map(p => p.name).join(", ")}`
+        `Please provide the following required parameters: ${requiredParams.map((p) => p.name).join(", ")}`,
       );
     }
-    
+
     return { valid: errors.length === 0, errors, suggestions };
   }
-  
+
   // Check if params is an empty object
   if (typeof params === "object" && Object.keys(params).length === 0) {
     const paramInfo = extractParameterInfo(schema);
-    const requiredParams = paramInfo.filter(p => p.required);
-    
+    const requiredParams = paramInfo.filter((p) => p.required);
+
     if (requiredParams.length > 0) {
       for (const param of requiredParams) {
         errors.push({
@@ -286,7 +286,7 @@ export function validateParameters(
           required: true,
         });
       }
-      
+
       // Create example with required params
       const example: any = {};
       for (const param of requiredParams) {
@@ -302,15 +302,13 @@ export function validateParameters(
           example[param.name] = null;
         }
       }
-      
-      suggestions.push(
-        `Example usage: ${JSON.stringify(example, null, 2)}`
-      );
+
+      suggestions.push(`Example usage: ${JSON.stringify(example, null, 2)}`);
     }
-    
+
     return { valid: errors.length === 0, errors, suggestions };
   }
-  
+
   // Validate using Zod
   try {
     schema.parse(params);
@@ -319,31 +317,25 @@ export function validateParameters(
     if (error instanceof z.ZodError) {
       for (const issue of error.issues) {
         const field = issue.path.join(".");
-        
+
         errors.push({
           field: field || "[root]",
           message: issue.message,
           required: issue.code === "invalid_type" && issue.received === "undefined",
           providedValue: issue.code === "invalid_type" ? issue.received : undefined,
         });
-        
+
         // Add specific suggestions based on error type
         if (issue.code === "invalid_type") {
           if (issue.received === "undefined") {
             suggestions.push(`Parameter "${field}" is required and must be of type ${issue.expected}`);
           } else {
-            suggestions.push(
-              `Parameter "${field}" must be of type ${issue.expected}, but received ${issue.received}`
-            );
+            suggestions.push(`Parameter "${field}" must be of type ${issue.expected}, but received ${issue.received}`);
           }
         } else if (issue.code === "invalid_enum_value") {
-          suggestions.push(
-            `Parameter "${field}" must be one of: ${(issue as any).options?.join(", ")}`
-          );
+          suggestions.push(`Parameter "${field}" must be one of: ${(issue as any).options?.join(", ")}`);
         } else if (issue.code === "too_small") {
-          suggestions.push(
-            `Parameter "${field}" must be at least ${(issue as any).minimum} characters/items`
-          );
+          suggestions.push(`Parameter "${field}" must be at least ${(issue as any).minimum} characters/items`);
         }
       }
     } else {
@@ -354,7 +346,7 @@ export function validateParameters(
       });
     }
   }
-  
+
   return { valid: false, errors, suggestions };
 }
 
@@ -363,42 +355,36 @@ export function validateParameters(
  */
 export function generateParameterHelp(toolName: string, schema: z.ZodTypeAny): string {
   const params = extractParameterInfo(schema);
-  
+
   if (params.length === 0) {
     return `Tool "${toolName}" requires no parameters.`;
   }
-  
-  const lines: string[] = [
-    `Tool: ${toolName}`,
-    "",
-    "Parameters:",
-  ];
-  
+
+  const lines: string[] = [`Tool: ${toolName}`, "", "Parameters:"];
+
   for (const param of params) {
     const required = param.required ? " (REQUIRED)" : " (optional)";
     const defaultStr = param.defaultValue !== undefined ? ` [default: ${JSON.stringify(param.defaultValue)}]` : "";
     const enumStr = param.enumValues ? ` [values: ${param.enumValues.join(", ")}]` : "";
-    
+
     lines.push(`  - ${param.name}: ${param.type}${required}${defaultStr}${enumStr}`);
-    
+
     if (param.description) {
       lines.push(`    ${param.description}`);
     }
   }
-  
+
   // Add example
   lines.push("");
   lines.push("Example:");
-  
+
   const example: any = {};
   for (const param of params) {
     if (param.required || param.defaultValue === undefined) {
       if (param.enumValues && param.enumValues.length > 0) {
         example[param.name] = param.enumValues[0];
       } else if (param.type === "string") {
-        example[param.name] = param.description?.toLowerCase().includes("pattern") 
-          ? "*" 
-          : `example_${param.name}`;
+        example[param.name] = param.description?.toLowerCase().includes("pattern") ? "*" : `example_${param.name}`;
       } else if (param.type === "number") {
         example[param.name] = param.name.toLowerCase().includes("limit") ? 10 : 1;
       } else if (param.type === "boolean") {
@@ -408,8 +394,8 @@ export function generateParameterHelp(toolName: string, schema: z.ZodTypeAny): s
       }
     }
   }
-  
+
   lines.push(JSON.stringify(example, null, 2));
-  
+
   return lines.join("\n");
 }

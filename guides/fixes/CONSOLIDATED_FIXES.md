@@ -4,12 +4,29 @@
 This document consolidates all fixes applied to the Elasticsearch MCP Server, organizing them by category for easy reference.
 
 ## Table of Contents
-1. [Schema Conversion Fixes](#schema-conversion-fixes)
-2. [Parameter Handling Fixes](#parameter-handling-fixes)
-3. [Response Size Management](#response-size-management)
-4. [Validation Improvements](#validation-improvements)
-5. [ILM Tool Fixes](#ilm-tool-fixes)
-6. [Default Value Handling](#default-value-handling)
+1. [Zod 3.x Compatibility Fix](#zod-3x-compatibility-fix)
+2. [Schema Conversion Fixes](#schema-conversion-fixes)
+3. [Parameter Handling Fixes](#parameter-handling-fixes)
+4. [Response Size Management](#response-size-management)
+5. [Validation Improvements](#validation-improvements)
+6. [ILM Tool Fixes](#ilm-tool-fixes)
+7. [Default Value Handling](#default-value-handling)
+
+## Zod 3.x Compatibility Fix
+
+### Issue: Tools Not Receiving Parameters from LLM
+**Problem:** Elasticsearch tools were receiving empty arguments instead of actual parameters, particularly affecting date range searches.
+
+**Root Cause:** MCP SDK incompatibility with Zod 4.x (SDK built for Zod 3.x).
+
+**Solution:**
+- Downgraded to Zod 3.23.8 and zod-to-json-schema 3.23.5
+- Enhanced universal wrapper to handle both Pattern 1 (plain objects) and ZodObject schemas
+- Updated compatibility wrapper for proper fallback support
+
+**Impact:** All 60+ tools now receive parameters correctly without breaking changes.
+
+**Details:** See [ZOD_3X_COMPATIBILITY_FIX.md](./ZOD_3X_COMPATIBILITY_FIX.md)
 
 ## Schema Conversion Fixes
 

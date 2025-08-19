@@ -198,8 +198,8 @@ describe("elasticsearch_search Tool Fix Validation", () => {
     });
     
     // Verify the JSON Schema structure matches MCP expectations
-    expect(jsonSchema).toHaveProperty("$schema");
-    expect(jsonSchema.$schema).toBe("http://json-schema.org/draft-07/schema#");
+    // Note: We now remove $schema for MCP SDK compatibility
+    expect(jsonSchema).not.toHaveProperty("$schema");
     expect(jsonSchema.type).toBe("object");
     expect(jsonSchema.properties).toBeDefined();
     expect(jsonSchema.required).toEqual(["index", "queryBody"]);

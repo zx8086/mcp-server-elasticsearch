@@ -28,7 +28,7 @@ async function checkVersionCompatibility() {
     console.log(`   Zod: ${zodVersion}`);
     console.log("   Compatibility wrapper: src/utils/zodToJsonSchema.ts");
   }
-  
+
   return true;
 }
 

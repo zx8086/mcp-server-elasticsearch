@@ -13,7 +13,13 @@ const GetLifecycleParams = z.object({
   timeout: z.string().optional(),
   // New parameters for handling large responses
   limit: z
-    .union([z.number(), z.string().regex(/^\d+$/).transform(val => parseInt(val, 10))])
+    .union([
+      z.number(),
+      z
+        .string()
+        .regex(/^\d+$/)
+        .transform((val) => parseInt(val, 10)),
+    ])
     .pipe(z.number().min(1).max(100))
     .optional()
     .describe("Maximum number of policies to return. Range: 1-100"),
@@ -58,7 +64,7 @@ export const registerGetLifecycleImprovedTool: ToolRegistrationFunction = (serve
         // Debug logging
         logger.debug(`get_lifecycle called with params:`, params);
         logger.debug(`Limit value: ${params.limit}, type: ${typeof params.limit}`);
-        
+
         // Fetch policies from Elasticsearch
         const result = await esClient.ilm.getLifecycle({
           name: params.policy,

@@ -9,9 +9,20 @@ import { type SearchResult, TextContent, type ToolRegistrationFunction } from ".
 // Define the parameter schema type
 const GetNodesStatsParams = z.object({
   nodeId: z.string().optional().describe("Specific node ID, or leave empty for all nodes"),
-  metric: z.string().optional().describe("CRITICAL: Specify exact metrics needed. Options: 'os', 'jvm', 'fs', 'process', 'http', 'transport', 'indices'. Combine: 'os,jvm'"),
-  indexMetric: z.string().optional().describe("When using 'indices' metric, MUST specify: 'docs', 'store', 'indexing', 'search', 'segments', etc."),
-  level: z.enum(["node", "indices", "shards"]).optional().describe("Aggregation level. Use 'node' for node-level stats (default)"),
+  metric: z
+    .string()
+    .optional()
+    .describe(
+      "CRITICAL: Specify exact metrics needed. Options: 'os', 'jvm', 'fs', 'process', 'http', 'transport', 'indices'. Combine: 'os,jvm'",
+    ),
+  indexMetric: z
+    .string()
+    .optional()
+    .describe("When using 'indices' metric, MUST specify: 'docs', 'store', 'indexing', 'search', 'segments', etc."),
+  level: z
+    .enum(["node", "indices", "shards"])
+    .optional()
+    .describe("Aggregation level. Use 'node' for node-level stats (default)"),
   timeout: z.string().optional().describe("Timeout for the request"),
 });
 
@@ -29,60 +40,60 @@ export const registerGetNodesStatsTool: ToolRegistrationFunction = (server: McpS
           paramsType: typeof params,
           paramsKeys: params ? Object.keys(params) : null,
           hasMetric: !!params?.metric,
-          metricValue: params?.metric
+          metricValue: params?.metric,
         });
-        
+
         const { nodeId, metric, indexMetric, level, timeout } = params || {};
-        
+
         logger.info("Extracted parameters:", { nodeId, metric, indexMetric, level, timeout, hasMetric: !!metric });
-        
+
         // Warn if no metric specified or problematic combinations
         if (!metric) {
           logger.warn("nodes.stats called without metric - response will be very large");
-          
+
           // Force minimal metrics if not specified
           const minimalResult = await esClient.nodes.stats({
             node_id: nodeId,
-            metric: "os,jvm",  // Minimal useful metrics
-            level: "node",  // Node level stats
+            metric: "os,jvm", // Minimal useful metrics
+            level: "node", // Node level stats
             timeout: timeout,
           });
-          
+
           return {
             content: [
-              { 
-                type: "text", 
-                text: "⚠️ No metric specified. Returning minimal stats (os,jvm at node level). Specify 'metric' parameter for other stats." 
+              {
+                type: "text",
+                text: "⚠️ No metric specified. Returning minimal stats (os,jvm at node level). Specify 'metric' parameter for other stats.",
               },
-              { type: "text", text: JSON.stringify(minimalResult, null, 2) }
+              { type: "text", text: JSON.stringify(minimalResult, null, 2) },
             ],
           };
         }
-        
+
         // Warn about indices without indexMetric
         if (metric.includes("indices") && !indexMetric) {
           logger.warn("'indices' metric without indexMetric will return excessive data");
-          
+
           // If indices metric without specification, limit to basic stats
           const result = await esClient.nodes.stats({
             node_id: nodeId,
             metric: metric,
-            index_metric: "docs,store",  // Just document count and size
+            index_metric: "docs,store", // Just document count and size
             level: level,
             timeout: timeout,
           });
-          
+
           return {
             content: [
-              { 
-                type: "text", 
-                text: "⚠️ 'indices' metric without indexMetric defaults to 'docs,store' only. Specify indexMetric for more details." 
+              {
+                type: "text",
+                text: "⚠️ 'indices' metric without indexMetric defaults to 'docs,store' only. Specify indexMetric for more details.",
               },
-              { type: "text", text: JSON.stringify(result, null, 2) }
+              { type: "text", text: JSON.stringify(result, null, 2) },
             ],
           };
         }
-        
+
         // Normal execution with specified parameters
         const result = await esClient.nodes.stats({
           node_id: nodeId,
@@ -91,7 +102,7 @@ export const registerGetNodesStatsTool: ToolRegistrationFunction = (server: McpS
           level: level,
           timeout: timeout,
         });
-        
+
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
         };

@@ -5,7 +5,7 @@ import { logger } from "./logger.js";
 
 /**
  * MCP Specification Compliant Response Builder
- * 
+ *
  * According to MCP specification:
  * 1. Tools should return both human-readable text AND structured content
  * 2. Structured content should be serialized as JSON
@@ -43,13 +43,13 @@ export function createSuccessResponse(
     summary?: string;
     includeStructured?: boolean;
     annotations?: Record<string, any>;
-  } = {}
+  } = {},
 ): SearchResult {
   const { toolName, summary, includeStructured = true, annotations } = options;
-  
+
   // Build content array
   const content: any[] = [];
-  
+
   // Add human-readable summary if provided
   if (summary) {
     content.push({
@@ -62,7 +62,7 @@ export function createSuccessResponse(
       },
     });
   }
-  
+
   // Add the main data as formatted JSON text
   content.push({
     type: "text",
@@ -74,17 +74,17 @@ export function createSuccessResponse(
       ...(annotations || {}),
     },
   });
-  
+
   // Build the response
   const response: SearchResult = {
     content,
   };
-  
+
   // Add structured content for model consumption (best practice)
   if (includeStructured && data) {
     response.structuredContent = data;
   }
-  
+
   // Add metadata if available
   if (toolName) {
     response._meta = {
@@ -92,7 +92,7 @@ export function createSuccessResponse(
       timestamp: new Date().toISOString(),
     };
   }
-  
+
   return response;
 }
 
@@ -106,16 +106,16 @@ export function createErrorResponse(
     code?: string;
     details?: any;
     suggestions?: string[];
-  } = {}
+  } = {},
 ): SearchResult {
   const { toolName, code, details, suggestions } = options;
-  
+
   const errorMessage = error instanceof Error ? error.message : String(error);
   const errorStack = error instanceof Error ? error.stack : undefined;
-  
+
   // Build content array
   const content: any[] = [];
-  
+
   // Add the error message
   content.push({
     type: "text",
@@ -126,12 +126,12 @@ export function createErrorResponse(
       priority: 1,
     },
   });
-  
+
   // Add suggestions if provided
   if (suggestions && suggestions.length > 0) {
     content.push({
       type: "text",
-      text: `Suggestions:\n${suggestions.map(s => `• ${s}`).join("\n")}`,
+      text: `Suggestions:\n${suggestions.map((s) => `• ${s}`).join("\n")}`,
       annotations: {
         audience: ["human"],
         severity: "info",
@@ -139,7 +139,7 @@ export function createErrorResponse(
       },
     });
   }
-  
+
   // Add details if provided
   if (details) {
     content.push({
@@ -153,13 +153,13 @@ export function createErrorResponse(
       },
     });
   }
-  
+
   // Build the error response
   const response: SearchResult = {
     content,
-    isError: true,  // MCP spec: mark errors explicitly
+    isError: true, // MCP spec: mark errors explicitly
   };
-  
+
   // Add structured error information
   response.structuredContent = {
     error: {
@@ -169,20 +169,20 @@ export function createErrorResponse(
       stack: errorStack,
     },
   };
-  
+
   // Add metadata
   response._meta = {
     tool: toolName,
     timestamp: new Date().toISOString(),
     errorCode: code,
   };
-  
+
   logger.error(`Tool error in ${toolName}:`, {
     error: errorMessage,
     code,
     details,
   });
-  
+
   return response;
 }
 
@@ -202,16 +202,16 @@ export function createPaginatedResponse(
   options: {
     toolName?: string;
     summary?: string;
-  } = {}
+  } = {},
 ): SearchResult {
   const { toolName, summary } = options;
-  
+
   // Build content array
   const content: any[] = [];
-  
+
   // Add pagination summary
   const paginationSummary = `Showing ${pagination.returned} of ${pagination.total} results (offset: ${pagination.offset}, limit: ${pagination.limit})`;
-  
+
   content.push({
     type: "text",
     text: summary || paginationSummary,
@@ -220,7 +220,7 @@ export function createPaginatedResponse(
       priority: 1,
     },
   });
-  
+
   // Add pagination metadata
   content.push({
     type: "text",
@@ -231,7 +231,7 @@ export function createPaginatedResponse(
       priority: 2,
     },
   });
-  
+
   // Add the data
   content.push({
     type: "text",
@@ -242,7 +242,7 @@ export function createPaginatedResponse(
       priority: 3,
     },
   });
-  
+
   // Build response with structured content
   const response: SearchResult = {
     content,
@@ -256,7 +256,7 @@ export function createPaginatedResponse(
       pagination,
     },
   };
-  
+
   return response;
 }
 
@@ -274,13 +274,13 @@ export function createResourceResponse(
   options: {
     toolName?: string;
     summary?: string;
-  } = {}
+  } = {},
 ): SearchResult {
   const { toolName, summary } = options;
-  
+
   // Build content array
   const content: any[] = [];
-  
+
   // Add summary
   if (summary) {
     content.push({
@@ -292,7 +292,7 @@ export function createResourceResponse(
       },
     });
   }
-  
+
   // Add resources
   for (const resource of resources) {
     if (resource.blob) {
@@ -323,7 +323,7 @@ export function createResourceResponse(
       });
     }
   }
-  
+
   return {
     content,
     _meta: {
@@ -337,36 +337,32 @@ export function createResourceResponse(
 /**
  * Transform legacy response format to MCP-compliant format
  */
-export function transformToMCPResponse(
-  legacyResponse: any,
-  toolName?: string
-): SearchResult {
+export function transformToMCPResponse(legacyResponse: any, toolName?: string): SearchResult {
   // If already MCP-compliant, return as-is
   if (legacyResponse?.content && Array.isArray(legacyResponse.content)) {
     return legacyResponse;
   }
-  
+
   // Handle error responses
   if (legacyResponse?.error || legacyResponse?.isError) {
-    return createErrorResponse(
-      legacyResponse.error || legacyResponse.message || "Unknown error",
-      {
-        toolName,
-        details: legacyResponse,
-      }
-    );
+    return createErrorResponse(legacyResponse.error || legacyResponse.message || "Unknown error", {
+      toolName,
+      details: legacyResponse,
+    });
   }
-  
+
   // Handle simple text responses
   if (typeof legacyResponse === "string") {
     return {
-      content: [{
-        type: "text",
-        text: legacyResponse,
-      }],
+      content: [
+        {
+          type: "text",
+          text: legacyResponse,
+        },
+      ],
     };
   }
-  
+
   // Handle object responses
   return createSuccessResponse(legacyResponse, {
     toolName,

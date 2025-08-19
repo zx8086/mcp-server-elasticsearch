@@ -122,38 +122,38 @@ export const integerField = (options: {
 export const coerceJson = z.preprocess(
   (val) => {
     // If it's already an object or array, return as-is
-    if (typeof val === 'object' && val !== null) {
+    if (typeof val === "object" && val !== null) {
       return val;
     }
-    
+
     // If it's a string, try to parse it as JSON
-    if (typeof val === 'string') {
+    if (typeof val === "string") {
       try {
         // First, try to clean up common issues with escaped quotes
         let cleanedVal = val;
-        
+
         // Handle double-escaped quotes
         if (val.includes('\\"')) {
           cleanedVal = val.replace(/\\"/g, '"');
         }
-        
+
         // Handle escaped backslashes
-        if (cleanedVal.includes('\\\\')) {
-          cleanedVal = cleanedVal.replace(/\\\\/g, '\\');
+        if (cleanedVal.includes("\\\\")) {
+          cleanedVal = cleanedVal.replace(/\\\\/g, "\\");
         }
-        
+
         const parsed = JSON.parse(cleanedVal);
-        if (typeof parsed !== 'object' || parsed === null) {
-          throw new Error('Parsed value is not an object or array');
+        if (typeof parsed !== "object" || parsed === null) {
+          throw new Error("Parsed value is not an object or array");
         }
         return parsed;
       } catch (error) {
         // If parsing fails, try one more time with aggressive cleanup
         try {
           // Remove all backslashes before quotes
-          const aggressiveClean = val.replace(/\\(.)/g, '$1');
+          const aggressiveClean = val.replace(/\\(.)/g, "$1");
           const parsed = JSON.parse(aggressiveClean);
-          if (typeof parsed === 'object' && parsed !== null) {
+          if (typeof parsed === "object" && parsed !== null) {
             return parsed;
           }
         } catch (secondError) {
@@ -162,11 +162,11 @@ export const coerceJson = z.preprocess(
         return val;
       }
     }
-    
+
     // For other types, return as-is and let Zod validate
     return val;
   },
-  z.union([z.object({}).passthrough(), z.array(z.any())])
+  z.union([z.object({}).passthrough(), z.array(z.any())]),
 );
 
 /**
@@ -175,14 +175,14 @@ export const coerceJson = z.preprocess(
  */
 export const jsonField = (defaultValue?: any, description?: string) => {
   let field = coerceJson;
-  
+
   if (defaultValue !== undefined) {
     field = field.default(defaultValue);
   }
-  
+
   if (description) {
     field = field.describe(description);
   }
-  
+
   return field;
 };

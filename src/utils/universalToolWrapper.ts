@@ -4,7 +4,7 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { z } from "zod";
 import type { ZodObject } from "zod";
-import { zodToJsonSchemaCompat as zodToJsonSchema } from "./zodToJsonSchema.js";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { logger } from "./logger.js";
 import { getCurrentSession } from "./sessionContext.js";
 import { isTracingActive } from "./tracing.js";
@@ -25,12 +25,12 @@ import { createErrorResponse, transformToMCPResponse } from "./mcpCompliantRespo
  */
 export function wrapServerWithTracing(server: McpServer): McpServer {
   const originalTool = server.tool.bind(server);
-  
+
   // CRITICAL DEBUG: Log the originalTool to understand its signature
-  logger.debug('Universal wrapper initialized:', {
-    hasOriginalTool: typeof originalTool === 'function',
+  logger.debug("Universal wrapper initialized:", {
+    hasOriginalTool: typeof originalTool === "function",
     originalToolName: originalTool?.name,
-    serverType: server.constructor.name
+    serverType: server.constructor.name,
   });
 
   // Override the tool registration method
@@ -41,139 +41,94 @@ export function wrapServerWithTracing(server: McpServer): McpServer {
     handler: (args: any) => Promise<any>,
   ) => {
     logger.debug(`Wrapping tool with tracing: ${name}`);
-    
+
     // CRITICAL DEBUG: Check what type of schema we're receiving
     logger.debug(`Schema analysis for tool ${name}:`, {
       schemaType: typeof inputSchema,
       hasDefProperty: inputSchema && typeof inputSchema === "object" && "_def" in inputSchema,
       isZodSchema: inputSchema && typeof inputSchema === "object" && "_def" in inputSchema,
       schemaKeys: inputSchema && typeof inputSchema === "object" ? Object.keys(inputSchema) : null,
-      schemaConstructor: inputSchema?.constructor?.name
+      schemaConstructor: inputSchema?.constructor?.name,
     });
 
-    // Convert Zod schema to JSON Schema and create validator
+    // Convert Zod schema to Pattern 1 format for MCP SDK compatibility
     let finalSchema = inputSchema;
     let validator: (args: any) => any = (args) => args;
 
     if (inputSchema && typeof inputSchema === "object") {
-      // Check if it's a Zod schema object
-      if ("_def" in inputSchema) {
-        // This is a Zod schema, convert it
-        const convertedSchema = zodToJsonSchema(inputSchema as ZodObject<any>, {
+      // Check if it's a ZodObject
+      if ("_def" in inputSchema && (inputSchema as any)._def?.typeName === "ZodObject") {
+        // This is a ZodObject - extract the shape for Pattern 1
+        const zodObject = inputSchema as z.ZodObject<any>;
+
+        // Extract the shape (Pattern 1 format)
+        const shape = (zodObject as any).shape;
+
+        if (shape && typeof shape === "object") {
+          logger.debug(`Converting ZodObject to Pattern 1 for tool ${name}`, {
+            shapeKeys: Object.keys(shape),
+          });
+
+          // Use the raw shape (Pattern 1 - plain object with Zod validators)
+          finalSchema = shape;
+
+          // Keep the original ZodObject for validation
+          validator = (args: any) => zodObject.parse(args);
+        } else {
+          // Fallback to JSON Schema conversion
+          logger.warn(`Could not extract shape from ZodObject for tool ${name}, using JSON Schema`);
+          const convertedSchema = zodToJsonSchema(inputSchema as ZodObject<any>, {
+            $refStrategy: "none",
+            target: "jsonSchema7",
+          });
+
+          // Clean up schema for MCP SDK compatibility
+          if (convertedSchema && typeof convertedSchema === "object") {
+            if ("$schema" in convertedSchema) {
+              delete convertedSchema.$schema;
+            }
+          }
+
+          finalSchema = convertedSchema;
+          validator = (args: any) => (inputSchema as z.ZodTypeAny).parse(args);
+        }
+      } else if ("_def" in inputSchema) {
+        // Other Zod types - convert to JSON Schema
+        const convertedSchema = zodToJsonSchema(inputSchema as z.ZodTypeAny, {
           $refStrategy: "none",
           target: "jsonSchema7",
         });
-        
-        // CRITICAL FIX: Clean up schema for MCP SDK compatibility
+
         if (convertedSchema && typeof convertedSchema === "object") {
-          // Remove $schema field
           if ("$schema" in convertedSchema) {
             delete convertedSchema.$schema;
           }
-          
-          // POTENTIAL FIX: Remove default values which might cause MCP SDK issues
-          if ("properties" in convertedSchema && convertedSchema.properties) {
-            for (const [key, prop] of Object.entries(convertedSchema.properties)) {
-              if (prop && typeof prop === "object" && "default" in prop) {
-                delete prop.default;
-              }
-            }
-          }
         }
-        
+
         finalSchema = convertedSchema;
         validator = (args: any) => (inputSchema as z.ZodTypeAny).parse(args);
       } else {
-        // Check if it's a plain object with Zod validators (inline schemas)
+        // Check if it's a plain object with Zod validators (Pattern 1)
         const hasZodValidators = Object.values(inputSchema).some(
-          (val) => val && typeof val === "object" && "_def" in val
+          (val) => val && typeof val === "object" && "_def" in val,
         );
-        
+
         if (hasZodValidators) {
-          logger.debug(`Converting inline Zod validators for tool ${name}`, { 
+          logger.debug(`Pattern 1 detected for tool ${name} - keeping as-is for MCP SDK`, {
             inputSchemaKeys: Object.keys(inputSchema),
-            hasZodValidators: true
+            hasZodValidators: true,
           });
-          
-          // Convert inline Zod validators to JSON Schema
-          const properties: Record<string, any> = {};
-          const required: string[] = [];
-          
-          for (const [key, fieldSchema] of Object.entries(inputSchema)) {
-            logger.debug(`Processing field ${key}`, { 
-              hasFieldSchema: !!fieldSchema,
-              hasDefProperty: fieldSchema && typeof fieldSchema === "object" && "_def" in fieldSchema
-            });
-            
-            if (fieldSchema && typeof fieldSchema === "object" && "_def" in fieldSchema) {
-              try {
-                // Convert individual field schema
-                const fieldJsonSchema = zodToJsonSchema(fieldSchema as z.ZodTypeAny, {
-                  $refStrategy: "none",
-                  target: "jsonSchema7",
-                });
-                
-                logger.debug(`Successfully converted field ${key}`, { fieldJsonSchema });
-                
-                // Remove $schema from nested schemas
-                delete fieldJsonSchema.$schema;
-                properties[key] = fieldJsonSchema;
-              } catch (fieldError: any) {
-                // If conversion fails (e.g., custom type), use any type
-                logger.error(`Field ${key} conversion failed:`, fieldError.message, fieldError.stack);
-                properties[key] = {}; // JSON Schema for any type
-              }
-              
-              // Check if field is optional
-              const isOptional = typeof (fieldSchema as any).isOptional === "function" && 
-                                (fieldSchema as any).isOptional();
-              
-              if (!isOptional) {
-                required.push(key);
-              }
-            }
-          }
-          
-          finalSchema = {
-            type: "object",
-            properties,
-            required: required.length > 0 ? required : undefined,
-            additionalProperties: false
-            // CRITICAL FIX: Remove $schema field - MCP SDK might not handle it properly
-          };
-          
-          logger.debug(`Final converted schema for tool ${name}`, { 
-            finalSchema: JSON.stringify(finalSchema, null, 2),
-            propertiesCount: Object.keys(properties).length,
-            requiredCount: required.length
-          });
-          
+
+          // CRITICAL FIX: For Pattern 1, DON'T convert to JSON Schema
+          // The MCP SDK handles Pattern 1 (plain objects with Zod validators) correctly
+          // Only ZodObject needs conversion
+          finalSchema = inputSchema;
+
           // Create a validator that validates each field
           validator = (args: any) => {
-            // First check if args is undefined or empty
-            if (!args || (typeof args === "object" && Object.keys(args).length === 0)) {
-              const requiredFields: string[] = [];
-              
-              for (const [key, fieldSchema] of Object.entries(inputSchema)) {
-                if (fieldSchema && typeof fieldSchema === "object" && "_def" in fieldSchema) {
-                  const zodSchema = fieldSchema as z.ZodTypeAny;
-                  const isOptional = typeof zodSchema.isOptional === "function" && zodSchema.isOptional();
-                  if (!isOptional) {
-                    requiredFields.push(key);
-                  }
-                }
-              }
-              
-              if (requiredFields.length > 0) {
-                throw new Error(`Missing required fields: ${requiredFields.join(", ")}. No parameters were provided.`);
-              }
-              
-              return {};
-            }
-            
             const result: any = {};
             const errors: string[] = [];
-            
+
             for (const [key, fieldSchema] of Object.entries(inputSchema)) {
               if (fieldSchema && typeof fieldSchema === "object" && "_def" in fieldSchema) {
                 const zodSchema = fieldSchema as z.ZodTypeAny;
@@ -191,13 +146,15 @@ export function wrapServerWithTracing(server: McpServer): McpServer {
                 }
               }
             }
-            
+
             if (errors.length > 0) {
               throw new Error(`Validation failed:\n${errors.join("\n")}`);
             }
-            
+
             return result;
           };
+
+          logger.debug(`Pattern 1 tool ${name} will use native MCP SDK handling`);
         }
       }
     }
@@ -208,7 +165,7 @@ export function wrapServerWithTracing(server: McpServer): McpServer {
     // - When called through the protocol (e.g., from Claude): metadata might be first arg with params nested
     const wrappedHandler = async (args: any, extra?: any) => {
       const perfMonitor = new PerformanceMonitor();
-      
+
       // CRITICAL FIX: The MCP SDK call structure is different than expected
       // Based on analysis, the user parameters may not be in the expected locations
       // Let's try a comprehensive approach to find them
@@ -218,30 +175,41 @@ export function wrapServerWithTracing(server: McpServer): McpServer {
         extra_type: typeof extra,
         extra_keys: extra && typeof extra === "object" ? Object.keys(extra) : null,
       });
-      
+
       // Extract actual parameters from the arguments
       // The MCP SDK might pass arguments in different ways:
       // 1. Direct call: args = parameters, extra = metadata
       // 2. Protocol call: args = metadata with nested parameters
       let actualArgs: any = {};
-      
+
       // Check if args looks like metadata (has signal, requestId, etc.)
       // To avoid false positives, require multiple metadata indicators AND no obvious user data
-      const hasMetadataFields = args && typeof args === "object" && 
-        ("signal" in args || "requestId" in args || "sessionId" in args);
-      
-      const hasNestedParams = args && typeof args === "object" &&
-        ("arguments" in args || "params" in args || "input" in args);
-      
+      const hasMetadataFields =
+        args && typeof args === "object" && ("signal" in args || "requestId" in args || "sessionId" in args);
+
+      const hasNestedParams =
+        args && typeof args === "object" && ("arguments" in args || "params" in args || "input" in args);
+
       // Only treat as metadata if it has metadata fields AND either:
-      // 1. Has nested parameter objects, OR 
+      // 1. Has nested parameter objects, OR
       // 2. Has ONLY metadata fields (no other user-looking data)
-      const onlyMetadataFields = hasMetadataFields && Object.keys(args).every(key => 
-        ["signal", "requestId", "sessionId", "sendNotification", "sendRequest", "_meta", "authInfo", "requestInfo"].includes(key)
-      );
-      
+      const onlyMetadataFields =
+        hasMetadataFields &&
+        Object.keys(args).every((key) =>
+          [
+            "signal",
+            "requestId",
+            "sessionId",
+            "sendNotification",
+            "sendRequest",
+            "_meta",
+            "authInfo",
+            "requestInfo",
+          ].includes(key),
+        );
+
       const isMetadata = hasMetadataFields && (hasNestedParams || onlyMetadataFields);
-      
+
       if (isMetadata) {
         // This is metadata, look for parameters in different places
         // Check common locations where MCP SDK might put parameters
@@ -258,7 +226,7 @@ export function wrapServerWithTracing(server: McpServer): McpServer {
           // No parameters found, use empty object
           actualArgs = {};
         }
-        
+
         logger.debug(`Tool ${name} called with metadata first, extracted parameters:`, {
           metadataKeys: Object.keys(args),
           extractedArgs: actualArgs,
@@ -268,37 +236,40 @@ export function wrapServerWithTracing(server: McpServer): McpServer {
         // args is the parameters object
         actualArgs = args || {};
       }
-      
+
       // SPECIAL CASE: Handle LLMs that incorrectly wrap parameters in 'query' object
       // This happens specifically with nodes/cluster tools when LLMs misinterpret them
       // Only unwrap for specific tools that shouldn't have a 'query' field
       const toolsToUnwrapQuery = [
-        'elasticsearch_get_nodes_stats',
-        'elasticsearch_get_nodes_info', 
-        'elasticsearch_get_cluster_health',
-        'elasticsearch_get_shards',
-        'elasticsearch_list_indices',
-        'elasticsearch_ilm_explain_lifecycle'
+        "elasticsearch_get_nodes_stats",
+        "elasticsearch_get_nodes_info",
+        "elasticsearch_get_cluster_health",
+        "elasticsearch_get_shards",
+        "elasticsearch_list_indices",
+        "elasticsearch_ilm_explain_lifecycle",
       ];
-      
-      if (actualArgs && typeof actualArgs === "object" && 
-          actualArgs.query && 
-          typeof actualArgs.query === "object" &&
-          toolsToUnwrapQuery.includes(name)) {
+
+      if (
+        actualArgs &&
+        typeof actualArgs === "object" &&
+        actualArgs.query &&
+        typeof actualArgs.query === "object" &&
+        toolsToUnwrapQuery.includes(name)
+      ) {
         logger.warn(`Tool ${name}: Detected incorrect 'query' wrapper for non-search tool, unwrapping parameters`, {
           toolName: name,
           isInList: toolsToUnwrapQuery.includes(name),
           wrappedArgs: actualArgs,
           unwrappedArgs: actualArgs.query,
-          originalKeys: Object.keys(actualArgs)
+          originalKeys: Object.keys(actualArgs),
         });
-        
+
         // Only unwrap if this tool shouldn't have a query field
         if (Object.keys(actualArgs).length === 1) {
           actualArgs = actualArgs.query;
         }
       }
-      
+
       // Log the received parameters for debugging
       logger.debug(`Tool ${name} called with parameters:`, {
         originalArgs: args,
@@ -310,7 +281,7 @@ export function wrapServerWithTracing(server: McpServer): McpServer {
         extraKeys: extra && typeof extra === "object" ? Object.keys(extra) : null,
         isMetadata: isMetadata,
       });
-      
+
       // DISABLED: Complex parameter override logic
       // The issue was here - it was replacing user parameters with defaults
       // Keeping this simple: if user provides parameters, use them as-is
@@ -318,14 +289,14 @@ export function wrapServerWithTracing(server: McpServer): McpServer {
       try {
         // Enhanced validation with helpful error messages
         let validatedArgs: any;
-        
+
         try {
           validatedArgs = validator(actualArgs);
         } catch (validationError) {
           // SIMPLIFIED: Just re-throw validation errors, no complex merging
           throw validationError;
         }
-        
+
         // Check if tracing is active
         if (!isTracingActive()) {
           logger.debug(`Executing tool without tracing: ${name}`, { args: validatedArgs });
@@ -396,19 +367,16 @@ export function wrapServerWithTracing(server: McpServer): McpServer {
           duration: metrics.duration,
           args,
         });
-        
+
         // Return MCP-compliant error response instead of throwing
-        return createErrorResponse(
-          error instanceof Error ? error : String(error),
-          {
-            toolName: name,
-            code: "EXECUTION_ERROR",
-            details: {
-              duration: metrics.duration,
-              args: actualArgs,
-            },
-          }
-        );
+        return createErrorResponse(error instanceof Error ? error : String(error), {
+          toolName: name,
+          code: "EXECUTION_ERROR",
+          details: {
+            duration: metrics.duration,
+            args: actualArgs,
+          },
+        });
       }
     };
 
@@ -416,19 +384,22 @@ export function wrapServerWithTracing(server: McpServer): McpServer {
     logger.debug(`Final schema before originalTool for ${name}:`, {
       finalSchemaType: typeof finalSchema,
       finalSchemaHasProperties: finalSchema && typeof finalSchema === "object" && "properties" in finalSchema,
-      finalSchemaPropertiesCount: finalSchema && typeof finalSchema === "object" && "properties" in finalSchema && finalSchema.properties ? Object.keys(finalSchema.properties).length : 0,
+      finalSchemaPropertiesCount:
+        finalSchema && typeof finalSchema === "object" && "properties" in finalSchema && finalSchema.properties
+          ? Object.keys(finalSchema.properties).length
+          : 0,
       finalSchemaKeys: finalSchema && typeof finalSchema === "object" ? Object.keys(finalSchema) : null,
-      finalSchemaStringified: JSON.stringify(finalSchema, null, 2)
+      finalSchemaStringified: JSON.stringify(finalSchema, null, 2),
     });
-    
+
     // POTENTIAL FIX: Try calling originalTool with explicit parameter structure
     logger.debug(`Calling originalTool for ${name} with parameters:`, {
       name: name,
       description: description,
       hasSchema: !!finalSchema,
-      hasHandler: typeof wrappedHandler === 'function'
+      hasHandler: typeof wrappedHandler === "function",
     });
-    
+
     try {
       const result = originalTool(name, description, finalSchema, wrappedHandler);
       logger.debug(`originalTool call successful for ${name}`);
@@ -436,7 +407,7 @@ export function wrapServerWithTracing(server: McpServer): McpServer {
     } catch (error) {
       logger.error(`originalTool call failed for ${name}:`, {
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
       throw error;
     }

@@ -21,7 +21,13 @@ const GetPolicyParams = z.object({
   masterTimeout: z.string().optional(),
   // New pagination and response control parameters
   limit: z
-    .union([z.number(), z.string().regex(/^\d+$/).transform(val => parseInt(val, 10))])
+    .union([
+      z.number(),
+      z
+        .string()
+        .regex(/^\d+$/)
+        .transform((val) => parseInt(val, 10)),
+    ])
     .pipe(z.number().min(1).max(50))
     .optional()
     .describe("Maximum number of policies to return. Range: 1-50"),

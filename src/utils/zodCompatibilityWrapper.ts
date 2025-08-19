@@ -1,6 +1,6 @@
 /**
  * Zod 4 Compatibility Wrapper for MCP SDK
- * 
+ *
  * The MCP SDK expects to validate arguments using Zod's internal _parse method,
  * which doesn't exist in Zod 4. This wrapper provides compatibility by:
  * 1. Converting Zod schemas to JSON Schema for the SDK
@@ -20,7 +20,7 @@ export function registerToolWithZod4<T extends z.ZodTypeAny>(
   name: string,
   description: string,
   schema: T | Record<string, z.ZodTypeAny>,
-  handler: (args: z.infer<T>) => Promise<any>
+  handler: (args: z.infer<T>) => Promise<any>,
 ): void {
   let jsonSchema: any;
   let validator: (args: any) => any;
@@ -32,7 +32,7 @@ export function registerToolWithZod4<T extends z.ZodTypeAny>(
       $refStrategy: "none",
       target: "jsonSchema7",
     });
-    
+
     // Create validator using Zod's parse method
     validator = (args: any) => (schema as z.ZodTypeAny).parse(args);
   } else if (schema && typeof schema === "object") {
@@ -41,38 +41,39 @@ export function registerToolWithZod4<T extends z.ZodTypeAny>(
     // Convert each field to JSON Schema
     const properties: Record<string, any> = {};
     const required: string[] = [];
-    
+
     for (const [key, fieldSchema] of Object.entries(schema as Record<string, z.ZodTypeAny>)) {
       if (fieldSchema && typeof fieldSchema === "object" && "_def" in fieldSchema) {
         // Convert individual field schema
         const fieldJsonSchema = zodToJsonSchema(fieldSchema, {
-          $refStrategy: "none", 
+          $refStrategy: "none",
           target: "jsonSchema7",
         });
-        
+
         // Remove $schema from nested schemas
         delete fieldJsonSchema.$schema;
         properties[key] = fieldJsonSchema;
-        
+
         // Check if field is optional
         const def = (fieldSchema as any)._def;
-        const isOptional = def?.typeName === "ZodOptional" || 
-                          (typeof (fieldSchema as any).isOptional === "function" && (fieldSchema as any).isOptional());
-        
+        const isOptional =
+          def?.typeName === "ZodOptional" ||
+          (typeof (fieldSchema as any).isOptional === "function" && (fieldSchema as any).isOptional());
+
         if (!isOptional) {
           required.push(key);
         }
       }
     }
-    
+
     jsonSchema = {
       type: "object",
       properties,
       required: required.length > 0 ? required : undefined,
       additionalProperties: false,
-      $schema: "http://json-schema.org/draft-07/schema#"
+      $schema: "http://json-schema.org/draft-07/schema#",
     };
-    
+
     // Create a validator that validates each field
     validator = (args: any) => {
       const result: any = {};
@@ -90,13 +91,13 @@ export function registerToolWithZod4<T extends z.ZodTypeAny>(
     jsonSchema = schema;
     validator = (args: any) => args;
   }
-  
+
   // Register the tool with JSON Schema and wrapped handler
   server.tool(name, description, jsonSchema, async (args: any) => {
     try {
       // Validate arguments
       const validatedArgs = validator(args);
-      
+
       // Call the original handler with validated arguments
       return await handler(validatedArgs);
     } catch (error) {

@@ -48,7 +48,8 @@
     "http-proxy": "^1.18.1",
     "langsmith": "^0.3.60",
     "raw-body": "^3.0.0",
-    "zod": "4.0.17"
+    "zod": "3.23.8",
+    "zod-to-json-schema": "3.23.5"
   },
   "engines": {
     "bun": ">=1.0.0"

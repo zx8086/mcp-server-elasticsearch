@@ -9,15 +9,18 @@ import { type SearchResult, TextContent, type ToolRegistrationFunction } from ".
 
 // Define the parameter schema type
 const GetNodesInfoParams = z.object({
-  nodeId: z.string().optional()
-    .describe("Specific node ID, or '_local' for current node, or leave empty for all"),
-  metric: z.string().optional()
-    .describe("Specific metrics: 'name', 'os', 'jvm', 'process', 'thread_pool', 'transport', 'http', 'plugins', 'ingest'. Combine: 'os,jvm'"),
-  flatSettings: booleanField().optional()
-    .describe("Return settings in flat format"),
-  timeout: z.string().optional()
-    .describe("Timeout for the request"),
-  compact: z.boolean().optional()
+  nodeId: z.string().optional().describe("Specific node ID, or '_local' for current node, or leave empty for all"),
+  metric: z
+    .string()
+    .optional()
+    .describe(
+      "Specific metrics: 'name', 'os', 'jvm', 'process', 'thread_pool', 'transport', 'http', 'plugins', 'ingest'. Combine: 'os,jvm'",
+    ),
+  flatSettings: booleanField().optional().describe("Return settings in flat format"),
+  timeout: z.string().optional().describe("Timeout for the request"),
+  compact: z
+    .boolean()
+    .optional()
     .describe("Auto-select essential metrics (os,jvm,process,transport). Overrides 'metric' parameter"),
 });
 
@@ -30,20 +33,20 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (server: McpSe
     async (params: GetNodesInfoParamsType): Promise<SearchResult> => {
       try {
         const { nodeId, metric, flatSettings, timeout, compact } = params;
-        
+
         logger.debug("Getting nodes info", { nodeId, metric, compact });
-        
+
         let result: any;
-        
+
         // Handle no parameters - return minimal info
         if (!metric && !compact) {
           logger.warn("nodes.info called without metric or compact - forcing minimal response");
-          
+
           // Return just node names to prevent huge response
           result = await esClient.nodes.info(
             {
               node_id: nodeId,
-              metric: "name",  // Just node names
+              metric: "name", // Just node names
               flat_settings: flatSettings,
               timeout: timeout,
             },
@@ -51,7 +54,7 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (server: McpSe
               opaqueId: "elasticsearch_get_nodes_info",
             },
           );
-          
+
           return {
             content: [
               {
@@ -62,13 +65,13 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (server: McpSe
             ],
           };
         }
-        
+
         if (compact === true) {
           // Compact mode: request only essential metrics (overrides metric param)
           result = await esClient.nodes.info(
             {
               node_id: nodeId,
-              metric: "os,jvm,process,transport",  // Essential metrics only
+              metric: "os,jvm,process,transport", // Essential metrics only
               flat_settings: flatSettings,
               timeout: timeout,
             },
@@ -76,7 +79,7 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (server: McpSe
               opaqueId: "elasticsearch_get_nodes_info",
             },
           );
-          
+
           return {
             content: [
               {
@@ -100,7 +103,7 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (server: McpSe
             },
           );
         }
-        
+
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
         };

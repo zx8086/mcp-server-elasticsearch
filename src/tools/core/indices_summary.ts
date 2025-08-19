@@ -72,7 +72,7 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: Mcp
         for (const index of response) {
           // Skip indices with missing index name
           if (!index.index) continue;
-          
+
           // Health stats
           if (index.health === "green") stats.healthy++;
           else if (index.health === "yellow") stats.yellow++;
@@ -104,7 +104,7 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: Mcp
         for (const index of response) {
           // Skip indices with missing index name
           if (!index.index) continue;
-          
+
           let pattern: string;
           switch (groupBy) {
             case "date":

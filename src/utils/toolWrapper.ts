@@ -50,24 +50,35 @@ export function registerTracedTool(server: McpServer, esClient: Client, options:
     try {
       // Extract actual parameters from arguments (handle MCP SDK variations)
       let actualArgs: any = args;
-      
+
       // Check if args looks like metadata (has signal, requestId, etc.)
       // To avoid false positives, require multiple metadata indicators AND no obvious user data
-      const hasMetadataFields = args && typeof args === "object" && 
-        ("signal" in args || "requestId" in args || "sessionId" in args);
-      
-      const hasNestedParams = args && typeof args === "object" &&
-        ("arguments" in args || "params" in args || "input" in args);
-      
+      const hasMetadataFields =
+        args && typeof args === "object" && ("signal" in args || "requestId" in args || "sessionId" in args);
+
+      const hasNestedParams =
+        args && typeof args === "object" && ("arguments" in args || "params" in args || "input" in args);
+
       // Only treat as metadata if it has metadata fields AND either:
-      // 1. Has nested parameter objects, OR 
+      // 1. Has nested parameter objects, OR
       // 2. Has ONLY metadata fields (no other user-looking data)
-      const onlyMetadataFields = hasMetadataFields && Object.keys(args).every(key => 
-        ["signal", "requestId", "sessionId", "sendNotification", "sendRequest", "_meta", "authInfo", "requestInfo"].includes(key)
-      );
-      
+      const onlyMetadataFields =
+        hasMetadataFields &&
+        Object.keys(args).every((key) =>
+          [
+            "signal",
+            "requestId",
+            "sessionId",
+            "sendNotification",
+            "sendRequest",
+            "_meta",
+            "authInfo",
+            "requestInfo",
+          ].includes(key),
+        );
+
       const isMetadata = hasMetadataFields && (hasNestedParams || onlyMetadataFields);
-      
+
       if (isMetadata) {
         // This is metadata, look for parameters in different places
         if (args.arguments && typeof args.arguments === "object") {
@@ -81,16 +92,16 @@ export function registerTracedTool(server: McpServer, esClient: Client, options:
         } else {
           actualArgs = {};
         }
-        
+
         logger.debug(`Tool ${name} detected metadata first, extracted parameters:`, {
           metadataKeys: Object.keys(args),
           extractedArgs: actualArgs,
         });
       }
-      
+
       // Validate arguments using Zod schema
       const validatedArgs = inputSchema.parse(actualArgs);
-      
+
       // If tracing is not active, execute directly
       if (!isTracingActive()) {
         logger.debug(`Executing tool without tracing: ${name}`, { args: validatedArgs });

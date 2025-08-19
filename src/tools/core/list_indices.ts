@@ -9,21 +9,28 @@ import { type SearchResult, TextContent, type ToolRegistrationFunction } from ".
 
 // Define the parameter schema
 const ListIndicesParams = z.object({
-  indexPattern: z.string().optional()
+  indexPattern: z
+    .string()
+    .optional()
     .describe("Index pattern to match. Use '*' for all indices. Supports wildcards like 'logs-*' or 'app-*'"),
   limit: z
-    .union([z.number(), z.string().regex(/^\d+$/).transform(val => parseInt(val, 10))])
+    .union([
+      z.number(),
+      z
+        .string()
+        .regex(/^\d+$/)
+        .transform((val) => parseInt(val, 10)),
+    ])
     .pipe(z.number().min(1).max(1000))
     .optional()
     .describe("Maximum number of indices to return (1-1000). Required for large clusters"),
-  excludeSystemIndices: z.boolean().optional()
-    .describe("Exclude system indices starting with '.'"),
-  excludeDataStreams: z.boolean().optional()
-    .describe("Exclude data stream backing indices"),
-  sortBy: z.enum(["name", "size", "docs", "creation"]).optional()
+  excludeSystemIndices: z.boolean().optional().describe("Exclude system indices starting with '.'"),
+  excludeDataStreams: z.boolean().optional().describe("Exclude data stream backing indices"),
+  sortBy: z
+    .enum(["name", "size", "docs", "creation"])
+    .optional()
     .describe("Sort order for results: 'name', 'size', 'docs', or 'creation'"),
-  includeSize: z.boolean().optional()
-    .describe("Include storage size and creation date information"),
+  includeSize: z.boolean().optional().describe("Include storage size and creation date information"),
 });
 
 type ListIndicesParamsType = z.infer<typeof ListIndicesParams>;

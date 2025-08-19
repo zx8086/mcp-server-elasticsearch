@@ -4,6 +4,75 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "./types.js"; // Define the parameter schema type
-const GetDocumentParams = z.object({ index: z.string().min(1, "Index cannot be empty"), id: z.string().min(1, "Document ID cannot be empty"), source: booleanField().optional(), sourceExcludes: z.array(z.string()).optional(), sourceIncludes: z.array(z.string()).optional(), routing: z.string().optional(), preference: z.string().optional(), realtime: booleanField().optional(), refresh: booleanField().optional(), version: z.number().optional(), versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(),
-}); type GetDocumentParamsType = z.infer<typeof GetDocumentParams>; export const registerGetDocumentTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => { server.tool( "elasticsearch_get_document", "Get a document from Elasticsearch by index and id. Best for retrieving specific JSON documents, document validation, real-time data access. This tool REQUIRES both 'index' and 'id' parameters - it cannot work with empty {}. Use when you need to fetch individual documents by their unique identifier from Elasticsearch indices.", { index: z.string().min(1, "Index cannot be empty").describe("REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'"), id: z .string() .min(1, "Document ID is required") .describe("REQUIRED: Unique identifier of the document to retrieve. Example: '123', 'user-456'"), source: booleanField().optional() .describe("Whether to return the _source field "), sourceExcludes: z.array(z.string()).optional() .describe("Fields to exclude from the _source (optional)"), sourceIncludes: z.array(z.string()).optional() .describe("Fields to include in the _source (optional)"), routing: z.string().optional() .describe("Custom routing value (optional)"), preference: z.string().optional() .describe("Preference for shard selection (optional)"), realtime: booleanField().optional() .describe("Whether to perform a real-time get "), refresh: booleanField().optional() .describe("Whether to refresh before retrieval "), version: z.number().optional() .describe("Expected document version for optimistic concurrency control (optional)"), versionType: z.enum(["internal", "external", "external_gte", "force"]).optional() .describe("Version type for concurrency control (optional)"), }, async (params: GetDocumentParamsType): Promise<SearchResult> => { try { const result = await esClient.get({ index: params.index, id: params.id, _source: params.source, _source_excludes: params.sourceExcludes, _source_includes: params.sourceIncludes, routing: params.routing, preference: params.preference, realtime: params.realtime, refresh: params.refresh, version: params.version, version_type: params.versionType, }); return { content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent] }; } catch (error) { logger.error("Failed to get document:", { error: error instanceof Error ? error.message : String(error), }); return { content: [ { type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` } as TextContent, ], }; } }, );
+const GetDocumentParams = z.object({
+  index: z.string().min(1, "Index cannot be empty"),
+  id: z.string().min(1, "Document ID cannot be empty"),
+  source: booleanField().optional(),
+  sourceExcludes: z.array(z.string()).optional(),
+  sourceIncludes: z.array(z.string()).optional(),
+  routing: z.string().optional(),
+  preference: z.string().optional(),
+  realtime: booleanField().optional(),
+  refresh: booleanField().optional(),
+  version: z.number().optional(),
+  versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(),
+});
+type GetDocumentParamsType = z.infer<typeof GetDocumentParams>;
+export const registerGetDocumentTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
+  server.tool(
+    "elasticsearch_get_document",
+    "Get a document from Elasticsearch by index and id. Best for retrieving specific JSON documents, document validation, real-time data access. This tool REQUIRES both 'index' and 'id' parameters - it cannot work with empty {}. Use when you need to fetch individual documents by their unique identifier from Elasticsearch indices.",
+    {
+      index: z
+        .string()
+        .min(1, "Index cannot be empty")
+        .describe(
+          "REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'",
+        ),
+      id: z
+        .string()
+        .min(1, "Document ID is required")
+        .describe("REQUIRED: Unique identifier of the document to retrieve. Example: '123', 'user-456'"),
+      source: booleanField().optional().describe("Whether to return the _source field "),
+      sourceExcludes: z.array(z.string()).optional().describe("Fields to exclude from the _source (optional)"),
+      sourceIncludes: z.array(z.string()).optional().describe("Fields to include in the _source (optional)"),
+      routing: z.string().optional().describe("Custom routing value (optional)"),
+      preference: z.string().optional().describe("Preference for shard selection (optional)"),
+      realtime: booleanField().optional().describe("Whether to perform a real-time get "),
+      refresh: booleanField().optional().describe("Whether to refresh before retrieval "),
+      version: z
+        .number()
+        .optional()
+        .describe("Expected document version for optimistic concurrency control (optional)"),
+      versionType: z
+        .enum(["internal", "external", "external_gte", "force"])
+        .optional()
+        .describe("Version type for concurrency control (optional)"),
+    },
+    async (params: GetDocumentParamsType): Promise<SearchResult> => {
+      try {
+        const result = await esClient.get({
+          index: params.index,
+          id: params.id,
+          _source: params.source,
+          _source_excludes: params.sourceExcludes,
+          _source_includes: params.sourceIncludes,
+          routing: params.routing,
+          preference: params.preference,
+          realtime: params.realtime,
+          refresh: params.refresh,
+          version: params.version,
+          version_type: params.versionType,
+        });
+        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent] };
+      } catch (error) {
+        logger.error("Failed to get document:", { error: error instanceof Error ? error.message : String(error) });
+        return {
+          content: [
+            { type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` } as TextContent,
+          ],
+        };
+      }
+    },
+  );
 };

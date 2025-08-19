@@ -8,21 +8,22 @@ import { type SearchResult, TextContent, type ToolRegistrationFunction } from ".
 
 // Define the parameter schema
 const ExplainLifecycleParams = z.object({
-  index: z.string().optional()
-    .describe("Index pattern. Use '*' for all"),
-  onlyErrors: z.boolean().optional()
-    .describe("Only show errors"),
-  onlyManaged: z.boolean().optional()
-    .describe("Only show ILM-managed indices. Highly recommended for large clusters"),
-  masterTimeout: z.string().optional()
-    .describe("Master node timeout"),
+  index: z.string().optional().describe("Index pattern. Use '*' for all"),
+  onlyErrors: z.boolean().optional().describe("Only show errors"),
+  onlyManaged: z.boolean().optional().describe("Only show ILM-managed indices. Highly recommended for large clusters"),
+  masterTimeout: z.string().optional().describe("Master node timeout"),
   limit: z
-    .union([z.number(), z.string().regex(/^\d+$/).transform(val => parseInt(val, 10))])
+    .union([
+      z.number(),
+      z
+        .string()
+        .regex(/^\d+$/)
+        .transform((val) => parseInt(val, 10)),
+    ])
     .pipe(z.number().min(1).max(500))
     .optional()
     .describe("Maximum number of indices to return. Without this, returns ALL matching indices"),
-  includeDetails: z.boolean().optional()
-    .describe("Include full lifecycle details (false for compact output)"),
+  includeDetails: z.boolean().optional().describe("Include full lifecycle details (false for compact output)"),
 });
 
 type ExplainLifecycleParamsType = z.infer<typeof ExplainLifecycleParams>;
@@ -37,9 +38,9 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
         // Use parameters as provided by LLM
         const index = params.index || "*";
         const { limit, includeDetails, onlyManaged, onlyErrors, masterTimeout } = params;
-        
+
         logger.debug("Explaining ILM lifecycle", { index, limit, onlyManaged, includeDetails });
-        
+
         const result = await esClient.ilm.explainLifecycle(
           {
             index: index,
@@ -51,40 +52,40 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
             opaqueId: "elasticsearch_ilm_explain_lifecycle",
           },
         );
-        
+
         // Process and limit results
         if (result.indices) {
           const allIndices = Object.entries(result.indices);
           const totalCount = allIndices.length;
-          
+
           // Apply limit if specified, otherwise use a safe default for large responses
           const effectiveLimit = limit || (totalCount > 100 ? 50 : totalCount);
-          
+
           if (totalCount > effectiveLimit) {
             // Sort by importance: errors first, then by phase
             const sortedIndices = allIndices.sort(([, a], [, b]) => {
               // Prioritize indices with errors
-              const aHasError = (a as any).failed_step || (a as any).step_info?.type === 'error';
-              const bHasError = (b as any).failed_step || (b as any).step_info?.type === 'error';
+              const aHasError = (a as any).failed_step || (a as any).step_info?.type === "error";
+              const bHasError = (b as any).failed_step || (b as any).step_info?.type === "error";
               if (aHasError && !bHasError) return -1;
               if (!aHasError && bHasError) return 1;
-              
+
               // Then sort by phase priority
               const phaseOrder: Record<string, number> = {
-                'hot': 0,
-                'warm': 1,
-                'cold': 2,
-                'frozen': 3,
-                'delete': 4,
+                hot: 0,
+                warm: 1,
+                cold: 2,
+                frozen: 3,
+                delete: 4,
               };
-              const aPhase = (a as any).phase || 'unknown';
-              const bPhase = (b as any).phase || 'unknown';
+              const aPhase = (a as any).phase || "unknown";
+              const bPhase = (b as any).phase || "unknown";
               return (phaseOrder[aPhase] ?? 5) - (phaseOrder[bPhase] ?? 5);
             });
-            
+
             // Apply limit
             const limitedIndices = sortedIndices.slice(0, effectiveLimit);
-            
+
             // Create compact or detailed output
             const processedIndices: Record<string, any> = {};
             for (const [indexName, indexData] of limitedIndices) {
@@ -99,23 +100,23 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
                   phase: data.phase,
                   age: data.age,
                   ...(data.failed_step && { failed_step: data.failed_step }),
-                  ...(data.step_info?.type === 'error' && { error: data.step_info.reason }),
+                  ...(data.step_info?.type === "error" && { error: data.step_info.reason }),
                 };
               }
             }
-            
+
             // Count statistics
             const errorCount = allIndices.filter(([, data]) => {
               const d = data as any;
-              return d.failed_step || d.step_info?.type === 'error';
+              return d.failed_step || d.step_info?.type === "error";
             }).length;
-            
+
             const phaseStats: Record<string, number> = {};
             for (const [, data] of allIndices) {
-              const phase = (data as any).phase || 'unknown';
+              const phase = (data as any).phase || "unknown";
               phaseStats[phase] = (phaseStats[phase] || 0) + 1;
             }
-            
+
             return {
               content: [
                 {
@@ -140,18 +141,18 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
                   phase: data.phase,
                   age: data.age,
                   ...(data.failed_step && { failed_step: data.failed_step }),
-                  ...(data.step_info?.type === 'error' && { error: data.step_info.reason }),
+                  ...(data.step_info?.type === "error" && { error: data.step_info.reason }),
                 };
               } else {
                 processedIndices[indexName] = indexData;
               }
             }
-            
+
             return {
               content: [
                 {
                   type: "text",
-                  text: `Found ${totalCount} indices${onlyManaged ? ' (managed only)' : ''}`,
+                  text: `Found ${totalCount} indices${onlyManaged ? " (managed only)" : ""}`,
                 },
                 {
                   type: "text",
@@ -161,7 +162,7 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
             };
           }
         }
-        
+
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
         };
@@ -169,29 +170,31 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
         logger.error("Failed to explain lifecycle:", {
           error: error instanceof Error ? error.message : String(error),
         });
-        
+
         // Check if it's a response size error
         const errorMessage = error instanceof Error ? error.message : String(error);
-        const isResponseTooLarge = errorMessage.includes("exceeds maximum") || 
-                                  errorMessage.includes("too large") ||
-                                  errorMessage.includes("1048576");
-        
+        const isResponseTooLarge =
+          errorMessage.includes("exceeds maximum") ||
+          errorMessage.includes("too large") ||
+          errorMessage.includes("1048576");
+
         if (isResponseTooLarge) {
           return {
             content: [
               {
                 type: "text",
-                text: `❌ Response too large! Your cluster has too many indices to return without filters.\n\n` +
-                      `✅ Solution: Use one of these approaches:\n` +
-                      `1. {onlyManaged: true, limit: 50} - Show only ILM-managed indices\n` +
-                      `2. {index: "logs-*", limit: 100} - Filter by specific pattern\n` +
-                      `3. {onlyErrors: true, limit: 50} - Show only indices with errors\n\n` +
-                      `Original error: ${errorMessage}`,
+                text:
+                  `❌ Response too large! Your cluster has too many indices to return without filters.\n\n` +
+                  `✅ Solution: Use one of these approaches:\n` +
+                  `1. {onlyManaged: true, limit: 50} - Show only ILM-managed indices\n` +
+                  `2. {index: "logs-*", limit: 100} - Filter by specific pattern\n` +
+                  `3. {onlyErrors: true, limit: 50} - Show only indices with errors\n\n` +
+                  `Original error: ${errorMessage}`,
               },
             ],
           };
         }
-        
+
         return {
           content: [
             {
