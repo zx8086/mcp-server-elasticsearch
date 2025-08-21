@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
-import { readdir, readFile, writeFile } from "fs/promises";
-import { join } from "path";
+import { readFile, readdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 
 async function fixValidationMessages(dir: string) {
   const files = await readdir(dir, { withFileTypes: true });
@@ -13,12 +13,12 @@ async function fixValidationMessages(dir: string) {
       await fixValidationMessages(fullPath);
     } else if (file.name.endsWith(".ts") && !file.name.endsWith(".test.ts")) {
       let content = await readFile(fullPath, "utf-8");
-      let originalContent = content;
+      const originalContent = content;
       let changeCount = 0;
 
       // Pattern 1: Remove .min(1, "... is required") from optional fields
       // This validation is too aggressive for optional fields
-      content = content.replace(/z\.string\(\)\.min\(1,\s*"[^"]*\s+is required"\)\.optional\(\)/g, (match) => {
+      content = content.replace(/z\.string\(\)\.min\(1,\s*"[^"]*\s+is required"\)\.optional\(\)/g, (_match) => {
         changeCount++;
         return "z.string().optional()";
       });
@@ -27,14 +27,14 @@ async function fixValidationMessages(dir: string) {
       // Keep the validation but improve the message
       content = content.replace(
         /z\.string\(\)\.min\(1,\s*"([^"]+)\s+is required"\)(?!\.optional)/g,
-        (match, fieldName) => {
+        (_match, fieldName) => {
           changeCount++;
           return `z.string().min(1, "${fieldName} cannot be empty")`;
         },
       );
 
       // Pattern 3: Fix double .optional().optional()
-      content = content.replace(/\.optional\(\)\.optional\(\)/g, (match) => {
+      content = content.replace(/\.optional\(\)\.optional\(\)/g, (_match) => {
         changeCount++;
         return ".optional()";
       });

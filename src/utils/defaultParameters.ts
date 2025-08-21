@@ -50,16 +50,6 @@ export const DEFAULT_PARAMETERS: Record<string, any> = {
     summarize: true,
   },
 
-  // Get nodes info - can work with defaults
-  elasticsearch_get_nodes_info: {
-    // No parameters needed, will get all nodes
-  },
-
-  // Get cluster health - no params needed
-  elasticsearch_get_cluster_health: {
-    // No parameters needed
-  },
-
   // Get shards
   elasticsearch_get_shards: {
     index: "*",
@@ -169,12 +159,6 @@ export const DEFAULT_PARAMETERS: Record<string, any> = {
     summarize: true,
   },
 
-  // List tasks
-  elasticsearch_list_tasks: {
-    detailed: true,
-    groupBy: "parents",
-  },
-
   // Field usage stats
   elasticsearch_field_usage_stats: {
     index: "*",
@@ -184,12 +168,6 @@ export const DEFAULT_PARAMETERS: Record<string, any> = {
   elasticsearch_disk_usage: {
     index: "*",
     runExpensiveTasks: false,
-  },
-
-  // Enrich get policy
-  elasticsearch_enrich_get_policy: {
-    name: "*",
-    summarize: true,
   },
 
   // Watcher get watch

@@ -27,14 +27,12 @@ bun run test-connection        # Test Elasticsearch connectivity
 ### Debugging
 ```bash
 bun run inspector              # MCP protocol inspector (stdio mode)
-bun run inspector:sse          # MCP inspector for SSE mode
 LOG_LEVEL=debug bun run dev    # Enable debug logging
 ```
 
-### n8n Integration
+### Connectivity Testing
 ```bash
-bun run n8n-mode               # Start server + n8n proxy together
-bun run connectivity-test      # Test n8n connectivity
+bun run connectivity-test      # Test connectivity
 ```
 
 ## Architecture & Key Patterns

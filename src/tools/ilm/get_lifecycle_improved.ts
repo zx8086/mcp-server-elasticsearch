@@ -18,7 +18,7 @@ const GetLifecycleParams = z.object({
       z
         .string()
         .regex(/^\d+$/)
-        .transform((val) => parseInt(val, 10)),
+        .transform((val) => Number.parseInt(val, 10)),
     ])
     .pipe(z.number().min(1).max(100))
     .optional()
@@ -62,7 +62,7 @@ export const registerGetLifecycleImprovedTool: ToolRegistrationFunction = (serve
     async (params: GetLifecycleParamsType): Promise<SearchResult> => {
       try {
         // Debug logging
-        logger.debug(`get_lifecycle called with params:`, params);
+        logger.debug("get_lifecycle called with params:", params);
         logger.debug(`Limit value: ${params.limit}, type: ${typeof params.limit}`);
 
         // Fetch policies from Elasticsearch

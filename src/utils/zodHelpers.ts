@@ -147,7 +147,7 @@ export const coerceJson = z.preprocess(
           throw new Error("Parsed value is not an object or array");
         }
         return parsed;
-      } catch (error) {
+      } catch (_error) {
         // If parsing fails, try one more time with aggressive cleanup
         try {
           // Remove all backslashes before quotes
@@ -156,7 +156,7 @@ export const coerceJson = z.preprocess(
           if (typeof parsed === "object" && parsed !== null) {
             return parsed;
           }
-        } catch (secondError) {
+        } catch (_secondError) {
           // If all parsing attempts fail, return the original to let Zod handle the error
         }
         return val;

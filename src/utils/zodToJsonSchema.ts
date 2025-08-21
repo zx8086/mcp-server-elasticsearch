@@ -148,12 +148,12 @@ function simplifyFieldSchema(field: z.ZodTypeAny): any {
 function extractDefaultValue(schema: z.ZodTypeAny): any {
   const def = (schema as any)._def;
 
-  if (def && def.defaultValue) {
+  if (def?.defaultValue) {
     return typeof def.defaultValue === "function" ? def.defaultValue() : def.defaultValue;
   }
 
   // Check in nested schemas
-  if (def && def.innerType) {
+  if (def?.innerType) {
     return extractDefaultValue(def.innerType);
   }
 
@@ -167,7 +167,7 @@ function detectCoercionTargetType(schema: z.ZodTypeAny): string {
   const def = (schema as any)._def;
 
   // Check union options for the target type
-  if (def && def.options) {
+  if (def?.options) {
     for (const option of def.options) {
       const optionDef = (option as any)._def;
       if (optionDef) {
@@ -209,7 +209,7 @@ export function zodToJsonSchemaCompat(schema: z.ZodTypeAny, options: any = {}): 
     // Zod 4.x with native JSON Schema support
 
     // Try to convert, but handle transforms and custom types which aren't supported
-    let jsonSchema;
+    let jsonSchema: any;
     try {
       jsonSchema = (z as any).toJSONSchema(schema);
     } catch (error: any) {
@@ -323,7 +323,7 @@ export function zodToJsonSchemaCompat(schema: z.ZodTypeAny, options: any = {}): 
     }
 
     // Convert to JSON Schema Draft 7 format
-    if (jsonSchema.$schema && jsonSchema.$schema.includes("2020-12")) {
+    if (jsonSchema.$schema?.includes("2020-12")) {
       jsonSchema.$schema = "http://json-schema.org/draft-07/schema#";
     }
 
@@ -347,8 +347,8 @@ export function zodToJsonSchemaCompat(schema: z.ZodTypeAny, options: any = {}): 
       const types = schemas.map((s: any) => s.type).filter(Boolean);
       if (types.length > 0 && types.every((t: string) => typeof t === "string")) {
         jsonSchema.type = types;
-        delete jsonSchema.oneOf;
-        delete jsonSchema.anyOf;
+        jsonSchema.oneOf = undefined;
+        jsonSchema.anyOf = undefined;
       }
     }
 
@@ -372,7 +372,7 @@ export function zodToJsonSchemaCompat(schema: z.ZodTypeAny, options: any = {}): 
 
       jsonSchema.required = actualRequired.length > 0 ? actualRequired : undefined;
       if (!jsonSchema.required) {
-        delete jsonSchema.required;
+        jsonSchema.required = undefined;
       }
     }
 
@@ -423,7 +423,7 @@ export function zodToJsonSchemaCompat(schema: z.ZodTypeAny, options: any = {}): 
     // Clean up the schema
     if (jsonSchema && typeof jsonSchema === "object") {
       // Remove $schema if present
-      delete (jsonSchema as any).$schema;
+      (jsonSchema as any).$schema = undefined;
 
       // Handle passthrough objects (z.object({}).passthrough())
       if ((jsonSchema as any).type === "object" && (schema as any)._def?.unknownKeys === "passthrough") {

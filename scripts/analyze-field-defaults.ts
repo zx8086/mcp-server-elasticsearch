@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
-import { readdir, readFile } from "fs/promises";
-import { join } from "path";
+import { readFile, readdir } from "node:fs/promises";
+import { join } from "node:path";
 
 interface FieldUsage {
   file: string;
@@ -121,7 +121,7 @@ async function main() {
   // Group by file
   const byFile = new Map<string, FieldUsage[]>();
   for (const usage of usages) {
-    const relativePath = usage.file.replace(process.cwd() + "/", "");
+    const relativePath = usage.file.replace(`${process.cwd()}/`, "");
     if (!byFile.has(relativePath)) {
       byFile.set(relativePath, []);
     }
@@ -137,7 +137,7 @@ async function main() {
     }
   }
 
-  console.log("\n" + "=".repeat(60));
+  console.log(`\n${"=".repeat(60)}`);
   console.log("📊 Summary:");
   console.log(`  Total files affected: ${byFile.size}`);
   console.log(`  Total fields with defaults: ${usages.length}`);

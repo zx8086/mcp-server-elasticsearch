@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { readFile, writeFile } from "fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { glob } from "bun";
 
 interface TestFix {

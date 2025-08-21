@@ -26,7 +26,7 @@ const GetPolicyParams = z.object({
       z
         .string()
         .regex(/^\d+$/)
-        .transform((val) => parseInt(val, 10)),
+        .transform((val) => Number.parseInt(val, 10)),
     ])
     .pipe(z.number().min(1).max(50))
     .optional()

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
-import { readFile, writeFile } from "fs/promises";
-import { join } from "path";
+import { readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 
 // Files identified with default mentions
 const filesToUpdate = [

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
-import { readdir, readFile } from "fs/promises";
-import { join } from "path";
+import { readFile, readdir } from "node:fs/promises";
+import { join } from "node:path";
 
 interface ToolInfo {
   file: string;
@@ -62,7 +62,7 @@ async function analyzeTools() {
 
           // Extract description
           const descMatch = content.match(/server\.tool\(\s*["'][^"']+["'],\s*["']([^"']+)["']/);
-          const description = descMatch ? descMatch[1].substring(0, 100) + "..." : "No description";
+          const description = descMatch ? `${descMatch[1].substring(0, 100)}...` : "No description";
 
           // Check if parameters have .describe()
           const hasDescribeOnParams = content.includes(".describe(");

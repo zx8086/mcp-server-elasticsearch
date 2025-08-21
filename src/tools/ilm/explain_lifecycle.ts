@@ -18,7 +18,7 @@ const ExplainLifecycleParams = z.object({
       z
         .string()
         .regex(/^\d+$/)
-        .transform((val) => parseInt(val, 10)),
+        .transform((val) => Number.parseInt(val, 10)),
     ])
     .pipe(z.number().min(1).max(500))
     .optional()
@@ -129,38 +129,37 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
                 },
               ],
             };
-          } else {
-            // Process all indices without limiting
-            const processedIndices: Record<string, any> = {};
-            for (const [indexName, indexData] of allIndices) {
-              if (!includeDetails) {
-                const data = indexData as any;
-                processedIndices[indexName] = {
-                  managed: data.managed,
-                  policy: data.policy,
-                  phase: data.phase,
-                  age: data.age,
-                  ...(data.failed_step && { failed_step: data.failed_step }),
-                  ...(data.step_info?.type === "error" && { error: data.step_info.reason }),
-                };
-              } else {
-                processedIndices[indexName] = indexData;
-              }
-            }
-
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Found ${totalCount} indices${onlyManaged ? " (managed only)" : ""}`,
-                },
-                {
-                  type: "text",
-                  text: JSON.stringify({ indices: processedIndices }, null, 2),
-                },
-              ],
-            };
           }
+          // Process all indices without limiting
+          const processedIndices: Record<string, any> = {};
+          for (const [indexName, indexData] of allIndices) {
+            if (!includeDetails) {
+              const data = indexData as any;
+              processedIndices[indexName] = {
+                managed: data.managed,
+                policy: data.policy,
+                phase: data.phase,
+                age: data.age,
+                ...(data.failed_step && { failed_step: data.failed_step }),
+                ...(data.step_info?.type === "error" && { error: data.step_info.reason }),
+              };
+            } else {
+              processedIndices[indexName] = indexData;
+            }
+          }
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Found ${totalCount} indices${onlyManaged ? " (managed only)" : ""}`,
+              },
+              {
+                type: "text",
+                text: JSON.stringify({ indices: processedIndices }, null, 2),
+              },
+            ],
+          };
         }
 
         return {
@@ -183,13 +182,7 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
             content: [
               {
                 type: "text",
-                text:
-                  `❌ Response too large! Your cluster has too many indices to return without filters.\n\n` +
-                  `✅ Solution: Use one of these approaches:\n` +
-                  `1. {onlyManaged: true, limit: 50} - Show only ILM-managed indices\n` +
-                  `2. {index: "logs-*", limit: 100} - Filter by specific pattern\n` +
-                  `3. {onlyErrors: true, limit: 50} - Show only indices with errors\n\n` +
-                  `Original error: ${errorMessage}`,
+                text: `❌ Response too large! Your cluster has too many indices to return without filters.\n\n✅ Solution: Use one of these approaches:\n1. {onlyManaged: true, limit: 50} - Show only ILM-managed indices\n2. {index: "logs-*", limit: 100} - Filter by specific pattern\n3. {onlyErrors: true, limit: 50} - Show only indices with errors\n\nOriginal error: ${errorMessage}`,
               },
             ],
           };

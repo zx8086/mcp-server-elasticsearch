@@ -89,20 +89,19 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (server: McpSe
               { type: "text", text: JSON.stringify(result, null, 2) },
             ],
           };
-        } else {
-          // Use specified metric or fail gracefully
-          result = await esClient.nodes.info(
-            {
-              node_id: nodeId,
-              metric: metric,
-              flat_settings: flatSettings,
-              timeout: timeout,
-            },
-            {
-              opaqueId: "elasticsearch_get_nodes_info",
-            },
-          );
         }
+        // Use specified metric or fail gracefully
+        result = await esClient.nodes.info(
+          {
+            node_id: nodeId,
+            metric: metric,
+            flat_settings: flatSettings,
+            timeout: timeout,
+          },
+          {
+            opaqueId: "elasticsearch_get_nodes_info",
+          },
+        );
 
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],

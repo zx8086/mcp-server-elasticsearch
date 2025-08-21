@@ -9,8 +9,8 @@
 
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { z } from "zod";
-import { zodToJsonSchemaCompat as zodToJsonSchema } from "./zodToJsonSchema.js";
 import { logger } from "./logger.js";
+import { zodToJsonSchemaCompat as zodToJsonSchema } from "./zodToJsonSchema.js";
 
 /**
  * Wraps server.tool to handle Zod 4 compatibility
@@ -51,7 +51,7 @@ export function registerToolWithZod4<T extends z.ZodTypeAny>(
         });
 
         // Remove $schema from nested schemas
-        delete fieldJsonSchema.$schema;
+        fieldJsonSchema.$schema = undefined;
         properties[key] = fieldJsonSchema;
 
         // Check if field is optional

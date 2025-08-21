@@ -206,11 +206,11 @@ export function getSizeWarningMessage(actualSize: number, limit: number, total: 
 
   if (actualSize > MAX_RESPONSE_SIZE * 0.8) {
     return `⚠️ Large response (${sizeKB}KB). Showing ${limit} of ${total} ${entityType} (${percentage}%). Consider using filters or smaller limits.`;
-  } else if (limit < total) {
-    return `📊 Showing ${limit} of ${total} ${entityType} (${percentage}%). Use 'limit' parameter to see more.`;
-  } else {
-    return `✅ Showing all ${total} ${entityType}.`;
   }
+  if (limit < total) {
+    return `📊 Showing ${limit} of ${total} ${entityType} (${percentage}%). Use 'limit' parameter to see more.`;
+  }
+  return `✅ Showing all ${total} ${entityType}.`;
 }
 
 /**

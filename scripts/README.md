@@ -6,11 +6,7 @@ These scripts are used by package.json and should be committed:
 
 - `validate-config.ts` - Validates environment configuration
 - `test-connection.ts` - Tests Elasticsearch connection
-- `connectivity-test.js` - Tests n8n connectivity
-- `n8n-proxy.js` - Proxy for n8n integration
-- `run-inspector.js` - MCP inspector runner
-- `sse-inspector-proxy.js` - SSE inspector proxy
-- `start-n8n-mode.sh` - Script to start n8n mode
+- `connectivity-test.js` - Tests connectivity
 
 ## Test Scripts (Should NOT be committed)
 

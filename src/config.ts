@@ -206,96 +206,87 @@ function loadConfigFromEnv(): Partial<Config> {
 
   // Load server config
   config.server = {
-    name: (parseEnvVar(process.env[envVarMapping.server.name], "string") as string) || defaultConfig.server.name,
-    version:
-      (parseEnvVar(process.env[envVarMapping.server.version], "string") as string) || defaultConfig.server.version,
+    name: (parseEnvVar(Bun.env[envVarMapping.server.name], "string") as string) || defaultConfig.server.name,
+    version: (parseEnvVar(Bun.env[envVarMapping.server.version], "string") as string) || defaultConfig.server.version,
     readOnlyMode:
-      (parseEnvVar(process.env[envVarMapping.server.readOnlyMode], "boolean") as boolean) ??
+      (parseEnvVar(Bun.env[envVarMapping.server.readOnlyMode], "boolean") as boolean) ??
       defaultConfig.server.readOnlyMode,
     readOnlyStrictMode:
-      (parseEnvVar(process.env[envVarMapping.server.readOnlyStrictMode], "boolean") as boolean) ??
+      (parseEnvVar(Bun.env[envVarMapping.server.readOnlyStrictMode], "boolean") as boolean) ??
       defaultConfig.server.readOnlyStrictMode,
     maxQueryTimeout:
-      (parseEnvVar(process.env[envVarMapping.server.maxQueryTimeout], "number") as number) ||
+      (parseEnvVar(Bun.env[envVarMapping.server.maxQueryTimeout], "number") as number) ||
       defaultConfig.server.maxQueryTimeout,
     maxResultsPerQuery:
-      (parseEnvVar(process.env[envVarMapping.server.maxResultsPerQuery], "number") as number) ||
+      (parseEnvVar(Bun.env[envVarMapping.server.maxResultsPerQuery], "number") as number) ||
       defaultConfig.server.maxResultsPerQuery,
     transportMode:
-      (parseEnvVar(process.env[envVarMapping.server.transportMode], "string") as "stdio" | "sse") ||
+      (parseEnvVar(Bun.env[envVarMapping.server.transportMode], "string") as "stdio" | "sse") ||
       defaultConfig.server.transportMode,
-    port: (parseEnvVar(process.env[envVarMapping.server.port], "number") as number) || defaultConfig.server.port,
+    port: (parseEnvVar(Bun.env[envVarMapping.server.port], "number") as number) || defaultConfig.server.port,
   };
 
   // Load elasticsearch config
   config.elasticsearch = {
-    url:
-      (parseEnvVar(process.env[envVarMapping.elasticsearch.url], "string") as string) ||
-      defaultConfig.elasticsearch.url,
-    apiKey: parseEnvVar(process.env[envVarMapping.elasticsearch.apiKey], "string") as string,
-    username: parseEnvVar(process.env[envVarMapping.elasticsearch.username], "string") as string,
-    password: parseEnvVar(process.env[envVarMapping.elasticsearch.password], "string") as string,
-    caCert: parseEnvVar(process.env[envVarMapping.elasticsearch.caCert], "string") as string,
+    url: (parseEnvVar(Bun.env[envVarMapping.elasticsearch.url], "string") as string) || defaultConfig.elasticsearch.url,
+    apiKey: parseEnvVar(Bun.env[envVarMapping.elasticsearch.apiKey], "string") as string,
+    username: parseEnvVar(Bun.env[envVarMapping.elasticsearch.username], "string") as string,
+    password: parseEnvVar(Bun.env[envVarMapping.elasticsearch.password], "string") as string,
+    caCert: parseEnvVar(Bun.env[envVarMapping.elasticsearch.caCert], "string") as string,
     maxRetries:
-      (parseEnvVar(process.env[envVarMapping.elasticsearch.maxRetries], "number") as number) ||
+      (parseEnvVar(Bun.env[envVarMapping.elasticsearch.maxRetries], "number") as number) ||
       defaultConfig.elasticsearch.maxRetries,
     requestTimeout:
-      (parseEnvVar(process.env[envVarMapping.elasticsearch.requestTimeout], "number") as number) ||
+      (parseEnvVar(Bun.env[envVarMapping.elasticsearch.requestTimeout], "number") as number) ||
       defaultConfig.elasticsearch.requestTimeout,
     compression:
-      (parseEnvVar(process.env[envVarMapping.elasticsearch.compression], "boolean") as boolean) ??
+      (parseEnvVar(Bun.env[envVarMapping.elasticsearch.compression], "boolean") as boolean) ??
       defaultConfig.elasticsearch.compression,
     enableMetaHeader:
-      (parseEnvVar(process.env[envVarMapping.elasticsearch.enableMetaHeader], "boolean") as boolean) ??
+      (parseEnvVar(Bun.env[envVarMapping.elasticsearch.enableMetaHeader], "boolean") as boolean) ??
       defaultConfig.elasticsearch.enableMetaHeader,
     disablePrototypePoisoningProtection:
-      (parseEnvVar(
-        process.env[envVarMapping.elasticsearch.disablePrototypePoisoningProtection],
-        "boolean",
-      ) as boolean) ?? defaultConfig.elasticsearch.disablePrototypePoisoningProtection,
+      (parseEnvVar(Bun.env[envVarMapping.elasticsearch.disablePrototypePoisoningProtection], "boolean") as boolean) ??
+      defaultConfig.elasticsearch.disablePrototypePoisoningProtection,
   };
 
   // Load logging config
   config.logging = {
     level:
-      (parseEnvVar(process.env[envVarMapping.logging.level], "string") as "debug" | "info" | "warn" | "error") ||
+      (parseEnvVar(Bun.env[envVarMapping.logging.level], "string") as "debug" | "info" | "warn" | "error") ||
       defaultConfig.logging.level,
     format:
-      (parseEnvVar(process.env[envVarMapping.logging.format], "string") as "json" | "text") ||
-      defaultConfig.logging.format,
+      (parseEnvVar(Bun.env[envVarMapping.logging.format], "string") as "json" | "text") || defaultConfig.logging.format,
     includeMetadata:
-      (parseEnvVar(process.env[envVarMapping.logging.includeMetadata], "boolean") as boolean) ??
+      (parseEnvVar(Bun.env[envVarMapping.logging.includeMetadata], "boolean") as boolean) ??
       defaultConfig.logging.includeMetadata,
   };
 
   // Load security config
   config.security = {
     allowDestructiveOperations:
-      (parseEnvVar(process.env[envVarMapping.security.allowDestructiveOperations], "boolean") as boolean) ??
+      (parseEnvVar(Bun.env[envVarMapping.security.allowDestructiveOperations], "boolean") as boolean) ??
       defaultConfig.security.allowDestructiveOperations,
     allowSchemaModifications:
-      (parseEnvVar(process.env[envVarMapping.security.allowSchemaModifications], "boolean") as boolean) ??
+      (parseEnvVar(Bun.env[envVarMapping.security.allowSchemaModifications], "boolean") as boolean) ??
       defaultConfig.security.allowSchemaModifications,
     allowIndexManagement:
-      (parseEnvVar(process.env[envVarMapping.security.allowIndexManagement], "boolean") as boolean) ??
+      (parseEnvVar(Bun.env[envVarMapping.security.allowIndexManagement], "boolean") as boolean) ??
       defaultConfig.security.allowIndexManagement,
     maxBulkOperations:
-      (parseEnvVar(process.env[envVarMapping.security.maxBulkOperations], "number") as number) ||
+      (parseEnvVar(Bun.env[envVarMapping.security.maxBulkOperations], "number") as number) ||
       defaultConfig.security.maxBulkOperations,
   };
 
   // Load LangSmith config
   config.langsmith = {
     tracing:
-      (parseEnvVar(process.env[envVarMapping.langsmith.tracing], "boolean") as boolean) ??
-      defaultConfig.langsmith.tracing,
+      (parseEnvVar(Bun.env[envVarMapping.langsmith.tracing], "boolean") as boolean) ?? defaultConfig.langsmith.tracing,
     endpoint:
-      (parseEnvVar(process.env[envVarMapping.langsmith.endpoint], "string") as string) ||
-      defaultConfig.langsmith.endpoint,
-    apiKey: parseEnvVar(process.env[envVarMapping.langsmith.apiKey], "string") as string,
+      (parseEnvVar(Bun.env[envVarMapping.langsmith.endpoint], "string") as string) || defaultConfig.langsmith.endpoint,
+    apiKey: parseEnvVar(Bun.env[envVarMapping.langsmith.apiKey], "string") as string,
     project:
-      (parseEnvVar(process.env[envVarMapping.langsmith.project], "string") as string) ||
-      defaultConfig.langsmith.project,
+      (parseEnvVar(Bun.env[envVarMapping.langsmith.project], "string") as string) || defaultConfig.langsmith.project,
   };
 
   return config;
@@ -311,15 +302,15 @@ export function validateEnvironment(): { valid: boolean; errors: string[]; warni
   const warnings: string[] = [];
 
   for (const varName of requiredVars) {
-    if (!process.env[varName]) {
+    if (!Bun.env[varName]) {
       errors.push(`Missing required environment variable: ${varName}`);
     }
   }
 
   // Check for potential URL format issues
-  if (process.env.ES_URL) {
+  if (Bun.env.ES_URL) {
     try {
-      const url = new URL(process.env.ES_URL);
+      const url = new URL(Bun.env.ES_URL);
       if (!url.protocol.startsWith("http")) {
         errors.push("ES_URL must use http or https protocol");
       }
@@ -334,9 +325,9 @@ export function validateEnvironment(): { valid: boolean; errors: string[]; warni
   }
 
   // Check authentication configuration
-  const hasApiKey = !!process.env.ES_API_KEY;
-  const hasUsername = !!process.env.ES_USERNAME;
-  const hasPassword = !!process.env.ES_PASSWORD;
+  const hasApiKey = !!Bun.env.ES_API_KEY;
+  const hasUsername = !!Bun.env.ES_USERNAME;
+  const hasPassword = !!Bun.env.ES_PASSWORD;
 
   if (!hasApiKey && (!hasUsername || !hasPassword)) {
     warnings.push(
@@ -353,8 +344,8 @@ export function validateEnvironment(): { valid: boolean; errors: string[]; warni
   }
 
   // Check read-only configuration consistency
-  const readOnlyMode = process.env.READ_ONLY_MODE?.toLowerCase() === "true";
-  const readOnlyStrictMode = process.env.READ_ONLY_STRICT_MODE?.toLowerCase() === "true";
+  const readOnlyMode = Bun.env.READ_ONLY_MODE?.toLowerCase() === "true";
+  const readOnlyStrictMode = Bun.env.READ_ONLY_STRICT_MODE?.toLowerCase() === "true";
 
   if (!readOnlyMode && readOnlyStrictMode) {
     warnings.push("READ_ONLY_STRICT_MODE is enabled but READ_ONLY_MODE is disabled. STRICT_MODE will have no effect.");
@@ -425,6 +416,11 @@ try {
 // =============================================================================
 
 export { config, envVarMapping, defaultConfig };
+
+// Helper function to get the configuration
+export function getConfig(): Config {
+  return config;
+}
 
 // Helper function to get configuration warnings
 export function getConfigWarnings(): string[] {

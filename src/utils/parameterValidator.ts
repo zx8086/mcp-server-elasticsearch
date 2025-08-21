@@ -122,7 +122,8 @@ function getSchemaType(schema: z.ZodTypeAny): string {
       // For enums, try to get the values
       if (def.values) {
         return `enum(${Object.values(def.values).join(", ")})`;
-      } else if (def.entries) {
+      }
+      if (def.entries) {
         return `enum(${Object.values(def.entries).join(", ")})`;
       }
       return "enum";
@@ -246,7 +247,7 @@ function getDefaultValue(schema: z.ZodTypeAny): any {
  * Validate parameters and provide detailed error messages
  */
 export function validateParameters(
-  toolName: string,
+  _toolName: string,
   schema: z.ZodTypeAny,
   params: any,
 ): { valid: boolean; errors: ValidationError[]; suggestions: string[] } {

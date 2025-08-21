@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
-import { readdir, readFile, writeFile } from "fs/promises";
-import { join } from "path";
+import { readFile, readdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 
 interface ToolUpdate {
   file: string;

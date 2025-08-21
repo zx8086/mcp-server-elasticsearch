@@ -3,7 +3,6 @@
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { z } from "zod";
-import { zodToJsonSchemaCompat as zodToJsonSchema } from "./zodToJsonSchema.js";
 import { logger } from "./logger.js";
 import {
   PerformanceMonitor,
@@ -13,6 +12,7 @@ import {
   withNestedTrace,
 } from "./tracing.js";
 import { type ToolContext, traceNamedToolExecution } from "./tracingEnhanced.js";
+import { zodToJsonSchemaCompat as zodToJsonSchema } from "./zodToJsonSchema.js";
 
 // =============================================================================
 // TOOL REGISTRATION WITH TRACING

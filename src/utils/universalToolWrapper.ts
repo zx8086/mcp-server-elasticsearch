@@ -5,15 +5,15 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { z } from "zod";
 import type { ZodObject } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import { getParameterHelpMessage, getSuggestedParameters, toolNeedsParameters } from "./defaultParameters.js";
 import { logger } from "./logger.js";
+import { createErrorResponse, transformToMCPResponse } from "./mcpCompliantResponse.js";
+import { generateParameterHelp, validateParameters } from "./parameterValidator.js";
+import { handleLargeResponse } from "./responseHandler.js";
 import { getCurrentSession } from "./sessionContext.js";
 import { isTracingActive } from "./tracing.js";
 import { PerformanceMonitor } from "./tracing.js";
 import { traceNamedToolExecution } from "./tracingEnhanced.js";
-import { validateParameters, generateParameterHelp } from "./parameterValidator.js";
-import { getSuggestedParameters, toolNeedsParameters, getParameterHelpMessage } from "./defaultParameters.js";
-import { handleLargeResponse } from "./responseHandler.js";
-import { createErrorResponse, transformToMCPResponse } from "./mcpCompliantResponse.js";
 
 // =============================================================================
 // UNIVERSAL TOOL WRAPPER WITH AUTOMATIC TRACING
@@ -85,7 +85,7 @@ export function wrapServerWithTracing(server: McpServer): McpServer {
           // Clean up schema for MCP SDK compatibility
           if (convertedSchema && typeof convertedSchema === "object") {
             if ("$schema" in convertedSchema) {
-              delete convertedSchema.$schema;
+              convertedSchema.$schema = undefined;
             }
           }
 
@@ -101,7 +101,7 @@ export function wrapServerWithTracing(server: McpServer): McpServer {
 
         if (convertedSchema && typeof convertedSchema === "object") {
           if ("$schema" in convertedSchema) {
-            delete convertedSchema.$schema;
+            convertedSchema.$schema = undefined;
           }
         }
 
@@ -289,13 +289,7 @@ export function wrapServerWithTracing(server: McpServer): McpServer {
       try {
         // Enhanced validation with helpful error messages
         let validatedArgs: any;
-
-        try {
-          validatedArgs = validator(actualArgs);
-        } catch (validationError) {
-          // SIMPLIFIED: Just re-throw validation errors, no complex merging
-          throw validationError;
-        }
+        validatedArgs = validator(actualArgs);
 
         // Check if tracing is active
         if (!isTracingActive()) {

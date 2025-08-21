@@ -51,18 +51,17 @@ export function handleLargeResponse(
   // Try to intelligently truncate based on response type
   if (typeof response === "object" && response !== null) {
     return truncateObject(toolName, response, maxSize);
-  } else {
-    // For strings, simple truncation
-    const truncated = responseStr.substring(0, maxSize - TRUNCATION_BUFFER);
-    return {
-      content: [
-        {
-          type: "text",
-          text: `${truncated}\n\n⚠️ Response truncated. Original size: ${responseStr.length} bytes, limit: ${maxSize} bytes.`,
-        },
-      ],
-    };
   }
+  // For strings, simple truncation
+  const truncated = responseStr.substring(0, maxSize - TRUNCATION_BUFFER);
+  return {
+    content: [
+      {
+        type: "text",
+        text: `${truncated}\n\n⚠️ Response truncated. Original size: ${responseStr.length} bytes, limit: ${maxSize} bytes.`,
+      },
+    ],
+  };
 }
 
 /**
@@ -75,7 +74,7 @@ function truncateObject(toolName: string, obj: any, maxSize: number): any {
   }
 
   // Handle search results with hits
-  if (obj.hits && obj.hits.hits && Array.isArray(obj.hits.hits)) {
+  if (obj.hits?.hits && Array.isArray(obj.hits.hits)) {
     return truncateSearchResults(toolName, obj, maxSize);
   }
 
@@ -96,10 +95,10 @@ function truncateObject(toolName: string, obj: any, maxSize: number): any {
 /**
  * Truncate array responses
  */
-function truncateArray(toolName: string, arr: any[], maxSize: number): any {
+function truncateArray(_toolName: string, arr: any[], maxSize: number): any {
   const itemCount = arr.length;
   let includedItems = 0;
-  let result: any[] = [];
+  const result: any[] = [];
   let currentSize = 100; // Start with some overhead for structure
 
   for (const item of arr) {
@@ -130,13 +129,13 @@ function truncateArray(toolName: string, arr: any[], maxSize: number): any {
 /**
  * Truncate Elasticsearch search results
  */
-function truncateSearchResults(toolName: string, obj: any, maxSize: number): any {
+function truncateSearchResults(_toolName: string, obj: any, maxSize: number): any {
   const totalHits = obj.hits?.total?.value || obj.hits?.total || obj.hits?.hits?.length || 0;
   const hits = obj.hits?.hits || [];
 
   // Try to include more hits by being smarter about space
   let includedHits = 0;
-  let truncatedHits: any[] = [];
+  const truncatedHits: any[] = [];
   let currentSize = 500; // Account for metadata
   const targetHits = Math.min(hits.length, 100); // Try to include up to 100 hits
 
@@ -266,7 +265,7 @@ function truncateSource(source: any, maxSourceSize: number): any {
  */
 function truncateContentArray(toolName: string, obj: any, maxSize: number): any {
   const content = obj.content || [];
-  let truncatedContent: any[] = [];
+  const truncatedContent: any[] = [];
   let currentSize = 100;
   let actualItemsIncluded = 0;
 
@@ -317,7 +316,7 @@ function truncateContentArray(toolName: string, obj: any, maxSize: number): any 
 /**
  * Truncate indices response
  */
-function truncateIndicesResponse(toolName: string, obj: any, maxSize: number): any {
+function truncateIndicesResponse(_toolName: string, obj: any, maxSize: number): any {
   const indices = Object.keys(obj.indices || {});
   const totalIndices = indices.length;
 
@@ -325,7 +324,7 @@ function truncateIndicesResponse(toolName: string, obj: any, maxSize: number): a
     return obj;
   }
 
-  let includedIndices: Record<string, any> = {};
+  const includedIndices: Record<string, any> = {};
   let currentSize = 200;
   let includedCount = 0;
 
@@ -370,7 +369,7 @@ function truncateIndicesResponse(toolName: string, obj: any, maxSize: number): a
 /**
  * Generic object truncation
  */
-function genericObjectTruncation(toolName: string, obj: any, maxSize: number): any {
+function genericObjectTruncation(_toolName: string, obj: any, maxSize: number): any {
   const fullStr = JSON.stringify(obj, null, 2);
 
   // Try to include as much as possible

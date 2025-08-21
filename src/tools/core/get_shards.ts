@@ -15,7 +15,7 @@ const GetShardsParams = z.object({
       z
         .string()
         .regex(/^\d+$/)
-        .transform((val) => parseInt(val, 10)),
+        .transform((val) => Number.parseInt(val, 10)),
     ])
     .pipe(z.number().min(1).max(1000))
     .optional()
@@ -49,7 +49,7 @@ export const registerGetShardsTool: ToolRegistrationFunction = (server: McpServe
         logger.debug("Retrieved shard information", { totalCount: totalShards, requestedLimit: limit });
 
         // Sort shards based on sortBy parameter
-        let sortedShards = [...response];
+        const sortedShards = [...response];
 
         // Sort with unhealthy shards first for 'state' sorting
         if (sortBy === "state") {
@@ -69,14 +69,14 @@ export const registerGetShardsTool: ToolRegistrationFunction = (server: McpServe
           });
         } else if (sortBy === "size") {
           sortedShards.sort((a, b) => {
-            const sizeA = parseInt((a.store as string)?.replace(/[^\d]/g, "") || "0");
-            const sizeB = parseInt((b.store as string)?.replace(/[^\d]/g, "") || "0");
+            const sizeA = Number.parseInt((a.store as string)?.replace(/[^\d]/g, "") || "0");
+            const sizeB = Number.parseInt((b.store as string)?.replace(/[^\d]/g, "") || "0");
             return sizeB - sizeA; // Descending
           });
         } else if (sortBy === "docs") {
           sortedShards.sort((a, b) => {
-            const docsA = parseInt((a.docs as string) || "0");
-            const docsB = parseInt((b.docs as string) || "0");
+            const docsA = Number.parseInt((a.docs as string) || "0");
+            const docsB = Number.parseInt((b.docs as string) || "0");
             return docsB - docsA; // Descending
           });
         } else if (sortBy === "index") {

@@ -1,0 +1,416 @@
+{
+  "searchResponses": {
+    "logsWithDateRange": {
+      "took": 5,
+      "timed_out": false,
+      "_shards": {
+        "total": 1,
+        "successful": 1,
+        "skipped": 0,
+        "failed": 0
+      },
+      "hits": {
+        "total": {
+          "value": 3,
+          "relation": "eq"
+        },
+        "max_score": null,
+        "hits": [
+          {
+            "_index": "logs-2025.08.18",
+            "_id": "rWJhN5IBXhQwLPbX7mQL",
+            "_score": null,
+            "_source": {
+              "@timestamp": "2025-08-18T07:15:00Z",
+              "message": "ERROR: Connection timeout to database server",
+              "level": "error",
+              "service": "api-gateway",
+              "host": "prod-server-01",
+              "response_time": 30000,
+              "trace_id": "abc123def456",
+              "user_id": "user-789",
+              "request_path": "/api/v1/users/profile"
+            },
+            "sort": [1439281500000]
+          },
+          {
+            "_index": "logs-2025.08.18",
+            "_id": "rmJhN5IBXhQwLPbX8GQL",
+            "_score": null,
+            "_source": {
+              "@timestamp": "2025-08-18T07:30:00Z",
+              "message": "Successfully processed batch job",
+              "level": "info",
+              "service": "batch-processor",
+              "host": "worker-node-03",
+              "response_time": 1250,
+              "job_id": "job-456",
+              "records_processed": 5000
+            },
+            "sort": [1439282400000]
+          },
+          {
+            "_index": "logs-2025.08.18",
+            "_id": "r2JhN5IBXhQwLPbX8mQL",
+            "_score": null,
+            "_source": {
+              "@timestamp": "2025-08-18T07:45:00Z",
+              "message": "WARNING: Memory usage exceeds 80% threshold",
+              "level": "warning",
+              "service": "monitoring",
+              "host": "prod-server-02",
+              "memory_used_percent": 82.5,
+              "memory_available_mb": 3276,
+              "alert_triggered": true
+            },
+            "sort": [1439283300000]
+          }
+        ]
+      }
+    },
+    "aggregationQuery": {
+      "took": 12,
+      "timed_out": false,
+      "_shards": {
+        "total": 5,
+        "successful": 5,
+        "skipped": 0,
+        "failed": 0
+      },
+      "hits": {
+        "total": {
+          "value": 10000,
+          "relation": "gte"
+        },
+        "max_score": null,
+        "hits": []
+      },
+      "aggregations": {
+        "errors_over_time": {
+          "buckets": [
+            {
+              "key_as_string": "2025-08-18T07:00:00.000Z",
+              "key": 1439280000000,
+              "doc_count": 45
+            },
+            {
+              "key_as_string": "2025-08-18T07:05:00.000Z",
+              "key": 1439280300000,
+              "doc_count": 52
+            },
+            {
+              "key_as_string": "2025-08-18T07:10:00.000Z",
+              "key": 1439280600000,
+              "doc_count": 38
+            },
+            {
+              "key_as_string": "2025-08-18T07:15:00.000Z",
+              "key": 1439280900000,
+              "doc_count": 67
+            },
+            {
+              "key_as_string": "2025-08-18T07:20:00.000Z",
+              "key": 1439281200000,
+              "doc_count": 41
+            }
+          ]
+        },
+        "status_breakdown": {
+          "doc_count_error_upper_bound": 0,
+          "sum_other_doc_count": 0,
+          "buckets": [
+            {
+              "key": "200",
+              "doc_count": 8523
+            },
+            {
+              "key": "404",
+              "doc_count": 892
+            },
+            {
+              "key": "500",
+              "doc_count": 342
+            },
+            {
+              "key": "503",
+              "doc_count": 243
+            }
+          ]
+        },
+        "avg_response_time": {
+          "value": 245.67
+        }
+      }
+    },
+    "complexNestedQuery": {
+      "took": 8,
+      "timed_out": false,
+      "_shards": {
+        "total": 3,
+        "successful": 3,
+        "skipped": 0,
+        "failed": 0
+      },
+      "hits": {
+        "total": {
+          "value": 156,
+          "relation": "eq"
+        },
+        "max_score": 5.234,
+        "hits": [
+          {
+            "_index": "products-2025.08",
+            "_id": "prod-001",
+            "_score": 5.234,
+            "_source": {
+              "product_id": "SKU-12345",
+              "name": "Wireless Bluetooth Headphones",
+              "category": "Electronics",
+              "price": 89.99,
+              "in_stock": true,
+              "attributes": {
+                "color": "Black",
+                "battery_life": "30 hours",
+                "noise_cancellation": true,
+                "wireless_range": "10 meters"
+              },
+              "reviews": {
+                "count": 234,
+                "average_rating": 4.5,
+                "latest_review": {
+                  "user": "john_doe",
+                  "rating": 5,
+                  "comment": "Excellent sound quality!",
+                  "date": "2025-08-17T14:30:00Z"
+                }
+              },
+              "tags": ["wireless", "bluetooth", "noise-cancelling", "premium"],
+              "created_at": "2025-01-15T10:00:00Z",
+              "updated_at": "2025-08-18T09:00:00Z"
+            },
+            "highlight": {
+              "name": ["Wireless <em>Bluetooth</em> Headphones"],
+              "attributes.noise_cancellation": ["<em>true</em>"]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "indexListResponse": {
+    "indices": [
+      {
+        "health": "green",
+        "status": "open",
+        "index": "logs-2025.08.18",
+        "uuid": "a1b2c3d4e5f6",
+        "pri": "1",
+        "rep": "1",
+        "docs.count": "125847",
+        "docs.deleted": "0",
+        "store.size": "45.2mb",
+        "pri.store.size": "22.6mb"
+      },
+      {
+        "health": "green",
+        "status": "open",
+        "index": "metrics-2025.08.18",
+        "uuid": "f6e5d4c3b2a1",
+        "pri": "2",
+        "rep": "1",
+        "docs.count": "892451",
+        "docs.deleted": "125",
+        "store.size": "128.7mb",
+        "pri.store.size": "64.3mb"
+      },
+      {
+        "health": "yellow",
+        "status": "open",
+        "index": "users",
+        "uuid": "x9y8z7w6v5u4",
+        "pri": "5",
+        "rep": "1",
+        "docs.count": "45623",
+        "docs.deleted": "892",
+        "store.size": "12.4mb",
+        "pri.store.size": "6.2mb"
+      }
+    ]
+  },
+  "mappingResponse": {
+    "logs-2025.08.18": {
+      "mappings": {
+        "properties": {
+          "@timestamp": {
+            "type": "date",
+            "format": "strict_date_optional_time||epoch_millis"
+          },
+          "message": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "level": {
+            "type": "keyword"
+          },
+          "service": {
+            "type": "keyword"
+          },
+          "host": {
+            "type": "keyword"
+          },
+          "response_time": {
+            "type": "float"
+          },
+          "trace_id": {
+            "type": "keyword"
+          },
+          "user_id": {
+            "type": "keyword"
+          },
+          "request_path": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "geo": {
+            "properties": {
+              "location": {
+                "type": "geo_point"
+              },
+              "country": {
+                "type": "keyword"
+              },
+              "city": {
+                "type": "keyword"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "bulkOperationResponse": {
+    "took": 30,
+    "errors": false,
+    "items": [
+      {
+        "index": {
+          "_index": "test-bulk",
+          "_id": "1",
+          "_version": 1,
+          "result": "created",
+          "_shards": {
+            "total": 2,
+            "successful": 2,
+            "failed": 0
+          },
+          "_seq_no": 0,
+          "_primary_term": 1,
+          "status": 201
+        }
+      },
+      {
+        "index": {
+          "_index": "test-bulk",
+          "_id": "2",
+          "_version": 1,
+          "result": "created",
+          "_shards": {
+            "total": 2,
+            "successful": 2,
+            "failed": 0
+          },
+          "_seq_no": 1,
+          "_primary_term": 1,
+          "status": 201
+        }
+      },
+      {
+        "update": {
+          "_index": "test-bulk",
+          "_id": "3",
+          "_version": 2,
+          "result": "updated",
+          "_shards": {
+            "total": 2,
+            "successful": 2,
+            "failed": 0
+          },
+          "_seq_no": 2,
+          "_primary_term": 1,
+          "status": 200
+        }
+      }
+    ]
+  },
+  "clusterHealthResponse": {
+    "cluster_name": "elasticsearch-production",
+    "status": "green",
+    "timed_out": false,
+    "number_of_nodes": 5,
+    "number_of_data_nodes": 3,
+    "active_primary_shards": 127,
+    "active_shards": 254,
+    "relocating_shards": 0,
+    "initializing_shards": 0,
+    "unassigned_shards": 0,
+    "delayed_unassigned_shards": 0,
+    "number_of_pending_tasks": 0,
+    "number_of_in_flight_fetch": 0,
+    "task_max_waiting_in_queue_millis": 0,
+    "active_shards_percent_as_number": 100.0
+  },
+  "errorResponses": {
+    "indexNotFound": {
+      "error": {
+        "root_cause": [
+          {
+            "type": "index_not_found_exception",
+            "reason": "no such index [non-existent-index]",
+            "resource.type": "index_or_alias",
+            "resource.id": "non-existent-index",
+            "index_uuid": "_na_",
+            "index": "non-existent-index"
+          }
+        ],
+        "type": "index_not_found_exception",
+        "reason": "no such index [non-existent-index]",
+        "resource.type": "index_or_alias",
+        "resource.id": "non-existent-index",
+        "index_uuid": "_na_",
+        "index": "non-existent-index"
+      },
+      "status": 404
+    },
+    "queryParsingError": {
+      "error": {
+        "root_cause": [
+          {
+            "type": "parsing_exception",
+            "reason": "unknown query [invalid_query]",
+            "line": 1,
+            "col": 22
+          }
+        ],
+        "type": "parsing_exception",
+        "reason": "unknown query [invalid_query]",
+        "line": 1,
+        "col": 22,
+        "caused_by": {
+          "type": "named_object_not_found_exception",
+          "reason": "[1:22] unknown field [invalid_query]"
+        }
+      },
+      "status": 400
+    }
+  }
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
-import { readdir, readFile, writeFile } from "fs/promises";
-import { join } from "path";
+import { readFile, readdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 
 async function removeDefaults(dir: string) {
   const files = await readdir(dir, { withFileTypes: true });
@@ -29,7 +29,7 @@ async function removeDefaults(dir: string) {
         for (const match of matches.reverse()) {
           // Reverse to preserve indices
           const fullMatch = match[0];
-          const defaultValue = match[1];
+          const _defaultValue = match[1];
 
           // Check if this is in a Zod schema context (rough heuristic)
           const beforeContext = modified.substring(Math.max(0, match.index! - 100), match.index);
@@ -50,7 +50,7 @@ async function removeDefaults(dir: string) {
 
             // Check if .optional() already exists after
             if (!afterContext.trim().startsWith(".optional()")) {
-              modified = modified.substring(0, startIdx) + ".optional()" + modified.substring(endIdx);
+              modified = `${modified.substring(0, startIdx)}.optional()${modified.substring(endIdx)}`;
             } else {
               // Just remove the .default() call
               modified = modified.substring(0, startIdx) + modified.substring(endIdx);

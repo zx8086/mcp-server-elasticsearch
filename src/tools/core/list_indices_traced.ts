@@ -8,7 +8,7 @@ import { registerTracedTool } from "../../utils/toolWrapper.js";
 import { traceElasticsearchCall } from "../../utils/toolWrapper.js";
 
 const _MAX_INDICES_WITHOUT_SUMMARY = 50;
-const DEFAULT_LIMIT = 50;
+const _DEFAULT_LIMIT = 50;
 
 export const registerListIndicesTracedTool = (server: McpServer, esClient: Client) => {
   const inputSchema = z.object({
