@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
@@ -15,32 +15,32 @@ const indexDocumentSchema = {
     index: {
       type: "string",
       minLength: 1,
-      description: "REQUIRED: Name of the Elasticsearch index to store the document. Example: 'users', 'logs-2024.01'"
+      description: "REQUIRED: Name of the Elasticsearch index to store the document. Example: 'users', 'logs-2024.01'",
     },
     id: {
       type: "string",
-      description: "Optional: Unique identifier for the document. If not provided, Elasticsearch will generate one"
+      description: "Optional: Unique identifier for the document. If not provided, Elasticsearch will generate one",
     },
     document: {
       type: "object",
-      description: "REQUIRED: The JSON document to index"
+      description: "REQUIRED: The JSON document to index",
     },
     refresh: {
       type: "string",
       enum: ["true", "false", "wait_for"],
-      description: "Whether to refresh the index after the operation"
+      description: "Whether to refresh the index after the operation",
     },
     routing: {
-      type: "string", 
-      description: "Custom routing value for document placement"
+      type: "string",
+      description: "Custom routing value for document placement",
     },
     pipeline: {
       type: "string",
-      description: "Ingest pipeline to use for document processing"
-    }
+      description: "Ingest pipeline to use for document processing",
+    },
   },
   required: ["index", "document"],
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -56,23 +56,20 @@ const indexDocumentValidator = z.object({
 type IndexDocumentParams = z.infer<typeof indexDocumentValidator>;
 
 // MCP error handling
-function createIndexDocumentMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createIndexDocumentMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     document_already_exists: ErrorCode.InvalidRequest,
     version_conflict: ErrorCode.InvalidRequest,
   };
-  
+
   return new McpError(
     errorCodeMap[context.type] || ErrorCode.InternalError,
     `[elasticsearch_index_document] ${message}`,
-    context.details
+    context.details,
   );
 }
 
@@ -80,11 +77,11 @@ function createIndexDocumentMcpError(
 export const registerIndexDocumentTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const indexDocumentHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = indexDocumentValidator.parse(args);
-      
+
       const result = await esClient.index(
         {
           index: params.index,
@@ -96,57 +93,54 @@ export const registerIndexDocumentTool: ToolRegistrationFunction = (server: McpS
         },
         {
           opaqueId: "elasticsearch_index_document",
-        }
+        },
       );
-      
+
       const duration = performance.now() - perfStart;
       if (duration > 5000) {
         logger.warn("Slow document indexing", { duration });
       }
 
       return {
-        content: [
-          { type: "text", text: JSON.stringify(result, null, 2) }
-        ],
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createIndexDocumentMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createIndexDocumentMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       // Handle document already exists error
-      if (error instanceof Error && error.message.includes('document_already_exists')) {
-        throw createIndexDocumentMcpError('Document already exists', {
-          type: 'document_already_exists',
-          details: { 
+      if (error instanceof Error && error.message.includes("document_already_exists")) {
+        throw createIndexDocumentMcpError("Document already exists", {
+          type: "document_already_exists",
+          details: {
             duration: performance.now() - perfStart,
-            args 
-          }
+            args,
+          },
         });
       }
 
-      // Handle version conflict error  
-      if (error instanceof Error && error.message.includes('version_conflict')) {
-        throw createIndexDocumentMcpError('Version conflict occurred', {
-          type: 'version_conflict',
-          details: { 
+      // Handle version conflict error
+      if (error instanceof Error && error.message.includes("version_conflict")) {
+        throw createIndexDocumentMcpError("Version conflict occurred", {
+          type: "version_conflict",
+          details: {
             duration: performance.now() - perfStart,
-            args 
-          }
+            args,
+          },
         });
       }
-      
+
       throw createIndexDocumentMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -156,6 +150,6 @@ export const registerIndexDocumentTool: ToolRegistrationFunction = (server: McpS
     "elasticsearch_index_document",
     "Index a JSON document into Elasticsearch. Best for adding new documents, bulk data ingestion, real-time indexing. Use when you need to store structured JSON documents in Elasticsearch indices with optional routing and pipeline processing. Uses direct JSON Schema and standardized MCP error codes.",
     indexDocumentSchema,
-    withReadOnlyCheck("elasticsearch_index_document", indexDocumentHandler, OperationType.WRITE)
+    withReadOnlyCheck("elasticsearch_index_document", indexDocumentHandler, OperationType.WRITE),
   );
 };

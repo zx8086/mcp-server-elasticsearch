@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
@@ -12,21 +12,21 @@ const getShardsSchema = {
   properties: {
     index: {
       type: "string",
-      description: "Optional Elasticsearch index name to get shard information for"
+      description: "Optional Elasticsearch index name to get shard information for",
     },
     limit: {
       type: "integer",
       minimum: 1,
       maximum: 1000,
-      description: "Maximum number of shards to return (default: 100, max: 1000). Unhealthy shards are prioritized."
+      description: "Maximum number of shards to return (default: 100, max: 1000). Unhealthy shards are prioritized.",
     },
     sortBy: {
       type: "string",
       enum: ["state", "index", "size", "docs"],
-      description: "Sort order for shards. 'state' sorts unhealthy first (default: 'state')"
-    }
+      description: "Sort order for shards. 'state' sorts unhealthy first (default: 'state')",
+    },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 const getShardsValidator = z.object({
@@ -37,35 +37,32 @@ const getShardsValidator = z.object({
 
 type GetShardsParams = z.infer<typeof getShardsValidator>;
 
-function createGetShardsMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createGetShardsMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
-  if (message.includes('index_not_found')) {
-    return new McpError(ErrorCode.InvalidRequest, `Index not found: ${context.details?.index || 'unknown'}`);
+
+  if (message.includes("index_not_found")) {
+    return new McpError(ErrorCode.InvalidRequest, `Index not found: ${context.details?.index || "unknown"}`);
   }
-  
-  if (message.includes('cluster_block_exception')) {
-    return new McpError(ErrorCode.InvalidRequest, 'Cluster is blocked for shard operations');
+
+  if (message.includes("cluster_block_exception")) {
+    return new McpError(ErrorCode.InvalidRequest, "Cluster is blocked for shard operations");
   }
-  
-  if (message.includes('timeout')) {
-    return new McpError(ErrorCode.RequestTimeout, 'Request timed out while retrieving shard information');
+
+  if (message.includes("timeout")) {
+    return new McpError(ErrorCode.RequestTimeout, "Request timed out while retrieving shard information");
   }
-  
+
   return new McpError(ErrorCode.InternalError, `Failed to get shard information: ${message}`);
 }
 
 export const registerGetShardsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const getShardsHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       const params = getShardsValidator.parse(args);
       const { index, limit, sortBy } = params;
-      
+
       logger.debug("Getting shard information", { index, limit, sortBy });
 
       const response = await esClient.cat.shards({
@@ -76,10 +73,10 @@ export const registerGetShardsTool: ToolRegistrationFunction = (server: McpServe
 
       const totalShards = response.length;
       const duration = performance.now() - perfStart;
-      logger.debug("Retrieved shard information", { 
-        totalCount: totalShards, 
+      logger.debug("Retrieved shard information", {
+        totalCount: totalShards,
         requestedLimit: limit,
-        duration: `${duration.toFixed(2)}ms`
+        duration: `${duration.toFixed(2)}ms`,
       });
 
       const sortedShards = [...response];
@@ -145,18 +142,18 @@ export const registerGetShardsTool: ToolRegistrationFunction = (server: McpServe
       return {
         content: [
           { type: "text", text: metadataText },
-          { type: "text", text: JSON.stringify(shardsInfo, null, 2) }
+          { type: "text", text: JSON.stringify(shardsInfo, null, 2) },
         ],
       };
     } catch (error) {
       const duration = performance.now() - perfStart;
-      logger.error("Failed to get shard information", { 
+      logger.error("Failed to get shard information", {
         error: error instanceof Error ? error.message : String(error),
-        duration: `${duration.toFixed(2)}ms`
+        duration: `${duration.toFixed(2)}ms`,
       });
       throw createGetShardsMcpError(error instanceof Error ? error : new Error(String(error)), {
-        type: 'get_shards',
-        details: args
+        type: "get_shards",
+        details: args,
       });
     }
   };
@@ -165,6 +162,6 @@ export const registerGetShardsTool: ToolRegistrationFunction = (server: McpServe
     "elasticsearch_get_shards",
     "Get shard information. WARNING: Clusters often have 1000+ shards. Check cluster stats first to see shard count. If >500 shards, MUST use 'limit' or will fail. Patterns: {limit: 100, sortBy: 'state'} for health check, {limit: 50, sortBy: 'size'} for storage analysis. Empty {} only works for small clusters (<500 shards). Uses direct JSON Schema and standardized MCP error codes.",
     getShardsSchema,
-    getShardsHandler
+    getShardsHandler,
   );
 };

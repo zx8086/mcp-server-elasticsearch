@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
@@ -15,62 +15,62 @@ const updateByQuerySchema = {
     index: {
       type: "string",
       minLength: 1,
-      description: "Index name or pattern to update"
+      description: "Index name or pattern to update",
     },
     query: {
       type: "object",
       additionalProperties: true,
-      description: "Query DSL to select documents to update"
+      description: "Query DSL to select documents to update",
     },
     script: {
       type: "object",
       additionalProperties: true,
-      description: "Script to apply to matching documents"
+      description: "Script to apply to matching documents",
     },
     maxDocs: {
-      type: "number"
+      type: "number",
     },
     conflicts: {
       type: "string",
-      enum: ["abort", "proceed"]
+      enum: ["abort", "proceed"],
     },
     refresh: {
-      type: "boolean"
+      type: "boolean",
     },
     timeout: {
-      type: "string"
+      type: "string",
     },
     waitForActiveShards: {
       oneOf: [
         { type: "string", const: "all" },
-        { type: "number", minimum: 1, maximum: 9 }
-      ]
+        { type: "number", minimum: 1, maximum: 9 },
+      ],
     },
     waitForCompletion: {
-      type: "boolean"
+      type: "boolean",
     },
     requestsPerSecond: {
-      type: "number"
+      type: "number",
     },
     scroll: {
-      type: "string"
+      type: "string",
     },
     scrollSize: {
-      type: "number"
+      type: "number",
     },
     searchType: {
       type: "string",
-      enum: ["query_then_fetch", "dfs_query_then_fetch"]
+      enum: ["query_then_fetch", "dfs_query_then_fetch"],
     },
     searchTimeout: {
-      type: "string"
+      type: "string",
     },
     slices: {
-      type: "number"
-    }
+      type: "number",
+    },
   },
   required: ["index", "query"],
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -95,33 +95,26 @@ const updateByQueryValidator = z.object({
 type UpdateByQueryParams = z.infer<typeof updateByQueryValidator>;
 
 // MCP error handling
-function createUpdateByQueryMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createUpdateByQueryMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
   };
-  
-  return new McpError(
-    errorCodeMap[context.type],
-    `[elasticsearch_update_by_query] ${message}`,
-    context.details
-  );
+
+  return new McpError(errorCodeMap[context.type], `[elasticsearch_update_by_query] ${message}`, context.details);
 }
 
 // Tool implementation
 export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const updateByQueryHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = updateByQueryValidator.parse(args);
-      
+
       const result = await esClient.updateByQuery(
         {
           index: params.index,
@@ -142,7 +135,7 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpS
         },
         {
           opaqueId: "elasticsearch_update_by_query",
-        }
+        },
       );
 
       const duration = performance.now() - perfStart;
@@ -151,26 +144,23 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpS
       }
 
       return {
-        content: [
-          { type: "text", text: JSON.stringify(result, null, 2) }
-        ],
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createUpdateByQueryMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createUpdateByQueryMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       throw createUpdateByQueryMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -180,6 +170,6 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpS
     "elasticsearch_update_by_query",
     "Update documents by query in Elasticsearch. Best for bulk document updates, field modifications, script-based transformations. Use when you need to update multiple documents based on query conditions rather than individual document updates. Uses direct JSON Schema and standardized MCP error codes.",
     updateByQuerySchema,
-    updateByQueryHandler
+    updateByQueryHandler,
   );
 };

@@ -16,7 +16,6 @@ import { logger } from "../../../src/utils/logger.js";
 import { registerUpdateAliasesTool } from "../../../src/tools/alias/update_aliases.js";
 import { registerDeleteAliasTool } from "../../../src/tools/alias/delete_alias.js";
 import { registerPutAliasTool } from "../../../src/tools/alias/put_alias.js";
-import { registerGetAliasesOldTool } from "../../../src/tools/alias/get_aliases_old.js";
 import { registerGetAliasesImprovedTool } from "../../../src/tools/alias/get_aliases_improved.js";
 
 // Suppress logs during tests
@@ -59,7 +58,6 @@ describe.skipIf(shouldSkipIntegrationTests())("alias Tools - Real Integration Te
     registerUpdateAliasesTool(wrappedServer, client);
     registerDeleteAliasTool(wrappedServer, client);
     registerPutAliasTool(wrappedServer, client);
-    registerGetAliasesOldTool(wrappedServer, client);
     registerGetAliasesImprovedTool(wrappedServer, client);
     
     // Create test index with sample data

@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
@@ -16,18 +16,18 @@ const queryWatchesSchema = {
     from: {
       type: "number",
       minimum: 0,
-      description: "Starting offset for pagination"
+      description: "Starting offset for pagination",
     },
     size: {
       type: "number",
       minimum: 1,
       maximum: 50,
-      description: "Number of watches to return"
+      description: "Number of watches to return",
     },
     query: {
       type: "object",
       additionalProperties: true,
-      description: "Query to filter watches"
+      description: "Query to filter watches",
     },
     sort: {
       oneOf: [
@@ -36,29 +36,21 @@ const queryWatchesSchema = {
         {
           type: "array",
           items: {
-            oneOf: [
-              { type: "string" },
-              { type: "object", additionalProperties: true }
-            ]
-          }
-        }
+            oneOf: [{ type: "string" }, { type: "object", additionalProperties: true }],
+          },
+        },
       ],
-      description: "Sort criteria for results"
+      description: "Sort criteria for results",
     },
     search_after: {
       type: "array",
       items: {
-        oneOf: [
-          { type: "number" },
-          { type: "string" },
-          { type: "boolean" },
-          { type: "null" }
-        ]
+        oneOf: [{ type: "number" }, { type: "string" }, { type: "boolean" }, { type: "null" }],
       },
-      description: "Values to search after for pagination"
-    }
+      description: "Values to search after for pagination",
+    },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -75,21 +67,18 @@ const queryWatchesValidator = z.object({
 type QueryWatchesParams = z.infer<typeof queryWatchesValidator>;
 
 // MCP error handling
-function createQueryWatchesMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createQueryWatchesMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
   };
-  
+
   return new McpError(
     errorCodeMap[context.type] || ErrorCode.InternalError,
     `[elasticsearch_watcher_query_watches] ${message}`,
-    context.details
+    context.details,
   );
 }
 
@@ -97,11 +86,11 @@ function createQueryWatchesMcpError(
 export const registerWatcherQueryWatchesTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const queryWatchesHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = queryWatchesValidator.parse(args);
-      
+
       const result = await esClient.watcher.queryWatches({
         from: params.from,
         size: params.size,
@@ -123,22 +112,21 @@ export const registerWatcherQueryWatchesTool: ToolRegistrationFunction = (server
           },
         ],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createQueryWatchesMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createQueryWatchesMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       throw createQueryWatchesMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -148,6 +136,6 @@ export const registerWatcherQueryWatchesTool: ToolRegistrationFunction = (server
     "elasticsearch_watcher_query_watches",
     "Query and filter watches in Elasticsearch Watcher. Best for watch discovery, configuration management, monitoring overview. Use when you need to search and paginate through watch definitions in Elasticsearch alerting system. Uses direct JSON Schema and standardized MCP error codes.",
     queryWatchesSchema,
-    withReadOnlyCheck("elasticsearch_watcher_query_watches", queryWatchesHandler, OperationType.READ)
+    withReadOnlyCheck("elasticsearch_watcher_query_watches", queryWatchesHandler, OperationType.READ),
   );
 };

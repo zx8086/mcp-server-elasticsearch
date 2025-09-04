@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
@@ -13,41 +13,35 @@ const existsAliasSchema = {
   type: "object",
   properties: {
     name: {
-      oneOf: [
-        { type: "string" },
-        { type: "array", items: { type: "string" } }
-      ],
-      description: "Alias name(s) to check existence for. Examples: 'logs', ['alias1', 'alias2']"
+      oneOf: [{ type: "string" }, { type: "array", items: { type: "string" } }],
+      description: "Alias name(s) to check existence for. Examples: 'logs', ['alias1', 'alias2']",
     },
     index: {
-      oneOf: [
-        { type: "string" },
-        { type: "array", items: { type: "string" } }
-      ],
-      description: "Index name(s) or pattern(s) to check for aliases"
+      oneOf: [{ type: "string" }, { type: "array", items: { type: "string" } }],
+      description: "Index name(s) or pattern(s) to check for aliases",
     },
     allowNoIndices: {
       type: "boolean",
-      description: "Whether to ignore if a wildcard indices expression resolves into no concrete indices"
+      description: "Whether to ignore if a wildcard indices expression resolves into no concrete indices",
     },
     expandWildcards: {
       oneOf: [
         { type: "string", enum: ["all", "open", "closed", "hidden", "none"] },
-        { type: "array", items: { type: "string", enum: ["all", "open", "closed", "hidden", "none"] } }
+        { type: "array", items: { type: "string", enum: ["all", "open", "closed", "hidden", "none"] } },
       ],
-      description: "Type of index that wildcard patterns can match"
+      description: "Type of index that wildcard patterns can match",
     },
     ignoreUnavailable: {
       type: "boolean",
-      description: "Whether specified concrete indices should be ignored when unavailable"
+      description: "Whether specified concrete indices should be ignored when unavailable",
     },
     masterTimeout: {
       type: "string",
-      description: "Timeout for connection to master node"
-    }
+      description: "Timeout for connection to master node",
+    },
   },
   required: ["name"],
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -69,79 +63,76 @@ type ExistsAliasParams = z.infer<typeof existsAliasValidator>;
 function createExistsAliasMcpError(
   error: Error | string,
   context: {
-    type: 'validation' | 'execution' | 'index_not_found' | 'timeout';
+    type: "validation" | "execution" | "index_not_found" | "timeout";
     details?: any;
-  }
+  },
 ): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     index_not_found: ErrorCode.InvalidParams,
-    timeout: ErrorCode.InternalError
+    timeout: ErrorCode.InternalError,
   };
-  
-  return new McpError(
-    errorCodeMap[context.type],
-    `[elasticsearch_exists_alias] ${message}`,
-    context.details
-  );
+
+  return new McpError(errorCodeMap[context.type], `[elasticsearch_exists_alias] ${message}`, context.details);
 }
 
 // Tool implementation
 export const registerExistsAliasTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  
   const existsAliasHandler = async (args: any): Promise<SearchResult> => {
     try {
       // Validate parameters
       const params = existsAliasValidator.parse(args);
-      
+
       logger.debug("Checking if alias exists", { name: params.name, index: params.index });
-      
-      const result = await esClient.indices.existsAlias({
-        name: params.name,
-        index: params.index,
-        allow_no_indices: params.allowNoIndices,
-        expand_wildcards: params.expandWildcards,
-        ignore_unavailable: params.ignoreUnavailable,
-        master_timeout: params.masterTimeout,
-      }, {
-        opaqueId: "elasticsearch_exists_alias",
-      });
-      
+
+      const result = await esClient.indices.existsAlias(
+        {
+          name: params.name,
+          index: params.index,
+          allow_no_indices: params.allowNoIndices,
+          expand_wildcards: params.expandWildcards,
+          ignore_unavailable: params.ignoreUnavailable,
+          master_timeout: params.masterTimeout,
+        },
+        {
+          opaqueId: "elasticsearch_exists_alias",
+        },
+      );
+
       return {
         content: [{ type: "text", text: JSON.stringify({ exists: result }, null, 2) }],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createExistsAliasMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createExistsAliasMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       if (error instanceof Error) {
-        if (error.message.includes('index_not_found_exception')) {
+        if (error.message.includes("index_not_found_exception")) {
           throw createExistsAliasMcpError(`Index not found: ${args?.index}`, {
-            type: 'index_not_found',
-            details: { originalError: error.message }
+            type: "index_not_found",
+            details: { originalError: error.message },
           });
         }
 
-        if (error.message.includes('timeout') || error.message.includes('timed_out')) {
+        if (error.message.includes("timeout") || error.message.includes("timed_out")) {
           throw createExistsAliasMcpError(`Operation timed out: ${error.message}`, {
-            type: 'timeout',
-            details: { originalError: error.message }
+            type: "timeout",
+            details: { originalError: error.message },
           });
         }
       }
 
       throw createExistsAliasMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { args }
+        type: "execution",
+        details: { args },
       });
     }
   };
@@ -151,6 +142,6 @@ export const registerExistsAliasTool: ToolRegistrationFunction = (server: McpSer
     "elasticsearch_exists_alias",
     "Check if index or data stream aliases exist in Elasticsearch. Best for alias validation, deployment verification, configuration checks. Use when you need to verify alias presence before operations in Elasticsearch.",
     existsAliasSchema,
-    existsAliasHandler
+    existsAliasHandler,
   );
 };

@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
@@ -13,61 +13,61 @@ const clusterHealthSchema = {
   properties: {
     index: {
       type: "string",
-      description: "Comma-separated list of indices to check health for. Leave empty for cluster-wide health."
+      description: "Comma-separated list of indices to check health for. Leave empty for cluster-wide health.",
     },
     expandWildcards: {
       type: "string",
       enum: ["all", "open", "closed", "hidden", "none"],
-      description: "Controls which types of indices to include when using wildcards"
+      description: "Controls which types of indices to include when using wildcards",
     },
     level: {
       type: "string",
       enum: ["cluster", "indices", "shards"],
-      description: "Level of detail to return: cluster (default), indices, or shards"
+      description: "Level of detail to return: cluster (default), indices, or shards",
     },
     local: {
       type: "boolean",
-      description: "Return local information, do not retrieve from master node"
+      description: "Return local information, do not retrieve from master node",
     },
     masterTimeout: {
       type: "string",
-      description: "Timeout for connecting to master node (e.g., '30s', '1m')"
+      description: "Timeout for connecting to master node (e.g., '30s', '1m')",
     },
     timeout: {
       type: "string",
-      description: "Timeout for the request (e.g., '30s', '1m')"
+      description: "Timeout for the request (e.g., '30s', '1m')",
     },
     waitForActiveShards: {
       oneOf: [
         { type: "string", enum: ["all"] },
-        { type: "number", minimum: 0 }
+        { type: "number", minimum: 0 },
       ],
-      description: "Wait until the specified number of shards are active"
+      description: "Wait until the specified number of shards are active",
     },
     waitForEvents: {
       type: "string",
       enum: ["immediate", "urgent", "high", "normal", "low", "languid"],
-      description: "Wait until all pending events are processed"
+      description: "Wait until all pending events are processed",
     },
     waitForNoInitializingShards: {
       type: "boolean",
-      description: "Wait until there are no initializing shards"
+      description: "Wait until there are no initializing shards",
     },
     waitForNoRelocatingShards: {
       type: "boolean",
-      description: "Wait until there are no relocating shards"
+      description: "Wait until there are no relocating shards",
     },
     waitForNodes: {
       type: "string",
-      description: "Wait until the specified number of nodes are available (e.g., '>=2')"
+      description: "Wait until the specified number of nodes are available (e.g., '>=2')",
     },
     waitForStatus: {
       type: "string",
       enum: ["green", "yellow", "red"],
-      description: "Wait until cluster status reaches the specified level"
-    }
+      description: "Wait until cluster status reaches the specified level",
+    },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -92,37 +92,32 @@ type ClusterHealthParams = z.infer<typeof clusterHealthValidator>;
 function createClusterHealthMcpError(
   error: Error | string,
   context: {
-    type: 'validation' | 'execution' | 'cluster_unhealthy' | 'node_unavailable';
+    type: "validation" | "execution" | "cluster_unhealthy" | "node_unavailable";
     details?: any;
-  }
+  },
 ): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     cluster_unhealthy: ErrorCode.InternalError,
-    node_unavailable: ErrorCode.InternalError
+    node_unavailable: ErrorCode.InternalError,
   };
-  
-  return new McpError(
-    errorCodeMap[context.type],
-    `[elasticsearch_get_cluster_health] ${message}`,
-    context.details
-  );
+
+  return new McpError(errorCodeMap[context.type], `[elasticsearch_get_cluster_health] ${message}`, context.details);
 }
 
 // Tool implementation
 export const registerGetClusterHealthTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  
   const clusterHealthHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
     const requestId = Math.random().toString(36).substring(7);
-    
+
     try {
       // Validate parameters
       const params = clusterHealthValidator.parse(args);
-      
+
       logger.info(`[${requestId}] Cluster health request received`, {
         params: {
           ...params,
@@ -148,7 +143,7 @@ export const registerGetClusterHealthTool: ToolRegistrationFunction = (server: M
 
       logger.debug(`[${requestId}] Request parameters:`, requestParams);
       logger.info(`[${requestId}] Executing cluster.health()...`);
-      
+
       const result = await esClient.cluster.health(requestParams, {
         opaqueId: "elasticsearch_get_cluster_health",
       });
@@ -176,29 +171,28 @@ export const registerGetClusterHealthTool: ToolRegistrationFunction = (server: M
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createClusterHealthMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createClusterHealthMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       if (error instanceof Error) {
         // Cluster-specific error handling
-        if (error.message.includes('cluster_block_exception') || error.message.includes('cluster_unhealthy')) {
+        if (error.message.includes("cluster_block_exception") || error.message.includes("cluster_unhealthy")) {
           throw createClusterHealthMcpError(`Cluster is unhealthy: ${error.message}`, {
-            type: 'cluster_unhealthy',
-            details: { originalError: error.message }
+            type: "cluster_unhealthy",
+            details: { originalError: error.message },
           });
         }
 
-        if (error.message.includes('node_not_connected') || error.message.includes('no_node_available')) {
+        if (error.message.includes("node_not_connected") || error.message.includes("no_node_available")) {
           throw createClusterHealthMcpError(`Node unavailable: ${error.message}`, {
-            type: 'node_unavailable',
-            details: { originalError: error.message }
+            type: "node_unavailable",
+            details: { originalError: error.message },
           });
         }
       }
@@ -218,12 +212,12 @@ export const registerGetClusterHealthTool: ToolRegistrationFunction = (server: M
       });
 
       throw createClusterHealthMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
           requestId,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -233,6 +227,6 @@ export const registerGetClusterHealthTool: ToolRegistrationFunction = (server: M
     "elasticsearch_get_cluster_health",
     "Get the health status of the Elasticsearch cluster. Best for cluster monitoring, health checks, system diagnostics. Use when you need to assess cluster status, node availability, and overall Elasticsearch system health. READ operation - safe for production use.",
     clusterHealthSchema,
-    clusterHealthHandler
+    clusterHealthHandler,
   );
 };

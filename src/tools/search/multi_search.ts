@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
@@ -16,26 +16,26 @@ const multiSearchSchema = {
       type: "array",
       items: {
         type: "object",
-        additionalProperties: true
-      }
+        additionalProperties: true,
+      },
     },
     index: {
-      type: "string"
+      type: "string",
     },
     maxConcurrentSearches: {
-      type: "number"
+      type: "number",
     },
     ccsMinimizeRoundtrips: {
-      type: "boolean"
+      type: "boolean",
     },
     restTotalHitsAsInt: {
-      type: "boolean"
+      type: "boolean",
     },
     typedKeys: {
-      type: "boolean"
-    }
+      type: "boolean",
+    },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -51,33 +51,26 @@ const multiSearchValidator = z.object({
 type MultiSearchParams = z.infer<typeof multiSearchValidator>;
 
 // MCP error handling
-function createMultiSearchMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createMultiSearchMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
   };
-  
-  return new McpError(
-    errorCodeMap[context.type],
-    `[elasticsearch_multi_search] ${message}`,
-    context.details
-  );
+
+  return new McpError(errorCodeMap[context.type], `[elasticsearch_multi_search] ${message}`, context.details);
 }
 
 // Tool implementation
 export const registerMultiSearchTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const multiSearchHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = multiSearchValidator.parse(args);
-      
+
       const result = await esClient.msearch({
         searches: params.searches,
         index: params.index,
@@ -93,26 +86,23 @@ export const registerMultiSearchTool: ToolRegistrationFunction = (server: McpSer
       }
 
       return {
-        content: [
-          { type: "text", text: JSON.stringify(result, null, 2) }
-        ],
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createMultiSearchMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createMultiSearchMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       throw createMultiSearchMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -122,6 +112,6 @@ export const registerMultiSearchTool: ToolRegistrationFunction = (server: McpSer
     "elasticsearch_multi_search",
     "Perform multiple searches in Elasticsearch in a single request. Best for batch search operations, dashboard queries, parallel search execution. Use when you need to execute multiple Query DSL searches across different Elasticsearch indices efficiently. Uses direct JSON Schema and standardized MCP error codes.",
     multiSearchSchema,
-    multiSearchHandler
+    multiSearchHandler,
   );
 };

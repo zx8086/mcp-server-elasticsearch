@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
@@ -15,53 +15,54 @@ const deleteDocumentSchema = {
     index: {
       type: "string",
       minLength: 1,
-      description: "REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'"
+      description:
+        "REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'",
     },
     id: {
       type: "string",
       minLength: 1,
-      description: "REQUIRED: Unique identifier of the document to delete"
+      description: "REQUIRED: Unique identifier of the document to delete",
     },
     routing: {
       type: "string",
-      description: "Custom routing value for document placement"
+      description: "Custom routing value for document placement",
     },
     refresh: {
       type: "string",
       enum: ["true", "false", "wait_for"],
-      description: "Whether to refresh the index after the operation"
+      description: "Whether to refresh the index after the operation",
     },
     version: {
       type: "number",
-      description: "Expected document version for optimistic concurrency control"
+      description: "Expected document version for optimistic concurrency control",
     },
     versionType: {
       type: "string",
       enum: ["internal", "external", "external_gte", "force"],
-      description: "Version type for concurrency control"
+      description: "Version type for concurrency control",
     },
     ifSeqNo: {
       type: "number",
-      description: "Sequence number for optimistic concurrency control"
+      description: "Sequence number for optimistic concurrency control",
     },
     ifPrimaryTerm: {
       type: "number",
-      description: "Primary term for optimistic concurrency control"
+      description: "Primary term for optimistic concurrency control",
     },
     timeout: {
       type: "string",
-      description: "Operation timeout (e.g., '5s', '1m')"
+      description: "Operation timeout (e.g., '5s', '1m')",
     },
     waitForActiveShards: {
       oneOf: [
         { type: "string", enum: ["all"] },
-        { type: "number", minimum: 1, maximum: 9 }
+        { type: "number", minimum: 1, maximum: 9 },
       ],
-      description: "Number of active shards to wait for"
-    }
+      description: "Number of active shards to wait for",
+    },
   },
   required: ["index", "id"],
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -81,23 +82,20 @@ const deleteDocumentValidator = z.object({
 type DeleteDocumentParams = z.infer<typeof deleteDocumentValidator>;
 
 // MCP error handling
-function createDeleteDocumentMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createDeleteDocumentMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     document_not_found: ErrorCode.InvalidParams,
     version_conflict: ErrorCode.InvalidRequest,
   };
-  
+
   return new McpError(
     errorCodeMap[context.type] || ErrorCode.InternalError,
     `[elasticsearch_delete_document] ${message}`,
-    context.details
+    context.details,
   );
 }
 
@@ -105,11 +103,11 @@ function createDeleteDocumentMcpError(
 export const registerDeleteDocumentTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const deleteDocumentHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = deleteDocumentValidator.parse(args);
-      
+
       const result = await esClient.delete({
         index: params.index,
         id: params.id,
@@ -122,55 +120,52 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (server: Mcp
         timeout: params.timeout,
         wait_for_active_shards: params.waitForActiveShards,
       });
-      
+
       const duration = performance.now() - perfStart;
       if (duration > 5000) {
         logger.warn("Slow document deletion", { duration });
       }
 
       return {
-        content: [
-          { type: "text", text: JSON.stringify(result, null, 2) }
-        ],
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createDeleteDocumentMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createDeleteDocumentMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       // Handle document not found error
-      if (error instanceof Error && error.message.includes('document_not_found')) {
-        throw createDeleteDocumentMcpError('Document not found', {
-          type: 'document_not_found',
-          details: { 
+      if (error instanceof Error && error.message.includes("document_not_found")) {
+        throw createDeleteDocumentMcpError("Document not found", {
+          type: "document_not_found",
+          details: {
             duration: performance.now() - perfStart,
-            args 
-          }
+            args,
+          },
         });
       }
 
       // Handle version conflict error
-      if (error instanceof Error && error.message.includes('version_conflict')) {
-        throw createDeleteDocumentMcpError('Version conflict occurred', {
-          type: 'version_conflict',
-          details: { 
+      if (error instanceof Error && error.message.includes("version_conflict")) {
+        throw createDeleteDocumentMcpError("Version conflict occurred", {
+          type: "version_conflict",
+          details: {
             duration: performance.now() - perfStart,
-            args 
-          }
+            args,
+          },
         });
       }
-      
+
       throw createDeleteDocumentMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -180,6 +175,6 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (server: Mcp
     "elasticsearch_delete_document",
     "Delete a document from Elasticsearch by index and id. Best for removing specific documents, data cleanup, document lifecycle management. Use when you need to permanently remove individual JSON documents from Elasticsearch indices with optimistic concurrency control. Uses direct JSON Schema and standardized MCP error codes.",
     deleteDocumentSchema,
-    withReadOnlyCheck("elasticsearch_delete_document", deleteDocumentHandler, OperationType.DESTRUCTIVE)
+    withReadOnlyCheck("elasticsearch_delete_document", deleteDocumentHandler, OperationType.DESTRUCTIVE),
   );
 };

@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
@@ -14,10 +14,10 @@ const startWatcherSchema = {
   properties: {
     master_timeout: {
       type: "string",
-      description: "Explicit operation timeout for connection to master node"
-    }
+      description: "Explicit operation timeout for connection to master node",
+    },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -28,21 +28,18 @@ const startWatcherValidator = z.object({
 type StartWatcherParams = z.infer<typeof startWatcherValidator>;
 
 // MCP error handling
-function createStartWatcherMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createStartWatcherMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
   };
-  
+
   return new McpError(
     errorCodeMap[context.type] || ErrorCode.InternalError,
     `[elasticsearch_watcher_start] ${message}`,
-    context.details
+    context.details,
   );
 }
 
@@ -50,11 +47,11 @@ function createStartWatcherMcpError(
 export const registerWatcherStartTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const startWatcherHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = startWatcherValidator.parse(args);
-      
+
       const result = await esClient.watcher.start({
         master_timeout: params.master_timeout,
       });
@@ -72,22 +69,21 @@ export const registerWatcherStartTool: ToolRegistrationFunction = (server: McpSe
           },
         ],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createStartWatcherMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createStartWatcherMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       throw createStartWatcherMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -97,6 +93,6 @@ export const registerWatcherStartTool: ToolRegistrationFunction = (server: McpSe
     "elasticsearch_watcher_start",
     "Start the Elasticsearch Watcher service. Best for service management, monitoring activation, system initialization. Use when you need to enable the Watcher service for Elasticsearch alerting and monitoring capabilities. Uses direct JSON Schema and standardized MCP error codes.",
     startWatcherSchema,
-    withReadOnlyCheck("elasticsearch_watcher_start", startWatcherHandler, OperationType.WRITE)
+    withReadOnlyCheck("elasticsearch_watcher_start", startWatcherHandler, OperationType.WRITE),
   );
 };

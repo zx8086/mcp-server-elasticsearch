@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
@@ -16,7 +16,7 @@ const putWatchSchema = {
     id: {
       type: "string",
       minLength: 1,
-      description: "Watch ID"
+      description: "Watch ID",
     },
     actions: {
       type: "object",
@@ -26,17 +26,17 @@ const putWatchSchema = {
           add_backing_index: {
             type: "object",
             additionalProperties: true,
-            description: "Add backing index action"
+            description: "Add backing index action",
           },
           remove_backing_index: {
-            type: "object", 
+            type: "object",
             additionalProperties: true,
-            description: "Remove backing index action"
-          }
+            description: "Remove backing index action",
+          },
         },
-        additionalProperties: true
+        additionalProperties: true,
       },
-      description: "Actions to execute when watch triggers"
+      description: "Actions to execute when watch triggers",
     },
     condition: {
       type: "object",
@@ -44,71 +44,71 @@ const putWatchSchema = {
         always: {
           type: "object",
           additionalProperties: true,
-          description: "Always condition"
+          description: "Always condition",
         },
         array_compare: {
           type: "object",
           additionalProperties: true,
-          description: "Array compare condition"
+          description: "Array compare condition",
         },
         compare: {
           type: "object",
           additionalProperties: true,
-          description: "Compare condition"
+          description: "Compare condition",
         },
         never: {
           type: "object",
           additionalProperties: true,
-          description: "Never condition"
+          description: "Never condition",
         },
         script: {
           type: "object",
           additionalProperties: true,
-          description: "Script condition"
-        }
+          description: "Script condition",
+        },
       },
       additionalProperties: true,
-      description: "Condition that determines when to execute actions"
+      description: "Condition that determines when to execute actions",
     },
     input: {
-      type: "object", 
+      type: "object",
       properties: {
         chain: {
           type: "object",
           additionalProperties: true,
-          description: "Chain input"
+          description: "Chain input",
         },
         http: {
           type: "object",
           additionalProperties: true,
-          description: "HTTP input"
+          description: "HTTP input",
         },
         search: {
           type: "object",
           additionalProperties: true,
-          description: "Search input"
+          description: "Search input",
         },
         simple: {
           type: "object",
           additionalProperties: true,
-          description: "Simple input"
-        }
+          description: "Simple input",
+        },
       },
       additionalProperties: true,
-      description: "Input for the watch execution"
+      description: "Input for the watch execution",
     },
     metadata: {
       type: "object",
       additionalProperties: true,
-      description: "Watch metadata"
+      description: "Watch metadata",
     },
     throttle_period: {
       type: "string",
-      description: "Throttle period for watch execution"
+      description: "Throttle period for watch execution",
     },
     throttle_period_in_millis: {
       type: "number",
-      description: "Throttle period in milliseconds"
+      description: "Throttle period in milliseconds",
     },
     transform: {
       type: "object",
@@ -116,21 +116,21 @@ const putWatchSchema = {
         chain: {
           type: "object",
           additionalProperties: true,
-          description: "Chain transform"
+          description: "Chain transform",
         },
         script: {
-          type: "object", 
+          type: "object",
           additionalProperties: true,
-          description: "Script transform"
+          description: "Script transform",
         },
         search: {
           type: "object",
           additionalProperties: true,
-          description: "Search transform"
-        }
+          description: "Search transform",
+        },
       },
       additionalProperties: true,
-      description: "Transform to apply to watch payload"
+      description: "Transform to apply to watch payload",
     },
     trigger: {
       type: "object",
@@ -138,31 +138,31 @@ const putWatchSchema = {
         schedule: {
           type: "object",
           additionalProperties: true,
-          description: "Schedule trigger"
-        }
+          description: "Schedule trigger",
+        },
       },
       additionalProperties: true,
-      description: "Trigger that determines when watch should run"
+      description: "Trigger that determines when watch should run",
     },
     active: {
       type: "boolean",
-      description: "Whether the watch is active"
+      description: "Whether the watch is active",
     },
     if_primary_term: {
       type: "number",
-      description: "Only perform operation if primary term matches"
+      description: "Only perform operation if primary term matches",
     },
     if_seq_no: {
       type: "number",
-      description: "Only perform operation if sequence number matches"
+      description: "Only perform operation if sequence number matches",
     },
     version: {
-      type: "number", 
-      description: "Explicit version number for concurrency control"
-    }
+      type: "number",
+      description: "Explicit version number for concurrency control",
+    },
   },
   required: ["id"],
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -217,22 +217,19 @@ const putWatchValidator = z.object({
 type PutWatchParams = z.infer<typeof putWatchValidator>;
 
 // MCP error handling
-function createPutWatchMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createPutWatchMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     watch_already_exists: ErrorCode.InvalidRequest,
   };
-  
+
   return new McpError(
     errorCodeMap[context.type] || ErrorCode.InternalError,
     `[elasticsearch_watcher_put_watch] ${message}`,
-    context.details
+    context.details,
   );
 }
 
@@ -240,11 +237,11 @@ function createPutWatchMcpError(
 export const registerWatcherPutWatchTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const putWatchHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = putWatchValidator.parse(args);
-      
+
       const result = await esClient.watcher.putWatch({
         id: params.id,
         actions: params.actions,
@@ -274,30 +271,29 @@ export const registerWatcherPutWatchTool: ToolRegistrationFunction = (server: Mc
           },
         ],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createPutWatchMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createPutWatchMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       // Add specific watch error handling
-      if (error instanceof Error && error.message.includes('version_conflict_engine_exception')) {
+      if (error instanceof Error && error.message.includes("version_conflict_engine_exception")) {
         throw createPutWatchMcpError(error.message, {
-          type: 'watch_already_exists',
-          details: { watchId: args.id }
+          type: "watch_already_exists",
+          details: { watchId: args.id },
         });
       }
 
       throw createPutWatchMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -307,6 +303,6 @@ export const registerWatcherPutWatchTool: ToolRegistrationFunction = (server: Mc
     "elasticsearch_watcher_put_watch",
     "Create or update a watch in Elasticsearch Watcher. Best for alerting setup, monitoring automation, notification configuration. Use when you need to define watch triggers and actions for Elasticsearch alerting workflows. IMPORTANT: Use only this API, not direct index operations. Uses direct JSON Schema and standardized MCP error codes.",
     putWatchSchema,
-    withReadOnlyCheck("elasticsearch_watcher_put_watch", putWatchHandler, OperationType.WRITE)
+    withReadOnlyCheck("elasticsearch_watcher_put_watch", putWatchHandler, OperationType.WRITE),
   );
 };

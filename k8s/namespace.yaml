@@ -1,0 +1,10 @@
+# Namespace for Elasticsearch MCP Server
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: elasticsearch-mcp
+  labels:
+    app.kubernetes.io/name: elasticsearch-mcp-server
+    app.kubernetes.io/component: namespace
+    app.kubernetes.io/part-of: mcp-ecosystem
+spec:

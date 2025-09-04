@@ -1,0 +1,47 @@
+# Service for Elasticsearch MCP Server
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch-mcp-server
+  namespace: elasticsearch-mcp
+  labels:
+    app.kubernetes.io/name: elasticsearch-mcp-server
+    app.kubernetes.io/component: service
+    app.kubernetes.io/part-of: mcp-ecosystem
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"  # For AWS
+    service.beta.kubernetes.io/azure-load-balancer-mode: "as-service"  # For Azure
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: http
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: elasticsearch-mcp-server
+
+---
+# Headless Service for StatefulSet discovery (if needed)
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch-mcp-server-headless
+  namespace: elasticsearch-mcp
+  labels:
+    app.kubernetes.io/name: elasticsearch-mcp-server
+    app.kubernetes.io/component: headless-service
+    app.kubernetes.io/part-of: mcp-ecosystem
+spec:
+  clusterIP: None
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: elasticsearch-mcp-server

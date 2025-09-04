@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
@@ -16,68 +16,69 @@ const updateDocumentSchema = {
     index: {
       type: "string",
       minLength: 1,
-      description: "REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'"
+      description:
+        "REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'",
     },
     id: {
       type: "string",
       minLength: 1,
-      description: "REQUIRED: Unique identifier of the document to update"
+      description: "REQUIRED: Unique identifier of the document to update",
     },
     doc: {
       type: "object",
-      description: "Partial document with fields to update"
+      description: "Partial document with fields to update",
     },
     script: {
       type: "object",
-      description: "Script to run for updating the document"
+      description: "Script to run for updating the document",
     },
     upsert: {
       type: "object",
-      description: "Document to create if the document doesn't exist"
+      description: "Document to create if the document doesn't exist",
     },
     docAsUpsert: {
       type: "boolean",
-      description: "Use the doc as upsert value if document doesn't exist"
+      description: "Use the doc as upsert value if document doesn't exist",
     },
     detectNoop: {
       type: "boolean",
-      description: "Whether to detect if the update is a no-op"
+      description: "Whether to detect if the update is a no-op",
     },
     scriptedUpsert: {
       type: "boolean",
-      description: "Whether to run the script during upsert"
+      description: "Whether to run the script during upsert",
     },
     refresh: {
       type: "string",
       enum: ["true", "false", "wait_for"],
-      description: "Whether to refresh the index after the operation"
+      description: "Whether to refresh the index after the operation",
     },
     routing: {
       type: "string",
-      description: "Custom routing value for document placement"
+      description: "Custom routing value for document placement",
     },
     timeout: {
       type: "string",
-      description: "Operation timeout (e.g., '5s', '1m')"
+      description: "Operation timeout (e.g., '5s', '1m')",
     },
     waitForActiveShards: {
       oneOf: [
         { type: "string", enum: ["all"] },
-        { type: "number", minimum: 1, maximum: 9 }
+        { type: "number", minimum: 1, maximum: 9 },
       ],
-      description: "Number of active shards to wait for"
+      description: "Number of active shards to wait for",
     },
     ifSeqNo: {
       type: "number",
-      description: "Sequence number for optimistic concurrency control"
+      description: "Sequence number for optimistic concurrency control",
     },
     ifPrimaryTerm: {
-      type: "number", 
-      description: "Primary term for optimistic concurrency control"
-    }
+      type: "number",
+      description: "Primary term for optimistic concurrency control",
+    },
   },
   required: ["index", "id"],
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -101,23 +102,20 @@ const updateDocumentValidator = z.object({
 type UpdateDocumentParams = z.infer<typeof updateDocumentValidator>;
 
 // MCP error handling
-function createUpdateDocumentMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createUpdateDocumentMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     document_not_found: ErrorCode.InvalidParams,
     version_conflict: ErrorCode.InvalidRequest,
   };
-  
+
   return new McpError(
     errorCodeMap[context.type] || ErrorCode.InternalError,
     `[elasticsearch_update_document] ${message}`,
-    context.details
+    context.details,
   );
 }
 
@@ -125,11 +123,11 @@ function createUpdateDocumentMcpError(
 export const registerUpdateDocumentTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const updateDocumentHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = updateDocumentValidator.parse(args);
-      
+
       const result = await esClient.update(
         {
           index: params.index,
@@ -149,57 +147,54 @@ export const registerUpdateDocumentTool: ToolRegistrationFunction = (server: Mcp
         },
         {
           opaqueId: "elasticsearch_update_document",
-        }
+        },
       );
-      
+
       const duration = performance.now() - perfStart;
       if (duration > 5000) {
         logger.warn("Slow document update", { duration });
       }
 
       return {
-        content: [
-          { type: "text", text: JSON.stringify(result, null, 2) }
-        ],
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createUpdateDocumentMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createUpdateDocumentMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       // Handle document not found error
-      if (error instanceof Error && error.message.includes('document_not_found')) {
-        throw createUpdateDocumentMcpError('Document not found', {
-          type: 'document_not_found',
-          details: { 
+      if (error instanceof Error && error.message.includes("document_not_found")) {
+        throw createUpdateDocumentMcpError("Document not found", {
+          type: "document_not_found",
+          details: {
             duration: performance.now() - perfStart,
-            args 
-          }
+            args,
+          },
         });
       }
 
       // Handle version conflict error
-      if (error instanceof Error && error.message.includes('version_conflict')) {
-        throw createUpdateDocumentMcpError('Version conflict occurred', {
-          type: 'version_conflict',
-          details: { 
+      if (error instanceof Error && error.message.includes("version_conflict")) {
+        throw createUpdateDocumentMcpError("Version conflict occurred", {
+          type: "version_conflict",
+          details: {
             duration: performance.now() - perfStart,
-            args 
-          }
+            args,
+          },
         });
       }
-      
+
       throw createUpdateDocumentMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -209,6 +204,6 @@ export const registerUpdateDocumentTool: ToolRegistrationFunction = (server: Mcp
     "elasticsearch_update_document",
     "Update a JSON document in Elasticsearch by index and id. Best for partial document updates, scripted updates, upsert operations. Use when you need to modify existing documents in Elasticsearch indices with optimistic concurrency control. Uses direct JSON Schema and standardized MCP error codes.",
     updateDocumentSchema,
-    withReadOnlyCheck("elasticsearch_update_document", updateDocumentHandler, OperationType.WRITE)
+    withReadOnlyCheck("elasticsearch_update_document", updateDocumentHandler, OperationType.WRITE),
   );
 };

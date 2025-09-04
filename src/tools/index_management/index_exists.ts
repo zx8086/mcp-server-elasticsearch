@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
@@ -16,36 +16,36 @@ const indexExistsSchema = {
     index: {
       type: "string",
       minLength: 1,
-      description: "Name of the index to check existence for"
+      description: "Name of the index to check existence for",
     },
     ignoreUnavailable: {
       type: "boolean",
-      description: "Ignore unavailable indices"
+      description: "Ignore unavailable indices",
     },
     allowNoIndices: {
       type: "boolean",
-      description: "Allow wildcards that match no indices"
+      description: "Allow wildcards that match no indices",
     },
     expandWildcards: {
       type: "string",
       enum: ["all", "open", "closed", "hidden", "none"],
-      description: "Which indices to expand wildcards to"
+      description: "Which indices to expand wildcards to",
     },
     flatSettings: {
       type: "boolean",
-      description: "Return settings in flat format"
+      description: "Return settings in flat format",
     },
     includeDefaults: {
       type: "boolean",
-      description: "Include default settings"
+      description: "Include default settings",
     },
     local: {
       type: "boolean",
-      description: "Return local information only"
-    }
+      description: "Return local information only",
+    },
   },
   required: ["index"],
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -62,21 +62,18 @@ const indexExistsValidator = z.object({
 type IndexExistsParams = z.infer<typeof indexExistsValidator>;
 
 // MCP error handling
-function createIndexExistsMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createIndexExistsMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
   };
-  
+
   return new McpError(
     errorCodeMap[context.type] || ErrorCode.InternalError,
     `[elasticsearch_index_exists] ${message}`,
-    context.details
+    context.details,
   );
 }
 
@@ -84,11 +81,11 @@ function createIndexExistsMcpError(
 export const registerIndexExistsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const indexExistsHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = indexExistsValidator.parse(args);
-      
+
       const exists = await esClient.indices.exists({
         index: params.index,
         ignore_unavailable: params.ignoreUnavailable,
@@ -108,26 +105,25 @@ export const registerIndexExistsTool: ToolRegistrationFunction = (server: McpSer
         content: [
           {
             type: "text",
-            text: `Exists: ${exists}`
-          }
+            text: `Exists: ${exists}`,
+          },
         ],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createIndexExistsMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createIndexExistsMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
-      
+
       throw createIndexExistsMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -137,6 +133,6 @@ export const registerIndexExistsTool: ToolRegistrationFunction = (server: McpSer
     "elasticsearch_index_exists",
     "Check if an index exists in Elasticsearch. Best for index validation, conditional operations, deployment checks. Use when you need to verify index presence in Elasticsearch clusters before performing operations or creating indices. Uses direct JSON Schema and standardized MCP error codes.",
     indexExistsSchema,
-    withReadOnlyCheck("elasticsearch_index_exists", indexExistsHandler, OperationType.READ)
+    withReadOnlyCheck("elasticsearch_index_exists", indexExistsHandler, OperationType.READ),
   );
 };

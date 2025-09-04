@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import {
@@ -34,42 +34,42 @@ const getIndexTemplateSchema = {
   properties: {
     name: {
       type: "string",
-      description: "Template name pattern to filter by (supports wildcards)"
+      description: "Template name pattern to filter by (supports wildcards)",
     },
     flatSettings: {
       type: "boolean",
-      description: "Return settings in flat format"
+      description: "Return settings in flat format",
     },
     masterTimeout: {
       type: "string",
-      description: "Timeout for master node operations"
+      description: "Timeout for master node operations",
     },
     local: {
       type: "boolean",
-      description: "Retrieve information from local node only"
+      description: "Retrieve information from local node only",
     },
     limit: {
       oneOf: [
         { type: "number", minimum: 1, maximum: 50 },
-        { type: "string", pattern: "^\\d+$" }
+        { type: "string", pattern: "^\\d+$" },
       ],
-      description: "Maximum number of templates to return. Range: 1-50"
+      description: "Maximum number of templates to return. Range: 1-50",
     },
     summary: {
       type: "boolean",
-      description: "Return summarized template information instead of full details"
+      description: "Return summarized template information instead of full details",
     },
     includeComposed: {
       type: "boolean",
-      description: "Include composed_of templates in the response"
+      description: "Include composed_of templates in the response",
     },
     sortBy: {
       type: "string",
       enum: ["name", "priority", "index_patterns", "version"],
-      description: "Sort templates by specified field"
-    }
+      description: "Sort templates by specified field",
+    },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -81,7 +81,10 @@ const getIndexTemplateValidator = z.object({
   limit: z
     .union([
       z.number(),
-      z.string().regex(/^\d+$/).transform((val) => Number.parseInt(val, 10)),
+      z
+        .string()
+        .regex(/^\d+$/)
+        .transform((val) => Number.parseInt(val, 10)),
     ])
     .pipe(z.number().min(1).max(50))
     .optional(),
@@ -96,39 +99,34 @@ type GetIndexTemplateParams = z.infer<typeof getIndexTemplateValidator>;
 function createTemplateMcpError(
   error: Error | string,
   context: {
-    type: 'validation' | 'execution' | 'template_not_found' | 'access_denied';
+    type: "validation" | "execution" | "template_not_found" | "access_denied";
     details?: any;
-  }
+  },
 ): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     template_not_found: ErrorCode.InvalidParams,
-    access_denied: ErrorCode.InvalidParams
+    access_denied: ErrorCode.InvalidParams,
   };
-  
-  return new McpError(
-    errorCodeMap[context.type],
-    `[elasticsearch_get_index_template] ${message}`,
-    context.details
-  );
+
+  return new McpError(errorCodeMap[context.type], `[elasticsearch_get_index_template] ${message}`, context.details);
 }
 
 // Tool implementation
 export const registerGetIndexTemplateTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  
   const getIndexTemplateHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = getIndexTemplateValidator.parse(args);
       const { name, flatSettings, masterTimeout, local, limit, summary, sortBy } = params;
 
       logger.debug("Getting index templates", { name, summary, limit });
-      
+
       // Fetch templates from Elasticsearch
       const result = await esClient.indices.getIndexTemplate(
         {
@@ -139,7 +137,7 @@ export const registerGetIndexTemplateTool: ToolRegistrationFunction = (server: M
         },
         {
           opaqueId: "elasticsearch_get_index_template",
-        }
+        },
       );
 
       // Transform templates into a more manageable format
@@ -336,38 +334,40 @@ export const registerGetIndexTemplateTool: ToolRegistrationFunction = (server: M
       return {
         content: [{ type: "text", text: finalContent } as TextContent],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createTemplateMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createTemplateMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       if (error instanceof Error) {
-        if (error.message.includes('index_template_missing_exception') || error.message.includes('resource_not_found_exception')) {
-          throw createTemplateMcpError(`Template not found: ${args?.name || '*'}`, {
-            type: 'template_not_found',
-            details: { originalError: error.message }
+        if (
+          error.message.includes("index_template_missing_exception") ||
+          error.message.includes("resource_not_found_exception")
+        ) {
+          throw createTemplateMcpError(`Template not found: ${args?.name || "*"}`, {
+            type: "template_not_found",
+            details: { originalError: error.message },
           });
         }
 
-        if (error.message.includes('security_exception') || error.message.includes('unauthorized')) {
-          throw createTemplateMcpError(`Access denied to template operations`, {
-            type: 'access_denied',
-            details: { originalError: error.message }
+        if (error.message.includes("security_exception") || error.message.includes("unauthorized")) {
+          throw createTemplateMcpError("Access denied to template operations", {
+            type: "access_denied",
+            details: { originalError: error.message },
           });
         }
       }
 
       throw createTemplateMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -377,6 +377,6 @@ export const registerGetIndexTemplateTool: ToolRegistrationFunction = (server: M
     "elasticsearch_get_index_template",
     "Get index templates from Elasticsearch with pagination and filtering. Uses direct JSON Schema and standardized MCP error codes. Best for template management, configuration review, index pattern analysis. Returns summarized or detailed template information with configurable limits to handle large responses. TIP: Use 'summary: true' for overview, 'name' with wildcards for filtering.",
     getIndexTemplateSchema,
-    getIndexTemplateHandler
+    getIndexTemplateHandler,
   );
 };

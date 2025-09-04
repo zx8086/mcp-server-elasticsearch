@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
@@ -16,44 +16,44 @@ const getIndexSettingsSchema = {
     index: {
       type: "string",
       minLength: 1,
-      description: "Name of the index to get settings for"
+      description: "Name of the index to get settings for",
     },
     name: {
       type: "string",
-      description: "Specific setting name to retrieve"
+      description: "Specific setting name to retrieve",
     },
     ignoreUnavailable: {
       type: "boolean",
-      description: "Ignore unavailable indices"
+      description: "Ignore unavailable indices",
     },
     allowNoIndices: {
       type: "boolean",
-      description: "Allow wildcards that match no indices"
+      description: "Allow wildcards that match no indices",
     },
     expandWildcards: {
       type: "string",
       enum: ["all", "open", "closed", "hidden", "none"],
-      description: "Which indices to expand wildcards to"
+      description: "Which indices to expand wildcards to",
     },
     flatSettings: {
       type: "boolean",
-      description: "Return settings in flat format"
+      description: "Return settings in flat format",
     },
     includeDefaults: {
       type: "boolean",
-      description: "Include default settings"
+      description: "Include default settings",
     },
     local: {
       type: "boolean",
-      description: "Return local information only"
+      description: "Return local information only",
     },
     masterTimeout: {
       type: "string",
-      description: "Master node timeout (e.g., '30s')"
-    }
+      description: "Master node timeout (e.g., '30s')",
+    },
   },
   required: ["index"],
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -72,22 +72,19 @@ const getIndexSettingsValidator = z.object({
 type GetIndexSettingsParams = z.infer<typeof getIndexSettingsValidator>;
 
 // MCP error handling
-function createGetIndexSettingsMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createGetIndexSettingsMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     index_not_found: ErrorCode.InvalidParams,
   };
-  
+
   return new McpError(
     errorCodeMap[context.type] || ErrorCode.InternalError,
     `[elasticsearch_get_index_settings] ${message}`,
-    context.details
+    context.details,
   );
 }
 
@@ -95,11 +92,11 @@ function createGetIndexSettingsMcpError(
 export const registerGetIndexSettingsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const getIndexSettingsHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = getIndexSettingsValidator.parse(args);
-      
+
       const result = await esClient.indices.getSettings({
         index: params.index,
         name: params.name,
@@ -121,34 +118,33 @@ export const registerGetIndexSettingsTool: ToolRegistrationFunction = (server: M
         content: [
           {
             type: "text",
-            text: JSON.stringify(result, null, 2)
-          }
+            text: JSON.stringify(result, null, 2),
+          },
         ],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createGetIndexSettingsMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createGetIndexSettingsMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       // Handle index not found error
-      if (error instanceof Error && error.message.includes('index_not_found_exception')) {
+      if (error instanceof Error && error.message.includes("index_not_found_exception")) {
         throw createGetIndexSettingsMcpError(`Index not found: ${args.index}`, {
-          type: 'index_not_found',
-          details: { index: args.index }
+          type: "index_not_found",
+          details: { index: args.index },
         });
       }
-      
+
       throw createGetIndexSettingsMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -158,6 +154,6 @@ export const registerGetIndexSettingsTool: ToolRegistrationFunction = (server: M
     "elasticsearch_get_index_settings",
     "Get index settings from Elasticsearch. Best for configuration review, performance analysis, troubleshooting. Use when you need to inspect index-level settings and configurations in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
     getIndexSettingsSchema,
-    withReadOnlyCheck("elasticsearch_get_index_settings", getIndexSettingsHandler, OperationType.READ)
+    withReadOnlyCheck("elasticsearch_get_index_settings", getIndexSettingsHandler, OperationType.READ),
   );
 };

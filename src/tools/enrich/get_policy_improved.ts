@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import {
@@ -20,41 +20,39 @@ const getPolicySchema = {
     name: {
       oneOf: [
         { type: "string" },
-        { 
+        {
           type: "array",
-          items: { type: "string" }
-        }
+          items: { type: "string" },
+        },
       ],
-      description: "Policy name(s) to retrieve. Can be a single policy name or array of names"
+      description: "Policy name(s) to retrieve. Can be a single policy name or array of names",
     },
     masterTimeout: {
       type: "string",
-      description: "Timeout for master node operations. Examples: '30s', '1m'"
+      description: "Timeout for master node operations. Examples: '30s', '1m'",
     },
     limit: {
       type: "number",
       minimum: 1,
       maximum: 50,
-      description: "Maximum number of policies to return. Range: 1-50"
+      description: "Maximum number of policies to return. Range: 1-50",
     },
     summary: {
       type: "boolean",
-      description: "Return summarized policy information instead of full details"
+      description: "Return summarized policy information instead of full details",
     },
     sortBy: {
       type: "string",
       enum: ["name", "type", "indices_count"],
-      description: "Sort policies by specified field"
-    }
+      description: "Sort policies by specified field",
+    },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
 const getPolicyValidator = z.object({
-  name: z
-    .union([z.string(), z.array(z.string())])
-    .optional(),
+  name: z.union([z.string(), z.array(z.string())]).optional(),
   masterTimeout: z.string().optional(),
   limit: z
     .union([
@@ -86,33 +84,28 @@ interface PolicySummary {
 function createGetPolicyMcpError(
   error: Error | string,
   context: {
-    type: 'validation' | 'execution' | 'policy_not_found' | 'timeout' | 'parsing';
+    type: "validation" | "execution" | "policy_not_found" | "timeout" | "parsing";
     details?: any;
-  }
+  },
 ): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     policy_not_found: ErrorCode.InvalidParams,
     timeout: ErrorCode.InternalError,
-    parsing: ErrorCode.InternalError
+    parsing: ErrorCode.InternalError,
   };
-  
-  return new McpError(
-    errorCodeMap[context.type],
-    `[elasticsearch_enrich_get_policy] ${message}`,
-    context.details
-  );
+
+  return new McpError(errorCodeMap[context.type], `[elasticsearch_enrich_get_policy] ${message}`, context.details);
 }
 
 // Tool implementation
 export const registerEnrichGetPolicyTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  
   const getPolicyHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = getPolicyValidator.parse(args);
@@ -315,45 +308,44 @@ export const registerEnrichGetPolicyTool: ToolRegistrationFunction = (server: Mc
       return {
         content: [{ type: "text", text: finalContent } as TextContent],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createGetPolicyMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createGetPolicyMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       if (error instanceof Error) {
-        if (error.message.includes('timeout') || error.message.includes('timed_out')) {
+        if (error.message.includes("timeout") || error.message.includes("timed_out")) {
           throw createGetPolicyMcpError(`Operation timed out: ${error.message}`, {
-            type: 'timeout',
-            details: { duration: performance.now() - perfStart }
+            type: "timeout",
+            details: { duration: performance.now() - perfStart },
           });
         }
 
-        if (error.message.includes('not_found') || error.message.includes('resource_not_found_exception')) {
-          throw createGetPolicyMcpError(`Enrich policy not found: ${args?.name || 'unknown'}`, {
-            type: 'policy_not_found',
-            details: { requestedName: args?.name }
+        if (error.message.includes("not_found") || error.message.includes("resource_not_found_exception")) {
+          throw createGetPolicyMcpError(`Enrich policy not found: ${args?.name || "unknown"}`, {
+            type: "policy_not_found",
+            details: { requestedName: args?.name },
           });
         }
 
-        if (error.message.includes('parsing') || error.message.includes('invalid')) {
+        if (error.message.includes("parsing") || error.message.includes("invalid")) {
           throw createGetPolicyMcpError(`Policy parsing failed: ${error.message}`, {
-            type: 'parsing',
-            details: { originalError: error.message }
+            type: "parsing",
+            details: { originalError: error.message },
           });
         }
       }
 
       throw createGetPolicyMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -363,6 +355,6 @@ export const registerEnrichGetPolicyTool: ToolRegistrationFunction = (server: Mc
     "elasticsearch_enrich_get_policy",
     "Get enrich policies from Elasticsearch with pagination and filtering. Best for data enrichment configuration, policy inspection, document enhancement workflows. Returns summarized or detailed policy information with configurable limits.",
     getPolicySchema,
-    getPolicyHandler
+    getPolicyHandler,
   );
 };

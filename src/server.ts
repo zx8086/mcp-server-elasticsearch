@@ -8,12 +8,17 @@ import { HttpConnection } from "@elastic/transport";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Config } from "./config.js";
 import { registerAllTools } from "./tools/index.js";
+import { getGlobalConnectionPool } from "./utils/connectionPooling.js";
 import { logger } from "./utils/logger.js";
+import { createEnhancedMcpServer } from "./utils/mcpEnhancer.js";
 import { initializeReadOnlyManager } from "./utils/readOnlyMode.js";
 import { createConnectionMetadata, initializeTracing, traceMcpConnection } from "./utils/tracing.js";
 import { checkElasticsearchConnection, testBasicOperations, testModernFeatures } from "./validation.js";
-import { getGlobalConnectionPool } from "./utils/connectionPooling.js";
-import { createEnhancedMcpServer } from "./utils/mcpEnhancer.js";
+import { initializeHealthMonitor } from "./utils/healthCheck.js";
+import { initializeRateLimiters, initializeResourceMonitor } from "./utils/rateLimiter.js";
+import { initializeDefaultCircuitBreakers } from "./utils/circuitBreaker.js";
+import { initializeCaches } from "./utils/cache.js";
+import { initializeConnectionWarming, preWarmEndpoints } from "./utils/connectionWarming.js";
 
 export async function createElasticsearchMcpServer(config: Config): Promise<McpServer> {
   logger.info("Creating Elasticsearch MCP server", {
@@ -106,18 +111,18 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
 
     const esClient = new Client(clientOptions);
     logger.info("✅ Elasticsearch client created successfully");
-    
+
     // Initialize connection pool with the primary client
     const connectionPool = getGlobalConnectionPool({
       healthCheckInterval: 30000,
       maxErrorCount: 3,
-      loadBalanceStrategy: 'fastest-response'
+      loadBalanceStrategy: "fastest-response",
     });
     connectionPool.addConnection(config.elasticsearch.url, esClient);
-    
+
     logger.info("📡 Connection pool initialized", {
       primaryUrl: config.elasticsearch.url,
-      strategy: 'fastest-response'
+      strategy: "fastest-response",
     });
 
     // Enhanced connection test with configuration-aware timeouts
@@ -219,6 +224,69 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
       readOnlyMode: config.server.readOnlyMode,
       toolCount: registeredTools.length,
       message: config.server.readOnlyMode ? "Destructive operations are restricted" : "All operations available",
+    });
+
+    // Initialize resource management
+    logger.info("🛡️ Initializing resource management");
+    
+    // Initialize rate limiters with configuration-based limits
+    initializeRateLimiters({
+      toolLimits: {
+        windowMs: 60000, // 1 minute
+        maxRequests: config.server.maxResultsPerQuery || 1000, // Use config value
+      },
+      connectionLimits: {
+        windowMs: 60000, // 1 minute  
+        maxRequests: 50, // 50 connections per minute
+      },
+    });
+    
+    // Initialize resource monitor with memory threshold
+    const memoryThresholdMB = Math.floor(config.server.maxResponseSizeBytes / 1024 / 1024 * 10) || 1000;
+    initializeResourceMonitor(memoryThresholdMB);
+    
+    // Initialize circuit breakers for fault tolerance
+    initializeDefaultCircuitBreakers();
+    
+    // Initialize performance optimizations
+    logger.info("⚡ Initializing performance optimizations");
+    
+    // Initialize caches for query results, mappings, and cluster info
+    initializeCaches();
+    
+    // Initialize connection warming
+    const connectionWarmer = initializeConnectionWarming(esClient, {
+      enabled: true,
+      warmupDelayMs: 2000,      // Start warming after 2 seconds
+      warmupIntervalMs: 5 * 60 * 1000, // Warmup every 5 minutes
+      keepAliveIntervalMs: 30 * 1000,   // Keep-alive every 30 seconds
+    });
+    
+    // Pre-warm endpoints during startup
+    try {
+      await preWarmEndpoints(esClient);
+      logger.info("✅ Connection pre-warming completed");
+    } catch (error) {
+      logger.warn("⚠️ Connection pre-warming failed, continuing anyway", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+    
+    // Start connection warming
+    connectionWarmer.start();
+
+    // Initialize health monitoring
+    logger.info("💚 Initializing health monitoring");
+    const healthMonitor = initializeHealthMonitor(esClient);
+    healthMonitor.start();
+    
+    logger.info("🏥 Production systems active", {
+      rateLimiting: "Tool and connection limits enabled",
+      resourceMonitoring: `Memory threshold: ${memoryThresholdMB}MB`,
+      circuitBreakers: "Fault tolerance for ES operations",
+      caching: "Multi-tier response caching enabled",
+      connectionWarming: "Pre-warming and keep-alive active",
+      healthChecks: "30-second intervals",
     });
 
     return server;

@@ -1,29 +1,32 @@
-import { type Client } from "@elastic/elasticsearch";
+import type { Client } from "@elastic/elasticsearch";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType } from "../../utils/readOnlyMode.js";
 import { booleanField } from "../../utils/zodHelpers.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 
 // Define analytics-specific error types
 export class AnalyticsError extends Error {
-  constructor(message: string, public readonly operation?: string) {
+  constructor(
+    message: string,
+    public readonly operation?: string,
+  ) {
     super(message);
-    this.name = 'AnalyticsError';
+    this.name = "AnalyticsError";
   }
 }
 
 export class TermVectorError extends AnalyticsError {
   constructor(index: string, id: string | undefined, reason: string) {
-    super(`Failed to get term vectors for document ${id || 'anonymous'} in index ${index}: ${reason}`, 'term_vectors');
-    this.name = 'TermVectorError';
+    super(`Failed to get term vectors for document ${id || "anonymous"} in index ${index}: ${reason}`, "term_vectors");
+    this.name = "TermVectorError";
   }
 }
 
 export class MultiTermVectorError extends AnalyticsError {
   constructor(reason: string) {
-    super(`Failed to get multi term vectors: ${reason}`, 'multi_term_vectors');
-    this.name = 'MultiTermVectorError';
+    super(`Failed to get multi term vectors: ${reason}`, "multi_term_vectors");
+    this.name = "MultiTermVectorError";
   }
 }
 
@@ -51,27 +54,25 @@ const getTermVectorsSchema = z.object({
 });
 
 export const getTermVectors = {
-  name: 'elasticsearch_get_term_vectors',
-  description: 'Get term vectors for a document in Elasticsearch. Best for text analysis, relevance tuning, similarity calculations. Use when you need to analyze term frequency, positions, and offsets for document text analysis in Elasticsearch.',
+  name: "elasticsearch_get_term_vectors",
+  description:
+    "Get term vectors for a document in Elasticsearch. Best for text analysis, relevance tuning, similarity calculations. Use when you need to analyze term frequency, positions, and offsets for document text analysis in Elasticsearch.",
   inputSchema: getTermVectorsSchema,
   operationType: OperationType.READ as const,
   handler: async (client: Client, args: z.infer<typeof getTermVectorsSchema>) => {
     try {
-      logger.debug('Getting term vectors for document', { 
+      logger.debug("Getting term vectors for document", {
         index: args.index,
         id: args.id,
         fields: args.fields,
         hasDoc: !!args.doc,
         fieldStatistics: args.field_statistics,
-        termStatistics: args.term_statistics
+        termStatistics: args.term_statistics,
       });
 
       // Validate that either id or doc is provided
       if (!args.id && !args.doc) {
-        throw new McpError(
-          ErrorCode.InvalidRequest,
-          'Either "id" or "doc" parameter must be provided'
-        );
+        throw new McpError(ErrorCode.InvalidRequest, 'Either "id" or "doc" parameter must be provided');
       }
 
       const result = await client.termvectors(
@@ -95,49 +96,45 @@ export const getTermVectors = {
         },
         {
           opaqueId: "elasticsearch_get_term_vectors",
-        }
+        },
       );
 
-      logger.debug('Term vectors retrieved successfully', { 
+      logger.debug("Term vectors retrieved successfully", {
         index: args.index,
         id: args.id,
         termVectorsFound: !!result.term_vectors,
-        fieldsAnalyzed: result.term_vectors ? Object.keys(result.term_vectors).length : 0
+        fieldsAnalyzed: result.term_vectors ? Object.keys(result.term_vectors).length : 0,
       });
 
       return {
-        content: [{ 
-          type: 'text' as const, 
-          text: JSON.stringify(result, null, 2) 
-        }]
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(result, null, 2),
+          },
+        ],
       };
     } catch (error) {
-      logger.error('Failed to get term vectors', { 
+      logger.error("Failed to get term vectors", {
         error: error instanceof Error ? error.message : String(error),
         index: args.index,
-        id: args.id
+        id: args.id,
       });
-      
-      if (error instanceof Error && error.message.includes('index_not_found')) {
-        throw new McpError(
-          ErrorCode.InvalidRequest,
-          `Index not found: ${args.index}`
-        );
+
+      if (error instanceof Error && error.message.includes("index_not_found")) {
+        throw new McpError(ErrorCode.InvalidRequest, `Index not found: ${args.index}`);
       }
-      
-      if (error instanceof Error && error.message.includes('not found')) {
-        throw new McpError(
-          ErrorCode.InvalidRequest,
-          `Document not found: ${args.id} in index ${args.index}`
-        );
+
+      if (error instanceof Error && error.message.includes("not found")) {
+        throw new McpError(ErrorCode.InvalidRequest, `Document not found: ${args.id} in index ${args.index}`);
       }
-      
+
       throw new McpError(
         ErrorCode.InternalError,
-        `Failed to get term vectors: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to get term vectors: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
-  }
+  },
 };
 
 // ============================================================================
@@ -161,39 +158,34 @@ const getMultiTermVectorsSchema = z.object({
         routing: z.string().optional(),
         version: z.number().optional(),
         version_type: z.enum(["internal", "external", "external_gte", "force"]).optional(),
-      })
+      }),
     )
     .optional(),
   ids: z.array(z.string()).optional(),
 });
 
 export const getMultiTermVectors = {
-  name: 'elasticsearch_get_multi_term_vectors',
-  description: 'Get term vectors for multiple documents in Elasticsearch. Best for text analysis, similarity calculations, relevance tuning. Use when you need to analyze term frequency and position data for multiple documents in Elasticsearch indices.',
+  name: "elasticsearch_get_multi_term_vectors",
+  description:
+    "Get term vectors for multiple documents in Elasticsearch. Best for text analysis, similarity calculations, relevance tuning. Use when you need to analyze term frequency and position data for multiple documents in Elasticsearch indices.",
   inputSchema: getMultiTermVectorsSchema,
   operationType: OperationType.READ as const,
   handler: async (client: Client, args: z.infer<typeof getMultiTermVectorsSchema>) => {
     try {
-      logger.debug('Getting multi term vectors', { 
+      logger.debug("Getting multi term vectors", {
         index: args.index,
         docsCount: args.docs?.length,
-        idsCount: args.ids?.length
+        idsCount: args.ids?.length,
       });
 
       // Validate that either docs or ids is provided
       if (!args.docs && !args.ids) {
-        throw new McpError(
-          ErrorCode.InvalidRequest,
-          'Either "docs" or "ids" parameter must be provided'
-        );
+        throw new McpError(ErrorCode.InvalidRequest, 'Either "docs" or "ids" parameter must be provided');
       }
 
       // If using ids, ensure index is provided
       if (args.ids && !args.index) {
-        throw new McpError(
-          ErrorCode.InvalidRequest,
-          'When using "ids" parameter, "index" must also be provided'
-        );
+        throw new McpError(ErrorCode.InvalidRequest, 'When using "ids" parameter, "index" must also be provided');
       }
 
       const result = await client.mtermvectors(
@@ -217,45 +209,41 @@ export const getMultiTermVectors = {
         },
         {
           opaqueId: "elasticsearch_get_multi_term_vectors",
-        }
+        },
       );
 
-      logger.debug('Multi term vectors retrieved successfully', { 
+      logger.debug("Multi term vectors retrieved successfully", {
         index: args.index,
-        docsProcessed: result.docs?.length || 0
+        docsProcessed: result.docs?.length || 0,
       });
 
       return {
-        content: [{ 
-          type: 'text' as const, 
-          text: JSON.stringify(result, null, 2) 
-        }]
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(result, null, 2),
+          },
+        ],
       };
     } catch (error) {
-      logger.error('Failed to get multi term vectors', { 
+      logger.error("Failed to get multi term vectors", {
         error: error instanceof Error ? error.message : String(error),
         index: args.index,
         docsCount: args.docs?.length,
-        idsCount: args.ids?.length
+        idsCount: args.ids?.length,
       });
-      
-      if (error instanceof Error && error.message.includes('index_not_found')) {
-        throw new McpError(
-          ErrorCode.InvalidRequest,
-          `Index not found: ${args.index}`
-        );
+
+      if (error instanceof Error && error.message.includes("index_not_found")) {
+        throw new McpError(ErrorCode.InvalidRequest, `Index not found: ${args.index}`);
       }
-      
+
       throw new McpError(
         ErrorCode.InternalError,
-        `Failed to get multi term vectors: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to get multi term vectors: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
-  }
+  },
 };
 
 // Export all tools
-export const analyticsTools = [
-  getTermVectors,
-  getMultiTermVectors
-] as const;
+export const analyticsTools = [getTermVectors, getMultiTermVectors] as const;

@@ -1,0 +1,195 @@
+# Deployment for Elasticsearch MCP Server
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elasticsearch-mcp-server
+  namespace: elasticsearch-mcp
+  labels:
+    app.kubernetes.io/name: elasticsearch-mcp-server
+    app.kubernetes.io/component: server
+    app.kubernetes.io/part-of: mcp-ecosystem
+    app.kubernetes.io/version: "0.1.1"
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: elasticsearch-mcp-server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: elasticsearch-mcp-server
+        app.kubernetes.io/component: server
+        app.kubernetes.io/part-of: mcp-ecosystem
+        app.kubernetes.io/version: "0.1.1"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/health"
+    spec:
+      serviceAccountName: elasticsearch-mcp-service-account
+      
+      # Security Context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      
+      containers:
+      - name: mcp-server
+        image: elasticsearch-mcp-server:latest
+        imagePullPolicy: IfNotPresent
+        
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        
+        # Environment Variables from ConfigMap
+        envFrom:
+        - configMapRef:
+            name: elasticsearch-mcp-config
+        
+        # Sensitive Environment Variables from Secret
+        env:
+        - name: ES_URL
+          value: "https://your-elasticsearch-cluster.example.com:9200"
+        - name: ES_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: elasticsearch-mcp-secrets
+              key: ES_API_KEY
+              optional: true
+        - name: ES_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: elasticsearch-mcp-secrets
+              key: ES_USERNAME
+              optional: true
+        - name: ES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: elasticsearch-mcp-secrets
+              key: ES_PASSWORD
+              optional: true
+        - name: LANGSMITH_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: elasticsearch-mcp-secrets
+              key: LANGSMITH_API_KEY
+              optional: true
+        
+        # Security Context
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1001
+          capabilities:
+            drop:
+            - ALL
+        
+        # Resource Limits and Requests
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        
+        # Health Checks
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+          successThreshold: 1
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+        
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+          successThreshold: 1
+        
+        # Volume Mounts for temporary files
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /app/cache
+      
+      # Volumes
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: cache
+        emptyDir:
+          sizeLimit: 100Mi
+      
+      # Node Selection and Scheduling
+      nodeSelector:
+        kubernetes.io/os: linux
+      
+      tolerations:
+      - key: "node.kubernetes.io/not-ready"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 300
+      - key: "node.kubernetes.io/unreachable"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 300
+      
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - elasticsearch-mcp-server
+              topologyKey: kubernetes.io/hostname
+
+---
+# ServiceAccount for the MCP Server
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: elasticsearch-mcp-service-account
+  namespace: elasticsearch-mcp
+  labels:
+    app.kubernetes.io/name: elasticsearch-mcp-server
+    app.kubernetes.io/component: service-account
+    app.kubernetes.io/part-of: mcp-ecosystem
+automountServiceAccountToken: false

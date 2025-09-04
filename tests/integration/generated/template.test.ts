@@ -15,7 +15,6 @@ import { logger } from "../../../src/utils/logger.js";
 // Import all tools in this category
 import { registerPutIndexTemplateTool } from "../../../src/tools/template/put_index_template.js";
 import { registerSearchTemplateTool } from "../../../src/tools/template/search_template.js";
-import { registerGetIndexTemplateOldTool } from "../../../src/tools/template/get_index_template_old.js";
 import { registerMultiSearchTemplateTool } from "../../../src/tools/template/multi_search_template.js";
 import { registerDeleteIndexTemplateTool } from "../../../src/tools/template/delete_index_template.js";
 import { registerGetIndexTemplateImprovedTool } from "../../../src/tools/template/get_index_template_improved.js";
@@ -59,7 +58,6 @@ describe.skipIf(shouldSkipIntegrationTests())("template Tools - Real Integration
     // Register all tools
     registerPutIndexTemplateTool(wrappedServer, client);
     registerSearchTemplateTool(wrappedServer, client);
-    registerGetIndexTemplateOldTool(wrappedServer, client);
     registerMultiSearchTemplateTool(wrappedServer, client);
     registerDeleteIndexTemplateTool(wrappedServer, client);
     registerGetIndexTemplateImprovedTool(wrappedServer, client);

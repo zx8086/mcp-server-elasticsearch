@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
@@ -16,32 +16,32 @@ const flushIndexSchema = {
     index: {
       type: "string",
       minLength: 1,
-      description: "Name of the index to flush"
+      description: "Name of the index to flush",
     },
     ignoreUnavailable: {
       type: "boolean",
-      description: "Ignore unavailable indices"
+      description: "Ignore unavailable indices",
     },
     allowNoIndices: {
       type: "boolean",
-      description: "Allow wildcards that match no indices"
+      description: "Allow wildcards that match no indices",
     },
     expandWildcards: {
       type: "string",
       enum: ["all", "open", "closed", "hidden", "none"],
-      description: "Which indices to expand wildcards to"
+      description: "Which indices to expand wildcards to",
     },
     force: {
       type: "boolean",
-      description: "Force the flush operation even if not required"
+      description: "Force the flush operation even if not required",
     },
     waitIfOngoing: {
       type: "boolean",
-      description: "Wait if another flush operation is ongoing"
-    }
+      description: "Wait if another flush operation is ongoing",
+    },
   },
   required: ["index"],
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -57,22 +57,19 @@ const flushIndexValidator = z.object({
 type FlushIndexParams = z.infer<typeof flushIndexValidator>;
 
 // MCP error handling
-function createFlushIndexMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createFlushIndexMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     index_not_found: ErrorCode.InvalidParams,
   };
-  
+
   return new McpError(
     errorCodeMap[context.type] || ErrorCode.InternalError,
     `[elasticsearch_flush_index] ${message}`,
-    context.details
+    context.details,
   );
 }
 
@@ -80,11 +77,11 @@ function createFlushIndexMcpError(
 export const registerFlushIndexTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const flushIndexHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = flushIndexValidator.parse(args);
-      
+
       const result = await esClient.indices.flush({
         index: params.index,
         ignore_unavailable: params.ignoreUnavailable,
@@ -103,34 +100,33 @@ export const registerFlushIndexTool: ToolRegistrationFunction = (server: McpServ
         content: [
           {
             type: "text",
-            text: JSON.stringify(result, null, 2)
-          }
+            text: JSON.stringify(result, null, 2),
+          },
         ],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createFlushIndexMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createFlushIndexMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       // Handle index not found error
-      if (error instanceof Error && error.message.includes('index_not_found_exception')) {
+      if (error instanceof Error && error.message.includes("index_not_found_exception")) {
         throw createFlushIndexMcpError(`Index not found: ${args.index}`, {
-          type: 'index_not_found',
-          details: { index: args.index }
+          type: "index_not_found",
+          details: { index: args.index },
         });
       }
-      
+
       throw createFlushIndexMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -140,6 +136,6 @@ export const registerFlushIndexTool: ToolRegistrationFunction = (server: McpServ
     "elasticsearch_flush_index",
     "Flush an Elasticsearch index to ensure all data is written to disk. Best for data persistence, index optimization, ensuring durability. Use when you need to force Elasticsearch to write buffered data to storage for consistency. Uses direct JSON Schema and standardized MCP error codes.",
     flushIndexSchema,
-    withReadOnlyCheck("elasticsearch_flush_index", flushIndexHandler, OperationType.WRITE)
+    withReadOnlyCheck("elasticsearch_flush_index", flushIndexHandler, OperationType.WRITE),
   );
 };

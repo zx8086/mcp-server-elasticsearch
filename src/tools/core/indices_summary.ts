@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
@@ -12,15 +12,15 @@ const indicesSummarySchema = {
   properties: {
     indexPattern: {
       type: "string",
-      description: "Elasticsearch index pattern to summarize (supports wildcards like logs-*, app-*)"
+      description: "Elasticsearch index pattern to summarize (supports wildcards like logs-*, app-*)",
     },
     groupBy: {
       type: "string",
       enum: ["prefix", "date", "type"],
-      description: "How to group Elasticsearch indices for summary analysis"
-    }
+      description: "How to group Elasticsearch indices for summary analysis",
+    },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 const indicesSummaryValidator = z.object({
@@ -30,31 +30,31 @@ const indicesSummaryValidator = z.object({
 
 type IndicesSummaryParams = z.infer<typeof indicesSummaryValidator>;
 
-function createIndicesSummaryMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createIndicesSummaryMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
-  if (message.includes('index_not_found')) {
-    return new McpError(ErrorCode.InvalidRequest, `Index pattern not found: ${context.details?.indexPattern || 'unknown'}`);
+
+  if (message.includes("index_not_found")) {
+    return new McpError(
+      ErrorCode.InvalidRequest,
+      `Index pattern not found: ${context.details?.indexPattern || "unknown"}`,
+    );
   }
-  
-  if (message.includes('cluster_block_exception')) {
-    return new McpError(ErrorCode.InvalidRequest, 'Cluster is blocked for index operations');
+
+  if (message.includes("cluster_block_exception")) {
+    return new McpError(ErrorCode.InvalidRequest, "Cluster is blocked for index operations");
   }
-  
-  if (message.includes('timeout')) {
-    return new McpError(ErrorCode.RequestTimeout, 'Request timed out while retrieving indices summary');
+
+  if (message.includes("timeout")) {
+    return new McpError(ErrorCode.RequestTimeout, "Request timed out while retrieving indices summary");
   }
-  
+
   return new McpError(ErrorCode.InternalError, `Failed to get indices summary: ${message}`);
 }
 
 export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const indicesSummaryHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       const params = indicesSummaryValidator.parse(args);
       const { indexPattern, groupBy } = params;
@@ -68,9 +68,9 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: Mcp
       });
 
       const duration = performance.now() - perfStart;
-      logger.debug("Retrieved indices summary", { 
+      logger.debug("Retrieved indices summary", {
         indicesCount: response.length,
-        duration: `${duration.toFixed(2)}ms`
+        duration: `${duration.toFixed(2)}ms`,
       });
 
       const categories = {
@@ -189,7 +189,7 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: Mcp
 
       return {
         content: [
-          { type: "text", text: `📊 Indices Summary for pattern: ${indexPattern || '*'}` },
+          { type: "text", text: `📊 Indices Summary for pattern: ${indexPattern || "*"}` },
           { type: "text", text: JSON.stringify(summary, null, 2) },
         ],
       };
@@ -197,11 +197,11 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: Mcp
       const duration = performance.now() - perfStart;
       logger.error("Failed to get indices summary", {
         error: error instanceof Error ? error.message : String(error),
-        duration: `${duration.toFixed(2)}ms`
+        duration: `${duration.toFixed(2)}ms`,
       });
       throw createIndicesSummaryMcpError(error instanceof Error ? error : new Error(String(error)), {
-        type: 'indices_summary',
-        details: args
+        type: "indices_summary",
+        details: args,
       });
     }
   };
@@ -210,6 +210,6 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: Mcp
     "elasticsearch_indices_summary",
     "Get a high-level summary of indices without overwhelming detail in Elasticsearch. Best for cluster overview, index organization analysis, storage planning. Use when you need to understand index patterns, health distribution, and storage usage across your Elasticsearch cluster. Uses direct JSON Schema and standardized MCP error codes.",
     indicesSummarySchema,
-    indicesSummaryHandler
+    indicesSummaryHandler,
   );
 };

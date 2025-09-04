@@ -3,7 +3,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
@@ -18,32 +18,32 @@ const explainLifecycleSchema = {
   properties: {
     index: {
       type: "string",
-      description: "Index pattern. Use '*' for all indices"
+      description: "Index pattern. Use '*' for all indices",
     },
     onlyErrors: {
       type: "boolean",
-      description: "Only show indices with ILM errors"
+      description: "Only show indices with ILM errors",
     },
     onlyManaged: {
-      type: "boolean", 
-      description: "Only show ILM-managed indices. Highly recommended for large clusters"
+      type: "boolean",
+      description: "Only show ILM-managed indices. Highly recommended for large clusters",
     },
     masterTimeout: {
       type: "string",
-      description: "Master node timeout"
+      description: "Master node timeout",
     },
     limit: {
       type: "number",
       minimum: 1,
       maximum: 500,
-      description: "Maximum number of indices to return. Without this, returns ALL matching indices"
+      description: "Maximum number of indices to return. Without this, returns ALL matching indices",
     },
     includeDetails: {
       type: "boolean",
-      description: "Include full lifecycle details (false for compact output)"
-    }
+      description: "Include full lifecycle details (false for compact output)",
+    },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Simple Zod validator for runtime validation only
@@ -53,7 +53,7 @@ const explainLifecycleValidator = z.object({
   onlyManaged: z.boolean().optional(),
   masterTimeout: z.string().optional(),
   limit: z.number().min(1).max(500).optional(),
-  includeDetails: z.boolean().optional()
+  includeDetails: z.boolean().optional(),
 });
 
 type ExplainLifecycleParams = z.infer<typeof explainLifecycleValidator>;
@@ -65,24 +65,20 @@ type ExplainLifecycleParams = z.infer<typeof explainLifecycleValidator>;
 function createIlmExplainMcpError(
   error: Error | string,
   context: {
-    type: 'validation' | 'execution' | 'not_found' | 'permission';
+    type: "validation" | "execution" | "not_found" | "permission";
     details?: any;
-  }
+  },
 ): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     not_found: ErrorCode.InvalidRequest,
-    permission: ErrorCode.InvalidRequest
+    permission: ErrorCode.InvalidRequest,
   };
-  
-  return new McpError(
-    errorCodeMap[context.type],
-    `[elasticsearch_ilm_explain_lifecycle] ${message}`,
-    context.details
-  );
+
+  return new McpError(errorCodeMap[context.type], `[elasticsearch_ilm_explain_lifecycle] ${message}`, context.details);
 }
 
 // =============================================================================
@@ -90,21 +86,20 @@ function createIlmExplainMcpError(
 // =============================================================================
 
 export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  
   const explainLifecycleHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Simple validation - no complex parameter extraction
       const params = explainLifecycleValidator.parse(args);
-      
+
       const index = params.index || "*";
       logger.debug("Explaining ILM lifecycle (simplified)", {
         index,
         limit: params.limit,
         onlyManaged: params.onlyManaged,
         onlyErrors: params.onlyErrors,
-        includeDetails: params.includeDetails
+        includeDetails: params.includeDetails,
       });
 
       // Call Elasticsearch ILM explain API
@@ -122,10 +117,12 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
 
       if (indices.length === 0) {
         return {
-          content: [{
-            type: "text", 
-            text: `No indices found matching pattern: ${index}${params.onlyManaged ? ' (managed only)' : ''}${params.onlyErrors ? ' (with errors only)' : ''}`
-          }],
+          content: [
+            {
+              type: "text",
+              text: `No indices found matching pattern: ${index}${params.onlyManaged ? " (managed only)" : ""}${params.onlyErrors ? " (with errors only)" : ""}`,
+            },
+          ],
         };
       }
 
@@ -133,7 +130,7 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
       const totalFound = indices.length;
       let displayedIndices = indices;
       let autoLimited = false;
-      
+
       if (params.limit) {
         displayedIndices = indices.slice(0, params.limit);
       } else if (totalFound > 100) {
@@ -144,13 +141,19 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
 
       // Build response content
       const content: string[] = [];
-      
+
       // Header with summary
-      content.push(`## ILM Status for Indices (${displayedIndices.length}${totalFound > displayedIndices.length ? ` of ${totalFound}` : ""})`);
-      content.push(`Pattern: \`${index}\`${params.onlyManaged ? ' | Managed only' : ''}${params.onlyErrors ? ' | Errors only' : ''}\n`);
+      content.push(
+        `## ILM Status for Indices (${displayedIndices.length}${totalFound > displayedIndices.length ? ` of ${totalFound}` : ""})`,
+      );
+      content.push(
+        `Pattern: \`${index}\`${params.onlyManaged ? " | Managed only" : ""}${params.onlyErrors ? " | Errors only" : ""}\n`,
+      );
 
       if (autoLimited) {
-        content.push(`⚠️ Auto-limited to 50 indices (found ${totalFound}). Use 'limit' parameter or more specific pattern.\n`);
+        content.push(
+          `⚠️ Auto-limited to 50 indices (found ${totalFound}). Use 'limit' parameter or more specific pattern.\n`,
+        );
       } else if (params.limit && totalFound > params.limit) {
         content.push(`⚠️ Showing first ${params.limit} indices (found ${totalFound}).\n`);
       }
@@ -158,14 +161,14 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
       // Group indices by status for summary
       const statusGroups: Record<string, number> = {};
       const errorIndices: string[] = [];
-      
+
       for (const idx of displayedIndices) {
         const phase = idx.phase || "unknown";
         const action = idx.action || "";
         const status = `${phase}${action ? `:${action}` : ""}`;
-        
+
         statusGroups[status] = (statusGroups[status] || 0) + 1;
-        
+
         if (idx.step_info?.type === "error" || idx.failed_step) {
           errorIndices.push(idx.name);
         }
@@ -183,7 +186,12 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
       // Error summary
       if (errorIndices.length > 0) {
         content.push(`### ⚠️ Errors Found (${errorIndices.length})`);
-        content.push(errorIndices.slice(0, 10).map(name => `- ${name}`).join('\n'));
+        content.push(
+          errorIndices
+            .slice(0, 10)
+            .map((name) => `- ${name}`)
+            .join("\n"),
+        );
         if (errorIndices.length > 10) {
           content.push(`... and ${errorIndices.length - 10} more`);
         }
@@ -192,7 +200,7 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
 
       // Individual index details
       content.push("### Index Details");
-      
+
       for (const idx of displayedIndices) {
         if (params.includeDetails) {
           // Detailed mode - full information
@@ -207,7 +215,7 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
             ...(idx.step_info && { step_info: idx.step_info }),
             ...(idx.failed_step && { failed_step: idx.failed_step }),
             ...(idx.age && { age: idx.age }),
-            ...(idx.lifecycle_date && { lifecycle_date: new Date(idx.lifecycle_date).toISOString() })
+            ...(idx.lifecycle_date && { lifecycle_date: new Date(idx.lifecycle_date).toISOString() }),
           };
 
           content.push(`#### ${idx.name}`);
@@ -220,9 +228,11 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
           const policy = idx.policy || "none";
           const phase = idx.phase || "unknown";
           const action = idx.action ? `:${idx.action}` : "";
-          const error = (idx.step_info?.type === "error" || idx.failed_step) ? " ⚠️ ERROR" : "";
-          
-          content.push(`- **${idx.name}** | Managed: ${managed} | Policy: ${policy} | Phase: ${phase}${action}${error}`);
+          const error = idx.step_info?.type === "error" || idx.failed_step ? " ⚠️ ERROR" : "";
+
+          content.push(
+            `- **${idx.name}** | Managed: ${managed} | Policy: ${policy} | Phase: ${phase}${action}${error}`,
+          );
         }
       }
 
@@ -235,13 +245,12 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
       return {
         content: [{ type: "text", text: content.join("\n") }],
       };
-
     } catch (error) {
       // Standardized MCP error handling
       if (error instanceof z.ZodError) {
-        throw createIlmExplainMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createIlmExplainMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
@@ -250,27 +259,27 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
       }
 
       if (error instanceof Error) {
-        if (error.message.includes('security_exception')) {
-          throw createIlmExplainMcpError('Insufficient permissions to explain ILM lifecycle', {
-            type: 'permission',
-            details: { originalError: error.message }
+        if (error.message.includes("security_exception")) {
+          throw createIlmExplainMcpError("Insufficient permissions to explain ILM lifecycle", {
+            type: "permission",
+            details: { originalError: error.message },
           });
         }
-        
-        if (error.message.includes('index_not_found')) {
-          throw createIlmExplainMcpError(`No indices found matching pattern: ${args.index || '*'}`, {
-            type: 'not_found',
-            details: { pattern: args.index }
+
+        if (error.message.includes("index_not_found")) {
+          throw createIlmExplainMcpError(`No indices found matching pattern: ${args.index || "*"}`, {
+            type: "not_found",
+            details: { pattern: args.index },
           });
         }
       }
 
       throw createIlmExplainMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -280,7 +289,7 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
     "elasticsearch_ilm_explain_lifecycle",
     "Explain ILM status for indices. WARNING: Large clusters have 1000+ indices! ALWAYS specify filters to avoid truncation. Examples: {onlyManaged: true, limit: 50}, {index: 'logs-*', limit: 100}, {onlyErrors: true}. Uses direct JSON Schema and standardized MCP error codes.",
     explainLifecycleSchema, // Direct JSON Schema - no Zod conversion
-    explainLifecycleHandler
+    explainLifecycleHandler,
   );
 };
 

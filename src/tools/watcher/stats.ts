@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
@@ -17,24 +17,24 @@ const watcherStatsSchema = {
       oneOf: [
         {
           type: "string",
-          enum: ["_all", "queued_watches", "current_watches", "pending_watches"]
+          enum: ["_all", "queued_watches", "current_watches", "pending_watches"],
         },
         {
           type: "array",
           items: {
             type: "string",
-            enum: ["_all", "queued_watches", "current_watches", "pending_watches"]
-          }
-        }
+            enum: ["_all", "queued_watches", "current_watches", "pending_watches"],
+          },
+        },
       ],
-      description: "Limit the information returned to specific metrics"
+      description: "Limit the information returned to specific metrics",
     },
     emit_stacktraces: {
       type: "boolean",
-      description: "Whether to emit stack traces of currently running watches"
-    }
+      description: "Whether to emit stack traces of currently running watches",
+    },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -51,21 +51,18 @@ const watcherStatsValidator = z.object({
 type WatcherStatsParams = z.infer<typeof watcherStatsValidator>;
 
 // MCP error handling
-function createWatcherStatsMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createWatcherStatsMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
   };
-  
+
   return new McpError(
     errorCodeMap[context.type] || ErrorCode.InternalError,
     `[elasticsearch_watcher_stats] ${message}`,
-    context.details
+    context.details,
   );
 }
 
@@ -73,11 +70,11 @@ function createWatcherStatsMcpError(
 export const registerWatcherStatsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const watcherStatsHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = watcherStatsValidator.parse(args);
-      
+
       const result = await esClient.watcher.stats({
         metric: params.metric,
         emit_stacktraces: params.emit_stacktraces,
@@ -96,22 +93,21 @@ export const registerWatcherStatsTool: ToolRegistrationFunction = (server: McpSe
           },
         ],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createWatcherStatsMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createWatcherStatsMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       throw createWatcherStatsMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -121,6 +117,6 @@ export const registerWatcherStatsTool: ToolRegistrationFunction = (server: McpSe
     "elasticsearch_watcher_stats",
     "Get Elasticsearch Watcher statistics and metrics. Best for performance monitoring, service analysis, execution tracking. Use when you need to monitor Watcher service performance and execution statistics in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
     watcherStatsSchema,
-    withReadOnlyCheck("elasticsearch_watcher_stats", watcherStatsHandler, OperationType.READ)
+    withReadOnlyCheck("elasticsearch_watcher_stats", watcherStatsHandler, OperationType.READ),
   );
 };

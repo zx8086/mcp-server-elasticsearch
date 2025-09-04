@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
@@ -15,28 +15,28 @@ const scrollSearchSchema = {
     index: {
       type: "string",
       minLength: 1,
-      description: "Index name or pattern to search"
+      description: "Index name or pattern to search",
     },
     query: {
       type: "object",
       additionalProperties: true,
-      description: "Query DSL to filter documents"
+      description: "Query DSL to filter documents",
     },
     scroll: {
-      type: "string"
+      type: "string",
     },
     scrollId: {
-      type: "string"
+      type: "string",
     },
     maxDocuments: {
-      type: "number"
+      type: "number",
     },
     restTotalHitsAsInt: {
-      type: "boolean"
-    }
+      type: "boolean",
+    },
   },
   required: ["index", "query"],
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -52,33 +52,26 @@ const scrollSearchValidator = z.object({
 type ScrollSearchParams = z.infer<typeof scrollSearchValidator>;
 
 // MCP error handling
-function createScrollSearchMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createScrollSearchMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
   };
-  
-  return new McpError(
-    errorCodeMap[context.type],
-    `[elasticsearch_scroll_search] ${message}`,
-    context.details
-  );
+
+  return new McpError(errorCodeMap[context.type], `[elasticsearch_scroll_search] ${message}`, context.details);
 }
 
 // Tool implementation
 export const registerScrollSearchTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const scrollSearchHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = scrollSearchValidator.parse(args);
-      
+
       // If scrollId is provided, use the traditional scroll API
       if (params.scrollId) {
         const result = await esClient.scroll(
@@ -89,7 +82,7 @@ export const registerScrollSearchTool: ToolRegistrationFunction = (server: McpSe
           },
           {
             opaqueId: "elasticsearch_scroll_search",
-          }
+          },
         );
 
         const duration = performance.now() - perfStart;
@@ -98,9 +91,7 @@ export const registerScrollSearchTool: ToolRegistrationFunction = (server: McpSe
         }
 
         return {
-          content: [
-            { type: "text", text: JSON.stringify(result, null, 2) }
-          ],
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
         };
       }
 
@@ -141,22 +132,21 @@ export const registerScrollSearchTool: ToolRegistrationFunction = (server: McpSe
           { type: "text", text: JSON.stringify(documents, null, 2) },
         ],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createScrollSearchMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createScrollSearchMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       throw createScrollSearchMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -166,6 +156,6 @@ export const registerScrollSearchTool: ToolRegistrationFunction = (server: McpSe
     "elasticsearch_scroll_search",
     "Perform scroll search in Elasticsearch for large result sets. Best for pagination, large dataset retrieval, memory-efficient iteration. Use when you need to retrieve all documents from large result sets without overwhelming memory in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
     scrollSearchSchema,
-    scrollSearchHandler
+    scrollSearchHandler,
   );
 };

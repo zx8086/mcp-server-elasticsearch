@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
@@ -15,11 +15,11 @@ const getWatchSchema = {
     id: {
       type: "string",
       minLength: 1,
-      description: "Watch ID to retrieve"
-    }
+      description: "Watch ID to retrieve",
+    },
   },
   required: ["id"],
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -30,22 +30,19 @@ const getWatchValidator = z.object({
 type GetWatchParams = z.infer<typeof getWatchValidator>;
 
 // MCP error handling
-function createGetWatchMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createGetWatchMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     watch_not_found: ErrorCode.InvalidParams,
   };
-  
+
   return new McpError(
     errorCodeMap[context.type] || ErrorCode.InternalError,
     `[elasticsearch_watcher_get_watch] ${message}`,
-    context.details
+    context.details,
   );
 }
 
@@ -53,11 +50,11 @@ function createGetWatchMcpError(
 export const registerWatcherGetWatchTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const getWatchHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = getWatchValidator.parse(args);
-      
+
       const result = await esClient.watcher.getWatch({
         id: params.id,
       });
@@ -75,30 +72,29 @@ export const registerWatcherGetWatchTool: ToolRegistrationFunction = (server: Mc
           },
         ],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createGetWatchMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createGetWatchMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       // Add specific watch error handling
-      if (error instanceof Error && error.message.includes('watch_not_found')) {
+      if (error instanceof Error && error.message.includes("watch_not_found")) {
         throw createGetWatchMcpError(error.message, {
-          type: 'watch_not_found',
-          details: { watchId: args.id }
+          type: "watch_not_found",
+          details: { watchId: args.id },
         });
       }
 
       throw createGetWatchMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -108,6 +104,6 @@ export const registerWatcherGetWatchTool: ToolRegistrationFunction = (server: Mc
     "elasticsearch_watcher_get_watch",
     "Get a watch configuration from Elasticsearch Watcher. Best for monitoring automation, alerting configuration, watch inspection. Use when you need to retrieve watch definitions for Elasticsearch alerting and monitoring workflows. Uses direct JSON Schema and standardized MCP error codes.",
     getWatchSchema,
-    withReadOnlyCheck("elasticsearch_watcher_get_watch", getWatchHandler, OperationType.READ)
+    withReadOnlyCheck("elasticsearch_watcher_get_watch", getWatchHandler, OperationType.READ),
   );
 };

@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
@@ -15,28 +15,28 @@ const executeWatchSchema = {
   properties: {
     id: {
       type: "string",
-      description: "Watch ID to execute"
+      description: "Watch ID to execute",
     },
     action_modes: {
       type: "object",
       additionalProperties: {
         type: "string",
-        enum: ["simulate", "force_simulate", "execute", "force_execute", "skip"]
+        enum: ["simulate", "force_simulate", "execute", "force_execute", "skip"],
       },
-      description: "Override action execution modes"
+      description: "Override action execution modes",
     },
     alternative_input: {
       type: "object",
       additionalProperties: true,
-      description: "Alternative input to use instead of the watch input"
+      description: "Alternative input to use instead of the watch input",
     },
     ignore_condition: {
       type: "boolean",
-      description: "Whether to ignore the condition and always execute the actions"
+      description: "Whether to ignore the condition and always execute the actions",
     },
     record_execution: {
-      type: "boolean", 
-      description: "Whether to record the execution in the watch history"
+      type: "boolean",
+      description: "Whether to record the execution in the watch history",
     },
     simulated_actions: {
       type: "object",
@@ -44,34 +44,34 @@ const executeWatchSchema = {
         actions: {
           type: "array",
           items: { type: "string" },
-          description: "Actions to simulate"
+          description: "Actions to simulate",
         },
         all: {
           type: "boolean",
-          description: "Simulate all actions"
+          description: "Simulate all actions",
         },
         use_all: {
-          type: "boolean", 
-          description: "Use all actions for simulation"
-        }
+          type: "boolean",
+          description: "Use all actions for simulation",
+        },
       },
       additionalProperties: false,
-      description: "Actions to simulate instead of executing"
+      description: "Actions to simulate instead of executing",
     },
     trigger_data: {
       type: "object",
       properties: {
         scheduled_time: {
           type: "string",
-          description: "Scheduled execution time"
+          description: "Scheduled execution time",
         },
         triggered_time: {
           type: "string",
-          description: "Trigger execution time"
-        }
+          description: "Trigger execution time",
+        },
       },
       additionalProperties: false,
-      description: "Trigger data to use for execution"
+      description: "Trigger data to use for execution",
     },
     watch: {
       type: "object",
@@ -79,56 +79,56 @@ const executeWatchSchema = {
         actions: {
           type: "object",
           additionalProperties: true,
-          description: "Watch actions definition"
+          description: "Watch actions definition",
         },
         condition: {
           type: "object",
           additionalProperties: true,
-          description: "Watch condition definition"
+          description: "Watch condition definition",
         },
         input: {
           type: "object",
           additionalProperties: true,
-          description: "Watch input definition"
+          description: "Watch input definition",
         },
         metadata: {
           type: "object",
           additionalProperties: true,
-          description: "Watch metadata"
+          description: "Watch metadata",
         },
         status: {
           type: "object",
           additionalProperties: true,
-          description: "Watch status information"
+          description: "Watch status information",
         },
         throttle_period: {
           type: "string",
-          description: "Throttle period for the watch"
+          description: "Throttle period for the watch",
         },
         throttle_period_in_millis: {
           type: "number",
-          description: "Throttle period in milliseconds"
+          description: "Throttle period in milliseconds",
         },
         transform: {
           type: "object",
           additionalProperties: true,
-          description: "Watch transform definition"
+          description: "Watch transform definition",
         },
         trigger: {
           type: "object",
           additionalProperties: true,
-          description: "Watch trigger definition"
-        }
+          description: "Watch trigger definition",
+        },
       },
       additionalProperties: false,
-      description: "Watch definition to execute inline"
+      description: "Watch definition to execute inline",
     },
     debug: {
       type: "boolean",
-      description: "Enable debug mode for execution"
-    }
+      description: "Enable debug mode for execution",
+    },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -170,22 +170,19 @@ const executeWatchValidator = z.object({
 type ExecuteWatchParams = z.infer<typeof executeWatchValidator>;
 
 // MCP error handling
-function createExecuteWatchMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createExecuteWatchMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     watch_not_found: ErrorCode.InvalidParams,
   };
-  
+
   return new McpError(
     errorCodeMap[context.type] || ErrorCode.InternalError,
     `[elasticsearch_watcher_execute_watch] ${message}`,
-    context.details
+    context.details,
   );
 }
 
@@ -193,11 +190,11 @@ function createExecuteWatchMcpError(
 export const registerWatcherExecuteWatchTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const executeWatchHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = executeWatchValidator.parse(args);
-      
+
       const result = await esClient.watcher.executeWatch({
         id: params.id,
         action_modes: params.action_modes,
@@ -223,30 +220,29 @@ export const registerWatcherExecuteWatchTool: ToolRegistrationFunction = (server
           },
         ],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createExecuteWatchMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createExecuteWatchMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       // Add specific watch error handling
-      if (error instanceof Error && error.message.includes('watch_not_found')) {
+      if (error instanceof Error && error.message.includes("watch_not_found")) {
         throw createExecuteWatchMcpError(error.message, {
-          type: 'watch_not_found',
-          details: { watchId: args.id }
+          type: "watch_not_found",
+          details: { watchId: args.id },
         });
       }
 
       throw createExecuteWatchMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -256,6 +252,6 @@ export const registerWatcherExecuteWatchTool: ToolRegistrationFunction = (server
     "elasticsearch_watcher_execute_watch",
     "Execute a watch in Elasticsearch Watcher for testing or debugging. Best for watch testing, debugging workflows, manual execution. Use when you need to force watch execution outside normal triggers in Elasticsearch alerting systems. Uses direct JSON Schema and standardized MCP error codes.",
     executeWatchSchema,
-    withReadOnlyCheck("elasticsearch_watcher_execute_watch", executeWatchHandler, OperationType.WRITE)
+    withReadOnlyCheck("elasticsearch_watcher_execute_watch", executeWatchHandler, OperationType.WRITE),
   );
 };

@@ -3,7 +3,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
@@ -20,16 +20,16 @@ const retrySchema = {
     index: {
       type: "string",
       minLength: 1,
-      description: "Index name or pattern to retry ILM policy execution for (cannot be empty)"
-    }
+      description: "Index name or pattern to retry ILM policy execution for (cannot be empty)",
+    },
   },
   required: ["index"],
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Simple Zod validator for runtime validation only
 const retryValidator = z.object({
-  index: z.string().min(1, "Index name cannot be empty")
+  index: z.string().min(1, "Index name cannot be empty"),
 });
 
 type RetryParams = z.infer<typeof retryValidator>;
@@ -41,25 +41,21 @@ type RetryParams = z.infer<typeof retryValidator>;
 function createIlmRetryMcpError(
   error: Error | string,
   context: {
-    type: 'validation' | 'execution' | 'permission' | 'index_not_found' | 'no_failed_step';
+    type: "validation" | "execution" | "permission" | "index_not_found" | "no_failed_step";
     details?: any;
-  }
+  },
 ): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     permission: ErrorCode.InvalidRequest,
     index_not_found: ErrorCode.InvalidParams,
-    no_failed_step: ErrorCode.InvalidRequest
+    no_failed_step: ErrorCode.InvalidRequest,
   };
-  
-  return new McpError(
-    errorCodeMap[context.type],
-    `[elasticsearch_ilm_retry] ${message}`,
-    context.details
-  );
+
+  return new McpError(errorCodeMap[context.type], `[elasticsearch_ilm_retry] ${message}`, context.details);
 }
 
 // =============================================================================
@@ -67,16 +63,15 @@ function createIlmRetryMcpError(
 // =============================================================================
 
 export const registerRetryTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  
   const retryHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Simple validation - no complex parameter extraction
       const params = retryValidator.parse(args);
-      
+
       logger.debug("Retrying ILM policy execution", {
-        index: params.index
+        index: params.index,
       });
 
       const result = await esClient.ilm.retry({
@@ -94,7 +89,7 @@ export const registerRetryTool: ToolRegistrationFunction = (server: McpServer, e
       return {
         content: [
           {
-            type: "text", 
+            type: "text",
             text: `🔄 **ILM Policy Retry Initiated: ${params.index}**
 
 Retry operation has been triggered for indices in ERROR state.
@@ -107,58 +102,61 @@ Retry operation has been triggered for indices in ERROR state.
 ℹ️ **Monitor Progress**: Use \`elasticsearch_ilm_explain_lifecycle\` to check if errors are resolved.
 ⚠️ **Note**: This only affects indices currently in ERROR state for ILM.
 
-Operation completed at: ${new Date().toISOString()}`
+Operation completed at: ${new Date().toISOString()}`,
           },
           {
             type: "text",
-            text: JSON.stringify({
-              acknowledged: result.acknowledged || true,
-              index_pattern: params.index,
-              operation: "retry",
-              timestamp: new Date().toISOString()
-            }, null, 2)
-          }
+            text: JSON.stringify(
+              {
+                acknowledged: result.acknowledged || true,
+                index_pattern: params.index,
+                operation: "retry",
+                timestamp: new Date().toISOString(),
+              },
+              null,
+              2,
+            ),
+          },
         ],
       };
-
     } catch (error) {
       // Standardized MCP error handling
       if (error instanceof z.ZodError) {
-        throw createIlmRetryMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createIlmRetryMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       if (error instanceof Error) {
-        if (error.message.includes('security_exception')) {
-          throw createIlmRetryMcpError('Insufficient permissions to retry ILM policy', {
-            type: 'permission',
-            details: { originalError: error.message }
+        if (error.message.includes("security_exception")) {
+          throw createIlmRetryMcpError("Insufficient permissions to retry ILM policy", {
+            type: "permission",
+            details: { originalError: error.message },
           });
         }
 
-        if (error.message.includes('index_not_found') || error.message.includes('no such index')) {
-          throw createIlmRetryMcpError(`Index not found: ${params?.index || 'unknown'}`, {
-            type: 'index_not_found',
-            details: { suggestion: "Verify the index name or pattern exists" }
+        if (error.message.includes("index_not_found") || error.message.includes("no such index")) {
+          throw createIlmRetryMcpError(`Index not found: ${params?.index || "unknown"}`, {
+            type: "index_not_found",
+            details: { suggestion: "Verify the index name or pattern exists" },
           });
         }
 
-        if (error.message.includes('no_failed_step') || error.message.includes('not in error state')) {
-          throw createIlmRetryMcpError(`No failed ILM steps to retry for: ${params?.index || 'unknown'}`, {
-            type: 'no_failed_step',
-            details: { suggestion: "Use explain_lifecycle to check if indices are in ERROR state" }
+        if (error.message.includes("no_failed_step") || error.message.includes("not in error state")) {
+          throw createIlmRetryMcpError(`No failed ILM steps to retry for: ${params?.index || "unknown"}`, {
+            type: "no_failed_step",
+            details: { suggestion: "Use explain_lifecycle to check if indices are in ERROR state" },
           });
         }
       }
 
       throw createIlmRetryMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -168,6 +166,6 @@ Operation completed at: ${new Date().toISOString()}`
     "elasticsearch_ilm_retry",
     "Retry ILM policy execution. Retry Index Lifecycle Management policy execution for indices in ERROR state. Uses direct JSON Schema and standardized MCP error codes. Examples: {index: 'logs-*'}, {index: 'failed-index-000001'}",
     retrySchema, // Direct JSON Schema - no Zod conversion
-    withReadOnlyCheck("elasticsearch_ilm_retry", retryHandler, OperationType.WRITE)
+    withReadOnlyCheck("elasticsearch_ilm_retry", retryHandler, OperationType.WRITE),
   );
 };

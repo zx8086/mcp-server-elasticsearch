@@ -1,0 +1,57 @@
+# ConfigMap for Elasticsearch MCP Server configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elasticsearch-mcp-config
+  namespace: elasticsearch-mcp
+  labels:
+    app.kubernetes.io/name: elasticsearch-mcp-server
+    app.kubernetes.io/component: config
+    app.kubernetes.io/part-of: mcp-ecosystem
+data:
+  # Server Configuration
+  MCP_SERVER_NAME: "elasticsearch-mcp-server"
+  MCP_SERVER_VERSION: "0.1.1"
+  MCP_TRANSPORT: "sse"
+  MCP_PORT: "8080"
+  
+  # Performance Configuration
+  MCP_MAX_QUERY_TIMEOUT: "30000"
+  MCP_MAX_RESULTS_PER_QUERY: "1000"
+  MCP_MAX_RESPONSE_SIZE_BYTES: "1000000"
+  MCP_DEFAULT_PAGE_SIZE: "20"
+  MCP_MAX_PAGE_SIZE: "100"
+  MCP_ENABLE_RESPONSE_COMPRESSION: "true"
+  MCP_AUTO_SUMMARIZE_LARGE_RESPONSES: "true"
+  
+  # Security Configuration
+  READ_ONLY_MODE: "true"
+  READ_ONLY_STRICT_MODE: "true"
+  
+  # Elasticsearch Client Configuration  
+  ES_MAX_RETRIES: "3"
+  ES_REQUEST_TIMEOUT: "30000"
+  ES_COMPRESSION: "true"
+  ES_ENABLE_META_HEADER: "true"
+  ES_DISABLE_PROTOTYPE_POISONING_PROTECTION: "true"
+  
+  # Logging Configuration
+  LOG_LEVEL: "info"
+  LOG_FORMAT: "json"
+  LOG_INCLUDE_METADATA: "true"
+  
+  # Security and Permissions
+  ALLOW_DESTRUCTIVE_OPERATIONS: "false"
+  ALLOW_SCHEMA_MODIFICATIONS: "false"
+  ALLOW_INDEX_MANAGEMENT: "false"
+  MAX_BULK_OPERATIONS: "1000"
+  
+  # LangSmith Configuration
+  LANGSMITH_TRACING: "true"
+  LANGSMITH_ENDPOINT: "https://api.smith.langchain.com"
+  LANGSMITH_PROJECT: "elasticsearch-mcp-server"
+  
+  # Resource Configuration
+  NODE_ENV: "production"
+  BUN_HEAP_SIZE: "512m"
+  BUN_MAX_OLD_SPACE_SIZE: "512"

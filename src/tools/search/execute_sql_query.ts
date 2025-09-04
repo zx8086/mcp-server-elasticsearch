@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
@@ -13,17 +13,17 @@ const executeSqlQuerySchema = {
   properties: {
     query: {
       type: "string",
-      description: "SQL query to execute. Example: 'SELECT * FROM logs-* LIMIT 10'"
+      description: "SQL query to execute. Example: 'SELECT * FROM logs-* LIMIT 10'",
     },
     format: {
       type: "string",
-      enum: ["json", "csv", "tsv", "txt", "yaml", "cbor", "smile"]
+      enum: ["json", "csv", "tsv", "txt", "yaml", "cbor", "smile"],
     },
     fetchSize: {
-      type: "number"
-    }
+      type: "number",
+    },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -36,33 +36,26 @@ const executeSqlQueryValidator = z.object({
 type ExecuteSqlQueryParams = z.infer<typeof executeSqlQueryValidator>;
 
 // MCP error handling
-function createExecuteSqlQueryMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createExecuteSqlQueryMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
   };
-  
-  return new McpError(
-    errorCodeMap[context.type],
-    `[elasticsearch_execute_sql_query] ${message}`,
-    context.details
-  );
+
+  return new McpError(errorCodeMap[context.type], `[elasticsearch_execute_sql_query] ${message}`, context.details);
 }
 
 // Tool implementation
 export const registerExecuteSqlQueryTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const executeSqlQueryHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = executeSqlQueryValidator.parse(args);
-      
+
       const result = await esClient.sql.query(
         {
           query: params.query,
@@ -71,7 +64,7 @@ export const registerExecuteSqlQueryTool: ToolRegistrationFunction = (server: Mc
         },
         {
           opaqueId: "elasticsearch_execute_sql_query",
-        }
+        },
       );
 
       const duration = performance.now() - perfStart;
@@ -80,26 +73,23 @@ export const registerExecuteSqlQueryTool: ToolRegistrationFunction = (server: Mc
       }
 
       return {
-        content: [
-          { type: "text", text: JSON.stringify(result, null, 2) }
-        ],
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createExecuteSqlQueryMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createExecuteSqlQueryMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       throw createExecuteSqlQueryMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -109,6 +99,6 @@ export const registerExecuteSqlQueryTool: ToolRegistrationFunction = (server: Mc
     "elasticsearch_execute_sql_query",
     "Execute a SQL query using Elasticsearch SQL API. PARAMETER: 'query' (SQL string). Best for familiar SQL syntax, structured queries, data analysis. Example: {query: 'SELECT * FROM logs-* WHERE status = 500 LIMIT 100'}. Uses direct JSON Schema and standardized MCP error codes.",
     executeSqlQuerySchema,
-    executeSqlQueryHandler
+    executeSqlQueryHandler,
   );
 };

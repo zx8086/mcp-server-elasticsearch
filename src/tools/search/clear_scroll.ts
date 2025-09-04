@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
@@ -14,11 +14,11 @@ const clearScrollSchema = {
     scrollId: {
       type: "string",
       minLength: 1,
-      description: "Scroll ID to clear from memory"
-    }
+      description: "Scroll ID to clear from memory",
+    },
   },
   required: ["scrollId"],
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -29,33 +29,26 @@ const clearScrollValidator = z.object({
 type ClearScrollParams = z.infer<typeof clearScrollValidator>;
 
 // MCP error handling
-function createClearScrollMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createClearScrollMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
   };
-  
-  return new McpError(
-    errorCodeMap[context.type],
-    `[elasticsearch_clear_scroll] ${message}`,
-    context.details
-  );
+
+  return new McpError(errorCodeMap[context.type], `[elasticsearch_clear_scroll] ${message}`, context.details);
 }
 
 // Tool implementation
 export const registerClearScrollTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const clearScrollHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = clearScrollValidator.parse(args);
-      
+
       const result = await esClient.clearScroll({
         scroll_id: params.scrollId,
       });
@@ -66,26 +59,23 @@ export const registerClearScrollTool: ToolRegistrationFunction = (server: McpSer
       }
 
       return {
-        content: [
-          { type: "text", text: JSON.stringify(result, null, 2) }
-        ],
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createClearScrollMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createClearScrollMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       throw createClearScrollMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -95,6 +85,6 @@ export const registerClearScrollTool: ToolRegistrationFunction = (server: McpSer
     "elasticsearch_clear_scroll",
     "Clear a scroll context in Elasticsearch to free resources. Best for cleanup operations, memory management, scroll lifecycle management. Use when you need to explicitly release scroll contexts after completing large result set iterations in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
     clearScrollSchema,
-    clearScrollHandler
+    clearScrollHandler,
   );
 };

@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
@@ -16,74 +16,74 @@ const putMappingSchema = {
     index: {
       type: "string",
       minLength: 1,
-      description: "Name of the index to update mapping for"
+      description: "Name of the index to update mapping for",
     },
     properties: {
       type: "object",
       additionalProperties: true,
-      description: "Field mappings to add or update"
+      description: "Field mappings to add or update",
     },
     runtime: {
       type: "object",
       additionalProperties: true,
-      description: "Runtime fields configuration"
+      description: "Runtime fields configuration",
     },
     meta: {
       type: "object",
       additionalProperties: true,
-      description: "Metadata for the mapping"
+      description: "Metadata for the mapping",
     },
     dynamic: {
       type: "string",
       enum: ["true", "false", "strict", "runtime"],
-      description: "Dynamic mapping behavior"
+      description: "Dynamic mapping behavior",
     },
     dateDetection: {
       type: "boolean",
-      description: "Enable or disable date detection"
+      description: "Enable or disable date detection",
     },
     dynamicDateFormats: {
       type: "array",
       items: { type: "string" },
-      description: "Dynamic date formats"
+      description: "Dynamic date formats",
     },
     dynamicTemplates: {
       type: "array",
       items: { type: "object", additionalProperties: true },
-      description: "Dynamic mapping templates"
+      description: "Dynamic mapping templates",
     },
     numericDetection: {
       type: "boolean",
-      description: "Enable or disable numeric detection"
+      description: "Enable or disable numeric detection",
     },
     timeout: {
       type: "string",
-      description: "Operation timeout (e.g., '30s')"
+      description: "Operation timeout (e.g., '30s')",
     },
     masterTimeout: {
       type: "string",
-      description: "Master node timeout (e.g., '30s')"
+      description: "Master node timeout (e.g., '30s')",
     },
     ignoreUnavailable: {
       type: "boolean",
-      description: "Ignore unavailable indices"
+      description: "Ignore unavailable indices",
     },
     allowNoIndices: {
       type: "boolean",
-      description: "Allow wildcards that match no indices"
+      description: "Allow wildcards that match no indices",
     },
     expandWildcards: {
       type: "string",
       enum: ["all", "open", "closed", "hidden", "none"],
-      description: "Which indices to expand wildcards to"
+      description: "Which indices to expand wildcards to",
     },
     writeIndexOnly: {
       type: "boolean",
-      description: "Update only the write index for aliases"
-    }
+      description: "Update only the write index for aliases",
+    },
   },
   required: ["index"],
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -108,23 +108,20 @@ const putMappingValidator = z.object({
 type PutMappingParams = z.infer<typeof putMappingValidator>;
 
 // MCP error handling
-function createPutMappingMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createPutMappingMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     index_not_found: ErrorCode.InvalidParams,
     resource_already_exists: ErrorCode.InvalidRequest,
   };
-  
+
   return new McpError(
     errorCodeMap[context.type] || ErrorCode.InternalError,
     `[elasticsearch_put_mapping] ${message}`,
-    context.details
+    context.details,
   );
 }
 
@@ -132,11 +129,11 @@ function createPutMappingMcpError(
 export const registerPutMappingTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const putMappingHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = putMappingValidator.parse(args);
-      
+
       const result = await esClient.indices.putMapping({
         index: params.index,
         properties: params.properties,
@@ -164,42 +161,41 @@ export const registerPutMappingTool: ToolRegistrationFunction = (server: McpServ
         content: [
           {
             type: "text",
-            text: JSON.stringify(result, null, 2)
-          }
+            text: JSON.stringify(result, null, 2),
+          },
         ],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createPutMappingMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createPutMappingMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       // Handle index not found error
-      if (error instanceof Error && error.message.includes('index_not_found_exception')) {
+      if (error instanceof Error && error.message.includes("index_not_found_exception")) {
         throw createPutMappingMcpError(`Index not found: ${args.index}`, {
-          type: 'index_not_found',
-          details: { index: args.index }
+          type: "index_not_found",
+          details: { index: args.index },
         });
       }
 
       // Handle mapping conflicts
-      if (error instanceof Error && error.message.includes('strict_dynamic_mapping_exception')) {
+      if (error instanceof Error && error.message.includes("strict_dynamic_mapping_exception")) {
         throw createPutMappingMcpError(`Mapping conflict: ${error.message}`, {
-          type: 'resource_already_exists',
-          details: { index: args.index }
+          type: "resource_already_exists",
+          details: { index: args.index },
         });
       }
-      
+
       throw createPutMappingMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -209,6 +205,6 @@ export const registerPutMappingTool: ToolRegistrationFunction = (server: McpServ
     "elasticsearch_put_mapping",
     "Update index mappings in Elasticsearch. Best for schema evolution, field addition, mapping modifications. Use when you need to add new fields or update existing field mappings in Elasticsearch indices. Uses direct JSON Schema and standardized MCP error codes.",
     putMappingSchema,
-    withReadOnlyCheck("elasticsearch_put_mapping", putMappingHandler, OperationType.WRITE)
+    withReadOnlyCheck("elasticsearch_put_mapping", putMappingHandler, OperationType.WRITE),
   );
 };

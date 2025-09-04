@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
@@ -13,27 +13,24 @@ const existsTemplateSchema = {
   type: "object",
   properties: {
     name: {
-      oneOf: [
-        { type: "string" },
-        { type: "array", items: { type: "string" } }
-      ],
-      description: "Legacy template name(s) to check existence for. Examples: 'template1', ['template1', 'template2']"
+      oneOf: [{ type: "string" }, { type: "array", items: { type: "string" } }],
+      description: "Legacy template name(s) to check existence for. Examples: 'template1', ['template1', 'template2']",
     },
     flatSettings: {
       type: "boolean",
-      description: "Return settings in flat format"
+      description: "Return settings in flat format",
     },
     local: {
       type: "boolean",
-      description: "Return local information, do not retrieve the state from master node"
+      description: "Return local information, do not retrieve the state from master node",
     },
     masterTimeout: {
       type: "string",
-      description: "Timeout for connection to master node"
-    }
+      description: "Timeout for connection to master node",
+    },
   },
   required: ["name"],
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -50,77 +47,77 @@ type ExistsTemplateParams = z.infer<typeof existsTemplateValidator>;
 function createExistsTemplateMcpError(
   error: Error | string,
   context: {
-    type: 'validation' | 'execution' | 'template_not_found' | 'timeout';
+    type: "validation" | "execution" | "template_not_found" | "timeout";
     details?: any;
-  }
+  },
 ): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     template_not_found: ErrorCode.InvalidParams,
-    timeout: ErrorCode.InternalError
+    timeout: ErrorCode.InternalError,
   };
-  
-  return new McpError(
-    errorCodeMap[context.type],
-    `[elasticsearch_exists_template] ${message}`,
-    context.details
-  );
+
+  return new McpError(errorCodeMap[context.type], `[elasticsearch_exists_template] ${message}`, context.details);
 }
 
 // Tool implementation
 export const registerExistsTemplateTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  
   const existsTemplateHandler = async (args: any): Promise<SearchResult> => {
     try {
       // Validate parameters
       const params = existsTemplateValidator.parse(args);
-      
+
       logger.debug("Checking if legacy template exists", { name: params.name });
-      
-      const result = await esClient.indices.existsTemplate({
-        name: params.name,
-        flat_settings: params.flatSettings,
-        local: params.local,
-        master_timeout: params.masterTimeout,
-      }, {
-        opaqueId: "elasticsearch_exists_template",
-      });
-      
+
+      const result = await esClient.indices.existsTemplate(
+        {
+          name: params.name,
+          flat_settings: params.flatSettings,
+          local: params.local,
+          master_timeout: params.masterTimeout,
+        },
+        {
+          opaqueId: "elasticsearch_exists_template",
+        },
+      );
+
       return {
         content: [{ type: "text", text: JSON.stringify({ exists: result }, null, 2) }],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createExistsTemplateMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createExistsTemplateMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       if (error instanceof Error) {
-        if (error.message.includes('index_template_missing_exception') || error.message.includes('resource_not_found')) {
+        if (
+          error.message.includes("index_template_missing_exception") ||
+          error.message.includes("resource_not_found")
+        ) {
           throw createExistsTemplateMcpError(`Template not found: ${args?.name}`, {
-            type: 'template_not_found',
-            details: { originalError: error.message }
+            type: "template_not_found",
+            details: { originalError: error.message },
           });
         }
 
-        if (error.message.includes('timeout') || error.message.includes('timed_out')) {
+        if (error.message.includes("timeout") || error.message.includes("timed_out")) {
           throw createExistsTemplateMcpError(`Operation timed out: ${error.message}`, {
-            type: 'timeout',
-            details: { originalError: error.message }
+            type: "timeout",
+            details: { originalError: error.message },
           });
         }
       }
 
       throw createExistsTemplateMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { args }
+        type: "execution",
+        details: { args },
       });
     }
   };
@@ -130,6 +127,6 @@ export const registerExistsTemplateTool: ToolRegistrationFunction = (server: Mcp
     "elasticsearch_exists_template",
     "Check existence of legacy index templates in Elasticsearch. Best for legacy template validation, migration planning, compatibility checks. Use when you need to verify legacy index template presence in Elasticsearch (deprecated, use composable templates instead).",
     existsTemplateSchema,
-    existsTemplateHandler
+    existsTemplateHandler,
   );
 };

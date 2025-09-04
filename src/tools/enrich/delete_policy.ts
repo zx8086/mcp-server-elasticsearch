@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
@@ -15,15 +15,15 @@ const deletePolicySchema = {
     name: {
       type: "string",
       minLength: 1,
-      description: "Name of the enrich policy to delete"
+      description: "Name of the enrich policy to delete",
     },
     masterTimeout: {
       type: "string",
-      description: "Timeout for master node operations. Examples: '30s', '1m'"
-    }
+      description: "Timeout for master node operations. Examples: '30s', '1m'",
+    },
   },
   required: ["name"],
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -38,33 +38,28 @@ type DeletePolicyParams = z.infer<typeof deletePolicyValidator>;
 function createDeletePolicyMcpError(
   error: Error | string,
   context: {
-    type: 'validation' | 'execution' | 'policy_not_found' | 'timeout' | 'policy_in_use';
+    type: "validation" | "execution" | "policy_not_found" | "timeout" | "policy_in_use";
     details?: any;
-  }
+  },
 ): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     policy_not_found: ErrorCode.InvalidParams,
     timeout: ErrorCode.InternalError,
-    policy_in_use: ErrorCode.InvalidParams
+    policy_in_use: ErrorCode.InvalidParams,
   };
-  
-  return new McpError(
-    errorCodeMap[context.type],
-    `[elasticsearch_enrich_delete_policy] ${message}`,
-    context.details
-  );
+
+  return new McpError(errorCodeMap[context.type], `[elasticsearch_enrich_delete_policy] ${message}`, context.details);
 }
 
 // Tool implementation
 export const registerEnrichDeletePolicyTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  
   const deletePolicyHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = deletePolicyValidator.parse(args);
@@ -83,49 +78,50 @@ export const registerEnrichDeletePolicyTool: ToolRegistrationFunction = (server:
       }
 
       return {
-        content: [
-          { type: "text", text: JSON.stringify(result, null, 2) } as TextContent
-        ],
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createDeletePolicyMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createDeletePolicyMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       if (error instanceof Error) {
-        if (error.message.includes('timeout') || error.message.includes('timed_out')) {
+        if (error.message.includes("timeout") || error.message.includes("timed_out")) {
           throw createDeletePolicyMcpError(`Operation timed out: ${error.message}`, {
-            type: 'timeout',
-            details: { duration: performance.now() - perfStart }
+            type: "timeout",
+            details: { duration: performance.now() - perfStart },
           });
         }
 
-        if (error.message.includes('not_found') || error.message.includes('resource_not_found_exception')) {
-          throw createDeletePolicyMcpError(`Enrich policy not found: ${args?.name || 'unknown'}`, {
-            type: 'policy_not_found',
-            details: { policyName: args?.name }
+        if (error.message.includes("not_found") || error.message.includes("resource_not_found_exception")) {
+          throw createDeletePolicyMcpError(`Enrich policy not found: ${args?.name || "unknown"}`, {
+            type: "policy_not_found",
+            details: { policyName: args?.name },
           });
         }
 
-        if (error.message.includes('in_use') || error.message.includes('policy_is_in_use') || error.message.includes('cannot_delete')) {
+        if (
+          error.message.includes("in_use") ||
+          error.message.includes("policy_is_in_use") ||
+          error.message.includes("cannot_delete")
+        ) {
           throw createDeletePolicyMcpError(`Cannot delete policy in use: ${error.message}`, {
-            type: 'policy_in_use',
-            details: { originalError: error.message, policyName: args?.name }
+            type: "policy_in_use",
+            details: { originalError: error.message, policyName: args?.name },
           });
         }
       }
 
       throw createDeletePolicyMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -143,6 +139,6 @@ export const registerEnrichDeletePolicyTool: ToolRegistrationFunction = (server:
     "elasticsearch_enrich_delete_policy",
     "Delete an enrich policy and its index in Elasticsearch. Best for policy cleanup, configuration management, removing unused enrichment. Use when you need to remove enrich policies and their associated indices from Elasticsearch.",
     deletePolicySchema,
-    withReadOnlyCheck("elasticsearch_enrich_delete_policy", deletePolicyImpl, OperationType.DELETE)
+    withReadOnlyCheck("elasticsearch_enrich_delete_policy", deletePolicyImpl, OperationType.DELETE),
   );
 };

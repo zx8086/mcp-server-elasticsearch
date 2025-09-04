@@ -3,7 +3,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
@@ -18,37 +18,37 @@ const getLifecycleSchema = {
   properties: {
     policy: {
       type: "string",
-      description: "Specific policy name to retrieve"
+      description: "Specific policy name to retrieve",
     },
     masterTimeout: {
       type: "string",
-      description: "Master node timeout"
+      description: "Master node timeout",
     },
     timeout: {
-      type: "string", 
-      description: "Request timeout"
+      type: "string",
+      description: "Request timeout",
     },
     limit: {
       type: "number",
       minimum: 1,
       maximum: 100,
-      description: "Maximum number of policies to return. Range: 1-100"
+      description: "Maximum number of policies to return. Range: 1-100",
     },
     summary: {
       type: "boolean",
-      description: "Return summarized policy information instead of full details"
+      description: "Return summarized policy information instead of full details",
     },
     includeIndices: {
       type: "boolean",
-      description: "Include list of indices using each policy"
+      description: "Include list of indices using each policy",
     },
     sortBy: {
       type: "string",
       enum: ["name", "modified_date", "version", "indices_count"],
-      description: "Sort policies by specified field"
-    }
+      description: "Sort policies by specified field",
+    },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Simple Zod validator for runtime validation only
@@ -59,7 +59,7 @@ const getLifecycleValidator = z.object({
   limit: z.number().min(1).max(100).optional(),
   summary: z.boolean().optional(),
   includeIndices: z.boolean().optional(),
-  sortBy: z.enum(["name", "modified_date", "version", "indices_count"]).optional()
+  sortBy: z.enum(["name", "modified_date", "version", "indices_count"]).optional(),
 });
 
 type GetLifecycleParams = z.infer<typeof getLifecycleValidator>;
@@ -71,24 +71,20 @@ type GetLifecycleParams = z.infer<typeof getLifecycleValidator>;
 function createIlmMcpError(
   error: Error | string,
   context: {
-    type: 'validation' | 'execution' | 'not_found' | 'permission';
+    type: "validation" | "execution" | "not_found" | "permission";
     details?: any;
-  }
+  },
 ): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     not_found: ErrorCode.InvalidRequest,
-    permission: ErrorCode.InvalidRequest
+    permission: ErrorCode.InvalidRequest,
   };
-  
-  return new McpError(
-    errorCodeMap[context.type],
-    `[elasticsearch_ilm_get_lifecycle] ${message}`,
-    context.details
-  );
+
+  return new McpError(errorCodeMap[context.type], `[elasticsearch_ilm_get_lifecycle] ${message}`, context.details);
 }
 
 // =============================================================================
@@ -96,19 +92,18 @@ function createIlmMcpError(
 // =============================================================================
 
 export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  
   const getLifecycleHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Simple validation - no complex parameter extraction
       const params = getLifecycleValidator.parse(args);
-      
+
       logger.debug("Getting ILM lifecycle policies (simplified)", {
         policy: params.policy,
         limit: params.limit,
         summary: params.summary,
-        sortBy: params.sortBy
+        sortBy: params.sortBy,
       });
 
       // Fetch policies from Elasticsearch
@@ -127,11 +122,11 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
       // If a specific policy was requested, filter results
       if (params.policy) {
         policies = policies.filter((policy) => policy.name === params.policy);
-        
+
         if (policies.length === 0) {
           throw createIlmMcpError(`Policy '${params.policy}' not found`, {
-            type: 'not_found',
-            details: { requestedPolicy: params.policy }
+            type: "not_found",
+            details: { requestedPolicy: params.policy },
           });
         }
       }
@@ -145,7 +140,7 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
           const minAge = deletePhase.min_age;
           const match = minAge.match(/(\d+)d/);
           if (match) {
-            retentionDays = parseInt(match[1]);
+            retentionDays = Number.parseInt(match[1]);
           }
         }
 
@@ -189,12 +184,12 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
         if (params.summary) {
           // Summary mode - key information only
           const phases = Object.keys(policy.policy?.phases || {});
-          
+
           responseContent.push(`### ${policy.name}`);
           responseContent.push(`- **Version**: ${policy.version || 0}`);
           responseContent.push(`- **Modified**: ${new Date(policy.modified_date || 0).toISOString().split("T")[0]}`);
           responseContent.push(`- **Phases**: ${phases.join(" → ")}`);
-          
+
           if (policy.retention_days) {
             responseContent.push(`- **Retention**: ${policy.retention_days} days`);
           }
@@ -217,13 +212,14 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
             phases: Object.keys(policy.policy?.phases || {}),
             retention_days: policy.retention_days,
             policy_definition: policy.policy?.phases,
-            ...(params.includeIndices && policy.in_use_by && {
-              in_use_by: {
-                indices: policy.in_use_by.indices?.slice(0, 10), // Limit for readability
-                data_streams: policy.in_use_by.data_streams?.slice(0, 10),
-                composable_templates: policy.in_use_by.composable_templates,
-              }
-            })
+            ...(params.includeIndices &&
+              policy.in_use_by && {
+                in_use_by: {
+                  indices: policy.in_use_by.indices?.slice(0, 10), // Limit for readability
+                  data_streams: policy.in_use_by.data_streams?.slice(0, 10),
+                  composable_templates: policy.in_use_by.composable_templates,
+                },
+              }),
           };
 
           responseContent.push(`### ${detail.name}\n`);
@@ -237,7 +233,7 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
       if (params.summary && limitedPolicies.length > 5) {
         responseContent.push("\n## Phase Distribution");
         const phaseCount: Record<string, number> = {};
-        
+
         for (const policy of limitedPolicies) {
           for (const phase of Object.keys(policy.policy?.phases || {})) {
             phaseCount[phase] = (phaseCount[phase] || 0) + 1;
@@ -258,13 +254,12 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
       return {
         content: [{ type: "text", text: responseContent.join("\n") }],
       };
-
     } catch (error) {
       // Standardized MCP error handling
       if (error instanceof z.ZodError) {
-        throw createIlmMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createIlmMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
@@ -273,27 +268,27 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
       }
 
       if (error instanceof Error) {
-        if (error.message.includes('security_exception')) {
-          throw createIlmMcpError('Insufficient permissions to access ILM policies', {
-            type: 'permission',
-            details: { originalError: error.message }
+        if (error.message.includes("security_exception")) {
+          throw createIlmMcpError("Insufficient permissions to access ILM policies", {
+            type: "permission",
+            details: { originalError: error.message },
           });
         }
-        
-        if (error.message.includes('resource_not_found')) {
-          throw createIlmMcpError(`ILM policy not found: ${params.policy || 'unknown'}`, {
-            type: 'not_found',
-            details: { policy: params.policy }
+
+        if (error.message.includes("resource_not_found")) {
+          throw createIlmMcpError(`ILM policy not found: ${params.policy || "unknown"}`, {
+            type: "not_found",
+            details: { policy: params.policy },
           });
         }
       }
 
       throw createIlmMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -303,7 +298,7 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
     "elasticsearch_ilm_get_lifecycle",
     "Get ILM policies. PARAMETERS: 'policy' (string, optional), 'limit' (number 1-100), 'summary' (boolean), 'sortBy' (enum). Example: {limit: 50, summary: true}. Uses direct JSON Schema and standardized MCP error codes.",
     getLifecycleSchema, // Direct JSON Schema - no Zod conversion
-    getLifecycleHandler
+    getLifecycleHandler,
   );
 };
 

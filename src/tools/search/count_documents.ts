@@ -2,7 +2,7 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
@@ -13,56 +13,56 @@ const countDocumentsSchema = {
   properties: {
     index: {
       type: "string",
-      description: "Index pattern to count documents in. Use '*' for all indices"
+      description: "Index pattern to count documents in. Use '*' for all indices",
     },
     query: {
       type: "object",
       description: "Query DSL to filter documents. Default matches all",
-      additionalProperties: true
+      additionalProperties: true,
     },
     analyzer: {
-      type: "string"
+      type: "string",
     },
     analyzeWildcard: {
-      type: "boolean"
+      type: "boolean",
     },
     defaultOperator: {
       type: "string",
-      enum: ["AND", "OR"]
+      enum: ["AND", "OR"],
     },
     df: {
-      type: "string"
+      type: "string",
     },
     expandWildcards: {
       type: "string",
-      enum: ["all", "open", "closed", "hidden", "none"]
+      enum: ["all", "open", "closed", "hidden", "none"],
     },
     ignoreThrottled: {
-      type: "boolean"
+      type: "boolean",
     },
     ignoreUnavailable: {
-      type: "boolean"
+      type: "boolean",
     },
     allowNoIndices: {
-      type: "boolean"
+      type: "boolean",
     },
     minScore: {
-      type: "number"
+      type: "number",
     },
     preference: {
-      type: "string"
+      type: "string",
     },
     routing: {
-      type: "string"
+      type: "string",
     },
     q: {
-      type: "string"
+      type: "string",
     },
     terminateAfter: {
-      type: "number"
-    }
+      type: "number",
+    },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 
 // Zod validator for runtime validation
@@ -87,33 +87,26 @@ const countDocumentsValidator = z.object({
 type CountDocumentsParams = z.infer<typeof countDocumentsValidator>;
 
 // MCP error handling
-function createCountDocumentsMcpError(
-  error: Error | string,
-  context: { type: string; details?: any }
-): McpError {
+function createCountDocumentsMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
-  
+
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
   };
-  
-  return new McpError(
-    errorCodeMap[context.type],
-    `[elasticsearch_count_documents] ${message}`,
-    context.details
-  );
+
+  return new McpError(errorCodeMap[context.type], `[elasticsearch_count_documents] ${message}`, context.details);
 }
 
 // Tool implementation
 export const registerCountDocumentsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const countDocumentsHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
-    
+
     try {
       // Validate parameters
       const params = countDocumentsValidator.parse(args);
-      
+
       const result = await esClient.count(
         {
           index: params.index,
@@ -134,7 +127,7 @@ export const registerCountDocumentsTool: ToolRegistrationFunction = (server: Mcp
         },
         {
           opaqueId: "elasticsearch_count_documents",
-        }
+        },
       );
 
       const duration = performance.now() - perfStart;
@@ -143,26 +136,23 @@ export const registerCountDocumentsTool: ToolRegistrationFunction = (server: Mcp
       }
 
       return {
-        content: [
-          { type: "text", text: JSON.stringify(result, null, 2) }
-        ],
+        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
       };
-
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createCountDocumentsMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
-          type: 'validation',
-          details: { validationErrors: error.errors, providedArgs: args }
+        throw createCountDocumentsMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+          type: "validation",
+          details: { validationErrors: error.errors, providedArgs: args },
         });
       }
 
       throw createCountDocumentsMcpError(error instanceof Error ? error.message : String(error), {
-        type: 'execution',
-        details: { 
+        type: "execution",
+        details: {
           duration: performance.now() - perfStart,
-          args 
-        }
+          args,
+        },
       });
     }
   };
@@ -172,6 +162,6 @@ export const registerCountDocumentsTool: ToolRegistrationFunction = (server: Mcp
     "elasticsearch_count_documents",
     "Count documents in Elasticsearch. PARAMETERS: 'index' (string, default '*'), 'query' (object, default match_all). Best for data analysis, result set sizing. Example: {index: 'logs-*', query: {match: {status: 'error'}}}. Uses direct JSON Schema and standardized MCP error codes.",
     countDocumentsSchema,
-    countDocumentsHandler
+    countDocumentsHandler,
   );
 };
