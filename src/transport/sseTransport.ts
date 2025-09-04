@@ -1,8 +1,8 @@
 /* src/transport/sseTransport.ts */
 
 import http from "node:http";
-import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import getRawBody from "raw-body";
 import type { Config } from "../config.js";
 import { logger } from "../utils/logger.js";
@@ -21,7 +21,7 @@ export class SSETransportManager {
 
   constructor(
     private server: McpServer,
-    private config: Config
+    private config: Config,
   ) {}
 
   /**
@@ -48,7 +48,7 @@ export class SSETransportManager {
     });
 
     logger.info(`🌐 SSE HTTP server listening on port ${PORT}`, {
-      sseEndpoint: `/sse`,
+      sseEndpoint: "/sse",
       mcpEndpoint: `${sseEndpoint}?sessionId=<SESSION_ID>`,
     });
   }
@@ -56,11 +56,7 @@ export class SSETransportManager {
   /**
    * Handle incoming HTTP requests
    */
-  private async handleRequest(
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
-    sseEndpoint: string
-  ): Promise<void> {
+  private async handleRequest(req: http.IncomingMessage, res: http.ServerResponse, sseEndpoint: string): Promise<void> {
     // Set CORS headers
     this.setCorsHeaders(res);
 
@@ -81,7 +77,7 @@ export class SSETransportManager {
   private async handleSSEConnection(
     req: http.IncomingMessage,
     res: http.ServerResponse,
-    sseEndpoint: string
+    sseEndpoint: string,
   ): Promise<void> {
     if (req.method !== "GET") {
       if (req.method === "OPTIONS") {
@@ -95,7 +91,7 @@ export class SSETransportManager {
 
     const clientIP = req.socket.remoteAddress;
     const userAgent = req.headers["user-agent"] || "Unknown";
-    
+
     logger.info(`New SSE connection from ${clientIP}`, {
       userAgent,
       headers: req.headers,
@@ -145,7 +141,7 @@ export class SSETransportManager {
         error: error instanceof Error ? error.message : String(error),
         connectionId,
       });
-      
+
       if (!res.headersSent) {
         res.writeHead(500);
         res.end("Internal server error");
@@ -156,10 +152,7 @@ export class SSETransportManager {
   /**
    * Handle MCP POST requests
    */
-  private async handleMCPRequest(
-    req: http.IncomingMessage,
-    res: http.ServerResponse
-  ): Promise<void> {
+  private async handleMCPRequest(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
     if (req.method !== "POST") {
       if (req.method === "OPTIONS") {
         this.handleOptionsRequest(res);
@@ -197,12 +190,11 @@ export class SSETransportManager {
 
       // Handle the message
       await connection.transport.handlePostMessage(req, res, body.toString());
-      
     } catch (error) {
       logger.error("Error handling MCP POST request", {
         error: error instanceof Error ? error.message : String(error),
       });
-      
+
       if (!res.headersSent) {
         res.writeHead(500);
         res.end("Internal server error");

@@ -265,7 +265,7 @@ export class ElasticsearchConnectionPool {
    */
   getStats() {
     const totalConnections = this.connections.size;
-    const activeConnections = Array.from(this.connections.values()).filter(c => c.isHealthy).length;
+    const activeConnections = Array.from(this.connections.values()).filter((c) => c.isHealthy).length;
     const failedConnections = totalConnections - activeConnections;
 
     return {

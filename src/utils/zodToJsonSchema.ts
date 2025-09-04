@@ -7,24 +7,44 @@ import { zodToJsonSchema as zodToJsonSchemaV3 } from "zod-to-json-schema";
 function simplifyFieldSchema(field: z.ZodTypeAny): any {
   const def = (field as any)._def;
 
-  // Handle unions (like coerceBoolean, coerceNumber)
+  // Handle unions (like coerceBoolean, coerceNumber, or generic unions)
   if (def && (def.typeName === "ZodUnion" || def.type === "union")) {
+    // Check if this is a coercion union (has string representation)
     const targetType = detectCoercionTargetType(field);
+    
+    if (targetType && targetType !== "unknown") {
+      // This is a coercion union, use simplified type
+      const defaultValue = extractDefaultValue(field);
+      const result: any = { type: targetType };
 
-    // Check for default values
-    const defaultValue = extractDefaultValue(field);
-    const result: any = { type: targetType };
+      if (defaultValue !== undefined) {
+        result.default = defaultValue;
+      }
 
-    if (defaultValue !== undefined) {
-      result.default = defaultValue;
+      // Check for description
+      if (def.description) {
+        result.description = def.description;
+      }
+
+      return result;
+    } else {
+      // This is a generic union, use anyOf pattern
+      const options = def.options || [];
+      if (options.length > 0) {
+        const unionSchemas = options.map((option: z.ZodTypeAny) => 
+          zodToJsonSchemaCompat(option)
+        );
+        
+        const result: any = { anyOf: unionSchemas };
+        
+        // Check for description
+        if (def.description) {
+          result.description = def.description;
+        }
+
+        return result;
+      }
     }
-
-    // Check for description
-    if (def.description) {
-      result.description = def.description;
-    }
-
-    return result;
   }
 
   // Handle enums
@@ -166,22 +186,37 @@ function extractDefaultValue(schema: z.ZodTypeAny): any {
 function detectCoercionTargetType(schema: z.ZodTypeAny): string {
   const def = (schema as any)._def;
 
-  // Check union options for the target type
+  // Check if this is a true coercion union (has only one distinct target type after coercion)
   if (def?.options) {
+    const distinctTypes = new Set<string>();
+    let hasCoercion = false;
+    
     for (const option of def.options) {
       const optionDef = (option as any)._def;
       if (optionDef) {
-        if (optionDef.typeName === "ZodBoolean") return "boolean";
-        if (optionDef.typeName === "ZodNumber") return "number";
-        if (optionDef.typeName === "ZodString" && !optionDef.checks?.some((c: any) => c.kind === "transform")) {
-          return "string";
-        }
+        if (optionDef.coerce) hasCoercion = true;
+        
+        if (optionDef.typeName === "ZodBoolean") distinctTypes.add("boolean");
+        else if (optionDef.typeName === "ZodNumber") distinctTypes.add("number");
+        else if (optionDef.typeName === "ZodString") distinctTypes.add("string");
       }
+    }
+    
+    // If we have coercion or only one distinct type, it's a coercion union
+    if (hasCoercion || distinctTypes.size === 1) {
+      if (distinctTypes.has("boolean")) return "boolean";
+      if (distinctTypes.has("number")) return "number";  
+      if (distinctTypes.has("string")) return "string";
+    }
+    
+    // Multiple distinct types without coercion = generic union
+    if (distinctTypes.size > 1) {
+      return "unknown"; // Signal this should be handled as anyOf
     }
   }
 
-  // Default fallback
-  return "string";
+  // Default fallback for unknown cases
+  return "unknown";
 }
 
 /**
@@ -202,6 +237,11 @@ export function zodToJsonSchemaCompat(schema: z.ZodTypeAny, options: any = {}): 
       additionalProperties: true,
       $schema: "http://json-schema.org/draft-07/schema#",
     };
+  }
+
+  // Handle unions and enums at the root level using our simplified converter
+  if (def && (def.typeName === "ZodUnion" || def.typeName === "ZodEnum" || def.type === "union" || def.type === "enum")) {
+    return simplifyFieldSchema(schema);
   }
 
   // Check if Zod 4 has native toJSONSchema

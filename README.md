@@ -10,13 +10,17 @@ This is an enhancement of the Official Elastic MCP Server with the four tools (C
 
 ## 🚀 Key Features
 
-- **🔧 Comprehensive Tooling**: 60+ Elasticsearch operations including search, indexing, cluster management, and analytics
+- **🔧 Comprehensive Tooling**: 104+ Elasticsearch operations including search, indexing, cluster management, analytics, and specialized tools
 - **⚙️ Advanced Configuration**: Type-safe configuration system with environment variable validation
 - **🔒 Security Controls**: Read-only mode with strict/warning options for safe production monitoring
 - **📊 Rich Search**: Advanced search with automatic highlighting, aggregations, and SQL support
 - **🔄 Bulk Operations**: Efficient bulk indexing, updating, and deletion with helper APIs
 - **📈 Cluster Monitoring**: Health checks, node statistics, and performance metrics
 - **🛡️ Error Handling**: Robust error handling with detailed logging and troubleshooting guides
+- **📊 Auto-Detection Monitoring**: Prometheus metrics with Grafana dashboards (auto-detects and gracefully degrades)
+- **🔄 Circuit Breakers**: Production-grade resilience with connection pooling and rate limiting
+- **🎯 Multi-Agent Development**: Sophisticated development coordination with 15+ specialized agents
+- **📈 LangSmith Integration**: Advanced tracing and performance monitoring for AI interactions
 - **⚡ Performance**: Built on Bun runtime for optimal performance and modern JavaScript features
 
 ## 📋 Table of Contents

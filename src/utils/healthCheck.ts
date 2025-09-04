@@ -1,11 +1,11 @@
 /* src/utils/healthCheck.ts */
 
 import type { Client } from "@elastic/elasticsearch";
-import { logger } from "./logger.js";
-import { getGlobalConnectionPool } from "./connectionPooling.js";
 import { getAllCacheStats } from "./cache.js";
-import { getConnectionWarmingStats } from "./connectionWarming.js";
 import { getAllCircuitBreakerStats } from "./circuitBreaker.js";
+import { getGlobalConnectionPool } from "./connectionPooling.js";
+import { getConnectionWarmingStats } from "./connectionWarming.js";
+import { logger } from "./logger.js";
 import { getResourceMonitor } from "./rateLimiter.js";
 
 export interface HealthStatus {
@@ -53,7 +53,10 @@ export class HealthMonitor {
   private lastHealthCheck?: HealthStatus;
   private healthCheckInterval?: NodeJS.Timeout;
 
-  constructor(private client: Client, private intervalMs = 30000) {}
+  constructor(
+    private client: Client,
+    private intervalMs = 30000,
+  ) {}
 
   /**
    * Start periodic health checks
@@ -116,16 +119,16 @@ export class HealthMonitor {
    */
   private async performHealthCheck(): Promise<HealthStatus> {
     const timestamp = new Date().toISOString();
-    
+
     // Check Elasticsearch health
     const esHealth = await this.checkElasticsearchHealth();
-    
+
     // Check connection pool health
     const poolHealth = this.checkConnectionPoolHealth();
-    
+
     // Check server health
     const serverHealth = this.checkServerHealth();
-    
+
     // Check performance systems health
     const cachingHealth = this.checkCachingHealth();
     const connectionWarmingHealth = this.checkConnectionWarmingHealth();
@@ -134,13 +137,13 @@ export class HealthMonitor {
 
     // Determine overall status
     const overallStatus = this.determineOverallStatus(
-      esHealth, 
-      poolHealth, 
+      esHealth,
+      poolHealth,
       serverHealth,
       cachingHealth,
       connectionWarmingHealth,
       circuitBreakersHealth,
-      resourceMonitoringHealth
+      resourceMonitoringHealth,
     );
 
     const healthStatus: HealthStatus = {
@@ -173,7 +176,7 @@ export class HealthMonitor {
   private async checkElasticsearchHealth(): Promise<HealthStatus["elasticsearch"]> {
     try {
       const startTime = Date.now();
-      
+
       // Test basic connectivity
       const clusterInfo = await this.client.info();
       const responseTime = Date.now() - startTime;
@@ -185,7 +188,7 @@ export class HealthMonitor {
       const isDegraded = clusterHealth.status === "yellow";
 
       return {
-        status: isDegraded ? "degraded" : (isHealthy ? "healthy" : "unhealthy"),
+        status: isDegraded ? "degraded" : isHealthy ? "healthy" : "unhealthy",
         clusterName: clusterInfo.cluster_name,
         version: clusterInfo.version?.number,
         responseTime,
@@ -210,9 +213,9 @@ export class HealthMonitor {
     const stats = pool.getStats();
 
     const failureRate = stats.totalConnections > 0 ? stats.failedConnections / stats.totalConnections : 0;
-    
+
     let status: "healthy" | "degraded" | "unhealthy" = "healthy";
-    
+
     if (stats.activeConnections === 0) {
       status = "unhealthy";
     } else if (failureRate > 0.5) {
@@ -250,19 +253,20 @@ export class HealthMonitor {
   private checkCachingHealth(): HealthStatus["caching"] {
     try {
       const stats = getAllCacheStats();
-      
+
       // Calculate overall cache health based on hit rates
-      const avgHitRate = Object.values(stats).reduce((sum, cache) => sum + cache.hitRate, 0) / Object.keys(stats).length;
-      
+      const avgHitRate =
+        Object.values(stats).reduce((sum, cache) => sum + cache.hitRate, 0) / Object.keys(stats).length;
+
       let status: "healthy" | "degraded" | "unhealthy" = "healthy";
       if (avgHitRate < 0.2) status = "degraded"; // Less than 20% hit rate
       if (avgHitRate < 0.1) status = "unhealthy"; // Less than 10% hit rate
-      
+
       return { status, stats };
     } catch (error) {
-      return { 
-        status: "unhealthy", 
-        stats: { error: error instanceof Error ? error.message : String(error) } 
+      return {
+        status: "unhealthy",
+        stats: { error: error instanceof Error ? error.message : String(error) },
       };
     }
   }
@@ -273,26 +277,25 @@ export class HealthMonitor {
   private checkConnectionWarmingHealth(): HealthStatus["connectionWarming"] {
     try {
       const stats = getConnectionWarmingStats();
-      
+
       if (!stats) {
         return { status: "degraded", stats: { message: "Connection warming not initialized" } };
       }
-      
+
       // Check success rates
-      const warmupSuccessRate = stats.warmupOperations > 0 ? 
-        stats.successfulWarmups / stats.warmupOperations : 1;
-      const keepAliveSuccessRate = stats.keepAliveOperations > 0 ? 
-        stats.successfulKeepAlives / stats.keepAliveOperations : 1;
-      
+      const warmupSuccessRate = stats.warmupOperations > 0 ? stats.successfulWarmups / stats.warmupOperations : 1;
+      const keepAliveSuccessRate =
+        stats.keepAliveOperations > 0 ? stats.successfulKeepAlives / stats.keepAliveOperations : 1;
+
       let status: "healthy" | "degraded" | "unhealthy" = "healthy";
       if (warmupSuccessRate < 0.8 || keepAliveSuccessRate < 0.9) status = "degraded";
       if (warmupSuccessRate < 0.5 || keepAliveSuccessRate < 0.7) status = "unhealthy";
-      
+
       return { status, stats };
     } catch (error) {
-      return { 
-        status: "unhealthy", 
-        stats: { error: error instanceof Error ? error.message : String(error) } 
+      return {
+        status: "unhealthy",
+        stats: { error: error instanceof Error ? error.message : String(error) },
       };
     }
   }
@@ -303,17 +306,17 @@ export class HealthMonitor {
   private checkCircuitBreakersHealth(): HealthStatus["circuitBreakers"] {
     try {
       const stats = getAllCircuitBreakerStats();
-      
+
       // Check if any circuit breakers are open
       const openBreakers = Object.entries(stats).filter(([_, stat]) => stat.state === "open");
       const halfOpenBreakers = Object.entries(stats).filter(([_, stat]) => stat.state === "half_open");
-      
+
       let status: "healthy" | "degraded" | "unhealthy" = "healthy";
       if (halfOpenBreakers.length > 0) status = "degraded";
       if (openBreakers.length > 0) status = "unhealthy";
-      
-      return { 
-        status, 
+
+      return {
+        status,
         stats: {
           ...stats,
           summary: {
@@ -321,13 +324,13 @@ export class HealthMonitor {
             open: openBreakers.length,
             halfOpen: halfOpenBreakers.length,
             closed: Object.keys(stats).length - openBreakers.length - halfOpenBreakers.length,
-          }
-        }
+          },
+        },
       };
     } catch (error) {
-      return { 
-        status: "unhealthy", 
-        stats: { error: error instanceof Error ? error.message : String(error) } 
+      return {
+        status: "unhealthy",
+        stats: { error: error instanceof Error ? error.message : String(error) },
       };
     }
   }
@@ -340,23 +343,23 @@ export class HealthMonitor {
       const resourceMonitor = getResourceMonitor();
       const availability = resourceMonitor.checkResourceAvailability();
       const stats = resourceMonitor.getStats();
-      
+
       let status: "healthy" | "degraded" | "unhealthy" = "healthy";
       if (!availability.available) {
         status = availability.reason?.includes("Memory") ? "unhealthy" : "degraded";
       }
-      
-      return { 
-        status, 
+
+      return {
+        status,
         stats: {
           ...stats,
           availability,
-        }
+        },
       };
     } catch (error) {
-      return { 
-        status: "unhealthy", 
-        stats: { error: error instanceof Error ? error.message : String(error) } 
+      return {
+        status: "unhealthy",
+        stats: { error: error instanceof Error ? error.message : String(error) },
       };
     }
   }
@@ -371,7 +374,7 @@ export class HealthMonitor {
     cachingHealth?: HealthStatus["caching"],
     connectionWarmingHealth?: HealthStatus["connectionWarming"],
     circuitBreakersHealth?: HealthStatus["circuitBreakers"],
-    resourceMonitoringHealth?: HealthStatus["resourceMonitoring"]
+    resourceMonitoringHealth?: HealthStatus["resourceMonitoring"],
   ): "healthy" | "degraded" | "unhealthy" {
     const allComponents = [
       esHealth,
@@ -389,12 +392,12 @@ export class HealthMonitor {
     }
 
     // If any component is unhealthy, system is degraded (for performance components)
-    if (allComponents.some(component => component?.status === "unhealthy")) {
+    if (allComponents.some((component) => component?.status === "unhealthy")) {
       return "degraded";
     }
 
     // If any component is degraded, system is degraded
-    if (allComponents.some(component => component?.status === "degraded")) {
+    if (allComponents.some((component) => component?.status === "degraded")) {
       return "degraded";
     }
 
@@ -412,7 +415,7 @@ export function initializeHealthMonitor(client: Client, intervalMs = 30000): Hea
   if (globalHealthMonitor) {
     globalHealthMonitor.stop();
   }
-  
+
   globalHealthMonitor = new HealthMonitor(client, intervalMs);
   return globalHealthMonitor;
 }
@@ -434,12 +437,12 @@ export async function getQuickHealthStatus(): Promise<{ status: string; timestam
   try {
     const monitor = getHealthMonitor();
     const health = await monitor.getHealthStatus();
-    
+
     return {
       status: health.status,
       timestamp: health.timestamp,
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       status: "unhealthy",
       timestamp: new Date().toISOString(),

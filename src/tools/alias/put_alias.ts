@@ -41,7 +41,7 @@ const putAliasSchema = {
 const putAliasValidator = z.object({
   index: z.string().min(1, "Index cannot be empty"),
   name: z.string().min(1, "Alias name cannot be empty"),
-  filter: z.record(z.any()).optional(),
+  filter: z.record(z.string(), z.unknown()).optional(),
   routing: z.string().optional(),
   isWriteIndex: z.boolean().optional(),
 });

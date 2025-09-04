@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: 'elasticsearch-mcp'
+    orgId: 1
+    folder: 'Elasticsearch MCP'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    options:
+      path: /var/lib/grafana/dashboards

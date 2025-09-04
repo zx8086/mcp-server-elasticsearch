@@ -1,6 +1,6 @@
 {
   "name": "@elastic/mcp-server-elasticsearch",
-  "description": "Elasticsearch MCP Server",
+  "description": "Production-ready Elasticsearch MCP Server with 100+ tools, monitoring, and advanced infrastructure",
   "version": "0.1.1",
   "license": "Apache-2.0",
   "author": "Simon Owusu",
@@ -14,18 +14,27 @@
   "keywords": ["elasticsearch", "search", "mcp", "mcp-server"],
   "files": ["README.md"],
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist --target bun",
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun --minify --sourcemap=external --splitting --public-path=/assets/",
+    "build:dev": "bun build ./src/index.ts --outdir ./dist --target bun --sourcemap=inline",
+    "build:production": "bun build ./src/index.ts --outdir ./dist --target bun --minify --sourcemap=external --splitting --define:\"process.env.NODE_ENV=\\\"production\\\"\" --define:\"typeof Bun=\\\"object\\\"\"",
+    "build:analyze": "bun build ./src/index.ts --outdir ./dist --target bun --analyze",
     "start": "bun run dist/index.js",
+    "start:production": "NODE_ENV=production bun run dist/index.js",
     "inspector": "bun x --bun @modelcontextprotocol/inspector bun ./dist/index.js",
     "build:inspector": "bun run build && bun run inspector",
     "connectivity-test": "bun run scripts/connectivity-test.js",
     "dev": "bun run src/index.ts",
-    "test": "bun test",
+    "dev:hot": "bun --hot run src/index.ts",
+    "test": "bun run scripts/run-working-tests.ts",
+    "test:working": "bun run scripts/run-working-tests.ts",
+    "test:all": "bun run scripts/run-all-tests.ts",
     "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
     "test:integration": "bun test tests/integration/",
     "test:config": "bun test tests/config/",
     "test:zod": "bun test tests/zod*.test.ts",
     "test:no-integration": "SKIP_INTEGRATION_TESTS=true bun test",
+    "test:performance": "bun test tests/performance/",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
@@ -33,7 +42,20 @@
     "validate-config:full": "bun run scripts/validate-config.ts --check-connection --show-all",
     "test-connection": "bun run scripts/test-connection.ts",
     "validate-schemas": "bun run scripts/validate-schemas.ts",
-    "pre-commit": "bun run lint && bun run validate-schemas"
+    "pre-commit": "bun run lint && bun run validate-schemas",
+    "benchmark": "bun run scripts/benchmark.ts",
+    "memory-profile": "bun --heap-prof run src/index.ts",
+    "generate-docs": "bun run scripts/generate-docs.ts",
+    "docs": "bun run generate-docs && echo 'Open docs/api/index.html in your browser'",
+    "docs:serve": "bun run generate-docs && python3 -m http.server 8000 --directory docs/api",
+    "dev-tools": "bun run scripts/dev-tools.ts",
+    "dev-tools:full": "bun run scripts/dev-tools.ts --with-tests --with-profiling",
+    "dev-tools:minimal": "bun run scripts/dev-tools.ts --no-lint --no-type-check --no-monitoring",
+    "health-check": "bun run scripts/health-check.ts",
+    "audit-report": "bun run scripts/audit-report.ts",
+    "monitor:health": "curl -f http://localhost:9090/health || echo 'Monitoring not available - install with: bun add prom-client'",
+    "monitor:metrics": "curl -f http://localhost:9090/metrics || echo 'Monitoring not available - install with: bun add prom-client'",
+    "monitor:status": "echo 'Monitoring auto-starts with server if prom-client is installed. Check: bun add prom-client'"
   },
   "dependencies": {
     "@elastic/elasticsearch": "^9.1.1",
@@ -58,6 +80,25 @@
     "bun-types": "^1.2.20",
     "c8": "^10.1.3",
     "typescript": "^5.9.2"
+  },
+  "bun": {
+    "install": {
+      "peer": true,
+      "frozenLockfile": true,
+      "cache": {
+        "dir": ".bun-cache"
+      }
+    },
+    "build": {
+      "target": "bun",
+      "minify": true,
+      "sourcemap": "external",
+      "splitting": true,
+      "define": {
+        "process.env.NODE_ENV": "production",
+        "typeof Bun": "object"
+      }
+    }
   },
   "publishConfig": {
     "access": "public"

@@ -29,7 +29,7 @@ export class CircuitBreakerError extends Error {
   constructor(
     message: string,
     public readonly state: CircuitState,
-    public readonly nextRetryTime?: number
+    public readonly nextRetryTime?: number,
   ) {
     super(message);
     this.name = "CircuitBreakerError";
@@ -47,7 +47,7 @@ export class CircuitBreaker {
 
   constructor(
     private name: string,
-    private config: CircuitBreakerConfig
+    private config: CircuitBreakerConfig,
   ) {
     logger.debug("Circuit breaker initialized", {
       name: this.name,
@@ -65,7 +65,7 @@ export class CircuitBreaker {
       throw new CircuitBreakerError(
         `Circuit breaker for ${this.name} is ${this.state}. Retry in ${waitTime} seconds.`,
         this.state,
-        this.nextRetryTime
+        this.nextRetryTime,
       );
     }
 
@@ -245,18 +245,15 @@ const circuitBreakers = new Map<string, CircuitBreaker>();
 /**
  * Create or get a circuit breaker
  */
-export function getOrCreateCircuitBreaker(
-  name: string,
-  config: CircuitBreakerConfig
-): CircuitBreaker {
+export function getOrCreateCircuitBreaker(name: string, config: CircuitBreakerConfig): CircuitBreaker {
   let breaker = circuitBreakers.get(name);
-  
+
   if (!breaker) {
     breaker = new CircuitBreaker(name, config);
     circuitBreakers.set(name, breaker);
     logger.info("Created new circuit breaker", { name, config });
   }
-  
+
   return breaker;
 }
 
@@ -272,11 +269,11 @@ export function getCircuitBreaker(name: string): CircuitBreaker | undefined {
  */
 export function getAllCircuitBreakerStats(): Record<string, CircuitBreakerStats> {
   const stats: Record<string, CircuitBreakerStats> = {};
-  
+
   for (const [name, breaker] of circuitBreakers) {
     stats[name] = breaker.getStats();
   }
-  
+
   return stats;
 }
 
@@ -286,7 +283,7 @@ export function getAllCircuitBreakerStats(): Record<string, CircuitBreakerStats>
 export function withCircuitBreaker<T extends (...args: any[]) => Promise<any>>(
   name: string,
   operation: T,
-  config?: Partial<CircuitBreakerConfig>
+  config?: Partial<CircuitBreakerConfig>,
 ): T {
   const defaultConfig: CircuitBreakerConfig = {
     failureThreshold: 5, // Open after 5 failures
@@ -308,7 +305,7 @@ export function withCircuitBreaker<T extends (...args: any[]) => Promise<any>>(
  */
 export function withElasticsearchCircuitBreaker<T extends (...args: any[]) => Promise<any>>(
   operationName: string,
-  operation: T
+  operation: T,
 ): T {
   return withCircuitBreaker(`elasticsearch_${operationName}`, operation, {
     failureThreshold: 3, // More sensitive for ES operations
@@ -322,15 +319,7 @@ export function withElasticsearchCircuitBreaker<T extends (...args: any[]) => Pr
  * Initialize default circuit breakers for common operations
  */
 export function initializeDefaultCircuitBreakers(): void {
-  const commonOperations = [
-    "search",
-    "index",
-    "update",
-    "delete",
-    "bulk",
-    "cluster_health",
-    "indices_list",
-  ];
+  const commonOperations = ["search", "index", "update", "delete", "bulk", "cluster_health", "indices_list"];
 
   for (const operation of commonOperations) {
     getOrCreateCircuitBreaker(`elasticsearch_${operation}`, {

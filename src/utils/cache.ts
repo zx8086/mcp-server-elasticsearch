@@ -3,8 +3,8 @@
 import { logger } from "./logger.js";
 
 export interface CacheConfig {
-  maxSize: number;     // Maximum number of entries
-  ttlMs: number;       // Time to live in milliseconds
+  maxSize: number; // Maximum number of entries
+  ttlMs: number; // Time to live in milliseconds
   cleanupIntervalMs: number; // Cleanup interval
 }
 
@@ -122,13 +122,9 @@ export class LRUCache<T> {
   /**
    * Get or set value with factory function
    */
-  async getOrSet<R extends T>(
-    key: string,
-    factory: () => Promise<R>,
-    customTtlMs?: number
-  ): Promise<R> {
+  async getOrSet<R extends T>(key: string, factory: () => Promise<R>, customTtlMs?: number): Promise<R> {
     let value = this.get(key) as R;
-    
+
     if (value !== undefined) {
       return value;
     }
@@ -185,7 +181,7 @@ export class LRUCache<T> {
     this.cache.clear();
     this.accessOrder.clear();
     this.accessCounter = 0;
-    
+
     logger.debug("Cache cleared", { previousSize: size });
   }
 
@@ -222,7 +218,7 @@ export class LRUCache<T> {
 
     // Find the least recently used key
     let lruKey: string | undefined;
-    let lruAccess = Infinity;
+    let lruAccess = Number.POSITIVE_INFINITY;
 
     for (const [key, access] of this.accessOrder) {
       if (access < lruAccess) {
@@ -289,8 +285,8 @@ export class LRUCache<T> {
 export class QueryCache extends LRUCache<any> {
   constructor() {
     super({
-      maxSize: 1000,         // Store up to 1000 query results
-      ttlMs: 5 * 60 * 1000,  // 5 minutes TTL
+      maxSize: 1000, // Store up to 1000 query results
+      ttlMs: 5 * 60 * 1000, // 5 minutes TTL
       cleanupIntervalMs: 60 * 1000, // Cleanup every minute
     });
   }
@@ -301,14 +297,14 @@ export class QueryCache extends LRUCache<any> {
   static generateQueryKey(index: string, query: any, params: any = {}): string {
     const queryStr = JSON.stringify(query);
     const paramsStr = JSON.stringify(params);
-    return `query:${index}:${Buffer.from(queryStr + paramsStr).toString('base64')}`;
+    return `query:${index}:${Buffer.from(queryStr + paramsStr).toString("base64")}`;
   }
 }
 
 export class MappingCache extends LRUCache<any> {
   constructor() {
     super({
-      maxSize: 500,          // Store up to 500 mapping definitions
+      maxSize: 500, // Store up to 500 mapping definitions
       ttlMs: 30 * 60 * 1000, // 30 minutes TTL (mappings change infrequently)
       cleanupIntervalMs: 5 * 60 * 1000, // Cleanup every 5 minutes
     });
@@ -325,7 +321,7 @@ export class MappingCache extends LRUCache<any> {
 export class SettingsCache extends LRUCache<any> {
   constructor() {
     super({
-      maxSize: 500,          // Store up to 500 settings
+      maxSize: 500, // Store up to 500 settings
       ttlMs: 15 * 60 * 1000, // 15 minutes TTL
       cleanupIntervalMs: 5 * 60 * 1000, // Cleanup every 5 minutes
     });
@@ -342,8 +338,8 @@ export class SettingsCache extends LRUCache<any> {
 export class ClusterInfoCache extends LRUCache<any> {
   constructor() {
     super({
-      maxSize: 50,           // Small cache for cluster info
-      ttlMs: 2 * 60 * 1000,  // 2 minutes TTL (cluster info changes frequently)
+      maxSize: 50, // Small cache for cluster info
+      ttlMs: 2 * 60 * 1000, // 2 minutes TTL (cluster info changes frequently)
       cleanupIntervalMs: 60 * 1000, // Cleanup every minute
     });
   }
@@ -437,7 +433,7 @@ export function clearAllCaches(): void {
   getMappingCache().clear();
   getSettingsCache().clear();
   getClusterInfoCache().clear();
-  
+
   logger.info("All caches cleared");
 }
 
@@ -449,6 +445,6 @@ export function destroyAllCaches(): void {
   if (globalMappingCache) globalMappingCache.destroy();
   if (globalSettingsCache) globalSettingsCache.destroy();
   if (globalClusterInfoCache) globalClusterInfoCache.destroy();
-  
+
   logger.info("All caches destroyed");
 }

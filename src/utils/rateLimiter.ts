@@ -172,14 +172,14 @@ export function getConnectionRateLimiter(): RateLimiter {
 export function withRateLimit<T extends (...args: any[]) => Promise<any>>(
   toolName: string,
   handler: T,
-  keyGenerator: (args: any[]) => string = () => "default"
+  keyGenerator: (args: any[]) => string = () => "default",
 ): T {
   return (async (...args: any[]) => {
     const limiter = getToolRateLimiter();
     const key = `${toolName}:${keyGenerator(args)}`;
-    
+
     const result = limiter.checkLimit(key);
-    
+
     if (!result.allowed) {
       logger.warn("Rate limit exceeded", {
         toolName,
@@ -187,10 +187,8 @@ export function withRateLimit<T extends (...args: any[]) => Promise<any>>(
         retryAfter: result.retryAfter,
         resetTime: new Date(result.resetTime).toISOString(),
       });
-      
-      throw new Error(
-        `Rate limit exceeded for ${toolName}. Try again in ${result.retryAfter} seconds.`
-      );
+
+      throw new Error(`Rate limit exceeded for ${toolName}. Try again in ${result.retryAfter} seconds.`);
     }
 
     logger.debug("Rate limit check passed", {
@@ -213,7 +211,7 @@ export class ResourceMonitor {
 
   constructor(memoryThresholdMB = 1000) {
     this.memoryThreshold = memoryThresholdMB * 1024 * 1024; // Convert MB to bytes
-    
+
     // Check memory every 30 seconds
     this.checkInterval = setInterval(() => {
       this.checkMemoryUsage();
@@ -301,7 +299,7 @@ export function initializeResourceMonitor(memoryThresholdMB = 1000): ResourceMon
   if (globalResourceMonitor) {
     globalResourceMonitor.destroy();
   }
-  
+
   globalResourceMonitor = new ResourceMonitor(memoryThresholdMB);
   return globalResourceMonitor;
 }

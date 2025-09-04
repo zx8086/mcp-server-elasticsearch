@@ -1,0 +1,154 @@
+groups:
+  - name: elasticsearch_mcp_alerts
+    rules:
+      # High Error Rate
+      - alert: HighToolExecutionErrorRate
+        expr: rate(elasticsearch_mcp_tool_execution_errors_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High tool execution error rate"
+          description: "Tool execution error rate is {{ $value }} errors/sec for the last 5 minutes"
+
+      # Circuit Breaker Open
+      - alert: CircuitBreakerOpen
+        expr: elasticsearch_mcp_circuit_breaker_state > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Circuit breaker {{ $labels.operation }} is open"
+          description: "Circuit breaker for operation {{ $labels.operation }} has been open for more than 1 minute"
+
+      # Low Cache Hit Ratio
+      - alert: LowCacheHitRatio
+        expr: elasticsearch_mcp_cache_hit_ratio < 0.7
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low cache hit ratio for {{ $labels.cache_type }}"
+          description: "Cache hit ratio for {{ $labels.cache_type }} is {{ $value | humanizePercentage }}"
+
+      # High Connection Pool Usage
+      - alert: HighConnectionPoolUsage
+        expr: elasticsearch_mcp_connection_pool_active / elasticsearch_mcp_connection_pool_size > 0.8
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High connection pool usage"
+          description: "Connection pool usage is {{ $value | humanizePercentage }} for the last 3 minutes"
+
+      # Unhealthy Connections
+      - alert: UnhealthyConnections
+        expr: elasticsearch_mcp_connection_pool_health_ratio < 0.8
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Unhealthy connections detected"
+          description: "Connection pool health ratio is {{ $value | humanizePercentage }}"
+
+      # High Response Times
+      - alert: HighResponseTimes
+        expr: histogram_quantile(0.95, rate(elasticsearch_mcp_tool_execution_duration_seconds_bucket[5m])) > 5
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High tool execution response times"
+          description: "95th percentile response time is {{ $value }}s for the last 5 minutes"
+
+      # High Elasticsearch Response Times
+      - alert: HighElasticsearchResponseTimes
+        expr: histogram_quantile(0.95, rate(elasticsearch_mcp_es_response_time_seconds_bucket[5m])) > 2
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Elasticsearch response times"
+          description: "95th percentile Elasticsearch response time is {{ $value }}s for the last 5 minutes"
+
+      # Memory Usage Alert
+      - alert: HighMemoryUsage
+        expr: elasticsearch_mcp_memory_usage_bytes{type="rss"} / (1024*1024*1024) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "RSS memory usage is {{ $value | humanize }}GB"
+
+      # Service Down
+      - alert: ElasticsearchMCPDown
+        expr: up{job="elasticsearch-mcp"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Elasticsearch MCP Server is down"
+          description: "Elasticsearch MCP Server has been down for more than 1 minute"
+
+      # Security Validation Failures
+      - alert: SecurityValidationFailures
+        expr: rate(elasticsearch_mcp_security_validation_failures_total[5m]) > 0.01
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Security validation failures detected"
+          description: "Security validation failures rate is {{ $value }} failures/sec for the last 5 minutes"
+
+      # Rate Limiting Events
+      - alert: RateLimitingActive
+        expr: rate(elasticsearch_mcp_rate_limit_hits_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Rate limiting is active"
+          description: "Rate limit hits rate is {{ $value }} hits/sec for the last 5 minutes"
+
+      # Read-only Mode Blocks
+      - alert: ReadOnlyModeActive
+        expr: rate(elasticsearch_mcp_readonly_mode_blocks_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: info
+        annotations:
+          summary: "Read-only mode is blocking operations"
+          description: "Read-only mode blocks rate is {{ $value }} blocks/sec for the last 5 minutes"
+
+  - name: system_alerts
+    rules:
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: (100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value | humanizePercentage }} for the last 5 minutes"
+
+      # High Disk Usage
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes{fstype!="tmpfs"} - node_filesystem_free_bytes{fstype!="tmpfs"}) / node_filesystem_size_bytes{fstype!="tmpfs"} > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High disk usage on {{ $labels.instance }}"
+          description: "Disk usage is {{ $value | humanizePercentage }} on {{ $labels.device }}"
+
+      # Container High Memory Usage
+      - alert: ContainerHighMemoryUsage
+        expr: (container_memory_usage_bytes{name!=""} / container_spec_memory_limit_bytes{name!=""}) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage in container {{ $labels.name }}"
+          description: "Container {{ $labels.name }} memory usage is {{ $value | humanizePercentage }}"

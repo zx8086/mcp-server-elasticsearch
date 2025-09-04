@@ -1,16 +1,16 @@
 /* src/utils/connectionWarming.ts */
 
 import type { Client } from "@elastic/elasticsearch";
-import { logger } from "./logger.js";
 import { getGlobalConnectionPool } from "./connectionPooling.js";
+import { logger } from "./logger.js";
 
 export interface WarmingConfig {
   enabled: boolean;
-  warmupDelayMs: number;      // Delay before starting warmup
-  warmupIntervalMs: number;   // Interval between warmup operations
+  warmupDelayMs: number; // Delay before starting warmup
+  warmupIntervalMs: number; // Interval between warmup operations
   keepAliveIntervalMs: number; // Interval for keep-alive pings
-  connectionTimeout: number;   // Timeout for each warmup operation
-  maxRetries: number;         // Max retries for failed warmup operations
+  connectionTimeout: number; // Timeout for each warmup operation
+  maxRetries: number; // Max retries for failed warmup operations
 }
 
 export interface WarmingStats {
@@ -42,7 +42,7 @@ export class ConnectionWarmer {
 
   constructor(
     private client: Client,
-    private config: WarmingConfig
+    private config: WarmingConfig,
   ) {}
 
   /**
@@ -57,12 +57,11 @@ export class ConnectionWarmer {
     // Schedule initial warmup after delay
     setTimeout(() => {
       this.performWarmup();
-      
+
       // Set up periodic warmup
       this.warmupTimer = setInterval(() => {
         this.performWarmup();
       }, this.config.warmupIntervalMs);
-
     }, this.config.warmupDelayMs);
 
     // Set up periodic keep-alive
@@ -117,18 +116,17 @@ export class ConnectionWarmer {
       const duration = Date.now() - startTime;
       this.stats.successfulWarmups++;
       this.stats.lastWarmupTime = Date.now();
-      this.updateAverageTime('warmup', duration);
+      this.updateAverageTime("warmup", duration);
 
       logger.debug("Connection warmup completed", {
         duration,
         totalWarmups: this.stats.warmupOperations,
         successRate: this.getWarmupSuccessRate(),
       });
-
     } catch (error) {
       const duration = Date.now() - startTime;
       this.stats.failedWarmups++;
-      this.updateAverageTime('warmup', duration);
+      this.updateAverageTime("warmup", duration);
 
       logger.warn("Connection warmup failed", {
         error: error instanceof Error ? error.message : String(error),
@@ -151,26 +149,25 @@ export class ConnectionWarmer {
       // Simple ping to keep connections alive
       await Promise.race([
         this.client.ping(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Keep-alive timeout')), this.config.connectionTimeout)
-        )
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Keep-alive timeout")), this.config.connectionTimeout),
+        ),
       ]);
 
       const duration = Date.now() - startTime;
       this.stats.successfulKeepAlives++;
       this.stats.lastKeepAliveTime = Date.now();
-      this.updateAverageTime('keepAlive', duration);
+      this.updateAverageTime("keepAlive", duration);
 
       logger.debug("Keep-alive ping successful", {
         duration,
         totalKeepAlives: this.stats.keepAliveOperations,
         successRate: this.getKeepAliveSuccessRate(),
       });
-
     } catch (error) {
       const duration = Date.now() - startTime;
       this.stats.failedKeepAlives++;
-      this.updateAverageTime('keepAlive', duration);
+      this.updateAverageTime("keepAlive", duration);
 
       logger.warn("Keep-alive ping failed", {
         error: error instanceof Error ? error.message : String(error),
@@ -187,11 +184,11 @@ export class ConnectionWarmer {
     try {
       await Promise.race([
         this.client.info(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Cluster info timeout')), this.config.connectionTimeout)
-        )
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Cluster info timeout")), this.config.connectionTimeout),
+        ),
       ]);
-      
+
       logger.debug("Cluster info warmup successful");
     } catch (error) {
       logger.debug("Cluster info warmup failed", {
@@ -206,12 +203,12 @@ export class ConnectionWarmer {
   private async warmupClusterHealth(): Promise<void> {
     try {
       await Promise.race([
-        this.client.cluster.health({ wait_for_status: 'yellow', timeout: '1s' }),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Cluster health timeout')), this.config.connectionTimeout)
-        )
+        this.client.cluster.health({ wait_for_status: "yellow", timeout: "1s" }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Cluster health timeout")), this.config.connectionTimeout),
+        ),
       ]);
-      
+
       logger.debug("Cluster health warmup successful");
     } catch (error) {
       logger.debug("Cluster health warmup failed", {
@@ -226,12 +223,12 @@ export class ConnectionWarmer {
   private async warmupNodeInfo(): Promise<void> {
     try {
       await Promise.race([
-        this.client.nodes.info({ node_id: '_local', metric: 'process' }),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Node info timeout')), this.config.connectionTimeout)
-        )
+        this.client.nodes.info({ node_id: "_local", metric: "process" }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Node info timeout")), this.config.connectionTimeout),
+        ),
       ]);
-      
+
       logger.debug("Node info warmup successful");
     } catch (error) {
       logger.debug("Node info warmup failed", {
@@ -247,16 +244,16 @@ export class ConnectionWarmer {
     try {
       await Promise.race([
         this.client.cat.indices({
-          format: 'json',
-          h: 'index',
-          s: 'index',
-          bytes: 'b',
+          format: "json",
+          h: "index",
+          s: "index",
+          bytes: "b",
         }),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Index list timeout')), this.config.connectionTimeout)
-        )
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Index list timeout")), this.config.connectionTimeout),
+        ),
       ]);
-      
+
       logger.debug("Index list warmup successful");
     } catch (error) {
       logger.debug("Index list warmup failed", {
@@ -268,15 +265,13 @@ export class ConnectionWarmer {
   /**
    * Update average timing statistics
    */
-  private updateAverageTime(type: 'warmup' | 'keepAlive', duration: number): void {
-    if (type === 'warmup') {
+  private updateAverageTime(type: "warmup" | "keepAlive", duration: number): void {
+    if (type === "warmup") {
       const totalOps = this.stats.warmupOperations;
-      this.stats.averageWarmupTime = 
-        ((this.stats.averageWarmupTime * (totalOps - 1)) + duration) / totalOps;
+      this.stats.averageWarmupTime = (this.stats.averageWarmupTime * (totalOps - 1) + duration) / totalOps;
     } else {
       const totalOps = this.stats.keepAliveOperations;
-      this.stats.averageKeepAliveTime = 
-        ((this.stats.averageKeepAliveTime * (totalOps - 1)) + duration) / totalOps;
+      this.stats.averageKeepAliveTime = (this.stats.averageKeepAliveTime * (totalOps - 1) + duration) / totalOps;
     }
   }
 
@@ -329,17 +324,14 @@ let globalConnectionWarmer: ConnectionWarmer;
 /**
  * Initialize global connection warmer
  */
-export function initializeConnectionWarming(
-  client: Client,
-  config?: Partial<WarmingConfig>
-): ConnectionWarmer {
+export function initializeConnectionWarming(client: Client, config?: Partial<WarmingConfig>): ConnectionWarmer {
   const defaultConfig: WarmingConfig = {
     enabled: true,
-    warmupDelayMs: 5000,        // Wait 5 seconds before first warmup
+    warmupDelayMs: 5000, // Wait 5 seconds before first warmup
     warmupIntervalMs: 5 * 60 * 1000, // Warmup every 5 minutes
-    keepAliveIntervalMs: 30 * 1000,   // Keep-alive every 30 seconds
-    connectionTimeout: 5000,     // 5 second timeout per operation
-    maxRetries: 3,              // Retry failed operations up to 3 times
+    keepAliveIntervalMs: 30 * 1000, // Keep-alive every 30 seconds
+    connectionTimeout: 5000, // 5 second timeout per operation
+    maxRetries: 3, // Retry failed operations up to 3 times
   };
 
   const finalConfig = { ...defaultConfig, ...config };
@@ -402,7 +394,7 @@ export async function warmAllConnections(): Promise<void> {
   try {
     const pool = getGlobalConnectionPool();
     const stats = pool.getConnectionStats();
-    
+
     logger.info("Warming all connections in pool", {
       totalConnections: stats.totalConnections,
       healthyConnections: stats.healthyConnections,
@@ -414,7 +406,7 @@ export async function warmAllConnections(): Promise<void> {
         try {
           // Perform lightweight operations to warm the connection
           logger.debug("Warming connection", { url: conn.url });
-          
+
           // The actual warming is handled by the ConnectionWarmer
           // This just logs the intention to warm specific connections
           return { url: conn.url, success: true };
@@ -426,20 +418,17 @@ export async function warmAllConnections(): Promise<void> {
           return { url: conn.url, success: false };
         }
       }
-      return { url: conn.url, success: false, reason: 'unhealthy' };
+      return { url: conn.url, success: false, reason: "unhealthy" };
     });
 
     const results = await Promise.allSettled(warmupPromises);
-    const successful = results.filter(
-      (result) => result.status === 'fulfilled' && result.value.success
-    ).length;
+    const successful = results.filter((result) => result.status === "fulfilled" && result.value.success).length;
 
     logger.info("Connection warming completed", {
       totalConnections: stats.totalConnections,
       successfulWarmups: successful,
       failedWarmups: stats.totalConnections - successful,
     });
-
   } catch (error) {
     logger.error("Failed to warm connections", {
       error: error instanceof Error ? error.message : String(error),
@@ -453,11 +442,11 @@ export async function warmAllConnections(): Promise<void> {
  */
 export async function preWarmEndpoints(client: Client): Promise<void> {
   const endpoints = [
-    { name: 'cluster.info', operation: () => client.info() },
-    { name: 'cluster.health', operation: () => client.cluster.health() },
-    { name: 'cluster.stats', operation: () => client.cluster.stats() },
-    { name: 'nodes.info', operation: () => client.nodes.info({ node_id: '_local' }) },
-    { name: 'indices.list', operation: () => client.cat.indices({ format: 'json', h: 'index' }) },
+    { name: "cluster.info", operation: () => client.info() },
+    { name: "cluster.health", operation: () => client.cluster.health() },
+    { name: "cluster.stats", operation: () => client.cluster.stats() },
+    { name: "nodes.info", operation: () => client.nodes.info({ node_id: "_local" }) },
+    { name: "indices.list", operation: () => client.cat.indices({ format: "json", h: "index" }) },
   ];
 
   logger.info("Pre-warming Elasticsearch endpoints", {
@@ -480,12 +469,10 @@ export async function preWarmEndpoints(client: Client): Promise<void> {
         });
         return { name: endpoint.name, success: false, duration };
       }
-    })
+    }),
   );
 
-  const successful = results.filter(
-    (result) => result.status === 'fulfilled' && result.value.success
-  ).length;
+  const successful = results.filter((result) => result.status === "fulfilled" && result.value.success).length;
 
   logger.info("Endpoint pre-warming completed", {
     totalEndpoints: endpoints.length,

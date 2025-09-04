@@ -1,0 +1,60 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alert_rules.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Elasticsearch MCP Server
+  - job_name: 'elasticsearch-mcp'
+    static_configs:
+      - targets: ['elasticsearch-mcp:9090']
+    scrape_interval: 10s
+    metrics_path: /metrics
+    scrape_timeout: 10s
+    
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Node Exporter (system metrics)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # cAdvisor (container metrics)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # Docker service discovery (if available)
+  - job_name: 'docker-services'
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+        port: 9090
+    relabel_configs:
+      - source_labels: [__meta_docker_container_label_prometheus_scrape]
+        regex: true
+        action: keep
+      - source_labels: [__meta_docker_container_label_prometheus_port]
+        target_label: __address__
+        regex: (.+)
+        replacement: ${__meta_docker_container_network_ip}:${1}
+      - source_labels: [__meta_docker_container_label_prometheus_path]
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__meta_docker_container_name]
+        target_label: container
+        regex: /(.+)
+        replacement: ${1}
+      - source_labels: [__meta_docker_container_label_prometheus_job]
+        target_label: job

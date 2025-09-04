@@ -5,11 +5,11 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { clearConfigWarnings, config, getConfigWarnings } from "./config.js";
 import { createElasticsearchMcpServer } from "./server.js";
+import { SSETransportManager } from "./transport/sseTransport.js";
 import { logger } from "./utils/logger.js";
 import { createSessionContext, runWithSession } from "./utils/sessionContext.js";
 import { createConnectionMetadata, initializeTracing, traceMcpConnection } from "./utils/tracing.js";
 import { detectClient, generateSessionId, traceNamedMcpConnection } from "./utils/tracingEnhanced.js";
-import { SSETransportManager } from "./transport/sseTransport.js";
 
 async function main() {
   try {
@@ -46,7 +46,7 @@ async function main() {
     // Create transport based on configuration
     if (config.server.transportMode === "sse") {
       logger.info("Using SSE transport mode");
-      
+
       // Create and start SSE transport manager
       const sseTransport = new SSETransportManager(server, config);
       await sseTransport.start();
@@ -54,7 +54,7 @@ async function main() {
       // Set up graceful shutdown for SSE mode
       const shutdown = async () => {
         logger.info("Shutting down SSE server gracefully...");
-        
+
         try {
           await sseTransport.forceShutdown(5000);
           logger.info("SSE server shutdown completed");
