@@ -12,6 +12,8 @@ import { logger } from "./utils/logger.js";
 import { initializeReadOnlyManager } from "./utils/readOnlyMode.js";
 import { createConnectionMetadata, initializeTracing, traceMcpConnection } from "./utils/tracing.js";
 import { checkElasticsearchConnection, testBasicOperations, testModernFeatures } from "./validation.js";
+import { getGlobalConnectionPool } from "./utils/connectionPooling.js";
+import { createEnhancedMcpServer } from "./utils/mcpEnhancer.js";
 
 export async function createElasticsearchMcpServer(config: Config): Promise<McpServer> {
   logger.info("Creating Elasticsearch MCP server", {
@@ -104,6 +106,19 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
 
     const esClient = new Client(clientOptions);
     logger.info("✅ Elasticsearch client created successfully");
+    
+    // Initialize connection pool with the primary client
+    const connectionPool = getGlobalConnectionPool({
+      healthCheckInterval: 30000,
+      maxErrorCount: 3,
+      loadBalanceStrategy: 'fastest-response'
+    });
+    connectionPool.addConnection(config.elasticsearch.url, esClient);
+    
+    logger.info("📡 Connection pool initialized", {
+      primaryUrl: config.elasticsearch.url,
+      strategy: 'fastest-response'
+    });
 
     // Enhanced connection test with configuration-aware timeouts
     try {
@@ -194,16 +209,15 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
       name: config.server.name,
       version: config.server.version,
     });
-    logger.debug("MCP Server instance created");
 
     // Register all tools with the validated client
-    registerAllTools(server, esClient);
+    const registeredTools = registerAllTools(server, esClient);
 
     logger.info("🛠️ All tools registered successfully", {
       serverName: config.server.name,
       version: config.server.version,
       readOnlyMode: config.server.readOnlyMode,
-      toolCount: "All available tools registered",
+      toolCount: registeredTools.length,
       message: config.server.readOnlyMode ? "Destructive operations are restricted" : "All operations available",
     });
 

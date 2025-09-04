@@ -2,181 +2,333 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
-// Define the parameter schema
-const RolloverParams = z.object({
+// Direct JSON Schema definition
+const rolloverSchema = {
+  type: "object",
+  properties: {
+    alias: {
+      type: "string",
+      minLength: 1,
+      description: "Alias name for the data stream or index to roll over"
+    },
+    newIndex: {
+      type: "string",
+      description: "Name of the new index to create during rollover"
+    },
+    aliases: {
+      type: "object",
+      additionalProperties: {
+        type: "object",
+        properties: {
+          filter: {
+            type: "object",
+            additionalProperties: true,
+            description: "Query to filter documents for this alias"
+          },
+          indexRouting: {
+            type: "string",
+            description: "Value used for index routing"
+          },
+          isHidden: {
+            type: "boolean",
+            description: "Whether this alias is hidden"
+          },
+          isWriteIndex: {
+            type: "boolean",
+            description: "Whether this alias is the write index"
+          },
+          routing: {
+            type: "string",
+            description: "Value used for both index and search routing"
+          },
+          searchRouting: {
+            type: "string",
+            description: "Value used for search routing"
+          }
+        },
+        additionalProperties: false
+      },
+      description: "Aliases to add to the new index"
+    },
+    conditions: {
+      type: "object",
+      properties: {
+        minAge: {
+          type: "string",
+          description: "Minimum age of the index before rollover"
+        },
+        maxAge: {
+          type: "string",
+          description: "Maximum age of the index before rollover"
+        },
+        maxAgeMillis: {
+          type: "number",
+          description: "Maximum age in milliseconds before rollover"
+        },
+        minDocs: {
+          type: "number",
+          description: "Minimum number of documents before rollover"
+        },
+        maxDocs: {
+          type: "number",
+          description: "Maximum number of documents before rollover"
+        },
+        maxSize: {
+          type: "string",
+          description: "Maximum size of the index before rollover"
+        },
+        maxSizeBytes: {
+          type: "number",
+          description: "Maximum size in bytes before rollover"
+        },
+        minSize: {
+          type: "string",
+          description: "Minimum size of the index before rollover"
+        },
+        minSizeBytes: {
+          type: "number",
+          description: "Minimum size in bytes before rollover"
+        },
+        maxPrimaryShardSize: {
+          type: "string",
+          description: "Maximum primary shard size before rollover"
+        },
+        maxPrimaryShardSizeBytes: {
+          type: "number",
+          description: "Maximum primary shard size in bytes before rollover"
+        },
+        minPrimaryShardSize: {
+          type: "string",
+          description: "Minimum primary shard size before rollover"
+        },
+        minPrimaryShardSizeBytes: {
+          type: "number",
+          description: "Minimum primary shard size in bytes before rollover"
+        },
+        maxPrimaryShardDocs: {
+          type: "number",
+          description: "Maximum documents per primary shard before rollover"
+        },
+        minPrimaryShardDocs: {
+          type: "number",
+          description: "Minimum documents per primary shard before rollover"
+        }
+      },
+      additionalProperties: false,
+      description: "Rollover conditions"
+    },
+    mappings: {
+      type: "object",
+      additionalProperties: true,
+      description: "Mapping definition for the new index"
+    },
+    settings: {
+      type: "object",
+      additionalProperties: true,
+      description: "Settings for the new index"
+    },
+    dryRun: {
+      type: "boolean",
+      description: "Whether to perform a dry run without actually rolling over"
+    },
+    masterTimeout: {
+      type: "string",
+      description: "Timeout for connection to master node"
+    },
+    timeout: {
+      type: "string",
+      description: "Timeout for the rollover operation"
+    },
+    waitForActiveShards: {
+      oneOf: [
+        { type: "number" },
+        { type: "string", enum: ["all", "index-setting"] }
+      ],
+      description: "Number of active shards to wait for"
+    },
+    lazy: {
+      type: "boolean",
+      description: "Whether to perform lazy rollover"
+    }
+  },
+  required: ["alias"],
+  additionalProperties: false
+};
+
+// Zod validator for runtime validation
+const rolloverValidator = z.object({
   alias: z.string().min(1, "Alias name cannot be empty"),
-  new_index: z.string().optional(),
+  newIndex: z.string().optional(),
   aliases: z
     .record(
       z.object({
         filter: z.object({}).passthrough().optional(),
-        index_routing: z.string().optional(),
-        is_hidden: booleanField().optional(),
-        is_write_index: booleanField().optional(),
+        indexRouting: z.string().optional(),
+        isHidden: booleanField().optional(),
+        isWriteIndex: booleanField().optional(),
         routing: z.string().optional(),
-        search_routing: z.string().optional(),
+        searchRouting: z.string().optional(),
       }),
     )
     .optional(),
   conditions: z
     .object({
-      min_age: z.string().optional(),
-      max_age: z.string().optional(),
-      max_age_millis: z.number().optional(),
-      min_docs: z.number().optional(),
-      max_docs: z.number().optional(),
-      max_size: z.string().optional(),
-      max_size_bytes: z.number().optional(),
-      min_size: z.string().optional(),
-      min_size_bytes: z.number().optional(),
-      max_primary_shard_size: z.string().optional(),
-      max_primary_shard_size_bytes: z.number().optional(),
-      min_primary_shard_size: z.string().optional(),
-      min_primary_shard_size_bytes: z.number().optional(),
-      max_primary_shard_docs: z.number().optional(),
-      min_primary_shard_docs: z.number().optional(),
+      minAge: z.string().optional(),
+      maxAge: z.string().optional(),
+      maxAgeMillis: z.number().optional(),
+      minDocs: z.number().optional(),
+      maxDocs: z.number().optional(),
+      maxSize: z.string().optional(),
+      maxSizeBytes: z.number().optional(),
+      minSize: z.string().optional(),
+      minSizeBytes: z.number().optional(),
+      maxPrimaryShardSize: z.string().optional(),
+      maxPrimaryShardSizeBytes: z.number().optional(),
+      minPrimaryShardSize: z.string().optional(),
+      minPrimaryShardSizeBytes: z.number().optional(),
+      maxPrimaryShardDocs: z.number().optional(),
+      minPrimaryShardDocs: z.number().optional(),
     })
     .optional(),
-  mappings: z
-    .object({
-      _all: z
-        .object({
-          analyzer: z.string().optional(),
-          enabled: booleanField(),
-          omit_norms: booleanField().optional(),
-          search_analyzer: z.string().optional(),
-          search_quote_analyzer: z.string().optional(),
-          store: booleanField().optional(),
-          term_vector: z
-            .enum([
-              "no",
-              "yes",
-              "with_positions",
-              "with_offsets",
-              "with_positions_offsets",
-              "with_positions_payloads",
-              "with_positions_offsets_payloads",
-            ])
-            .optional(),
-        })
-        .optional(),
-      date_detection: booleanField().optional(),
-      dynamic: z.enum(["true", "false", "strict", "runtime"]).optional(),
-      dynamic_date_formats: z.array(z.string()).optional(),
-      dynamic_templates: z.array(z.object({}).passthrough()).optional(),
-      _field_names: z
-        .object({
-          enabled: booleanField(),
-        })
-        .optional(),
-      _meta: z.object({}).passthrough().optional(),
-      numeric_detection: booleanField().optional(),
-      properties: z.object({}).passthrough().optional(),
-      _routing: z
-        .object({
-          required: booleanField(),
-        })
-        .optional(),
-      _source: z
-        .object({
-          enabled: booleanField(),
-          excludes: z.array(z.string()).optional(),
-          includes: z.array(z.string()).optional(),
-        })
-        .optional(),
-      runtime: z.object({}).passthrough().optional(),
-    })
-    .optional(),
+  mappings: z.object({}).passthrough().optional(),
   settings: z.object({}).passthrough().optional(),
-  dry_run: booleanField().optional(),
-  master_timeout: z.string().optional(),
+  dryRun: booleanField().optional(),
+  masterTimeout: z.string().optional(),
   timeout: z.string().optional(),
-  wait_for_active_shards: z.union([z.number(), z.enum(["all", "index-setting"])]).optional(),
+  waitForActiveShards: z.union([z.number(), z.enum(["all", "index-setting"])]).optional(),
   lazy: booleanField().optional(),
 });
 
-type RolloverParamsType = z.infer<typeof RolloverParams>;
+type RolloverParams = z.infer<typeof rolloverValidator>;
 
+// MCP error handling
+function createRolloverMcpError(
+  error: Error | string,
+  context: {
+    type: 'validation' | 'execution' | 'alias_not_found' | 'rollover_conditions_not_met' | 'index_already_exists' | 'permission_denied';
+    details?: any;
+  }
+): McpError {
+  const message = error instanceof Error ? error.message : error;
+  
+  const errorCodeMap = {
+    validation: ErrorCode.InvalidParams,
+    execution: ErrorCode.InternalError,
+    alias_not_found: ErrorCode.InvalidParams,
+    rollover_conditions_not_met: ErrorCode.InvalidParams,
+    index_already_exists: ErrorCode.InvalidParams,
+    permission_denied: ErrorCode.MethodNotAllowed
+  };
+  
+  return new McpError(
+    errorCodeMap[context.type],
+    `[elasticsearch_rollover] ${message}`,
+    context.details
+  );
+}
+
+// Tool implementation
 export const registerRolloverTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  // Implementation function without read-only checks
-  const rolloverImpl = async (params: any, _extra: Record<string, unknown>): Promise<SearchResult> => {
-    const typedParams = params as RolloverParamsType;
+  
+  const rolloverHandler = async (args: any): Promise<SearchResult> => {
+    const perfStart = performance.now();
+    
     try {
-      const result = await esClient.indices.rollover({
-        alias: typedParams.alias,
-        new_index: typedParams.new_index,
-        aliases: typedParams.aliases,
-        conditions: typedParams.conditions,
-        mappings: typedParams.mappings,
-        settings: typedParams.settings,
-        dry_run: typedParams.dry_run,
-        master_timeout: typedParams.master_timeout,
-        timeout: typedParams.timeout,
-        wait_for_active_shards: typedParams.wait_for_active_shards,
-        lazy: typedParams.lazy,
+      // Validate parameters
+      const params = rolloverValidator.parse(args);
+      
+      logger.debug("Rolling over index", { 
+        alias: params.alias, 
+        newIndex: params.newIndex,
+        conditions: params.conditions
       });
+      
+      const result = await esClient.indices.rollover({
+        alias: params.alias,
+        new_index: params.newIndex,
+        aliases: params.aliases,
+        conditions: params.conditions,
+        mappings: params.mappings,
+        settings: params.settings,
+        dry_run: params.dryRun,
+        master_timeout: params.masterTimeout,
+        timeout: params.timeout,
+        wait_for_active_shards: params.waitForActiveShards,
+        lazy: params.lazy,
+      }, {
+        opaqueId: "elasticsearch_rollover",
+      });
+      
+      const duration = performance.now() - perfStart;
+      if (duration > 30000) {
+        logger.warn("Slow rollover operation", { duration });
+      }
+      
       return {
         content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
       };
+
     } catch (error) {
-      logger.error("Failed to rollover index:", {
-        error: error instanceof Error ? error.message : String(error),
+      // Error handling
+      if (error instanceof z.ZodError) {
+        throw createRolloverMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
+          type: 'validation',
+          details: { validationErrors: error.errors, providedArgs: args }
+        });
+      }
+
+      if (error instanceof Error) {
+        if (error.message.includes('alias_not_found') || error.message.includes('no such alias')) {
+          throw createRolloverMcpError(`Alias not found: ${args?.alias}`, {
+            type: 'alias_not_found',
+            details: { originalError: error.message }
+          });
+        }
+
+        if (error.message.includes('rollover_conditions_not_met') || error.message.includes('conditions not met')) {
+          throw createRolloverMcpError(`Rollover conditions not met for alias: ${args?.alias}`, {
+            type: 'rollover_conditions_not_met',
+            details: { originalError: error.message, conditions: args?.conditions }
+          });
+        }
+
+        if (error.message.includes('resource_already_exists_exception') || error.message.includes('index_already_exists')) {
+          throw createRolloverMcpError(`Index already exists: ${args?.newIndex}`, {
+            type: 'index_already_exists',
+            details: { originalError: error.message }
+          });
+        }
+
+        if (error.message.includes('security_exception') || error.message.includes('unauthorized')) {
+          throw createRolloverMcpError(`Permission denied: ${error.message}`, {
+            type: 'permission_denied',
+            details: { originalError: error.message }
+          });
+        }
+      }
+
+      throw createRolloverMcpError(error instanceof Error ? error.message : String(error), {
+        type: 'execution',
+        details: { 
+          duration: performance.now() - perfStart,
+          args 
+        }
       });
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-          },
-        ],
-      };
     }
   };
 
+  // Tool registration with read-only check
   server.tool(
     "elasticsearch_rollover",
     "Roll over to a new index in Elasticsearch for data streams or aliases. Best for index lifecycle management, data stream rotation, automated archiving. Use when you need to create new indices based on size, age, or document count thresholds in Elasticsearch.",
-    {
-      alias: z.string().min(1, "Alias name cannot be empty"),
-      new_index: z.string().optional(),
-      aliases: z
-        .record(
-          z.object({
-            filter: z.object({}).passthrough().optional(),
-            index_routing: z.string().optional(),
-            is_hidden: booleanField().optional(),
-            is_write_index: booleanField().optional(),
-            routing: z.string().optional(),
-            search_routing: z.string().optional(),
-          }),
-        )
-        .optional(),
-      conditions: z
-        .object({
-          min_age: z.string().optional(),
-          max_age: z.string().optional(),
-          max_age_millis: z.number().optional(),
-          min_docs: z.number().optional(),
-          max_docs: z.number().optional(),
-          max_size: z.string().optional(),
-          max_size_bytes: z.number().optional(),
-          min_size: z.string().optional(),
-          min_size_bytes: z.number().optional(),
-          max_primary_shard_size: z.string().optional(),
-          max_primary_shard_size_bytes: z.number().optional(),
-          min_primary_shard_size: z.string().optional(),
-          min_primary_shard_size_bytes: z.number().optional(),
-          max_primary_shard_docs: z.number().optional(),
-          min_primary_shard_docs: z.number().optional(),
-        })
-        .optional(),
-    },
-    withReadOnlyCheck("elasticsearch_rollover", rolloverImpl, OperationType.WRITE),
+    rolloverSchema,
+    withReadOnlyCheck("elasticsearch_rollover", rolloverHandler, OperationType.WRITE)
   );
 };

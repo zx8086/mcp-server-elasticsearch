@@ -3,6 +3,7 @@
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { logger } from "../utils/logger.js";
+import { withSecurityValidation } from "../utils/securityEnhancer.js";
 import { wrapServerWithTracing } from "../utils/universalToolWrapper.js";
 
 import { registerGetMappingsTool } from "./core/get_mappings.js";
@@ -78,7 +79,7 @@ import { registerGetFieldMappingTool } from "./mapping/get_field_mapping.js";
 // ILM Tools (Index Lifecycle Management)
 import { registerDeleteLifecycleTool } from "./ilm/delete_lifecycle.js";
 import { registerExplainLifecycleTool } from "./ilm/explain_lifecycle.js";
-import { registerGetLifecycleImprovedTool } from "./ilm/get_lifecycle_improved.js";
+import { registerGetLifecycleTool } from "./ilm/get_lifecycle.js";
 import { registerGetStatusTool } from "./ilm/get_status.js";
 import { registerMigrateToDataTiersTool } from "./ilm/migrate_to_data_tiers.js";
 import { registerMoveToStepTool } from "./ilm/move_to_step.js";
@@ -135,9 +136,29 @@ import {
   registerWatcherUpdateSettingsTool,
 } from "./watcher/index.js";
 
-export function registerAllTools(server: McpServer, esClient: Client) {
+interface ToolInfo {
+  name: string;
+  description: string;
+  inputSchema: any;
+}
+
+export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[] {
   // Wrap the server to automatically add tracing to ALL tools
   const wrappedServer = wrapServerWithTracing(server);
+  
+  // Track registered tools for MCP tools/list handler
+  const registeredTools: ToolInfo[] = [];
+  
+  // Override the tool method to capture tool information and add security validation
+  const originalTool = wrappedServer.tool.bind(wrappedServer);
+  wrappedServer.tool = (name: string, description: string, inputSchema: any, handler: any) => {
+    registeredTools.push({ name, description, inputSchema });
+    
+    // Wrap handler with security validation
+    const secureHandler = withSecurityValidation(name, handler);
+    
+    return originalTool(name, description, inputSchema, secureHandler);
+  };
 
   logger.info("🚀 Registering all tools with automatic tracing", {
     tracingEnabled: process.env.LANGSMITH_TRACING === "true",
@@ -207,7 +228,7 @@ export function registerAllTools(server: McpServer, esClient: Client) {
   // Register ILM Tools
   registerDeleteLifecycleTool(wrappedServer, esClient);
   registerExplainLifecycleTool(wrappedServer, esClient);
-  registerGetLifecycleImprovedTool(wrappedServer, esClient);
+  registerGetLifecycleTool(wrappedServer, esClient);
   registerGetStatusTool(wrappedServer, esClient);
   registerMigrateToDataTiersTool(wrappedServer, esClient);
   registerMoveToStepTool(wrappedServer, esClient);
@@ -354,5 +375,9 @@ export function registerAllTools(server: McpServer, esClient: Client) {
     },
   );
 
-  logger.info("✅ All tools registered with automatic tracing wrapper");
+  logger.info("✅ All tools registered with automatic tracing wrapper", {
+    toolCount: registeredTools.length,
+  });
+  
+  return registeredTools;
 }

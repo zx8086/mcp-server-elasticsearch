@@ -2,82 +2,144 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { readOnlyManager } from "../../utils/readOnlyMode.js";
-import { booleanField } from "../../utils/zodHelpers.js";
-import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import { coerceBoolean } from "../../utils/zodHelpers.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
-// Define the parameter schema type
-const DeleteIndexParams = z.object({
+// Direct JSON Schema definition
+const deleteIndexSchema = {
+  type: "object",
+  properties: {
+    index: {
+      type: "string",
+      minLength: 1,
+      description: "Name of the index to delete"
+    },
+    timeout: {
+      type: "string",
+      description: "Operation timeout (e.g., '30s')"
+    },
+    masterTimeout: {
+      type: "string",
+      description: "Master node timeout (e.g., '30s')"
+    },
+    ignoreUnavailable: {
+      type: "boolean",
+      description: "Ignore unavailable indices"
+    },
+    allowNoIndices: {
+      type: "boolean",
+      description: "Allow wildcards that match no indices"
+    },
+    expandWildcards: {
+      type: "string",
+      enum: ["all", "open", "closed", "hidden", "none"],
+      description: "Which indices to expand wildcards to"
+    }
+  },
+  required: ["index"],
+  additionalProperties: false
+};
+
+// Zod validator for runtime validation
+const deleteIndexValidator = z.object({
   index: z.string().min(1, "Index cannot be empty"),
   timeout: z.string().optional(),
   masterTimeout: z.string().optional(),
-  ignoreUnavailable: booleanField().optional(),
-  allowNoIndices: booleanField().optional(),
+  ignoreUnavailable: coerceBoolean.optional(),
+  allowNoIndices: coerceBoolean.optional(),
   expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
 });
 
-type DeleteIndexParamsType = z.infer<typeof DeleteIndexParams>;
+type DeleteIndexParams = z.infer<typeof deleteIndexValidator>;
+
+// MCP error handling
+function createDeleteIndexMcpError(
+  error: Error | string,
+  context: { type: string; details?: any }
+): McpError {
+  const message = error instanceof Error ? error.message : error;
+  
+  const errorCodeMap = {
+    validation: ErrorCode.InvalidParams,
+    execution: ErrorCode.InternalError,
+    index_not_found: ErrorCode.InvalidParams,
+  };
+  
+  return new McpError(
+    errorCodeMap[context.type] || ErrorCode.InternalError,
+    `[elasticsearch_delete_index] ${message}`,
+    context.details
+  );
+}
+
+// Tool implementation
 export const registerDeleteIndexTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
+  const deleteIndexHandler = async (args: any): Promise<SearchResult> => {
+    const perfStart = performance.now();
+    
+    try {
+      // Validate parameters
+      const params = deleteIndexValidator.parse(args);
+      
+      const result = await esClient.indices.delete({
+        index: params.index,
+        timeout: params.timeout,
+        master_timeout: params.masterTimeout,
+        ignore_unavailable: params.ignoreUnavailable,
+        allow_no_indices: params.allowNoIndices,
+        expand_wildcards: params.expandWildcards,
+      });
+
+      const duration = performance.now() - perfStart;
+      if (duration > 5000) {
+        logger.warn("Slow index deletion operation", { duration, index: params.index });
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(result, null, 2)
+          }
+        ],
+      };
+
+    } catch (error) {
+      // Error handling
+      if (error instanceof z.ZodError) {
+        throw createDeleteIndexMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
+          type: 'validation',
+          details: { validationErrors: error.errors, providedArgs: args }
+        });
+      }
+
+      // Handle index not found error
+      if (error instanceof Error && error.message.includes('index_not_found_exception')) {
+        throw createDeleteIndexMcpError(`Index not found: ${args.index}`, {
+          type: 'index_not_found',
+          details: { index: args.index }
+        });
+      }
+      
+      throw createDeleteIndexMcpError(error instanceof Error ? error.message : String(error), {
+        type: 'execution',
+        details: { 
+          duration: performance.now() - perfStart,
+          args 
+        }
+      });
+    }
+  };
+
+  // Tool registration
   server.tool(
     "elasticsearch_delete_index",
-    "Delete an entire index in Elasticsearch. Best for index cleanup, data lifecycle management, removing obsolete indices. Use when you need to permanently remove complete Elasticsearch indices and all their documents. DESTRUCTIVE OPERATION.",
-    {
-      index: z.string().min(1, "Index cannot be empty"),
-      timeout: z.string().optional(),
-      masterTimeout: z.string().optional(),
-      ignoreUnavailable: booleanField().optional(),
-      allowNoIndices: booleanField().optional(),
-      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
-    },
-    async (params: DeleteIndexParamsType): Promise<SearchResult> => {
-      // Check read-only mode with enhanced warning for destructive operation
-      const readOnlyCheck = readOnlyManager.checkOperation("elasticsearch_delete_index");
-      if (!readOnlyCheck.allowed) {
-        return readOnlyManager.createBlockedResponse("elasticsearch_delete_index");
-      }
-
-      try {
-        // Enhanced warning for particularly destructive operations
-        if (readOnlyCheck.warning) {
-          logger.warn("🚨 CRITICAL: About to delete entire index", {
-            tool: "elasticsearch_delete_index",
-            index: params.index,
-            warning: "This will permanently delete all data in the index",
-          });
-        }
-
-        const result = await esClient.indices.delete({
-          index: params.index,
-          timeout: params.timeout,
-          master_timeout: params.masterTimeout,
-          ignore_unavailable: params.ignoreUnavailable,
-          allow_no_indices: params.allowNoIndices,
-          expand_wildcards: params.expandWildcards,
-        });
-        const response: SearchResult = {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
-        };
-
-        if (readOnlyCheck.warning) {
-          return readOnlyManager.createWarningResponse("elasticsearch_delete_index", response);
-        }
-
-        return response;
-      } catch (error) {
-        logger.error("Failed to delete index:", {
-          error: error instanceof Error ? error.message : String(error),
-        });
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-            } as TextContent,
-          ],
-        };
-      }
-    },
+    "Delete an entire index in Elasticsearch. Best for index cleanup, data lifecycle management, removing obsolete indices. Use when you need to permanently remove complete Elasticsearch indices and all their documents. DESTRUCTIVE OPERATION. Uses direct JSON Schema and standardized MCP error codes.",
+    deleteIndexSchema,
+    withReadOnlyCheck("elasticsearch_delete_index", deleteIndexHandler, OperationType.DESTRUCTIVE)
   );
 };

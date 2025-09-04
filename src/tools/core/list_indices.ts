@@ -2,92 +2,139 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
-import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
+import { type SearchResult, type ToolRegistrationFunction } from "../types.js";
 
-// Define the parameter schema
-const ListIndicesParams = z.object({
-  indexPattern: z
-    .string()
-    .optional()
-    .describe("Index pattern to match. Use '*' for all indices. Supports wildcards like 'logs-*' or 'app-*'"),
-  limit: z
-    .union([
-      z.number(),
-      z
-        .string()
-        .regex(/^\d+$/)
-        .transform((val) => Number.parseInt(val, 10)),
-    ])
-    .pipe(z.number().min(1).max(1000))
-    .optional()
-    .describe("Maximum number of indices to return (1-1000). Required for large clusters"),
-  excludeSystemIndices: z.boolean().optional().describe("Exclude system indices starting with '.'"),
-  excludeDataStreams: z.boolean().optional().describe("Exclude data stream backing indices"),
-  sortBy: z
-    .enum(["name", "size", "docs", "creation"])
-    .optional()
-    .describe("Sort order for results: 'name', 'size', 'docs', or 'creation'"),
-  includeSize: z.boolean().optional().describe("Include storage size and creation date information"),
+// Direct JSON Schema definition
+const listIndicesSchema = {
+  type: "object",
+  properties: {
+    indexPattern: {
+      type: "string",
+      description: "Index pattern to match. Use '*' for all indices. Supports wildcards like 'logs-*' or 'app-*'"
+    },
+    limit: {
+      type: "number",
+      minimum: 1,
+      maximum: 1000,
+      description: "Maximum number of indices to return (1-1000). Required for large clusters"
+    },
+    excludeSystemIndices: {
+      type: "boolean",
+      description: "Exclude system indices starting with '.'"
+    },
+    excludeDataStreams: {
+      type: "boolean", 
+      description: "Exclude data stream backing indices"
+    },
+    sortBy: {
+      type: "string",
+      enum: ["name", "size", "docs", "creation"],
+      description: "Sort order for results: 'name', 'size', 'docs', or 'creation'"
+    },
+    includeSize: {
+      type: "boolean",
+      description: "Include storage size and creation date information"
+    }
+  },
+  additionalProperties: false
+};
+
+// Zod validator for runtime validation
+const listIndicesValidator = z.object({
+  indexPattern: z.string().optional(),
+  limit: z.number().min(1).max(1000).optional(),
+  excludeSystemIndices: z.boolean().optional(),
+  excludeDataStreams: z.boolean().optional(),
+  sortBy: z.enum(["name", "size", "docs", "creation"]).optional(),
+  includeSize: z.boolean().optional()
 });
 
-type ListIndicesParamsType = z.infer<typeof ListIndicesParams>;
+type ListIndicesParams = z.infer<typeof listIndicesValidator>;
+
+// MCP error handling
+
+function createMcpError(
+  error: Error | string,
+  context: {
+    toolName: string;
+    type: 'validation' | 'execution' | 'connection' | 'not_found';
+    details?: any;
+  }
+): McpError {
+  const message = error instanceof Error ? error.message : error;
+  
+  const errorCodeMap = {
+    validation: ErrorCode.InvalidParams,
+    execution: ErrorCode.InternalError,
+    connection: ErrorCode.InternalError,
+    not_found: ErrorCode.InvalidRequest
+  };
+  
+  return new McpError(
+    errorCodeMap[context.type],
+    `[${context.toolName}] ${message}`,
+    context.details
+  );
+}
+
+// Tool implementation
 
 export const registerListIndicesTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  const listIndicesImpl = async (params: any, _extra: Record<string, unknown>): Promise<SearchResult> => {
-    const { indexPattern, limit, excludeSystemIndices, excludeDataStreams, sortBy, includeSize } =
-      params as ListIndicesParamsType;
-
-    logger.debug("Listing indices with smart filtering", {
-      pattern: indexPattern,
-      limit,
-      excludeSystemIndices,
-      excludeDataStreams,
-      sortBy,
-    });
-
+  
+  // Tool handler
+  const listIndicesHandler = async (args: any): Promise<SearchResult> => {
+    const perfStart = performance.now();
+    
     try {
+      // Validate parameters
+      const params = listIndicesValidator.parse(args);
+      
+      logger.debug("Listing indices", {
+        pattern: params.indexPattern,
+        limit: params.limit,
+        filters: {
+          excludeSystemIndices: params.excludeSystemIndices,
+          excludeDataStreams: params.excludeDataStreams
+        }
+      });
+
       // Build the cat indices request
       const catParams = {
-        index: indexPattern,
+        index: params.indexPattern,
         format: "json" as const,
-        h: includeSize
+        h: params.includeSize
           ? "index,health,status,docs.count,store.size,creation.date.string"
           : "index,health,status,docs.count",
       };
 
       const response = await esClient.cat.indices(catParams);
 
-      logger.debug("Raw indices response", { count: response.length });
-
       // Apply filtering
       let filteredIndices = response.filter((index: any) => {
-        // Exclude system indices if requested
-        if (excludeSystemIndices && index.index.startsWith(".")) {
+        if (params.excludeSystemIndices && index.index.startsWith(".")) {
           return false;
         }
-
-        // Exclude data stream backing indices if requested
-        if (excludeDataStreams && index.index.includes(".ds-")) {
+        if (params.excludeDataStreams && index.index.includes(".ds-")) {
           return false;
         }
-
         return true;
       });
 
       // Sort indices
       filteredIndices.sort((a: any, b: any) => {
-        switch (sortBy) {
+        switch (params.sortBy) {
           case "size": {
-            const sizeA = Number.parseInt(a["store.size"]?.replace(/[^\d]/g, "") || "0");
-            const sizeB = Number.parseInt(b["store.size"]?.replace(/[^\d]/g, "") || "0");
+            const sizeA = parseInt(a["store.size"]?.replace(/[^\d]/g, "") || "0");
+            const sizeB = parseInt(b["store.size"]?.replace(/[^\d]/g, "") || "0");
             return sizeB - sizeA; // Descending
           }
           case "docs": {
-            const docsA = Number.parseInt(a["docs.count"] || "0");
-            const docsB = Number.parseInt(b["docs.count"] || "0");
+            const docsA = parseInt(a["docs.count"] || "0");
+            const docsB = parseInt(b["docs.count"] || "0");
             return docsB - docsA; // Descending
           }
           case "creation": {
@@ -102,53 +149,42 @@ export const registerListIndicesTool: ToolRegistrationFunction = (server: McpSer
 
       // Apply limit
       const totalFound = filteredIndices.length;
-      filteredIndices = filteredIndices.slice(0, limit);
+      if (params.limit) {
+        filteredIndices = filteredIndices.slice(0, params.limit);
+      }
 
       // Transform to consistent format
-      const indicesInfo = filteredIndices.map((index: any) => {
-        const info: any = {
-          index: index.index,
-          health: index.health,
-          status: index.status,
-          docsCount: index["docs.count"] || "0",
-        };
-
-        if (includeSize) {
-          info.storeSize = index["store.size"] || "0b";
-          info.creationDate = index["creation.date.string"] || "unknown";
-        }
-
-        return info;
-      });
-
-      // Group similar indices for summary
-      const indexGroups = new Map<string, number>();
-      for (const index of filteredIndices) {
-        const baseName = index.index.replace(/[-_]\d{4}\.\d{2}\.\d{2}.*$/, "").replace(/[-_]\d+$/, "");
-        indexGroups.set(baseName, (indexGroups.get(baseName) || 0) + 1);
-      }
+      const indicesInfo = filteredIndices.map((index: any) => ({
+        index: index.index,
+        health: index.health,
+        status: index.status,
+        docsCount: index["docs.count"] || "0",
+        ...(params.includeSize && {
+          storeSize: index["store.size"] || "0b",
+          creationDate: index["creation.date.string"] || "unknown"
+        })
+      }));
 
       const summary = {
         total_found: totalFound,
         displayed: indicesInfo.length,
-        limit_applied: limit,
+        limit_applied: params.limit,
         filters_applied: {
-          excluded_system_indices: excludeSystemIndices,
-          excluded_data_streams: excludeDataStreams,
+          excluded_system_indices: params.excludeSystemIndices,
+          excluded_data_streams: params.excludeDataStreams,
         },
-        sorted_by: sortBy,
-        index_groups: Object.fromEntries(
-          Array.from(indexGroups.entries())
-            .filter(([_, count]) => count > 1)
-            .sort(([_, a], [__, b]) => b - a)
-            .slice(0, 10), // Top 10 groups
-        ),
+        sorted_by: params.sortBy,
       };
 
-      const warningMessage =
-        totalFound > limit
-          ? `⚠️ Found ${totalFound} indices, showing first ${limit}. Use more specific patterns or increase limit.`
-          : `Found ${totalFound} indices matching pattern.`;
+      const duration = performance.now() - perfStart;
+      if (duration > 5000) {
+        logger.warn(`Slow operation: elasticsearch_list_indices`, { duration });
+      }
+
+      // MCP-compliant response format
+      const warningMessage = totalFound > (params.limit || totalFound)
+        ? `⚠️ Found ${totalFound} indices, showing first ${params.limit}. Use more specific patterns or increase limit.`
+        : `Found ${totalFound} indices matching pattern.`;
 
       return {
         content: [
@@ -157,21 +193,42 @@ export const registerListIndicesTool: ToolRegistrationFunction = (server: McpSer
           { type: "text", text: JSON.stringify(indicesInfo, null, 2) },
         ],
       };
+
     } catch (error) {
-      logger.error("Failed to list indices:", {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
+      // Error handling
+      if (error instanceof z.ZodError) {
+        throw createMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
+          toolName: 'elasticsearch_list_indices',
+          type: 'validation',
+          details: { validationErrors: error.errors, providedArgs: args }
+        });
+      }
+
+      if (error instanceof Error && error.message.includes('index_not_found_exception')) {
+        throw createMcpError(`No indices found matching pattern: ${args.indexPattern || '*'}`, {
+          toolName: 'elasticsearch_list_indices', 
+          type: 'not_found',
+          details: { pattern: args.indexPattern }
+        });
+      }
+
+      throw createMcpError(error instanceof Error ? error.message : String(error), {
+        toolName: 'elasticsearch_list_indices',
+        type: 'execution',
+        details: { 
+          duration: performance.now() - perfStart,
+          args 
+        }
       });
-      return {
-        content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
-      };
     }
   };
 
+  // Tool registration
   server.tool(
     "elasticsearch_list_indices",
-    "List indices with filtering. TIP: Use this FIRST to check cluster size before other tools. Common patterns: {limit: 50, excludeSystemIndices: true} for overview, {indexPattern: 'logs-*', limit: 100} for specific indices. Large clusters (>1000 indices) require 'limit' parameter or response will be truncated.",
-    ListIndicesParams,
-    withReadOnlyCheck("elasticsearch_list_indices", listIndicesImpl, OperationType.READ),
+    "List indices with filtering. Uses direct JSON Schema and standardized MCP error codes. TIP: Use this FIRST to check cluster size before other tools. Common patterns: {limit: 50, excludeSystemIndices: true} for overview, {indexPattern: 'logs-*', limit: 100} for specific indices.",
+    listIndicesSchema,
+    withReadOnlyCheck("elasticsearch_list_indices", listIndicesHandler, OperationType.READ)
   );
 };
+

@@ -2,55 +2,132 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
-import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
+import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
-// Define the parameter schema
-const ExistsIndexTemplateParams = z.object({
+// Direct JSON Schema definition
+const existsIndexTemplateSchema = {
+  type: "object",
+  properties: {
+    name: {
+      type: "string",
+      minLength: 1,
+      description: "Index template name to check existence for. Example: 'logs-template'"
+    },
+    local: {
+      type: "boolean",
+      description: "Return local information, do not retrieve the state from master node"
+    },
+    flatSettings: {
+      type: "boolean",
+      description: "Return settings in flat format"
+    },
+    masterTimeout: {
+      type: "string",
+      description: "Timeout for connection to master node"
+    }
+  },
+  required: ["name"],
+  additionalProperties: false
+};
+
+// Zod validator for runtime validation
+const existsIndexTemplateValidator = z.object({
   name: z.string().min(1, "Template name cannot be empty"),
   local: booleanField().optional(),
-  flat_settings: booleanField().optional(),
-  master_timeout: z.string().optional(),
+  flatSettings: booleanField().optional(),
+  masterTimeout: z.string().optional(),
 });
 
-type ExistsIndexTemplateParamsType = z.infer<typeof ExistsIndexTemplateParams>;
+type ExistsIndexTemplateParams = z.infer<typeof existsIndexTemplateValidator>;
 
+// MCP error handling
+function createExistsIndexTemplateMcpError(
+  error: Error | string,
+  context: {
+    type: 'validation' | 'execution' | 'template_not_found' | 'timeout';
+    details?: any;
+  }
+): McpError {
+  const message = error instanceof Error ? error.message : error;
+  
+  const errorCodeMap = {
+    validation: ErrorCode.InvalidParams,
+    execution: ErrorCode.InternalError,
+    template_not_found: ErrorCode.InvalidParams,
+    timeout: ErrorCode.InternalError
+  };
+  
+  return new McpError(
+    errorCodeMap[context.type],
+    `[elasticsearch_exists_index_template] ${message}`,
+    context.details
+  );
+}
+
+// Tool implementation
 export const registerExistsIndexTemplateTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
+  
+  const existsIndexTemplateHandler = async (args: any): Promise<SearchResult> => {
+    try {
+      // Validate parameters
+      const params = existsIndexTemplateValidator.parse(args);
+      
+      logger.debug("Checking if index template exists", { name: params.name });
+      
+      const result = await esClient.indices.existsIndexTemplate({
+        name: params.name,
+        local: params.local,
+        flat_settings: params.flatSettings,
+        master_timeout: params.masterTimeout,
+      }, {
+        opaqueId: "elasticsearch_exists_index_template",
+      });
+      
+      return {
+        content: [{ type: "text", text: JSON.stringify({ exists: result }, null, 2) }],
+      };
+
+    } catch (error) {
+      // Error handling
+      if (error instanceof z.ZodError) {
+        throw createExistsIndexTemplateMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
+          type: 'validation',
+          details: { validationErrors: error.errors, providedArgs: args }
+        });
+      }
+
+      if (error instanceof Error) {
+        if (error.message.includes('index_template_missing_exception') || error.message.includes('resource_not_found')) {
+          throw createExistsIndexTemplateMcpError(`Template not found: ${args?.name}`, {
+            type: 'template_not_found',
+            details: { originalError: error.message }
+          });
+        }
+
+        if (error.message.includes('timeout') || error.message.includes('timed_out')) {
+          throw createExistsIndexTemplateMcpError(`Operation timed out: ${error.message}`, {
+            type: 'timeout',
+            details: { originalError: error.message }
+          });
+        }
+      }
+
+      throw createExistsIndexTemplateMcpError(error instanceof Error ? error.message : String(error), {
+        type: 'execution',
+        details: { args }
+      });
+    }
+  };
+
+  // Tool registration
   server.tool(
     "elasticsearch_exists_index_template",
     "Check if index templates exist in Elasticsearch. Best for template validation, deployment verification, configuration checks. Use when you need to verify index template presence before operations in Elasticsearch.",
-    {
-      name: z.string().min(1, "Template name cannot be empty"),
-      local: booleanField().optional(),
-      flat_settings: booleanField().optional(),
-      master_timeout: z.string().optional(),
-    },
-    async (params: ExistsIndexTemplateParamsType): Promise<SearchResult> => {
-      try {
-        const result = await esClient.indices.existsIndexTemplate({
-          name: params.name,
-          local: params.local,
-          flat_settings: params.flat_settings,
-          master_timeout: params.master_timeout,
-        });
-        return {
-          content: [{ type: "text", text: JSON.stringify({ exists: result }, null, 2) }],
-        };
-      } catch (error) {
-        logger.error("Failed to check if index template exists:", {
-          error: error instanceof Error ? error.message : String(error),
-        });
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-            },
-          ],
-        };
-      }
-    },
+    existsIndexTemplateSchema,
+    existsIndexTemplateHandler
   );
 };

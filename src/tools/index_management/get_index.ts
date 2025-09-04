@@ -1,63 +1,157 @@
-/* src/tools/index_management/get_index.ts */ import type { Client } from "@elastic/elasticsearch";
+/* src/tools/index_management/get_index.ts */
+
+import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { booleanField } from "../../utils/zodHelpers.js";
-import type { SearchResult, TextContent, ToolRegistrationFunction } from "./types.js"; // Define the parameter schema type
-const GetIndexParams = z.object({
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import { coerceBoolean } from "../../utils/zodHelpers.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
+
+// Direct JSON Schema definition
+const getIndexSchema = {
+  type: "object",
+  properties: {
+    index: {
+      type: "string",
+      minLength: 1,
+      description: "Index pattern to get information for. Use '*' for all indices. Supports wildcards."
+    },
+    ignoreUnavailable: {
+      type: "boolean",
+      description: "Ignore unavailable indices"
+    },
+    allowNoIndices: {
+      type: "boolean",
+      description: "Allow wildcards that match no indices"
+    },
+    expandWildcards: {
+      type: "string",
+      enum: ["all", "open", "closed", "hidden", "none"],
+      description: "Which indices to expand wildcards to: 'all', 'open', 'closed', 'hidden', or 'none'"
+    },
+    flatSettings: {
+      type: "boolean",
+      description: "Return settings in flat format"
+    },
+    includeDefaults: {
+      type: "boolean",
+      description: "Include default settings"
+    },
+    local: {
+      type: "boolean",
+      description: "Return local information only"
+    },
+    masterTimeout: {
+      type: "string",
+      description: "Timeout for connection to master node"
+    }
+  },
+  required: ["index"],
+  additionalProperties: false
+};
+
+// Zod validator for runtime validation
+const getIndexValidator = z.object({
   index: z.string().min(1, "Index cannot be empty"),
-  ignoreUnavailable: booleanField().optional(),
-  allowNoIndices: booleanField().optional(),
+  ignoreUnavailable: coerceBoolean.optional(),
+  allowNoIndices: coerceBoolean.optional(),
   expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
-  flatSettings: booleanField().optional(),
-  includeDefaults: booleanField().optional(),
-  local: booleanField().optional(),
+  flatSettings: coerceBoolean.optional(),
+  includeDefaults: coerceBoolean.optional(),
+  local: coerceBoolean.optional(),
   masterTimeout: z.string().optional(),
 });
-type GetIndexParamsType = z.infer<typeof GetIndexParams>;
+
+type GetIndexParams = z.infer<typeof getIndexValidator>;
+
+// MCP error handling
+function createGetIndexMcpError(
+  error: Error | string,
+  context: { type: string; details?: any }
+): McpError {
+  const message = error instanceof Error ? error.message : error;
+  
+  const errorCodeMap = {
+    validation: ErrorCode.InvalidParams,
+    execution: ErrorCode.InternalError,
+    index_not_found: ErrorCode.InvalidParams,
+  };
+  
+  return new McpError(
+    errorCodeMap[context.type] || ErrorCode.InternalError,
+    `[elasticsearch_get_index] ${message}`,
+    context.details
+  );
+}
+
+// Tool implementation
 export const registerGetIndexTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
+  const getIndexHandler = async (args: any): Promise<SearchResult> => {
+    const perfStart = performance.now();
+    
+    try {
+      // Validate parameters
+      const params = getIndexValidator.parse(args);
+      
+      const result = await esClient.indices.get({
+        index: params.index,
+        ignore_unavailable: params.ignoreUnavailable,
+        allow_no_indices: params.allowNoIndices,
+        expand_wildcards: params.expandWildcards,
+        flat_settings: params.flatSettings,
+        include_defaults: params.includeDefaults,
+        local: params.local,
+        master_timeout: params.masterTimeout,
+      });
+
+      const duration = performance.now() - perfStart;
+      if (duration > 5000) {
+        logger.warn("Slow index retrieval operation", { duration, index: params.index });
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(result, null, 2)
+          }
+        ],
+      };
+
+    } catch (error) {
+      // Error handling
+      if (error instanceof z.ZodError) {
+        throw createGetIndexMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
+          type: 'validation',
+          details: { validationErrors: error.errors, providedArgs: args }
+        });
+      }
+
+      // Handle index not found error
+      if (error instanceof Error && error.message.includes('index_not_found_exception')) {
+        throw createGetIndexMcpError(`Index not found: ${args.index}`, {
+          type: 'index_not_found',
+          details: { index: args.index }
+        });
+      }
+      
+      throw createGetIndexMcpError(error instanceof Error ? error.message : String(error), {
+        type: 'execution',
+        details: { 
+          duration: performance.now() - perfStart,
+          args 
+        }
+      });
+    }
+  };
+
+  // Tool registration
   server.tool(
     "elasticsearch_get_index",
-    "Get comprehensive index information from Elasticsearch including settings, mappings, and aliases. Best for index inspection, configuration analysis, troubleshooting. Empty {} parameters will default to getting information for all indices. Use when you need detailed metadata about Elasticsearch indices structure and configuration. Parameters have smart defaults: index='*', ignoreUnavailable=true, allowNoIndices=true.",
-    {
-      index: z
-        .string()
-        .min(1, "Index is required")
-        .describe("Index pattern to get information for. Use '*' for all indices. Supports wildcards."),
-      ignoreUnavailable: booleanField().optional().describe("Ignore unavailable indices "),
-      allowNoIndices: booleanField().optional().describe("Allow wildcards that match no indices "),
-      expandWildcards: z
-        .enum(["all", "open", "closed", "hidden", "none"])
-        .optional()
-        .describe("Which indices to expand wildcards to: 'all', 'open', 'closed', 'hidden', or 'none'"),
-      flatSettings: booleanField().optional().describe("Return settings in flat format "),
-      includeDefaults: booleanField().optional().describe("Include default settings "),
-      local: booleanField().optional().describe("Return local information only "),
-      masterTimeout: z.string().optional().describe("Timeout for connection to master node"),
-    },
-    async (params: GetIndexParamsType): Promise<SearchResult> => {
-      try {
-        const result = await esClient.indices.get({
-          index: params.index,
-          ignore_unavailable: params.ignoreUnavailable,
-          allow_no_indices: params.allowNoIndices,
-          expand_wildcards: params.expandWildcards,
-          flat_settings: params.flatSettings,
-          include_defaults: params.includeDefaults,
-          local: params.local,
-          master_timeout: params.masterTimeout,
-        });
-        return { content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent] };
-      } catch (error) {
-        logger.error("Failed to get index information:", {
-          error: error instanceof Error ? error.message : String(error),
-        });
-        return {
-          content: [
-            { type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` } as TextContent,
-          ],
-        };
-      }
-    },
+    "Get comprehensive index information from Elasticsearch including settings, mappings, and aliases. Best for index inspection, configuration analysis, troubleshooting. Empty {} parameters will default to getting information for all indices. Use when you need detailed metadata about Elasticsearch indices structure and configuration. Parameters have smart defaults: index='*', ignoreUnavailable=true, allowNoIndices=true. Uses direct JSON Schema and standardized MCP error codes.",
+    getIndexSchema,
+    withReadOnlyCheck("elasticsearch_get_index", getIndexHandler, OperationType.READ)
   );
 };

@@ -2,13 +2,58 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
-import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
-// Define the parameter schema type
-const DocumentExistsParams = z.object({
+// Direct JSON Schema definition
+const documentExistsSchema = {
+  type: "object",
+  properties: {
+    index: {
+      type: "string",
+      minLength: 1,
+      description: "REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'"
+    },
+    id: {
+      type: "string",
+      minLength: 1,
+      description: "REQUIRED: Unique identifier of the document to check"
+    },
+    routing: {
+      type: "string",
+      description: "Custom routing value for document placement"
+    },
+    preference: {
+      type: "string",
+      description: "Preference for shard selection"
+    },
+    realtime: {
+      type: "boolean",
+      description: "Whether to perform a real-time check"
+    },
+    refresh: {
+      type: "boolean",
+      description: "Whether to refresh before checking existence"
+    },
+    version: {
+      type: "number",
+      description: "Expected document version for optimistic concurrency control"
+    },
+    versionType: {
+      type: "string",
+      enum: ["internal", "external", "external_gte", "force"],
+      description: "Version type for concurrency control"
+    }
+  },
+  required: ["index", "id"],
+  additionalProperties: false
+};
+
+// Zod validator for runtime validation
+const documentExistsValidator = z.object({
   index: z.string().min(1, "Index cannot be empty"),
   id: z.string().min(1, "Document ID cannot be empty"),
   routing: z.string().optional(),
@@ -19,45 +64,94 @@ const DocumentExistsParams = z.object({
   versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(),
 });
 
-type DocumentExistsParamsType = z.infer<typeof DocumentExistsParams>;
+type DocumentExistsParams = z.infer<typeof documentExistsValidator>;
 
+// MCP error handling
+function createDocumentExistsMcpError(
+  error: Error | string,
+  context: { type: string; details?: any }
+): McpError {
+  const message = error instanceof Error ? error.message : error;
+  
+  const errorCodeMap = {
+    validation: ErrorCode.InvalidParams,
+    execution: ErrorCode.InternalError,
+    version_conflict: ErrorCode.InvalidRequest,
+  };
+  
+  return new McpError(
+    errorCodeMap[context.type] || ErrorCode.InternalError,
+    `[elasticsearch_document_exists] ${message}`,
+    context.details
+  );
+}
+
+// Tool implementation
 export const registerDocumentExistsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
+  const documentExistsHandler = async (args: any): Promise<SearchResult> => {
+    const perfStart = performance.now();
+    
+    try {
+      // Validate parameters
+      const params = documentExistsValidator.parse(args);
+      
+      const exists = await esClient.exists({
+        index: params.index,
+        id: params.id,
+        routing: params.routing,
+        preference: params.preference,
+        realtime: params.realtime,
+        refresh: params.refresh,
+        version: params.version,
+        version_type: params.versionType,
+      });
+      
+      const duration = performance.now() - perfStart;
+      if (duration > 5000) {
+        logger.warn("Slow document existence check", { duration });
+      }
+
+      return {
+        content: [
+          { type: "text", text: `Exists: ${exists}` }
+        ],
+      };
+
+    } catch (error) {
+      // Error handling
+      if (error instanceof z.ZodError) {
+        throw createDocumentExistsMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
+          type: 'validation',
+          details: { validationErrors: error.errors, providedArgs: args }
+        });
+      }
+
+      // Handle version conflict error
+      if (error instanceof Error && error.message.includes('version_conflict')) {
+        throw createDocumentExistsMcpError('Version conflict occurred', {
+          type: 'version_conflict',
+          details: { 
+            duration: performance.now() - perfStart,
+            args 
+          }
+        });
+      }
+      
+      throw createDocumentExistsMcpError(error instanceof Error ? error.message : String(error), {
+        type: 'execution',
+        details: { 
+          duration: performance.now() - perfStart,
+          args 
+        }
+      });
+    }
+  };
+
+  // Tool registration (no withReadOnlyCheck for read operation)
   server.tool(
     "elasticsearch_document_exists",
-    "Check if a document exists in Elasticsearch by index and id. Best for document validation, existence checks, conditional operations. Use when you need to verify document presence in Elasticsearch indices before performing operations.",
-    {
-      index: z.string().min(1, "Index cannot be empty"),
-      id: z.string().min(1, "Document ID cannot be empty"),
-      routing: z.string().optional(),
-      preference: z.string().optional(),
-      realtime: booleanField().optional(),
-      refresh: booleanField().optional(),
-      version: z.number().optional(),
-      versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(),
-    },
-    async (params: DocumentExistsParamsType): Promise<SearchResult> => {
-      try {
-        const exists = await esClient.exists({
-          index: params.index,
-          id: params.id,
-          routing: params.routing,
-          preference: params.preference,
-          realtime: params.realtime,
-          refresh: params.refresh,
-          version: params.version,
-          version_type: params.versionType,
-        });
-        return { content: [{ type: "text", text: `Exists: ${exists}` } as TextContent] };
-      } catch (error) {
-        logger.error("Failed to check if document exists:", {
-          error: error instanceof Error ? error.message : String(error),
-        });
-        return {
-          content: [
-            { type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` } as TextContent,
-          ],
-        };
-      }
-    },
+    "Check if a document exists in Elasticsearch by index and id. Best for document validation, existence checks, conditional operations. Use when you need to verify document presence in Elasticsearch indices before performing operations. Uses direct JSON Schema and standardized MCP error codes.",
+    documentExistsSchema,
+    documentExistsHandler
   );
 };

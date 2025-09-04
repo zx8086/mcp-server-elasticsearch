@@ -2,61 +2,119 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
-// Define the parameter schema
-const UpdateWatcherSettingsParams = z.object({
+// Direct JSON Schema definition
+const updateWatcherSettingsSchema = {
+  type: "object",
+  properties: {
+    "index.auto_expand_replicas": {
+      type: "string",
+      description: "Auto expand replicas setting"
+    },
+    "index.number_of_replicas": {
+      type: "number",
+      description: "Number of replica shards"
+    },
+    master_timeout: {
+      type: "string",
+      description: "Explicit operation timeout for connection to master node"
+    },
+    timeout: {
+      type: "string", 
+      description: "Explicit operation timeout"
+    }
+  },
+  additionalProperties: false
+};
+
+// Zod validator for runtime validation
+const updateWatcherSettingsValidator = z.object({
   "index.auto_expand_replicas": z.string().optional(),
   "index.number_of_replicas": z.number().optional(),
   master_timeout: z.string().optional(),
   timeout: z.string().optional(),
 });
 
-type UpdateWatcherSettingsParamsType = z.infer<typeof UpdateWatcherSettingsParams>;
+type UpdateWatcherSettingsParams = z.infer<typeof updateWatcherSettingsValidator>;
 
+// MCP error handling
+function createUpdateWatcherSettingsMcpError(
+  error: Error | string,
+  context: { type: string; details?: any }
+): McpError {
+  const message = error instanceof Error ? error.message : error;
+  
+  const errorCodeMap = {
+    validation: ErrorCode.InvalidParams,
+    execution: ErrorCode.InternalError,
+  };
+  
+  return new McpError(
+    errorCodeMap[context.type] || ErrorCode.InternalError,
+    `[elasticsearch_watcher_update_settings] ${message}`,
+    context.details
+  );
+}
+
+// Tool implementation
 export const registerWatcherUpdateSettingsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  // Implementation function without read-only checks
-  const updateWatcherSettingsImpl = async (
-    params: UpdateWatcherSettingsParamsType,
-    _extra: Record<string, unknown>,
-  ): Promise<SearchResult> => {
+  const updateWatcherSettingsHandler = async (args: any): Promise<SearchResult> => {
+    const perfStart = performance.now();
+    
     try {
+      // Validate parameters
+      const params = updateWatcherSettingsValidator.parse(args);
+      
       const result = await esClient.watcher.updateSettings({
         "index.auto_expand_replicas": params["index.auto_expand_replicas"],
         "index.number_of_replicas": params["index.number_of_replicas"],
         master_timeout: params.master_timeout,
         timeout: params.timeout,
       });
-      return {
-        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-      };
-    } catch (error) {
-      logger.error("Failed to update watcher settings:", {
-        error: error instanceof Error ? error.message : String(error),
-      });
+
+      const duration = performance.now() - perfStart;
+      if (duration > 5000) {
+        logger.warn("Slow watcher operation", { duration });
+      }
+
       return {
         content: [
           {
             type: "text",
-            text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            text: JSON.stringify(result, null, 2),
           },
         ],
       };
+
+    } catch (error) {
+      // Error handling
+      if (error instanceof z.ZodError) {
+        throw createUpdateWatcherSettingsMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
+          type: 'validation',
+          details: { validationErrors: error.errors, providedArgs: args }
+        });
+      }
+
+      throw createUpdateWatcherSettingsMcpError(error instanceof Error ? error.message : String(error), {
+        type: 'execution',
+        details: { 
+          duration: performance.now() - perfStart,
+          args 
+        }
+      });
     }
   };
 
+  // Tool registration
   server.tool(
     "elasticsearch_watcher_update_settings",
-    "Update Elasticsearch Watcher index settings for .watches index. Best for configuration management, performance tuning, allocation control. Use when you need to modify Watcher internal index settings like replicas and allocation in Elasticsearch.",
-    {
-      "index.auto_expand_replicas": z.string().optional(),
-      "index.number_of_replicas": z.number().optional(),
-      master_timeout: z.string().optional(),
-      timeout: z.string().optional(),
-    },
-    withReadOnlyCheck("elasticsearch_watcher_update_settings", updateWatcherSettingsImpl, OperationType.WRITE),
+    "Update Elasticsearch Watcher index settings for .watches index. Best for configuration management, performance tuning, allocation control. Use when you need to modify Watcher internal index settings like replicas and allocation in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+    updateWatcherSettingsSchema,
+    withReadOnlyCheck("elasticsearch_watcher_update_settings", updateWatcherSettingsHandler, OperationType.WRITE)
   );
 };

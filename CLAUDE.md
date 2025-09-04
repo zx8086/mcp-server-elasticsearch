@@ -14,7 +14,7 @@ bun run dev                    # Start development server with hot reload
 bun run build                  # Build production bundle
 bun run test                   # Run tests
 bun run lint                   # Run ESLint
-bun run format                 # Format with Prettier
+bun run lint:fix               # Format with Biome
 ```
 
 ### Configuration & Validation
@@ -150,19 +150,18 @@ MCP-compatible logging in `src/utils/logger.ts`:
 
 ## Critical Dependencies
 
-### Zod 4.x Support
-The project now supports Zod 4.x through a custom compatibility wrapper:
-- **zod**: 4.0.17+ (Zod 4 with native JSON Schema support)
+### Zod 3.x Support with Compatibility Wrapper
+The project uses Zod 3.x with a custom compatibility wrapper for enhanced JSON Schema conversion:
+- **zod**: 3.23.8 (Zod 3 with stable ecosystem support)
+- **zod-to-json-schema**: 3.23.5 (Primary conversion library)
 - **Compatibility wrapper**: `src/utils/zodToJsonSchema.ts`
 
-The compatibility wrapper handles:
-- Zod 4's native `toJSONSchema` method
-- Transform schemas (coercion helpers from `zodHelpers.ts`)
+The compatibility wrapper enhances zod-to-json-schema with:
+- Enhanced transform schema handling (coercion helpers from `zodHelpers.ts`)
 - Special cases like `z.record()`, `z.object({}).passthrough()`
-- Conversion to JSON Schema Draft 7 format
-- Proper handling of required/optional fields with defaults
-
-**Note**: The project no longer depends on `zod-to-json-schema` package.
+- Improved conversion to JSON Schema Draft 7 format
+- Better handling of required/optional fields with defaults
+- Fallback support for complex schemas that standard conversion can't handle
 
 ## Common Patterns
 

@@ -2,69 +2,162 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { booleanField } from "../../utils/zodHelpers.js";
-import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
+import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import { coerceBoolean } from "../../utils/zodHelpers.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
-// Define the parameter schema type
-const GetIndexSettingsParams = z.object({
+// Direct JSON Schema definition
+const getIndexSettingsSchema = {
+  type: "object",
+  properties: {
+    index: {
+      type: "string",
+      minLength: 1,
+      description: "Name of the index to get settings for"
+    },
+    name: {
+      type: "string",
+      description: "Specific setting name to retrieve"
+    },
+    ignoreUnavailable: {
+      type: "boolean",
+      description: "Ignore unavailable indices"
+    },
+    allowNoIndices: {
+      type: "boolean",
+      description: "Allow wildcards that match no indices"
+    },
+    expandWildcards: {
+      type: "string",
+      enum: ["all", "open", "closed", "hidden", "none"],
+      description: "Which indices to expand wildcards to"
+    },
+    flatSettings: {
+      type: "boolean",
+      description: "Return settings in flat format"
+    },
+    includeDefaults: {
+      type: "boolean",
+      description: "Include default settings"
+    },
+    local: {
+      type: "boolean",
+      description: "Return local information only"
+    },
+    masterTimeout: {
+      type: "string",
+      description: "Master node timeout (e.g., '30s')"
+    }
+  },
+  required: ["index"],
+  additionalProperties: false
+};
+
+// Zod validator for runtime validation
+const getIndexSettingsValidator = z.object({
   index: z.string().min(1, "Index cannot be empty"),
   name: z.string().optional(),
-  ignoreUnavailable: booleanField().optional(),
-  allowNoIndices: booleanField().optional(),
+  ignoreUnavailable: coerceBoolean.optional(),
+  allowNoIndices: coerceBoolean.optional(),
   expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
-  flatSettings: booleanField().optional(),
-  includeDefaults: booleanField().optional(),
-  local: booleanField().optional(),
+  flatSettings: coerceBoolean.optional(),
+  includeDefaults: coerceBoolean.optional(),
+  local: coerceBoolean.optional(),
   masterTimeout: z.string().optional(),
 });
 
-type GetIndexSettingsParamsType = z.infer<typeof GetIndexSettingsParams>;
+type GetIndexSettingsParams = z.infer<typeof getIndexSettingsValidator>;
+
+// MCP error handling
+function createGetIndexSettingsMcpError(
+  error: Error | string,
+  context: { type: string; details?: any }
+): McpError {
+  const message = error instanceof Error ? error.message : error;
+  
+  const errorCodeMap = {
+    validation: ErrorCode.InvalidParams,
+    execution: ErrorCode.InternalError,
+    index_not_found: ErrorCode.InvalidParams,
+  };
+  
+  return new McpError(
+    errorCodeMap[context.type] || ErrorCode.InternalError,
+    `[elasticsearch_get_index_settings] ${message}`,
+    context.details
+  );
+}
+
+// Tool implementation
 export const registerGetIndexSettingsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
+  const getIndexSettingsHandler = async (args: any): Promise<SearchResult> => {
+    const perfStart = performance.now();
+    
+    try {
+      // Validate parameters
+      const params = getIndexSettingsValidator.parse(args);
+      
+      const result = await esClient.indices.getSettings({
+        index: params.index,
+        name: params.name,
+        ignore_unavailable: params.ignoreUnavailable,
+        allow_no_indices: params.allowNoIndices,
+        expand_wildcards: params.expandWildcards,
+        flat_settings: params.flatSettings,
+        include_defaults: params.includeDefaults,
+        local: params.local,
+        master_timeout: params.masterTimeout,
+      });
+
+      const duration = performance.now() - perfStart;
+      if (duration > 5000) {
+        logger.warn("Slow index settings retrieval operation", { duration, index: params.index });
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(result, null, 2)
+          }
+        ],
+      };
+
+    } catch (error) {
+      // Error handling
+      if (error instanceof z.ZodError) {
+        throw createGetIndexSettingsMcpError(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, {
+          type: 'validation',
+          details: { validationErrors: error.errors, providedArgs: args }
+        });
+      }
+
+      // Handle index not found error
+      if (error instanceof Error && error.message.includes('index_not_found_exception')) {
+        throw createGetIndexSettingsMcpError(`Index not found: ${args.index}`, {
+          type: 'index_not_found',
+          details: { index: args.index }
+        });
+      }
+      
+      throw createGetIndexSettingsMcpError(error instanceof Error ? error.message : String(error), {
+        type: 'execution',
+        details: { 
+          duration: performance.now() - perfStart,
+          args 
+        }
+      });
+    }
+  };
+
+  // Tool registration
   server.tool(
     "elasticsearch_get_index_settings",
-    "Get index settings from Elasticsearch. Best for configuration review, performance analysis, troubleshooting. Use when you need to inspect index-level settings and configurations in Elasticsearch.",
-    {
-      index: z.string().min(1, "Index cannot be empty"),
-      name: z.string().optional(),
-      ignoreUnavailable: booleanField().optional(),
-      allowNoIndices: booleanField().optional(),
-      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
-      flatSettings: booleanField().optional(),
-      includeDefaults: booleanField().optional(),
-      local: booleanField().optional(),
-      masterTimeout: z.string().optional(),
-    },
-    async (params: GetIndexSettingsParamsType): Promise<SearchResult> => {
-      try {
-        const result = await esClient.indices.getSettings({
-          index: params.index,
-          name: params.name,
-          ignore_unavailable: params.ignoreUnavailable,
-          allow_no_indices: params.allowNoIndices,
-          expand_wildcards: params.expandWildcards,
-          flat_settings: params.flatSettings,
-          include_defaults: params.includeDefaults,
-          local: params.local,
-          master_timeout: params.masterTimeout,
-        });
-        return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
-        };
-      } catch (error) {
-        logger.error("Failed to get index settings:", {
-          error: error instanceof Error ? error.message : String(error),
-        });
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-            } as TextContent,
-          ],
-        };
-      }
-    },
+    "Get index settings from Elasticsearch. Best for configuration review, performance analysis, troubleshooting. Use when you need to inspect index-level settings and configurations in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+    getIndexSettingsSchema,
+    withReadOnlyCheck("elasticsearch_get_index_settings", getIndexSettingsHandler, OperationType.READ)
   );
 };
