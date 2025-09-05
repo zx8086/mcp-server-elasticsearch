@@ -151,49 +151,54 @@ export const traceMcpConnection = traceable(
 // TOOL EXECUTION TRACING
 // =============================================================================
 
-export const traceToolExecution = traceable(
-  async (toolName: string, _args: any, handler: () => Promise<any>) => {
-    const startTime = Date.now();
-    const currentRun = getCurrentRunTree();
+export function traceToolExecution(toolName: string, _args: any, handler: () => Promise<any>) {
+  // Create a traceable function with the specific tool name
+  const toolTracer = traceable(
+    async () => {
+      const startTime = Date.now();
+      const currentRun = getCurrentRunTree();
 
-    logger.debug("Executing tool with tracing", {
-      toolName,
-      hasParentTrace: !!currentRun,
-      parentTraceId: currentRun?.id,
-    });
-
-    try {
-      const result = await handler();
-
-      const executionTime = Date.now() - startTime;
-      logger.debug("Tool execution completed", {
+      logger.debug("Executing tool with tracing", {
         toolName,
-        executionTime,
-        hasResult: !!result,
+        hasParentTrace: !!currentRun,
+        parentTraceId: currentRun?.id,
       });
 
-      return {
-        ...result,
-        _trace: {
-          runId: currentRun?.id,
+      try {
+        const result = await handler();
+
+        const executionTime = Date.now() - startTime;
+        logger.debug("Tool execution completed", {
+          toolName,
           executionTime,
-        },
-      };
-    } catch (error) {
-      const executionTime = Date.now() - startTime;
-      logger.error("Tool execution failed", {
-        toolName,
-        executionTime,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  },
-  {
-    name: "Tool Execution",
-    run_type: "tool",
-  },
-);
+          hasResult: !!result,
+        });
+
+        return {
+          ...result,
+          _trace: {
+            runId: currentRun?.id,
+            executionTime,
+          },
+        };
+      } catch (error) {
+        const executionTime = Date.now() - startTime;
+        logger.error("Tool execution failed", {
+          toolName,
+          executionTime,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        throw error;
+      }
+    },
+    {
+      name: toolName, // Use the dynamic tool name
+      run_type: "tool",
+    },
+  );
+
+  return toolTracer();
+}
 
 // =============================================================================
 // ELASTICSEARCH OPERATION TRACING

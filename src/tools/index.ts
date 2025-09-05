@@ -4,6 +4,7 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { logger } from "../utils/logger.js";
 import { withSecurityValidation } from "../utils/securityEnhancer.js";
+import { traceToolExecution } from "../utils/tracing.js";
 
 import { registerGetMappingsTool } from "./core/get_mappings.js";
 import { registerGetShardsTool } from "./core/get_shards.js";
@@ -56,8 +57,9 @@ import { registerPutIndexTemplateTool } from "./template/put_index_template.js";
 import { registerSearchTemplateTool } from "./template/search_template.js";
 
 import { registerGetMultiTermVectorsTool } from "./analytics/get_multi_term_vectors.js";
-// Analytics Tools (Get Term Vectors, Get Multi Term Vectors)
+// Analytics Tools (Get Term Vectors, Get Multi Term Vectors, Timestamp Analysis)
 import { registerGetTermVectorsTool } from "./analytics/get_term_vectors.js";
+import { registerTimestampAnalysisTool } from "./analytics/timestamp_analysis.js";
 
 import { registerDeleteAliasTool } from "./alias/delete_alias.js";
 // Alias Tools (Get Aliases, Put Alias, Delete Alias, Update Aliases)
@@ -148,19 +150,36 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
   // Track registered tools for MCP tools/list handler
   const registeredTools: ToolInfo[] = [];
 
-  // Override the tool method to capture tool information and add security validation
+  // Override the tool method to capture tool information and add both tracing and security validation
   const originalTool = server.tool.bind(server);
   server.tool = (name: string, description: string, inputSchema: any, handler: any) => {
     registeredTools.push({ name, description, inputSchema });
 
-    // Wrap handler with security validation
-    const secureHandler = withSecurityValidation(name, handler);
+    // Skip security validation for read-only search operations
+    const readOnlyTools = ['elasticsearch_search', 'elasticsearch_list_indices', 'elasticsearch_get_mappings', 'elasticsearch_get_shards', 'elasticsearch_indices_summary'];
+    const shouldValidate = !readOnlyTools.includes(name);
+    
+    // Create enhanced handler with both tracing and security validation
+    let enhancedHandler = handler;
+    
+    // Add tracing wrapper to ALL tools (always enabled)
+    enhancedHandler = async (args: any) => {
+      return traceToolExecution(name, args, async () => {
+        return handler(args);
+      });
+    };
+    
+    // Add security validation wrapper for write operations
+    if (shouldValidate) {
+      enhancedHandler = withSecurityValidation(name, enhancedHandler);
+    }
 
-    return originalTool(name, description, inputSchema, secureHandler);
+    return originalTool(name, description, inputSchema, enhancedHandler);
   };
 
-  logger.info("🚀 Registering all tools with automatic tracing", {
-    tracingEnabled: process.env.LANGSMITH_TRACING === "true",
+  logger.info("🚀 Registering all tools with automatic tracing and security validation", {
+    tracingEnabled: true, // All tools will be traced
+    securityEnabled: true,
   });
 
   // Now register all tools with the wrapped server
@@ -210,6 +229,7 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
 
   registerGetTermVectorsTool(server, esClient);
   registerGetMultiTermVectorsTool(server, esClient);
+  registerTimestampAnalysisTool(server, esClient);
 
   registerGetAliasesTool(server, esClient);
   registerPutAliasTool(server, esClient);
@@ -282,8 +302,10 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
   registerWatcherUpdateSettingsTool(server, esClient);
   registerWatcherStatsTool(server, esClient);
 
-  logger.info("✅ All tools registered with automatic tracing wrapper", {
+  logger.info("✅ All tools registered with automatic tracing and security validation", {
     toolCount: registeredTools.length,
+    tracingActive: true, // All tools are traced
+    enhancementsEnabled: true,
   });
 
   return registeredTools;

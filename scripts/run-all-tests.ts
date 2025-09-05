@@ -4,9 +4,9 @@
  * Runs all test suites with detailed reporting and validation
  */
 
-import { spawn, type ChildProcess } from 'child_process';
-import { readdir, stat, writeFile, mkdir } from 'fs/promises';
-import path from 'path';
+import { type ChildProcess, spawn } from "node:child_process";
+import { mkdir, readdir, stat, writeFile } from "node:fs/promises";
+import path from "node:path";
 
 interface TestResult {
   suite: string;
@@ -37,16 +37,18 @@ interface TestSummary {
 
 class TestRunner {
   private results: TestResult[] = [];
-  private startTime: number = 0;
-  private verbose: boolean = false;
-  private generateReport: boolean = true;
-  private runCoverage: boolean = false;
+  private startTime = 0;
+  private verbose = false;
+  private generateReport = true;
+  private runCoverage = false;
 
-  constructor(options: {
-    verbose?: boolean;
-    generateReport?: boolean;
-    runCoverage?: boolean;
-  } = {}) {
+  constructor(
+    options: {
+      verbose?: boolean;
+      generateReport?: boolean;
+      runCoverage?: boolean;
+    } = {},
+  ) {
     this.verbose = options.verbose ?? false;
     this.generateReport = options.generateReport ?? true;
     this.runCoverage = options.runCoverage ?? false;
@@ -54,34 +56,34 @@ class TestRunner {
 
   async runAllTests(): Promise<TestSummary> {
     this.startTime = Date.now();
-    
-    console.log('🧪 Starting comprehensive test execution...');
-    console.log('═'.repeat(60));
+
+    console.log("🧪 Starting comprehensive test execution...");
+    console.log("═".repeat(60));
 
     // Discover all test files
     const testFiles = await this.discoverTestFiles();
-    
+
     if (testFiles.length === 0) {
-      console.log('⚠️  No test files found!');
+      console.log("⚠️  No test files found!");
       return this.generateSummary();
     }
 
     console.log(`📋 Found ${testFiles.length} test suites:`);
-    testFiles.forEach(file => console.log(`   • ${file.category}/${file.name}`));
-    console.log('');
+    testFiles.forEach((file) => console.log(`   • ${file.category}/${file.name}`));
+    console.log("");
 
     // Run tests by category for better organization
-    const categories = [...new Set(testFiles.map(f => f.category))];
-    
+    const categories = [...new Set(testFiles.map((f) => f.category))];
+
     for (const category of categories) {
-      const categoryFiles = testFiles.filter(f => f.category === category);
+      const categoryFiles = testFiles.filter((f) => f.category === category);
       console.log(`🏷️  Running ${category} tests (${categoryFiles.length} suites):`);
-      
+
       for (const testFile of categoryFiles) {
         await this.runTestSuite(testFile);
       }
-      
-      console.log('');
+
+      console.log("");
     }
 
     // Run coverage analysis if requested
@@ -91,7 +93,7 @@ class TestRunner {
 
     // Generate test report
     const summary = this.generateSummary();
-    
+
     if (this.generateReport) {
       await this.saveTestReport(summary);
     }
@@ -100,34 +102,36 @@ class TestRunner {
     return summary;
   }
 
-  private async discoverTestFiles(): Promise<Array<{
-    name: string;
-    category: string;
-    path: string;
-  }>> {
+  private async discoverTestFiles(): Promise<
+    Array<{
+      name: string;
+      category: string;
+      path: string;
+    }>
+  > {
     const testFiles: Array<{ name: string; category: string; path: string }> = [];
-    const testsDir = path.join(process.cwd(), 'tests');
+    const testsDir = path.join(process.cwd(), "tests");
 
     try {
       await stat(testsDir);
     } catch {
-      console.log('⚠️  Tests directory not found');
+      console.log("⚠️  Tests directory not found");
       return testFiles;
     }
 
     const categories = await readdir(testsDir, { withFileTypes: true });
-    
+
     for (const category of categories) {
       if (category.isDirectory()) {
         const categoryPath = path.join(testsDir, category.name);
         const files = await readdir(categoryPath);
-        
+
         for (const file of files) {
-          if (file.endsWith('.test.ts') || file.endsWith('.test.js')) {
+          if (file.endsWith(".test.ts") || file.endsWith(".test.js")) {
             testFiles.push({
               name: file,
               category: category.name,
-              path: path.join(categoryPath, file)
+              path: path.join(categoryPath, file),
             });
           }
         }
@@ -149,8 +153,8 @@ class TestRunner {
     path: string;
   }): Promise<void> {
     const startTime = Date.now();
-    const suiteName = testFile.name.replace('.test.ts', '').replace('.test.js', '');
-    
+    const suiteName = testFile.name.replace(".test.ts", "").replace(".test.js", "");
+
     console.log(`  ▶️  ${suiteName}...`);
 
     try {
@@ -165,26 +169,25 @@ class TestRunner {
         skipped: result.skipped,
         duration,
         output: result.output,
-        errors: result.errors
+        errors: result.errors,
       });
 
       // Print immediate result
-      const status = result.failed > 0 ? '❌' : '✅';
+      const status = result.failed > 0 ? "❌" : "✅";
       const timing = `${duration}ms`;
       const counts = `${result.passed}✅ ${result.failed}❌ ${result.skipped}⏭️`;
-      
+
       console.log(`     ${status} ${timing.padEnd(8)} ${counts}`);
 
       // Show errors if any and verbose mode
       if (result.failed > 0 && this.verbose) {
-        result.errors.forEach(error => {
+        result.errors.forEach((error) => {
           console.log(`       🔍 ${error}`);
         });
       }
-
     } catch (error) {
       const duration = Date.now() - startTime;
-      
+
       this.results.push({
         suite: suiteName,
         category: testFile.category,
@@ -192,8 +195,8 @@ class TestRunner {
         failed: 1,
         skipped: 0,
         duration,
-        output: '',
-        errors: [error instanceof Error ? error.message : String(error)]
+        output: "",
+        errors: [error instanceof Error ? error.message : String(error)],
       });
 
       console.log(`     💥 ${duration}ms - Test suite failed to run`);
@@ -211,23 +214,23 @@ class TestRunner {
     errors: string[];
   }> {
     return new Promise((resolve, reject) => {
-      const process = spawn('bun', ['test', testPath, '--reporter', 'verbose'], {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        cwd: process.cwd
+      const process = spawn("bun", ["test", testPath, "--reporter", "verbose"], {
+        stdio: ["pipe", "pipe", "pipe"],
+        cwd: process.cwd,
       });
 
-      let stdout = '';
-      let stderr = '';
+      let stdout = "";
+      let stderr = "";
 
-      process.stdout?.on('data', (data) => {
+      process.stdout?.on("data", (data) => {
         stdout += data.toString();
       });
 
-      process.stderr?.on('data', (data) => {
+      process.stderr?.on("data", (data) => {
         stderr += data.toString();
       });
 
-      process.on('close', (code) => {
+      process.on("close", (code) => {
         const output = stdout + stderr;
         const result = this.parseTestOutput(output);
 
@@ -235,21 +238,21 @@ class TestRunner {
           resolve({
             ...result,
             output: stdout,
-            errors: result.errors
+            errors: result.errors,
           });
         } else {
-          reject(new Error(`Test execution failed: ${stderr || 'Unknown error'}`));
+          reject(new Error(`Test execution failed: ${stderr || "Unknown error"}`));
         }
       });
 
-      process.on('error', (error) => {
+      process.on("error", (error) => {
         reject(error);
       });
 
       // Set timeout for long-running tests
       setTimeout(() => {
         process.kill();
-        reject(new Error('Test execution timeout'));
+        reject(new Error("Test execution timeout"));
       }, 60000); // 60 second timeout
     });
   }
@@ -260,7 +263,7 @@ class TestRunner {
     skipped: number;
     errors: string[];
   } {
-    const lines = output.split('\n');
+    const lines = output.split("\n");
     let passed = 0;
     let failed = 0;
     let skipped = 0;
@@ -268,35 +271,35 @@ class TestRunner {
 
     for (const line of lines) {
       // Parse Bun test output patterns
-      if (line.includes('✅') || line.includes('PASS') || line.match(/\d+ pass/i)) {
+      if (line.includes("✅") || line.includes("PASS") || line.match(/\d+ pass/i)) {
         const match = line.match(/(\d+)/);
         if (match) {
-          passed += parseInt(match[1]);
+          passed += Number.parseInt(match[1]);
         } else {
           passed++;
         }
       }
-      
-      if (line.includes('❌') || line.includes('FAIL') || line.match(/\d+ fail/i)) {
+
+      if (line.includes("❌") || line.includes("FAIL") || line.match(/\d+ fail/i)) {
         const match = line.match(/(\d+)/);
         if (match) {
-          failed += parseInt(match[1]);
+          failed += Number.parseInt(match[1]);
         } else {
           failed++;
         }
       }
-      
-      if (line.includes('⏭️') || line.includes('SKIP') || line.match(/\d+ skip/i)) {
+
+      if (line.includes("⏭️") || line.includes("SKIP") || line.match(/\d+ skip/i)) {
         const match = line.match(/(\d+)/);
         if (match) {
-          skipped += parseInt(match[1]);
+          skipped += Number.parseInt(match[1]);
         } else {
           skipped++;
         }
       }
 
       // Capture error messages
-      if (line.includes('Error:') || line.includes('Failed:') || line.includes('Exception:')) {
+      if (line.includes("Error:") || line.includes("Failed:") || line.includes("Exception:")) {
         errors.push(line.trim());
       }
     }
@@ -311,21 +314,21 @@ class TestRunner {
       if (passMatches) {
         passed = passMatches.reduce((sum, match) => {
           const num = match.match(/\d+/);
-          return sum + (num ? parseInt(num[0]) : 0);
+          return sum + (num ? Number.parseInt(num[0]) : 0);
         }, 0);
       }
 
       if (failMatches) {
         failed = failMatches.reduce((sum, match) => {
           const num = match.match(/\d+/);
-          return sum + (num ? parseInt(num[0]) : 0);
+          return sum + (num ? Number.parseInt(num[0]) : 0);
         }, 0);
       }
 
       if (skipMatches) {
         skipped = skipMatches.reduce((sum, match) => {
           const num = match.match(/\d+/);
-          return sum + (num ? parseInt(num[0]) : 0);
+          return sum + (num ? Number.parseInt(num[0]) : 0);
         }, 0);
       }
     }
@@ -334,41 +337,40 @@ class TestRunner {
   }
 
   private async runCoverageAnalysis(): Promise<void> {
-    console.log('📊 Running coverage analysis...');
-    
+    console.log("📊 Running coverage analysis...");
+
     try {
-      const coverageProcess = spawn('bun', ['test', '--coverage'], {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        cwd: process.cwd()
+      const coverageProcess = spawn("bun", ["test", "--coverage"], {
+        stdio: ["pipe", "pipe", "pipe"],
+        cwd: process.cwd(),
       });
 
-      let coverageOutput = '';
-      coverageProcess.stdout?.on('data', (data) => {
-        coverageOutput += data.toString();
+      let _coverageOutput = "";
+      coverageProcess.stdout?.on("data", (data) => {
+        _coverageOutput += data.toString();
       });
 
       await new Promise((resolve, reject) => {
-        coverageProcess.on('close', (code) => {
+        coverageProcess.on("close", (code) => {
           if (code === 0) {
-            console.log('✅ Coverage analysis completed');
+            console.log("✅ Coverage analysis completed");
             resolve(true);
           } else {
-            console.log('⚠️  Coverage analysis failed');
+            console.log("⚠️  Coverage analysis failed");
             resolve(false);
           }
         });
 
-        coverageProcess.on('error', (error) => {
+        coverageProcess.on("error", (error) => {
           console.log(`⚠️  Coverage analysis error: ${error.message}`);
           resolve(false);
         });
 
         setTimeout(() => {
           coverageProcess.kill();
-          reject(new Error('Coverage analysis timeout'));
+          reject(new Error("Coverage analysis timeout"));
         }, 30000);
       });
-
     } catch (error) {
       console.log(`⚠️  Coverage analysis failed: ${error}`);
     }
@@ -376,7 +378,7 @@ class TestRunner {
 
   private generateSummary(): TestSummary {
     const totalDuration = Date.now() - this.startTime;
-    
+
     return {
       totalSuites: this.results.length,
       totalTests: this.results.reduce((sum, r) => sum + r.passed + r.failed + r.skipped, 0),
@@ -384,16 +386,16 @@ class TestRunner {
       totalFailed: this.results.reduce((sum, r) => sum + r.failed, 0),
       totalSkipped: this.results.reduce((sum, r) => sum + r.skipped, 0),
       totalDuration,
-      results: this.results
+      results: this.results,
     };
   }
 
   private printSummary(summary: TestSummary): void {
-    console.log('');
-    console.log('🏁 Test Execution Complete');
-    console.log('═'.repeat(60));
-    
-    console.log(`📊 Summary:`);
+    console.log("");
+    console.log("🏁 Test Execution Complete");
+    console.log("═".repeat(60));
+
+    console.log("📊 Summary:");
     console.log(`   Suites:    ${summary.totalSuites}`);
     console.log(`   Tests:     ${summary.totalTests}`);
     console.log(`   Passed:    ${summary.totalPassed} ✅`);
@@ -401,20 +403,18 @@ class TestRunner {
     console.log(`   Skipped:   ${summary.totalSkipped} ⏭️`);
     console.log(`   Duration:  ${(summary.totalDuration / 1000).toFixed(2)}s`);
 
-    const successRate = summary.totalTests > 0 
-      ? (summary.totalPassed / summary.totalTests * 100).toFixed(1)
-      : '0';
+    const successRate = summary.totalTests > 0 ? ((summary.totalPassed / summary.totalTests) * 100).toFixed(1) : "0";
     console.log(`   Success:   ${successRate}%`);
 
     if (summary.totalFailed > 0) {
-      console.log('');
-      console.log('❌ Failed Test Suites:');
+      console.log("");
+      console.log("❌ Failed Test Suites:");
       summary.results
-        .filter(r => r.failed > 0)
-        .forEach(result => {
+        .filter((r) => r.failed > 0)
+        .forEach((result) => {
           console.log(`   • ${result.category}/${result.suite} (${result.failed} failures)`);
           if (this.verbose && result.errors.length > 0) {
-            result.errors.forEach(error => {
+            result.errors.forEach((error) => {
               console.log(`     - ${error}`);
             });
           }
@@ -422,39 +422,35 @@ class TestRunner {
     }
 
     // Performance insights
-    console.log('');
-    console.log('🚀 Performance Insights:');
-    const slowestSuites = [...summary.results]
-      .sort((a, b) => b.duration - a.duration)
-      .slice(0, 3);
-    
+    console.log("");
+    console.log("🚀 Performance Insights:");
+    const slowestSuites = [...summary.results].sort((a, b) => b.duration - a.duration).slice(0, 3);
+
     slowestSuites.forEach((suite, index) => {
       console.log(`   ${index + 1}. ${suite.category}/${suite.suite}: ${suite.duration}ms`);
     });
 
     // Category breakdown
-    console.log('');
-    console.log('📂 By Category:');
-    const categories = [...new Set(summary.results.map(r => r.category))];
-    
-    categories.forEach(category => {
-      const categoryResults = summary.results.filter(r => r.category === category);
+    console.log("");
+    console.log("📂 By Category:");
+    const categories = [...new Set(summary.results.map((r) => r.category))];
+
+    categories.forEach((category) => {
+      const categoryResults = summary.results.filter((r) => r.category === category);
       const categoryPassed = categoryResults.reduce((sum, r) => sum + r.passed, 0);
       const categoryFailed = categoryResults.reduce((sum, r) => sum + r.failed, 0);
       const categorySkipped = categoryResults.reduce((sum, r) => sum + r.skipped, 0);
       const categoryTotal = categoryPassed + categoryFailed + categorySkipped;
-      
-      const categoryRate = categoryTotal > 0 
-        ? (categoryPassed / categoryTotal * 100).toFixed(1)
-        : '0';
-      
+
+      const categoryRate = categoryTotal > 0 ? ((categoryPassed / categoryTotal) * 100).toFixed(1) : "0";
+
       console.log(`   ${category}: ${categoryPassed}/${categoryTotal} (${categoryRate}%)`);
     });
 
-    console.log('');
-    
+    console.log("");
+
     if (summary.totalFailed === 0) {
-      console.log('🎉 All tests passed! 🎉');
+      console.log("🎉 All tests passed! 🎉");
     } else {
       console.log(`⚠️  ${summary.totalFailed} test(s) failed`);
       process.exitCode = 1;
@@ -463,12 +459,12 @@ class TestRunner {
 
   private async saveTestReport(summary: TestSummary): Promise<void> {
     try {
-      const reportsDir = path.join(process.cwd(), 'test-reports');
+      const reportsDir = path.join(process.cwd(), "test-reports");
       await mkdir(reportsDir, { recursive: true });
-      
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
       const reportPath = path.join(reportsDir, `test-report-${timestamp}.json`);
-      
+
       await writeFile(reportPath, JSON.stringify(summary, null, 2));
       console.log(`📄 Test report saved: ${reportPath}`);
 
@@ -477,7 +473,6 @@ class TestRunner {
       const htmlPath = path.join(reportsDir, `test-report-${timestamp}.html`);
       await writeFile(htmlPath, htmlReport);
       console.log(`📄 HTML report saved: ${htmlPath}`);
-
     } catch (error) {
       console.log(`⚠️  Failed to save test report: ${error}`);
     }
@@ -485,9 +480,7 @@ class TestRunner {
 
   private generateHTMLReport(summary: TestSummary): string {
     const timestamp = new Date().toISOString();
-    const successRate = summary.totalTests > 0 
-      ? (summary.totalPassed / summary.totalTests * 100).toFixed(1)
-      : '0';
+    const successRate = summary.totalTests > 0 ? ((summary.totalPassed / summary.totalTests) * 100).toFixed(1) : "0";
 
     return `
 <!DOCTYPE html>
@@ -549,8 +542,10 @@ class TestRunner {
 
     <div class="results">
         <h2>Test Suites</h2>
-        ${summary.results.map(result => `
-            <div class="suite ${result.failed > 0 ? 'failure' : 'success'}">
+        ${summary.results
+          .map(
+            (result) => `
+            <div class="suite ${result.failed > 0 ? "failure" : "success"}">
                 <h3>${result.category}/${result.suite}</h3>
                 <div class="details">
                     <span class="passed">${result.passed} passed</span> •
@@ -558,13 +553,19 @@ class TestRunner {
                     <span class="skipped">${result.skipped} skipped</span> •
                     Duration: ${result.duration}ms
                 </div>
-                ${result.errors.length > 0 ? `
+                ${
+                  result.errors.length > 0
+                    ? `
                     <div class="errors">
-                        ${result.errors.map(error => `<div class="error">${error}</div>`).join('')}
+                        ${result.errors.map((error) => `<div class="error">${error}</div>`).join("")}
                     </div>
-                ` : ''}
+                `
+                    : ""
+                }
             </div>
-        `).join('')}
+        `,
+          )
+          .join("")}
     </div>
 </body>
 </html>`;
@@ -575,32 +576,32 @@ class TestRunner {
 async function main() {
   const args = process.argv.slice(2);
   const options = {
-    verbose: args.includes('--verbose') || args.includes('-v'),
-    generateReport: !args.includes('--no-report'),
-    runCoverage: args.includes('--coverage'),
+    verbose: args.includes("--verbose") || args.includes("-v"),
+    generateReport: !args.includes("--no-report"),
+    runCoverage: args.includes("--coverage"),
   };
 
-  if (args.includes('--help') || args.includes('-h')) {
-    console.log('Usage: bun run scripts/run-all-tests.ts [options]');
-    console.log('');
-    console.log('Options:');
-    console.log('  --verbose, -v     Show verbose output including error details');
-    console.log('  --coverage        Run coverage analysis');
-    console.log('  --no-report       Skip generating test reports');
-    console.log('  --help, -h        Show this help message');
+  if (args.includes("--help") || args.includes("-h")) {
+    console.log("Usage: bun run scripts/run-all-tests.ts [options]");
+    console.log("");
+    console.log("Options:");
+    console.log("  --verbose, -v     Show verbose output including error details");
+    console.log("  --coverage        Run coverage analysis");
+    console.log("  --no-report       Skip generating test reports");
+    console.log("  --help, -h        Show this help message");
     process.exit(0);
   }
 
-  console.log('🔧 Elasticsearch MCP Server - Test Suite');
+  console.log("🔧 Elasticsearch MCP Server - Test Suite");
   console.log(`Runtime: ${process.version}`);
   console.log(`Platform: ${process.platform}`);
-  console.log('');
+  console.log("");
 
   const runner = new TestRunner(options);
-  
+
   try {
     const summary = await runner.runAllTests();
-    
+
     // Exit with appropriate code
     if (summary.totalFailed > 0) {
       process.exit(1);
@@ -608,7 +609,7 @@ async function main() {
       process.exit(0);
     }
   } catch (error) {
-    console.error('💥 Test runner failed:', error);
+    console.error("💥 Test runner failed:", error);
     process.exit(1);
   }
 }

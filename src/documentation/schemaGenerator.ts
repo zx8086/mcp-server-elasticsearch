@@ -1,7 +1,7 @@
-import { z } from 'zod';
-import { zodToJsonSchemaCompat } from '../utils/zodToJsonSchema.js';
-import fs from 'fs/promises';
-import path from 'path';
+import fs from "node:fs/promises";
+import path from "node:path";
+import type { z } from "zod";
+import { zodToJsonSchemaCompat } from "../utils/zodToJsonSchema.js";
 
 export interface ToolDocumentation {
   name: string;
@@ -40,7 +40,7 @@ export class SchemaGenerator {
   private version: string;
   private title: string;
 
-  constructor(title: string = 'Elasticsearch MCP Server API', version: string = '1.0.0') {
+  constructor(title = "Elasticsearch MCP Server API", version = "1.0.0") {
     this.title = title;
     this.version = version;
   }
@@ -53,29 +53,29 @@ export class SchemaGenerator {
     const categories = this.generateCategories();
 
     return {
-      openapi: '3.0.3',
+      openapi: "3.0.3",
       info: {
         title: this.title,
-        description: 'Comprehensive Elasticsearch MCP Server with 104+ tools for enterprise-grade operations',
+        description: "Comprehensive Elasticsearch MCP Server with 104+ tools for enterprise-grade operations",
         version: this.version,
         contact: {
-          name: 'MCP Elasticsearch Team',
+          name: "MCP Elasticsearch Team",
         },
         license: {
-          name: 'MIT',
+          name: "MIT",
         },
       },
       servers: [
         {
-          url: 'http://localhost:8080',
-          description: 'Development server (SSE transport)',
+          url: "http://localhost:8080",
+          description: "Development server (SSE transport)",
         },
         {
-          url: 'stdio://',
-          description: 'Studio transport (Claude Desktop)',
+          url: "stdio://",
+          description: "Studio transport (Claude Desktop)",
         },
       ],
-      tags: categories.map(cat => ({
+      tags: categories.map((cat) => ({
         name: cat.name,
         description: cat.description,
         externalDocs: {
@@ -87,82 +87,79 @@ export class SchemaGenerator {
         schemas: this.generateSchemas(),
         securitySchemes: {
           ApiKeyAuth: {
-            type: 'apiKey',
-            in: 'header',
-            name: 'Authorization',
-            description: 'Elasticsearch API Key authentication',
+            type: "apiKey",
+            in: "header",
+            name: "Authorization",
+            description: "Elasticsearch API Key authentication",
           },
           BasicAuth: {
-            type: 'http',
-            scheme: 'basic',
-            description: 'Elasticsearch username/password authentication',
+            type: "http",
+            scheme: "basic",
+            description: "Elasticsearch username/password authentication",
           },
         },
       },
-      security: [
-        { ApiKeyAuth: [] },
-        { BasicAuth: [] },
-      ],
+      security: [{ ApiKeyAuth: [] }, { BasicAuth: [] }],
     };
   }
 
   public generateMarkdownDocs(): string {
     const categories = this.generateCategories();
-    
+
     let markdown = `# ${this.title}\n\n`;
     markdown += `Version: ${this.version}\n\n`;
-    markdown += `## Overview\n\n`;
+    markdown += "## Overview\n\n";
     markdown += `This is a comprehensive Elasticsearch MCP (Model Context Protocol) Server providing ${this.tools.length}+ tools for enterprise-grade Elasticsearch operations.\n\n`;
-    
+
     // Table of Contents
-    markdown += `## Table of Contents\n\n`;
-    categories.forEach(category => {
-      markdown += `- [${category.name}](#${category.name.toLowerCase().replace(/\s+/g, '-')}) (${category.count} tools)\n`;
+    markdown += "## Table of Contents\n\n";
+    categories.forEach((category) => {
+      markdown += `- [${category.name}](#${category.name.toLowerCase().replace(/\s+/g, "-")}) (${category.count} tools)\n`;
     });
-    markdown += `\n`;
+    markdown += "\n";
 
     // Categories
-    categories.forEach(category => {
+    categories.forEach((category) => {
       markdown += `## ${category.name}\n\n`;
       markdown += `${category.description}\n\n`;
       markdown += `**Available Tools (${category.count}):**\n\n`;
 
-      const categoryTools = this.tools.filter(tool => tool.category === category.name);
-      categoryTools.forEach(tool => {
+      const categoryTools = this.tools.filter((tool) => tool.category === category.name);
+      categoryTools.forEach((tool) => {
         markdown += `### \`${tool.name}\`\n\n`;
         markdown += `${tool.description}\n\n`;
-        
+
         if (tool.tags && tool.tags.length > 0) {
-          markdown += `**Tags:** ${tool.tags.map(tag => `\`${tag}\``).join(', ')}\n\n`;
+          markdown += `**Tags:** ${tool.tags.map((tag) => `\`${tag}\``).join(", ")}\n\n`;
         }
 
         // Input Schema
-        markdown += `**Input Schema:**\n\n`;
-        markdown += '```json\n';
+        markdown += "**Input Schema:**\n\n";
+        markdown += "```json\n";
         markdown += JSON.stringify(tool.inputSchema, null, 2);
-        markdown += '\n```\n\n';
+        markdown += "\n```\n\n";
 
         // Examples
         if (tool.examples && tool.examples.length > 0) {
-          markdown += `**Examples:**\n\n`;
-          tool.examples.forEach((example, index) => {
+          markdown += "**Examples:**\n\n";
+          tool.examples.forEach((example, _index) => {
             markdown += `#### ${example.title}\n\n`;
             markdown += `${example.description}\n\n`;
-            markdown += `**Input:**\n`;
-            markdown += '```json\n';
+            markdown += "**Input:**\n";
+            markdown += "```json\n";
             markdown += JSON.stringify(example.input, null, 2);
-            markdown += '\n```\n\n';
-            
+            markdown += "\n```\n\n";
+
             if (example.expectedOutput) {
-              markdown += `**Expected Output:**\n`;
-              markdown += '```json\n';
+              markdown += "**Expected Output:**\n";
+              markdown += "```json\n";
               markdown += JSON.stringify(example.expectedOutput, null, 2);
-              markdown += '\n```\n\n';
+              markdown += "\n```\n\n";
             }
           });
         }
 
-        markdown += `---\n\n`;
+        markdown += "---\n\n";
       });
     });
 
@@ -171,7 +168,7 @@ export class SchemaGenerator {
 
   public async generateHTMLDocs(): Promise<string> {
     const categories = this.generateCategories();
-    
+
     let html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -362,9 +359,9 @@ export class SchemaGenerator {
         <h2>Categories</h2>
         <div class="nav-grid">`;
 
-    categories.forEach(category => {
+    categories.forEach((category) => {
       html += `
-            <a href="#${category.name.toLowerCase().replace(/\s+/g, '-')}" class="nav-item">
+            <a href="#${category.name.toLowerCase().replace(/\s+/g, "-")}" class="nav-item">
                 <strong>${category.name}</strong><br>
                 ${category.count} tools
             </a>`;
@@ -374,25 +371,25 @@ export class SchemaGenerator {
         </div>
     </div>`;
 
-    categories.forEach(category => {
+    categories.forEach((category) => {
       html += `
-    <div class="category" id="${category.name.toLowerCase().replace(/\s+/g, '-')}">
+    <div class="category" id="${category.name.toLowerCase().replace(/\s+/g, "-")}">
         <div class="category-header">
             <h2>${category.name}</h2>
         </div>
         <div class="category-content">
             <p>${category.description}</p>`;
 
-      const categoryTools = this.tools.filter(tool => tool.category === category.name);
-      categoryTools.forEach(tool => {
+      const categoryTools = this.tools.filter((tool) => tool.category === category.name);
+      categoryTools.forEach((tool) => {
         html += `
             <div class="tool">
                 <div class="tool-header">
                     <span class="tool-name">${tool.name}</span>
                     <div class="tool-tags">`;
-        
+
         if (tool.tags) {
-          tool.tags.forEach(tag => {
+          tool.tags.forEach((tag) => {
             html += `<span class="tag">${tag}</span>`;
           });
         }
@@ -408,7 +405,7 @@ export class SchemaGenerator {
 
         if (tool.examples && tool.examples.length > 0) {
           html += `<div class="examples">`;
-          tool.examples.forEach(example => {
+          tool.examples.forEach((example) => {
             html += `
                 <div class="example">
                     <div class="example-title">${example.title}</div>
@@ -417,7 +414,7 @@ export class SchemaGenerator {
                         <div class="schema-title">Input</div>
                         <pre><code>${JSON.stringify(example.input, null, 2)}</code></pre>
                     </div>`;
-            
+
             if (example.expectedOutput) {
               html += `
                     <div class="schema-container">
@@ -426,12 +423,12 @@ export class SchemaGenerator {
                     </div>`;
             }
 
-            html += `</div>`;
+            html += "</div>";
           });
-          html += `</div>`;
+          html += "</div>";
         }
 
-        html += `</div>`;
+        html += "</div>";
       });
 
       html += `
@@ -451,8 +448,8 @@ export class SchemaGenerator {
 
   private generatePaths(): any {
     const paths: any = {};
-    
-    this.tools.forEach(tool => {
+
+    this.tools.forEach((tool) => {
       const pathKey = `/tools/${tool.name}`;
       paths[pathKey] = {
         post: {
@@ -462,7 +459,7 @@ export class SchemaGenerator {
           requestBody: {
             required: true,
             content: {
-              'application/json': {
+              "application/json": {
                 schema: {
                   $ref: `#/components/schemas/${tool.name}Input`,
                 },
@@ -470,20 +467,20 @@ export class SchemaGenerator {
             },
           },
           responses: {
-            '200': {
-              description: 'Successful response',
+            "200": {
+              description: "Successful response",
               content: {
-                'application/json': {
+                "application/json": {
                   schema: {
-                    type: 'object',
+                    type: "object",
                     properties: {
                       content: {
-                        type: 'array',
+                        type: "array",
                         items: {
-                          type: 'object',
+                          type: "object",
                           properties: {
-                            type: { type: 'string', example: 'text' },
-                            text: { type: 'string' },
+                            type: { type: "string", example: "text" },
+                            text: { type: "string" },
                           },
                         },
                       },
@@ -492,11 +489,11 @@ export class SchemaGenerator {
                 },
               },
             },
-            '400': {
-              description: 'Invalid request parameters',
+            "400": {
+              description: "Invalid request parameters",
             },
-            '500': {
-              description: 'Internal server error',
+            "500": {
+              description: "Internal server error",
             },
           },
         },
@@ -508,8 +505,8 @@ export class SchemaGenerator {
 
   private generateSchemas(): any {
     const schemas: any = {};
-    
-    this.tools.forEach(tool => {
+
+    this.tools.forEach((tool) => {
       schemas[`${tool.name}Input`] = tool.inputSchema;
     });
 
@@ -518,8 +515,8 @@ export class SchemaGenerator {
 
   private generateCategories(): CategoryDocumentation[] {
     const categoryMap = new Map<string, string[]>();
-    
-    this.tools.forEach(tool => {
+
+    this.tools.forEach((tool) => {
       if (!categoryMap.has(tool.category)) {
         categoryMap.set(tool.category, []);
       }
@@ -527,18 +524,18 @@ export class SchemaGenerator {
     });
 
     const categoryDescriptions: { [key: string]: string } = {
-      'Core': 'Essential Elasticsearch operations including search, mappings, and indices management',
-      'Document': 'Document CRUD operations for creating, reading, updating, and deleting documents',
-      'Search': 'Advanced search capabilities including SQL queries, scrolling, and multi-search',
-      'Index Management': 'Complete index lifecycle management including creation, settings, and maintenance',
-      'Cluster': 'Cluster monitoring and health management tools',
-      'Bulk': 'High-throughput bulk operations for efficient data processing',
-      'Analytics': 'Text analysis and term vector operations',
-      'ILM': 'Index Lifecycle Management for automated index policies and transitions',
-      'Watcher': 'Comprehensive alerting and monitoring capabilities',
-      'Templates': 'Search and index template management',
-      'Aliases': 'Index alias management for flexible index routing',
-      'Advanced': 'Advanced Elasticsearch features and specialized operations',
+      Core: "Essential Elasticsearch operations including search, mappings, and indices management",
+      Document: "Document CRUD operations for creating, reading, updating, and deleting documents",
+      Search: "Advanced search capabilities including SQL queries, scrolling, and multi-search",
+      "Index Management": "Complete index lifecycle management including creation, settings, and maintenance",
+      Cluster: "Cluster monitoring and health management tools",
+      Bulk: "High-throughput bulk operations for efficient data processing",
+      Analytics: "Text analysis and term vector operations",
+      ILM: "Index Lifecycle Management for automated index policies and transitions",
+      Watcher: "Comprehensive alerting and monitoring capabilities",
+      Templates: "Search and index template management",
+      Aliases: "Index alias management for flexible index routing",
+      Advanced: "Advanced Elasticsearch features and specialized operations",
     };
 
     return Array.from(categoryMap.entries()).map(([name, tools]) => ({
@@ -554,32 +551,28 @@ export class SchemaGenerator {
 
     // Save OpenAPI spec
     const openApiSpec = this.generateOpenAPISpec();
-    await fs.writeFile(
-      path.join(outputDir, 'openapi.json'),
-      JSON.stringify(openApiSpec, null, 2)
-    );
+    await fs.writeFile(path.join(outputDir, "openapi.json"), JSON.stringify(openApiSpec, null, 2));
 
     // Save Markdown docs
     const markdownDocs = this.generateMarkdownDocs();
-    await fs.writeFile(
-      path.join(outputDir, 'API.md'),
-      markdownDocs
-    );
+    await fs.writeFile(path.join(outputDir, "API.md"), markdownDocs);
 
     // Save HTML docs
     const htmlDocs = await this.generateHTMLDocs();
-    await fs.writeFile(
-      path.join(outputDir, 'index.html'),
-      htmlDocs
-    );
+    await fs.writeFile(path.join(outputDir, "index.html"), htmlDocs);
 
     console.log(`Documentation generated in ${outputDir}`);
-    console.log('- openapi.json: OpenAPI 3.0 specification');
-    console.log('- API.md: Markdown documentation');
-    console.log('- index.html: Interactive HTML documentation');
+    console.log("- openapi.json: OpenAPI 3.0 specification");
+    console.log("- API.md: Markdown documentation");
+    console.log("- index.html: Interactive HTML documentation");
   }
 
-  public static fromZodSchema(name: string, description: string, schema: z.ZodTypeAny, category: string): ToolDocumentation {
+  public static fromZodSchema(
+    name: string,
+    description: string,
+    schema: z.ZodTypeAny,
+    category: string,
+  ): ToolDocumentation {
     return {
       name,
       description,

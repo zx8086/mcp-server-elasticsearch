@@ -8,8 +8,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import type { Config } from "../config.js";
+import { BunPerformanceTimer, BunRuntimeDetection } from "../utils/bunOptimizer.js";
 import { logger } from "../utils/logger.js";
-import { BunRuntimeDetection, BunPerformanceTimer } from "../utils/bunOptimizer.js";
 import { detectClient, generateSessionId, traceNamedMcpConnection } from "../utils/tracingEnhanced.js";
 
 interface BunSSEConnection {
@@ -27,7 +27,7 @@ export class BunOptimizedSSETransport {
 
   constructor(
     private mcpServer: McpServer,
-    private config: Config
+    private config: Config,
   ) {}
 
   /**
@@ -44,46 +44,46 @@ export class BunOptimizedSSETransport {
     this.server = Bun.serve({
       port: PORT,
       hostname: "0.0.0.0",
-      
+
       fetch: async (req: Request) => {
         const startTime = Bun.nanoseconds();
-        
+
         try {
           const result = await this.handleBunRequest(req, sseEndpoint);
-          
+
           // Log performance metrics
           const duration = (Bun.nanoseconds() - startTime) / 1_000_000;
-          this.performanceTimer.recordMeasurement('request_handling', duration);
-          
+          this.performanceTimer.recordMeasurement("request_handling", duration);
+
           return result;
         } catch (error) {
           logger.error("Error handling Bun request", {
             error: error instanceof Error ? error.message : String(error),
             url: req.url,
-            method: req.method
+            method: req.method,
           });
-          
+
           return new Response("Internal Server Error", { status: 500 });
         }
       },
 
       // Bun-specific optimizations
       reusePort: true,
-      
+
       error: (error) => {
         logger.error("Bun server error", {
           error: error.message,
-          stack: error.stack
+          stack: error.stack,
         });
         return new Response("Server Error", { status: 500 });
-      }
+      },
     });
 
     logger.info(`🚀 Bun-optimized SSE server listening on port ${PORT}`, {
       runtime: "bun",
       sseEndpoint: "/sse",
       mcpEndpoint: `${sseEndpoint}?sessionId=<SESSION_ID>`,
-      optimizations: ["native-http", "reuse-port", "performance-tracking"]
+      optimizations: ["native-http", "reuse-port", "performance-tracking"],
     });
   }
 
@@ -92,19 +92,19 @@ export class BunOptimizedSSETransport {
    */
   private async handleBunRequest(req: Request, sseEndpoint: string): Promise<Response> {
     const url = new URL(req.url);
-    
+
     // Set CORS headers
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type"
+      "Access-Control-Allow-Headers": "Content-Type",
     };
 
     // Handle OPTIONS preflight
     if (req.method === "OPTIONS") {
-      return new Response(null, { 
-        status: 204, 
-        headers: corsHeaders 
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders,
       });
     }
 
@@ -128,9 +128,9 @@ export class BunOptimizedSSETransport {
       return this.handleMetrics();
     }
 
-    return new Response("Not Found", { 
-      status: 404, 
-      headers: corsHeaders 
+    return new Response("Not Found", {
+      status: 404,
+      headers: corsHeaders,
     });
   }
 
@@ -138,26 +138,24 @@ export class BunOptimizedSSETransport {
    * Handle SSE connection with Bun optimizations
    */
   private async handleBunSSEConnection(
-    req: Request, 
-    sseEndpoint: string, 
-    corsHeaders: Record<string, string>
+    req: Request,
+    sseEndpoint: string,
+    corsHeaders: Record<string, string>,
   ): Promise<Response> {
     if (req.method !== "GET") {
-      return new Response("Method Not Allowed", { 
-        status: 405, 
-        headers: corsHeaders 
+      return new Response("Method Not Allowed", {
+        status: 405,
+        headers: corsHeaders,
       });
     }
 
-    const clientIP = req.headers.get("x-forwarded-for") || 
-                    req.headers.get("x-real-ip") || 
-                    "unknown";
+    const clientIP = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
     const userAgent = req.headers.get("user-agent") || "Unknown";
 
     logger.info(`New Bun SSE connection from ${clientIP}`, {
       userAgent,
       protocol: "SSE",
-      runtime: "bun"
+      runtime: "bun",
     });
 
     // Create connection ID and session
@@ -170,7 +168,7 @@ export class BunOptimizedSSETransport {
     const writer = writable.getWriter();
 
     // Initialize SSE headers
-    await writer.write(new TextEncoder().encode("data: {\"type\":\"connection\",\"id\":\"" + sessionId + "\"}\n\n"));
+    await writer.write(new TextEncoder().encode(`data: {"type":"connection","id":"${sessionId}"}\n\n`));
 
     // Create transport and connect
     try {
@@ -180,7 +178,7 @@ export class BunOptimizedSSETransport {
         },
         end: () => {
           writer.close();
-        }
+        },
       } as any);
 
       // Store connection info
@@ -189,7 +187,7 @@ export class BunOptimizedSSETransport {
         sessionId,
         clientInfo,
         connectionId,
-        connectedAt: Date.now()
+        connectedAt: Date.now(),
       });
 
       // Connect with tracing if enabled
@@ -198,7 +196,7 @@ export class BunOptimizedSSETransport {
           connectionId,
           transportMode: "sse-bun",
           clientInfo,
-          sessionId
+          sessionId,
         });
         await tracedConnection(async () => this.mcpServer.connect(transport));
       } else {
@@ -209,17 +207,16 @@ export class BunOptimizedSSETransport {
         sessionId,
         connectionId,
         client: clientInfo.name,
-        runtime: "bun"
+        runtime: "bun",
       });
-
     } catch (error) {
       logger.error("Failed to establish Bun SSE connection", {
         error: error instanceof Error ? error.message : String(error),
         connectionId,
-        sessionId
+        sessionId,
       });
 
-      await writer.write(new TextEncoder().encode("data: {\"error\":\"Connection failed\"}\n\n"));
+      await writer.write(new TextEncoder().encode('data: {"error":"Connection failed"}\n\n'));
       await writer.close();
     }
 
@@ -229,22 +226,19 @@ export class BunOptimizedSSETransport {
         ...corsHeaders,
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
-        "Connection": "keep-alive"
-      }
+        Connection: "keep-alive",
+      },
     });
   }
 
   /**
    * Handle MCP POST requests with Bun optimizations
    */
-  private async handleBunMCPRequest(
-    req: Request, 
-    corsHeaders: Record<string, string>
-  ): Promise<Response> {
+  private async handleBunMCPRequest(req: Request, corsHeaders: Record<string, string>): Promise<Response> {
     if (req.method !== "POST") {
-      return new Response("Method Not Allowed", { 
-        status: 405, 
-        headers: corsHeaders 
+      return new Response("Method Not Allowed", {
+        status: 405,
+        headers: corsHeaders,
       });
     }
 
@@ -253,17 +247,17 @@ export class BunOptimizedSSETransport {
       const sessionId = url.searchParams.get("sessionId");
 
       if (!sessionId) {
-        return new Response("Missing sessionId parameter", { 
-          status: 400, 
-          headers: corsHeaders 
+        return new Response("Missing sessionId parameter", {
+          status: 400,
+          headers: corsHeaders,
         });
       }
 
       const connection = this.activeConnections.get(sessionId);
       if (!connection) {
-        return new Response("Session not found", { 
-          status: 404, 
-          headers: corsHeaders 
+        return new Response("Session not found", {
+          status: 404,
+          headers: corsHeaders,
         });
       }
 
@@ -271,27 +265,30 @@ export class BunOptimizedSSETransport {
       const body = await req.text();
 
       // Handle the message through the transport
-      await connection.transport.handlePostMessage(req as any, {
-        writeHead: () => {},
-        setHeader: () => {},
-        end: (data: string) => {
-          // Response handling would be managed by the transport
-        }
-      } as any, body);
+      await connection.transport.handlePostMessage(
+        req as any,
+        {
+          writeHead: () => {},
+          setHeader: () => {},
+          end: (_data: string) => {
+            // Response handling would be managed by the transport
+          },
+        } as any,
+        body,
+      );
 
-      return new Response("OK", { 
-        status: 200, 
-        headers: corsHeaders 
+      return new Response("OK", {
+        status: 200,
+        headers: corsHeaders,
       });
-
     } catch (error) {
       logger.error("Error handling Bun MCP request", {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
 
-      return new Response("Internal Server Error", { 
-        status: 500, 
-        headers: corsHeaders 
+      return new Response("Internal Server Error", {
+        status: 500,
+        headers: corsHeaders,
       });
     }
   }
@@ -301,21 +298,24 @@ export class BunOptimizedSSETransport {
    */
   private handleHealthCheck(): Response {
     const stats = this.getConnectionStats();
-    const performanceStats = this.performanceTimer.getStats('request_handling');
+    const performanceStats = this.performanceTimer.getStats("request_handling");
 
-    return new Response(JSON.stringify({
-      status: "healthy",
-      runtime: "bun",
-      timestamp: new Date().toISOString(),
-      connections: stats,
-      performance: performanceStats
-    }), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-cache"
-      }
-    });
+    return new Response(
+      JSON.stringify({
+        status: "healthy",
+        runtime: "bun",
+        timestamp: new Date().toISOString(),
+        connections: stats,
+        performance: performanceStats,
+      }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+        },
+      },
+    );
   }
 
   /**
@@ -328,8 +328,8 @@ export class BunOptimizedSSETransport {
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Cache-Control": "no-cache"
-      }
+        "Cache-Control": "no-cache",
+      },
     });
   }
 
@@ -338,17 +338,17 @@ export class BunOptimizedSSETransport {
    */
   getConnectionStats() {
     const activeCount = this.activeConnections.size;
-    const connections = Array.from(this.activeConnections.values()).map(conn => ({
+    const connections = Array.from(this.activeConnections.values()).map((conn) => ({
       sessionId: conn.sessionId,
       client: conn.clientInfo.name,
       connectedAt: new Date(conn.connectedAt).toISOString(),
-      duration: Date.now() - conn.connectedAt
+      duration: Date.now() - conn.connectedAt,
     }));
 
     return {
       active: activeCount,
       total: connections.length,
-      connections
+      connections,
     };
   }
 
@@ -357,18 +357,18 @@ export class BunOptimizedSSETransport {
    */
   getDetailedStats() {
     const connectionStats = this.getConnectionStats();
-    const performanceStats = this.performanceTimer.getStats('request_handling');
-    
+    const performanceStats = this.performanceTimer.getStats("request_handling");
+
     return {
       runtime: "bun",
       server: {
         uptime: process.uptime(),
         memory: process.memoryUsage(),
-        pid: process.pid
+        pid: process.pid,
       },
       connections: connectionStats,
       performance: performanceStats,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -378,7 +378,7 @@ export class BunOptimizedSSETransport {
   async shutdown(): Promise<void> {
     logger.info("Shutting down Bun SSE server", {
       activeConnections: this.activeConnections.size,
-      runtime: "bun"
+      runtime: "bun",
     });
 
     try {
@@ -389,7 +389,7 @@ export class BunOptimizedSSETransport {
         } catch (error) {
           logger.debug("Error closing connection", {
             sessionId,
-            error: error instanceof Error ? error.message : String(error)
+            error: error instanceof Error ? error.message : String(error),
           });
         }
       }
@@ -404,7 +404,7 @@ export class BunOptimizedSSETransport {
       logger.info("Bun SSE server shutdown completed");
     } catch (error) {
       logger.error("Error during Bun SSE server shutdown", {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
       throw error;
     }

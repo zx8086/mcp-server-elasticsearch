@@ -7,6 +7,7 @@ import { Client, type ClientOptions, Transport, TransportRequestParams, type est
 import { HttpConnection } from "@elastic/transport";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Config } from "./config.js";
+import { MetricsEndpoint } from "./monitoring/metricsEndpoint.js";
 import { registerAllTools } from "./tools/index.js";
 import { initializeCaches } from "./utils/cache.js";
 import { initializeDefaultCircuitBreakers } from "./utils/circuitBreaker.js";
@@ -19,7 +20,6 @@ import { initializeRateLimiters, initializeResourceMonitor } from "./utils/rateL
 import { initializeReadOnlyManager } from "./utils/readOnlyMode.js";
 import { createConnectionMetadata, initializeTracing, traceMcpConnection } from "./utils/tracing.js";
 import { checkElasticsearchConnection, testBasicOperations, testModernFeatures } from "./validation.js";
-import { MetricsEndpoint } from "./monitoring/metricsEndpoint.js";
 
 export async function createElasticsearchMcpServer(config: Config): Promise<McpServer> {
   logger.info("Creating Elasticsearch MCP server", {
@@ -289,13 +289,16 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
       if (metricsEndpoint.isRunning()) {
         logger.info("✅ Prometheus metrics endpoint started", {
           port: metricsEndpoint.getPort(),
-          endpoints: [`http://localhost:${metricsEndpoint.getPort()}/metrics`, `http://localhost:${metricsEndpoint.getPort()}/health`]
+          endpoints: [
+            `http://localhost:${metricsEndpoint.getPort()}/metrics`,
+            `http://localhost:${metricsEndpoint.getPort()}/health`,
+          ],
         });
       }
-    } catch (error) {
+    } catch (_error) {
       // MetricsEndpoint handles graceful degradation internally
       logger.debug("Metrics endpoint initialization completed", {
-        running: metricsEndpoint.isRunning()
+        running: metricsEndpoint.isRunning(),
       });
     }
 

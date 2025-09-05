@@ -1,8 +1,8 @@
-import fs from 'fs/promises';
-import path from 'path';
-import { createHash } from 'crypto';
-import { logger } from '../utils/logger.js';
-import { metrics } from '../monitoring/prometheusMetrics.js';
+import { createHash } from "node:crypto";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { metrics } from "../monitoring/prometheusMetrics.js";
+import { logger } from "../utils/logger.js";
 
 export interface AuditEvent {
   id: string;
@@ -20,21 +20,21 @@ export interface AuditEvent {
 }
 
 export enum AuditEventType {
-  TOOL_EXECUTION = 'tool_execution',
-  SECURITY_VIOLATION = 'security_violation',
-  AUTHENTICATION_FAILURE = 'authentication_failure',
-  RATE_LIMIT_HIT = 'rate_limit_hit',
-  CIRCUIT_BREAKER_TRIP = 'circuit_breaker_trip',
-  READ_ONLY_BLOCK = 'read_only_block',
-  SUSPICIOUS_ACTIVITY = 'suspicious_activity',
-  CONFIGURATION_CHANGE = 'configuration_change',
-  CONNECTION_EVENT = 'connection_event',
-  ERROR_EVENT = 'error_event'
+  TOOL_EXECUTION = "tool_execution",
+  SECURITY_VIOLATION = "security_violation",
+  AUTHENTICATION_FAILURE = "authentication_failure",
+  RATE_LIMIT_HIT = "rate_limit_hit",
+  CIRCUIT_BREAKER_TRIP = "circuit_breaker_trip",
+  READ_ONLY_BLOCK = "read_only_block",
+  SUSPICIOUS_ACTIVITY = "suspicious_activity",
+  CONFIGURATION_CHANGE = "configuration_change",
+  CONNECTION_EVENT = "connection_event",
+  ERROR_EVENT = "error_event",
 }
 
 interface OperationDetails {
   operation: string;
-  operationType: 'read' | 'write' | 'destructive';
+  operationType: "read" | "write" | "destructive";
   targetIndex?: string;
   targetCluster?: string;
   parameters?: any;
@@ -52,7 +52,7 @@ interface SecurityContext {
 }
 
 interface OperationResult {
-  status: 'success' | 'error' | 'blocked' | 'timeout';
+  status: "success" | "error" | "blocked" | "timeout";
   duration: number;
   errorCode?: string;
   errorMessage?: string;
@@ -71,7 +71,7 @@ interface AuditMetadata {
 
 interface AuditConfiguration {
   enabled: boolean;
-  logLevel: 'minimal' | 'standard' | 'detailed';
+  logLevel: "minimal" | "standard" | "detailed";
   retention: {
     days: number;
     maxFiles: number;
@@ -86,7 +86,7 @@ interface AuditConfiguration {
     };
   };
   storage: {
-    type: 'file' | 'elasticsearch' | 'both';
+    type: "file" | "elasticsearch" | "both";
     directory: string;
     indexPrefix?: string;
   };
@@ -108,7 +108,7 @@ export class SecurityAuditTrail {
   constructor(config: Partial<AuditConfiguration> = {}) {
     this.config = {
       enabled: true,
-      logLevel: 'standard',
+      logLevel: "standard",
       retention: {
         days: 90,
         maxFiles: 100,
@@ -123,12 +123,12 @@ export class SecurityAuditTrail {
         },
       },
       storage: {
-        type: 'file',
-        directory: 'audit',
+        type: "file",
+        directory: "audit",
       },
       encryption: {
         enabled: false,
-        algorithm: 'aes-256-gcm',
+        algorithm: "aes-256-gcm",
         keyRotationDays: 30,
       },
       ...config,
@@ -139,7 +139,7 @@ export class SecurityAuditTrail {
 
   private async initializeAuditTrail(): Promise<void> {
     if (!this.config.enabled) {
-      logger.info('Security audit trail disabled');
+      logger.info("Security audit trail disabled");
       return;
     }
 
@@ -160,7 +160,7 @@ export class SecurityAuditTrail {
         this.eventCounts.set(eventType, 0);
       }
 
-      logger.info('Security audit trail initialized', {
+      logger.info("Security audit trail initialized", {
         directory: this.config.storage.directory,
         level: this.config.logLevel,
         encryption: this.config.encryption.enabled,
@@ -169,25 +169,24 @@ export class SecurityAuditTrail {
       // Log initialization event
       await this.logEvent({
         eventType: AuditEventType.CONFIGURATION_CHANGE,
-        toolName: 'audit_trail',
-        category: 'security',
+        toolName: "audit_trail",
+        category: "security",
         operation: {
-          operation: 'initialize',
-          operationType: 'read',
+          operation: "initialize",
+          operationType: "read",
         },
         security: {
-          validationsPassed: ['initialization'],
+          validationsPassed: ["initialization"],
           validationsFailed: [],
           securityScore: 10,
         },
         result: {
-          status: 'success',
+          status: "success",
           duration: 0,
         },
       });
-
     } catch (error) {
-      logger.error('Failed to initialize security audit trail', { error });
+      logger.error("Failed to initialize security audit trail", { error });
     }
   }
 
@@ -201,17 +200,18 @@ export class SecurityAuditTrail {
         id: this.generateEventId(),
         timestamp: new Date().toISOString(),
         eventType: eventData.eventType || AuditEventType.TOOL_EXECUTION,
-        toolName: eventData.toolName || 'unknown',
-        category: eventData.category || 'general',
+        toolName: eventData.toolName || "unknown",
+        category: eventData.category || "general",
         userId: eventData.userId,
         sessionId: eventData.sessionId,
         clientType: eventData.clientType,
         operation: {
-          operation: 'unknown',
-          operationType: 'read',
+          operation: "unknown",
+          operationType: "read",
           ...eventData.operation,
-          sanitizedParameters: eventData.operation?.parameters ? 
-            this.sanitizeParameters(eventData.operation.parameters) : undefined,
+          sanitizedParameters: eventData.operation?.parameters
+            ? this.sanitizeParameters(eventData.operation.parameters)
+            : undefined,
         },
         security: {
           validationsPassed: [],
@@ -220,14 +220,14 @@ export class SecurityAuditTrail {
           ...eventData.security,
         },
         result: {
-          status: 'success',
+          status: "success",
           duration: 0,
           ...eventData.result,
         },
         metadata: {
-          version: '1.0.0',
+          version: "1.0.0",
           runtime: `Bun ${Bun.version}`,
-          serverInstance: process.env.INSTANCE_ID || 'unknown',
+          serverInstance: process.env.INSTANCE_ID || "unknown",
           ...eventData.metadata,
         },
       };
@@ -246,8 +246,8 @@ export class SecurityAuditTrail {
       if (metrics.isEnabled()) {
         if (auditEvent.eventType === AuditEventType.SECURITY_VIOLATION) {
           metrics.recordSecurityValidationFailure(
-            auditEvent.toolName, 
-            auditEvent.security.validationsFailed[0] || 'unknown'
+            auditEvent.toolName,
+            auditEvent.security.validationsFailed[0] || "unknown",
           );
         }
 
@@ -256,7 +256,7 @@ export class SecurityAuditTrail {
         }
 
         if (auditEvent.eventType === AuditEventType.RATE_LIMIT_HIT) {
-          metrics.recordRateLimitHit('tool_execution');
+          metrics.recordRateLimitHit("tool_execution");
         }
       }
 
@@ -267,9 +267,8 @@ export class SecurityAuditTrail {
 
       // Log to standard logger based on event type
       this.logToStandardLogger(auditEvent);
-
     } catch (error) {
-      logger.error('Failed to log audit event', { error, eventType: eventData.eventType });
+      logger.error("Failed to log audit event", { error, eventType: eventData.eventType });
     }
   }
 
@@ -279,7 +278,7 @@ export class SecurityAuditTrail {
     operation: OperationDetails,
     result: OperationResult,
     securityContext: Partial<SecurityContext> = {},
-    sessionInfo: { sessionId?: string; userId?: string; clientType?: string } = {}
+    sessionInfo: { sessionId?: string; userId?: string; clientType?: string } = {},
   ): Promise<void> {
     await this.logEvent({
       eventType: AuditEventType.TOOL_EXECUTION,
@@ -301,42 +300,42 @@ export class SecurityAuditTrail {
     toolName: string,
     violationType: string,
     details: any,
-    securityContext: SecurityContext
+    securityContext: SecurityContext,
   ): Promise<void> {
     await this.logEvent({
       eventType: AuditEventType.SECURITY_VIOLATION,
       toolName,
-      category: 'security',
+      category: "security",
       operation: {
         operation: violationType,
-        operationType: 'read',
+        operationType: "read",
         parameters: details,
       },
       security: securityContext,
       result: {
-        status: 'blocked',
+        status: "blocked",
         duration: 0,
       },
       metadata: {
-        tags: ['security', 'violation', violationType],
+        tags: ["security", "violation", violationType],
       },
     });
   }
 
   public async logSuspiciousActivity(
     description: string,
-    severity: 'low' | 'medium' | 'high',
-    context: any
+    severity: "low" | "medium" | "high",
+    context: any,
   ): Promise<void> {
-    const securityScore = severity === 'high' ? 9 : severity === 'medium' ? 6 : 3;
+    const securityScore = severity === "high" ? 9 : severity === "medium" ? 6 : 3;
 
     await this.logEvent({
       eventType: AuditEventType.SUSPICIOUS_ACTIVITY,
-      toolName: 'security_monitor',
-      category: 'security',
+      toolName: "security_monitor",
+      category: "security",
       operation: {
-        operation: 'suspicious_activity_detected',
-        operationType: 'read',
+        operation: "suspicious_activity_detected",
+        operationType: "read",
         parameters: context,
       },
       security: {
@@ -345,18 +344,16 @@ export class SecurityAuditTrail {
         securityScore,
       },
       result: {
-        status: 'blocked',
+        status: "blocked",
         duration: 0,
       },
       metadata: {
-        tags: ['suspicious', severity, 'automated_detection'],
+        tags: ["suspicious", severity, "automated_detection"],
       },
     });
   }
 
-  public async getAuditSummary(
-    hours: number = 24
-  ): Promise<{
+  public async getAuditSummary(hours = 24): Promise<{
     totalEvents: number;
     eventsByType: { [key: string]: number };
     securityEvents: number;
@@ -376,11 +373,13 @@ export class SecurityAuditTrail {
         eventsByType[event.eventType] = (eventsByType[event.eventType] || 0) + 1;
         toolCounts[event.toolName] = (toolCounts[event.toolName] || 0) + 1;
 
-        if ([
-          AuditEventType.SECURITY_VIOLATION,
-          AuditEventType.SUSPICIOUS_ACTIVITY,
-          AuditEventType.AUTHENTICATION_FAILURE,
-        ].includes(event.eventType)) {
+        if (
+          [
+            AuditEventType.SECURITY_VIOLATION,
+            AuditEventType.SUSPICIOUS_ACTIVITY,
+            AuditEventType.AUTHENTICATION_FAILURE,
+          ].includes(event.eventType)
+        ) {
           securityEvents++;
         }
       }
@@ -395,11 +394,7 @@ export class SecurityAuditTrail {
         .slice(0, 5)
         .map(([pattern, count]) => ({ pattern, count }));
 
-      const recommendations = this.generateSecurityRecommendations(
-        eventsByType,
-        securityEvents,
-        suspiciousActivity
-      );
+      const recommendations = this.generateSecurityRecommendations(eventsByType, securityEvents, suspiciousActivity);
 
       return {
         totalEvents: recentEvents.length,
@@ -410,14 +405,14 @@ export class SecurityAuditTrail {
         recommendations,
       };
     } catch (error) {
-      logger.error('Failed to generate audit summary', { error });
+      logger.error("Failed to generate audit summary", { error });
       return {
         totalEvents: 0,
         eventsByType: {},
         securityEvents: 0,
         topTools: [],
         suspiciousActivity: [],
-        recommendations: ['Error generating audit summary'],
+        recommendations: ["Error generating audit summary"],
       };
     }
   }
@@ -431,38 +426,39 @@ export class SecurityAuditTrail {
         this.suspiciousPatterns.set(patternKey, currentCount + 1);
 
         if (currentCount + 1 >= 5) {
-          await this.logSuspiciousActivity(
-            `Repeated security violations from IP ${event.security.ipAddress}`,
-            'high',
-            { ipAddress: event.security.ipAddress, violationCount: currentCount + 1 }
-          );
+          await this.logSuspiciousActivity(`Repeated security violations from IP ${event.security.ipAddress}`, "high", {
+            ipAddress: event.security.ipAddress,
+            violationCount: currentCount + 1,
+          });
         }
       }
 
       // Pattern: High-frequency tool execution
       if (event.eventType === AuditEventType.TOOL_EXECUTION) {
-        const patternKey = `high_frequency:${event.toolName}:${event.sessionId || 'unknown'}`;
+        const patternKey = `high_frequency:${event.toolName}:${event.sessionId || "unknown"}`;
         const currentCount = this.suspiciousPatterns.get(patternKey) || 0;
         this.suspiciousPatterns.set(patternKey, currentCount + 1);
 
-        if (currentCount + 1 >= 100) { // 100 requests from same session/tool
-          await this.logSuspiciousActivity(
-            `High-frequency tool execution detected`,
-            'medium',
-            { toolName: event.toolName, sessionId: event.sessionId, requestCount: currentCount + 1 }
-          );
+        if (currentCount + 1 >= 100) {
+          // 100 requests from same session/tool
+          await this.logSuspiciousActivity("High-frequency tool execution detected", "medium", {
+            toolName: event.toolName,
+            sessionId: event.sessionId,
+            requestCount: currentCount + 1,
+          });
         }
       }
 
       // Pattern: Destructive operations outside business hours
-      if (event.operation.operationType === 'destructive') {
+      if (event.operation.operationType === "destructive") {
         const hour = new Date().getHours();
-        if (hour < 8 || hour > 18) { // Outside 8 AM - 6 PM
-          await this.logSuspiciousActivity(
-            'Destructive operation outside business hours',
-            'medium',
-            { toolName: event.toolName, hour, operation: event.operation.operation }
-          );
+        if (hour < 8 || hour > 18) {
+          // Outside 8 AM - 6 PM
+          await this.logSuspiciousActivity("Destructive operation outside business hours", "medium", {
+            toolName: event.toolName,
+            hour,
+            operation: event.operation.operation,
+          });
         }
       }
 
@@ -475,65 +471,64 @@ export class SecurityAuditTrail {
 
       // Clean up old patterns (keep only last 24 hours of patterns)
       this.cleanupOldPatterns();
-
     } catch (error) {
-      logger.error('Error analyzing security patterns', { error });
+      logger.error("Error analyzing security patterns", { error });
     }
   }
 
   private async getRecentEvents(cutoffTime: Date): Promise<AuditEvent[]> {
     // In a production implementation, this would read from the audit storage
     // For now, return events from the buffer that match the criteria
-    return this.auditBuffer.filter(event => new Date(event.timestamp) >= cutoffTime);
+    return this.auditBuffer.filter((event) => new Date(event.timestamp) >= cutoffTime);
   }
 
   private generateSecurityRecommendations(
     eventsByType: { [key: string]: number },
     securityEvents: number,
-    suspiciousActivity: { pattern: string; count: number }[]
+    suspiciousActivity: { pattern: string; count: number }[],
   ): string[] {
     const recommendations: string[] = [];
 
     if (securityEvents > 10) {
-      recommendations.push('High number of security events detected - review security configurations');
+      recommendations.push("High number of security events detected - review security configurations");
     }
 
     if (eventsByType[AuditEventType.RATE_LIMIT_HIT] > 20) {
-      recommendations.push('Frequent rate limiting - consider adjusting rate limits or investigating client behavior');
+      recommendations.push("Frequent rate limiting - consider adjusting rate limits or investigating client behavior");
     }
 
     if (eventsByType[AuditEventType.CIRCUIT_BREAKER_TRIP] > 5) {
-      recommendations.push('Circuit breaker trips detected - investigate Elasticsearch cluster health');
+      recommendations.push("Circuit breaker trips detected - investigate Elasticsearch cluster health");
     }
 
     if (suspiciousActivity.length > 3) {
-      recommendations.push('Multiple suspicious patterns detected - enable enhanced monitoring');
+      recommendations.push("Multiple suspicious patterns detected - enable enhanced monitoring");
     }
 
     if (eventsByType[AuditEventType.AUTHENTICATION_FAILURE] > 5) {
-      recommendations.push('Authentication failures detected - review access credentials and policies');
+      recommendations.push("Authentication failures detected - review access credentials and policies");
     }
 
     if (recommendations.length === 0) {
-      recommendations.push('No significant security concerns detected');
+      recommendations.push("No significant security concerns detected");
     }
 
     return recommendations;
   }
 
   private sanitizeParameters(params: any): any {
-    if (!params || typeof params !== 'object') {
+    if (!params || typeof params !== "object") {
       return params;
     }
 
-    const sensitiveFields = ['password', 'token', 'key', 'secret', 'auth', 'credential'];
+    const sensitiveFields = ["password", "token", "key", "secret", "auth", "credential"];
     const sanitized = JSON.parse(JSON.stringify(params));
 
     const sanitizeObject = (obj: any): void => {
       for (const [key, value] of Object.entries(obj)) {
-        if (sensitiveFields.some(field => key.toLowerCase().includes(field))) {
-          obj[key] = '***REDACTED***';
-        } else if (typeof value === 'object' && value !== null) {
+        if (sensitiveFields.some((field) => key.toLowerCase().includes(field))) {
+          obj[key] = "***REDACTED***";
+        } else if (typeof value === "object" && value !== null) {
           sanitizeObject(value);
         }
       }
@@ -550,11 +545,13 @@ export class SecurityAuditTrail {
   }
 
   private isCriticalEvent(event: AuditEvent): boolean {
-    return [
-      AuditEventType.SECURITY_VIOLATION,
-      AuditEventType.SUSPICIOUS_ACTIVITY,
-      AuditEventType.AUTHENTICATION_FAILURE,
-    ].includes(event.eventType) && event.security.securityScore > 7;
+    return (
+      [
+        AuditEventType.SECURITY_VIOLATION,
+        AuditEventType.SUSPICIOUS_ACTIVITY,
+        AuditEventType.AUTHENTICATION_FAILURE,
+      ].includes(event.eventType) && event.security.securityScore > 7
+    );
   }
 
   private logToStandardLogger(event: AuditEvent): void {
@@ -571,14 +568,14 @@ export class SecurityAuditTrail {
     switch (event.eventType) {
       case AuditEventType.SECURITY_VIOLATION:
       case AuditEventType.SUSPICIOUS_ACTIVITY:
-        logger.warn('Security audit event', logData);
+        logger.warn("Security audit event", logData);
         break;
       case AuditEventType.ERROR_EVENT:
-        logger.error('Error audit event', logData);
+        logger.error("Error audit event", logData);
         break;
       default:
-        if (this.config.logLevel === 'detailed') {
-          logger.info('Audit event', logData);
+        if (this.config.logLevel === "detailed") {
+          logger.info("Audit event", logData);
         }
         break;
     }
@@ -586,7 +583,7 @@ export class SecurityAuditTrail {
 
   private async initializeEncryption(): Promise<void> {
     // In production, this would use proper key management
-    this.encryptionKey = process.env.AUDIT_ENCRYPTION_KEY || 'default-key-change-in-production';
+    this.encryptionKey = process.env.AUDIT_ENCRYPTION_KEY || "default-key-change-in-production";
   }
 
   private startPeriodicFlush(): void {
@@ -613,29 +610,30 @@ export class SecurityAuditTrail {
 
       await this.writeEventsToStorage(events);
 
-      logger.debug('Flushed audit buffer', { eventCount: events.length });
+      logger.debug("Flushed audit buffer", { eventCount: events.length });
     } catch (error) {
-      logger.error('Failed to flush audit buffer', { error });
+      logger.error("Failed to flush audit buffer", { error });
       // Re-add events to buffer on failure
       this.auditBuffer.unshift(...this.auditBuffer);
     }
   }
 
   private async writeEventsToStorage(events: AuditEvent[]): Promise<void> {
-    const filename = `audit-${new Date().toISOString().split('T')[0]}.log`;
+    const filename = `audit-${new Date().toISOString().split("T")[0]}.log`;
     const filepath = path.join(this.config.storage.directory, filename);
 
-    const logLines = events.map(event => JSON.stringify(event)).join('\n') + '\n';
+    const logLines = `${events.map((event) => JSON.stringify(event)).join("\n")}\n`;
 
-    await fs.appendFile(filepath, logLines, 'utf8');
+    await fs.appendFile(filepath, logLines, "utf8");
   }
 
   private cleanupOldPatterns(): void {
-    const cutoffTime = Date.now() - (24 * 60 * 60 * 1000); // 24 hours ago
-    
+    const _cutoffTime = Date.now() - 24 * 60 * 60 * 1000; // 24 hours ago
+
     for (const [key] of this.suspiciousPatterns) {
       // This is a simplified cleanup - in production, you'd track timestamps per pattern
-      if (Math.random() < 0.01) { // Randomly clean up 1% of patterns
+      if (Math.random() < 0.01) {
+        // Randomly clean up 1% of patterns
         this.suspiciousPatterns.delete(key);
       }
     }
@@ -650,7 +648,7 @@ export class SecurityAuditTrail {
       await this.flushBuffer();
     }
 
-    logger.info('Security audit trail cleanup completed');
+    logger.info("Security audit trail cleanup completed");
   }
 
   public getConfiguration(): AuditConfiguration {
@@ -663,6 +661,6 @@ export class SecurityAuditTrail {
     }
 
     // In production, implement proper key rotation
-    logger.info('Encryption key rotation requested (not implemented in demo)');
+    logger.info("Encryption key rotation requested (not implemented in demo)");
   }
 }

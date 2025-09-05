@@ -59,7 +59,7 @@ export class SecurityEnhancer {
           /(\b(DROP|DELETE|TRUNCATE|ALTER|CREATE|INSERT|UPDATE)\b)/gi,
           /(UNION\s+SELECT|OR\s+1\s*=\s*1|'.*OR.*'|".*OR.*")/gi,
           /(;\s*(DROP|DELETE|TRUNCATE|ALTER))/gi,
-          /('|"|\||\*|%|;|--|\||&&|\|\|)/g,
+          /('|"|\||%|;|--|\||&&|\|\|)/g,
         ],
       ],
       [

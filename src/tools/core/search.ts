@@ -27,32 +27,24 @@ interface SearchQueryBody {
   [key: string]: unknown;
 }
 
-// Direct JSON Schema definition
-const searchSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      description:
-        "Name of the Elasticsearch index to search for documents. Use '*' to search all indices. Examples: 'logs-*', 'metrics-*', '*2025.08.16*'",
-    },
-    queryBody: {
-      type: "object",
-      description:
-        "Complete Elasticsearch Query DSL object (not 'body', use 'queryBody'). Include query, size, from, aggs, sort, etc. Example: { query: { match_all: {} }, size: 10 }",
-      additionalProperties: true,
-    },
-  },
-  additionalProperties: false,
-};
-
-// Zod validator for runtime validation
-const searchValidator = z.object({
-  index: z.string().trim().min(1).optional(),
-  queryBody: z.object({}).passthrough().optional(),
+// Zod schema for Elasticsearch search parameters - OBJECT ONLY format
+const SearchParams = z.object({
+  index: z.string().optional().describe("Name of the Elasticsearch index to search. Use '*' to search all indices. Examples: 'logs-*', 'metrics-*'"),
+  query: z.object({}).passthrough().optional().describe("Elasticsearch query object. Example: { range: { '@timestamp': { gte: 'now-24h' } } }"),
+  size: z.number().optional().describe("Number of documents to return. Default is 10. Use 0 for pure analytics (aggregations only), 10+ to include documents"),
+  from: z.number().optional().describe("Starting offset for pagination. Default is 0"),
+  sort: z.array(z.object({}).passthrough()).optional().describe("Sort order. Example: [{ '@timestamp': { order: 'desc' } }]"),
+  aggs: z.object({}).passthrough().optional().describe("Aggregations object for analytics queries"),
+  _source: z.union([
+    z.array(z.string()),
+    z.boolean(),
+    z.string()
+  ]).optional().describe("Fields to return in results"),
+  highlight: z.object({}).passthrough().optional().describe("Highlight configuration")
 });
 
-type SearchParams = z.infer<typeof searchValidator>;
+type SearchParamsType = z.infer<typeof SearchParams>;
+
 
 // MCP error handling
 function createSearchMcpError(
@@ -76,15 +68,41 @@ function createSearchMcpError(
 
 // Tool implementation
 export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  const searchHandler = async (args: any): Promise<SearchResult> => {
+  const searchHandler = async (params: SearchParamsType): Promise<SearchResult> => {
     const perfStart = performance.now();
 
     try {
-      // Validate parameters
-      const params = searchValidator.parse(args);
-      const { index, queryBody } = params;
+      // DEBUG: Check what we actually receive  
+      logger.debug("SEARCH PARAMS DEBUG", {
+        paramsExists: !!params,
+        paramsType: typeof params,
+        paramsKeys: params ? Object.keys(params) : 'NO PARAMS',
+        hasIndex: !!params?.index,
+        hasQuery: !!params?.query,
+        hasSize: params?.size !== undefined,
+        hasAggs: !!params?.aggs,
+        indexValue: params?.index,
+        sizeValue: params?.size
+      });
 
-      logger.debug("Searching index", { index, queryBody });
+      // Zod has already parsed and transformed the parameters
+      const { index, query, size, from, sort, aggs, _source, highlight } = params;
+
+      logger.debug("Parsed search parameters", { 
+        index, 
+        queryType: typeof query,
+        queryKeys: query && typeof query === 'object' ? Object.keys(query) : undefined,
+        size,
+        from,
+        hasAggs: !!aggs,
+        hasSort: !!sort
+      });
+      
+      // Log warning for potential timestamp issues if range queries are used
+      if (query && typeof query === 'object' && query.range?.['@timestamp']) {
+        const rangeQuery = query.range['@timestamp'];
+        logger.debug("Time range query detected", { rangeQuery, currentTime: new Date().toISOString() });
+      }
 
       let indexMappings: { properties?: Record<string, { type: string }> } = {};
       try {
@@ -96,9 +114,20 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
         });
       }
 
-      // Handle undefined queryBody - provide default
-      const typedQueryBody = (queryBody || { query: { match_all: {} }, size: 10 }) as SearchQueryBody;
-      const searchRequest = { index: index || "*", ...typedQueryBody };
+      // Build search request from natural parameters
+      const searchRequest: SearchQueryBody & { index: string } = {
+        index: index || "*",
+        query: query || { match_all: {} },
+        size: size ?? 10,
+        ...(from !== undefined && { from }),
+        ...(sort && { sort }),
+        ...(aggs && { aggs }),
+        ...(_source !== undefined && { _source }),
+        ...(highlight && { highlight })
+      };
+
+      // DEBUG: Log the exact request being sent to Elasticsearch
+      logger.debug("🔍 EXACT Elasticsearch request:", JSON.stringify(searchRequest, null, 2));
 
       if (indexMappings.properties) {
         const textFields: Record<string, any> = {};
@@ -130,15 +159,20 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
       });
 
       // Safe property access to avoid undefined errors
-      const from = typedQueryBody?.from ?? 0;
-      const size = typedQueryBody?.size;
-      const hasAggregations = typedQueryBody?.aggs || result.aggregations;
+      const fromOffset = from ?? 0;
+      const sizeLimit = size;
+      const hasAggregations = aggs || result.aggregations;
 
-      // Handle aggregation-only queries (size=0) or queries with aggregations
-      if (size === 0 || hasAggregations) {
+      // Handle aggregation-only queries (size=0) - only return aggregations if explicitly no documents wanted
+      if (sizeLimit === 0) {
+        const metadata = {
+          totalHits: typeof result.hits.total === "number" ? result.hits.total : result.hits.total?.value || 0,
+          tookMs: result.took,
+          currentTime: new Date().toISOString()
+        };
         return {
           content: [
-            { type: "text", text: "Search results with aggregations:" } as TextContent,
+            { type: "text", text: `Search results with aggregations (${metadata.totalHits} total hits, ${metadata.tookMs}ms, current time: ${metadata.currentTime}):` } as TextContent,
             {
               type: "text",
               text: JSON.stringify(result.aggregations || {}, null, 2),
@@ -179,7 +213,7 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
       const totalHits = typeof result.hits.total === "number" ? result.hits.total : result.hits.total?.value || 0;
       const metadataFragment: TextContent = {
         type: "text",
-        text: `Total results: ${totalHits}, showing ${result.hits.hits.length} from position ${from}`,
+        text: `Total results: ${totalHits}, showing ${result.hits.hits.length} from position ${fromOffset}`,
       };
 
       const duration = performance.now() - perfStart;
@@ -187,21 +221,32 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
         logger.warn("Slow search operation", { duration });
       }
 
+      // If we have aggregations AND documents, show both
+      const responseContent: TextContent[] = [metadataFragment, ...contentFragments];
+      
+      if (hasAggregations && result.aggregations) {
+        const aggregationsFragment: TextContent = {
+          type: "text",
+          text: `\n=== AGGREGATIONS ===\n${JSON.stringify(result.aggregations, null, 2)}`,
+        };
+        responseContent.push(aggregationsFragment);
+      }
+
       return {
-        content: [metadataFragment, ...contentFragments],
+        content: responseContent,
       };
     } catch (error) {
-      // Error handling
-      if (error instanceof z.ZodError) {
-        throw createSearchMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+      // Error handling - JSON parsing errors
+      if (error instanceof SyntaxError && error.message.includes('JSON')) {
+        throw createSearchMcpError(`JSON parsing failed: ${error.message}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { originalError: error.message, providedParams: params },
         });
       }
 
       if (error instanceof Error) {
         if (error.message.includes("index_not_found_exception")) {
-          throw createSearchMcpError(`Index not found: ${args?.index || "*"}`, {
+          throw createSearchMcpError(`Index not found: ${params?.index || "*"}`, {
             type: "index_not_found",
             details: { originalError: error.message },
           });
@@ -210,7 +255,7 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
         if (error.message.includes("parsing_exception") || error.message.includes("query_shard_exception")) {
           throw createSearchMcpError(`Query parsing failed: ${error.message}`, {
             type: "query_parsing",
-            details: { query: args?.queryBody },
+            details: { query: params?.query },
           });
         }
       }
@@ -219,7 +264,7 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
         type: "execution",
         details: {
           duration: performance.now() - perfStart,
-          args,
+          params,
         },
       });
     }
@@ -228,8 +273,8 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
   // Tool registration
   server.tool(
     "elasticsearch_search",
-    "Search Elasticsearch with Query DSL. Uses direct JSON Schema and standardized MCP error codes. TIP: Always set 'size' in queryBody (default is only 10). For aggregations use {size: 0, aggs: {...}}. For large result sets (>100), consider pagination with 'from' and 'size'. Example: {index: 'logs-*', queryBody: {query: {match_all: {}}, size: 50, from: 0}}",
-    searchSchema,
+    "Search Elasticsearch with natural Query DSL parameters. Supports both document search and analytics. Parameters: query (filter), size (document count), from (pagination), sort, aggs (analytics), _source (fields), highlight. Use size=0 for pure analytics, size=10+ for documents. Both documents and aggregations can be returned together. Example: {index: 'logs-*', query: {range: {'@timestamp': {gte: 'now-24h'}}}, size: 50, aggs: {hourly: {date_histogram: {field: '@timestamp', fixed_interval: '1h'}}}}",
+    SearchParams.shape,
     searchHandler,
   );
 };

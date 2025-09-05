@@ -116,6 +116,59 @@ MCP-compatible logging in `src/utils/logger.ts`:
 - Structured logging with metadata
 - Integration with MCP protocol
 
+### Universal Tool Tracing
+Production-ready tracing system with LangSmith integration:
+- **Dynamic Tool Names**: Each tool trace appears with its actual name (e.g., `elasticsearch_search`)
+- **Automatic Wrapping**: All tools are traced without conditional checks
+- **Performance Tracking**: Execution time and performance metrics captured
+- **Graceful Degradation**: Works without tracing dependencies installed
+- **Universal Pattern**: Implementation works for any MCP server
+
+#### Tracing Implementation Pattern:
+```typescript
+// Universal tool tracing function
+export function traceToolExecution(toolName: string, _args: any, handler: () => Promise<any>) {
+  const toolTracer = traceable(
+    async () => {
+      const startTime = Date.now();
+      
+      try {
+        const result = await handler();
+        const executionTime = Date.now() - startTime;
+        
+        return {
+          ...result,
+          _trace: { runId: currentRun?.id, executionTime }
+        };
+      } catch (error) {
+        // Error tracking and re-throw
+        throw error;
+      }
+    },
+    {
+      name: toolName, // Dynamic tool name for proper identification
+      run_type: "tool",
+    }
+  );
+
+  return toolTracer();
+}
+
+// Tool registration with automatic tracing
+server.tool = (name: string, description: string, inputSchema: any, handler: any) => {
+  // Wrap ALL tools with tracing (no conditions)
+  const tracedHandler = async (args: any) => {
+    return traceToolExecution(name, args, async () => {
+      return handler(args);
+    });
+  };
+  
+  return originalTool(name, description, inputSchema, tracedHandler);
+};
+```
+
+This pattern ensures every tool execution is automatically traced with proper naming in LangSmith or compatible tracing systems.
+
 ### Production Readiness Features
 The server includes enterprise-grade infrastructure components:
 
@@ -129,6 +182,7 @@ The server includes enterprise-grade infrastructure components:
 - **Read-only Mode**: Production safety with strict/warning modes for monitoring scenarios
 - **Resource Management**: Memory thresholds, request limits, and automatic resource monitoring
 - **Enhanced Error Handling**: Structured MCP-compliant errors with detailed logging and redaction
+- **Universal Tool Tracing**: Automatic LangSmith tracing for all tools with dynamic naming and performance tracking
 
 All infrastructure components are automatically initialized and require no manual configuration.
 

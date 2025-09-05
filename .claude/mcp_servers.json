@@ -1,0 +1,16 @@
+{
+  "servers": {
+    "elasticsearch": {
+      "command": "bun",
+      "args": ["./dist/index.js"],
+      "cwd": "/Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch",
+      "env": {
+        "MCP_TRANSPORT": "stdio",
+        "LANGSMITH_TRACING": "true",
+        "LANGSMITH_API_KEY": "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",
+        "LANGSMITH_PROJECT": "elasticsearch-mcp-server",
+        "LANGSMITH_ENDPOINT": "https://api.smith.langchain.com"
+      }
+    }
+  }
+}

@@ -43,14 +43,27 @@ const putLifecycleSchema = {
 // Simple Zod validator for runtime validation only
 const putLifecycleValidator = z.object({
   policy: z.string().min(1, "Policy identifier cannot be empty"),
-  body: z.object({
-    policy: z.object({
-      phases: z.record(z.string(), z.object({
-        actions: z.record(z.string(), z.unknown()).optional(),
-        min_age: z.string().optional()
-      }).passthrough()).optional()
-    }).passthrough().optional()
-  }).passthrough().optional(),
+  body: z
+    .object({
+      policy: z
+        .object({
+          phases: z
+            .record(
+              z.string(),
+              z
+                .object({
+                  actions: z.record(z.string(), z.unknown()).optional(),
+                  min_age: z.string().optional(),
+                })
+                .passthrough(),
+            )
+            .optional(),
+        })
+        .passthrough()
+        .optional(),
+    })
+    .passthrough()
+    .optional(),
   masterTimeout: z.string().optional(),
   timeout: z.string().optional(),
 });

@@ -37,22 +37,38 @@ const updateAliasesSchema = {
 
 // Zod validator for runtime validation
 const updateAliasesValidator = z.object({
-  actions: z.array(z.union([
-    z.object({ add: z.object({
-      index: z.string(),
-      alias: z.string(),
-      filter: z.record(z.string(), z.unknown()).optional(),
-      routing: z.string().optional(),
-      is_write_index: z.boolean().optional()
-    }).passthrough() }),
-    z.object({ remove: z.object({
-      index: z.string(),
-      alias: z.string()
-    }).passthrough() }),
-    z.object({ remove_index: z.object({
-      index: z.string()
-    }).passthrough() })
-  ])).min(1, "At least one action is required"),
+  actions: z
+    .array(
+      z.union([
+        z.object({
+          add: z
+            .object({
+              index: z.string(),
+              alias: z.string(),
+              filter: z.record(z.string(), z.unknown()).optional(),
+              routing: z.string().optional(),
+              is_write_index: z.boolean().optional(),
+            })
+            .passthrough(),
+        }),
+        z.object({
+          remove: z
+            .object({
+              index: z.string(),
+              alias: z.string(),
+            })
+            .passthrough(),
+        }),
+        z.object({
+          remove_index: z
+            .object({
+              index: z.string(),
+            })
+            .passthrough(),
+        }),
+      ]),
+    )
+    .min(1, "At least one action is required"),
   timeout: z.string().optional(),
   masterTimeout: z.string().optional(),
 });

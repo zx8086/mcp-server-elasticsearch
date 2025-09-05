@@ -11,7 +11,7 @@ function simplifyFieldSchema(field: z.ZodTypeAny): any {
   if (def && (def.typeName === "ZodUnion" || def.type === "union")) {
     // Check if this is a coercion union (has string representation)
     const targetType = detectCoercionTargetType(field);
-    
+
     if (targetType && targetType !== "unknown") {
       // This is a coercion union, use simplified type
       const defaultValue = extractDefaultValue(field);
@@ -27,23 +27,20 @@ function simplifyFieldSchema(field: z.ZodTypeAny): any {
       }
 
       return result;
-    } else {
-      // This is a generic union, use anyOf pattern
-      const options = def.options || [];
-      if (options.length > 0) {
-        const unionSchemas = options.map((option: z.ZodTypeAny) => 
-          zodToJsonSchemaCompat(option)
-        );
-        
-        const result: any = { anyOf: unionSchemas };
-        
-        // Check for description
-        if (def.description) {
-          result.description = def.description;
-        }
+    }
+    // This is a generic union, use anyOf pattern
+    const options = def.options || [];
+    if (options.length > 0) {
+      const unionSchemas = options.map((option: z.ZodTypeAny) => zodToJsonSchemaCompat(option));
 
-        return result;
+      const result: any = { anyOf: unionSchemas };
+
+      // Check for description
+      if (def.description) {
+        result.description = def.description;
       }
+
+      return result;
     }
   }
 
@@ -190,25 +187,25 @@ function detectCoercionTargetType(schema: z.ZodTypeAny): string {
   if (def?.options) {
     const distinctTypes = new Set<string>();
     let hasCoercion = false;
-    
+
     for (const option of def.options) {
       const optionDef = (option as any)._def;
       if (optionDef) {
         if (optionDef.coerce) hasCoercion = true;
-        
+
         if (optionDef.typeName === "ZodBoolean") distinctTypes.add("boolean");
         else if (optionDef.typeName === "ZodNumber") distinctTypes.add("number");
         else if (optionDef.typeName === "ZodString") distinctTypes.add("string");
       }
     }
-    
+
     // If we have coercion or only one distinct type, it's a coercion union
     if (hasCoercion || distinctTypes.size === 1) {
       if (distinctTypes.has("boolean")) return "boolean";
-      if (distinctTypes.has("number")) return "number";  
+      if (distinctTypes.has("number")) return "number";
       if (distinctTypes.has("string")) return "string";
     }
-    
+
     // Multiple distinct types without coercion = generic union
     if (distinctTypes.size > 1) {
       return "unknown"; // Signal this should be handled as anyOf
@@ -240,7 +237,10 @@ export function zodToJsonSchemaCompat(schema: z.ZodTypeAny, options: any = {}): 
   }
 
   // Handle unions and enums at the root level using our simplified converter
-  if (def && (def.typeName === "ZodUnion" || def.typeName === "ZodEnum" || def.type === "union" || def.type === "enum")) {
+  if (
+    def &&
+    (def.typeName === "ZodUnion" || def.typeName === "ZodEnum" || def.type === "union" || def.type === "enum")
+  ) {
     return simplifyFieldSchema(schema);
   }
 

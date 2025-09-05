@@ -1,4 +1,4 @@
-import { createRequire } from 'module';
+import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 
 // Use dynamic import for Prometheus client with fallback
@@ -6,15 +6,15 @@ let promClient: any = null;
 let metricsEnabled = false;
 
 try {
-  promClient = require('prom-client');
+  promClient = require("prom-client");
   metricsEnabled = true;
-} catch (error) {
-  console.warn('[PrometheusMetrics] prom-client not installed, metrics disabled');
+} catch (_error) {
+  console.warn("[PrometheusMetrics] prom-client not installed, metrics disabled");
 }
 
 export class PrometheusMetrics {
   private static instance: PrometheusMetrics;
-  
+
   // MCP Server Metrics
   public readonly toolExecutionDuration: any;
   public readonly toolExecutionTotal: any;
@@ -61,162 +61,162 @@ export class PrometheusMetrics {
 
     // Configure default metrics
     promClient.collectDefaultMetrics({
-      prefix: 'elasticsearch_mcp_',
+      prefix: "elasticsearch_mcp_",
       timeout: 5000,
       gcDurationBuckets: [0.001, 0.01, 0.1, 1, 2, 5],
     });
 
     // Tool Execution Metrics
     this.toolExecutionDuration = new promClient.Histogram({
-      name: 'elasticsearch_mcp_tool_execution_duration_seconds',
-      help: 'Duration of tool execution in seconds',
-      labelNames: ['tool_name', 'tool_category', 'status'],
+      name: "elasticsearch_mcp_tool_execution_duration_seconds",
+      help: "Duration of tool execution in seconds",
+      labelNames: ["tool_name", "tool_category", "status"],
       buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 2, 5],
     });
 
     this.toolExecutionTotal = new promClient.Counter({
-      name: 'elasticsearch_mcp_tool_execution_total',
-      help: 'Total number of tool executions',
-      labelNames: ['tool_name', 'tool_category', 'status'],
+      name: "elasticsearch_mcp_tool_execution_total",
+      help: "Total number of tool executions",
+      labelNames: ["tool_name", "tool_category", "status"],
     });
 
     this.toolExecutionErrors = new promClient.Counter({
-      name: 'elasticsearch_mcp_tool_execution_errors_total',
-      help: 'Total number of tool execution errors',
-      labelNames: ['tool_name', 'tool_category', 'error_type'],
+      name: "elasticsearch_mcp_tool_execution_errors_total",
+      help: "Total number of tool execution errors",
+      labelNames: ["tool_name", "tool_category", "error_type"],
     });
 
     this.activeConnections = new promClient.Gauge({
-      name: 'elasticsearch_mcp_active_connections',
-      help: 'Number of active MCP connections',
+      name: "elasticsearch_mcp_active_connections",
+      help: "Number of active MCP connections",
     });
 
     this.requestsPerSecond = new promClient.Gauge({
-      name: 'elasticsearch_mcp_requests_per_second',
-      help: 'Current requests per second',
+      name: "elasticsearch_mcp_requests_per_second",
+      help: "Current requests per second",
     });
 
     // Circuit Breaker Metrics
     this.circuitBreakerState = new promClient.Gauge({
-      name: 'elasticsearch_mcp_circuit_breaker_state',
-      help: 'Circuit breaker state (0=closed, 1=open, 2=half-open)',
-      labelNames: ['operation'],
+      name: "elasticsearch_mcp_circuit_breaker_state",
+      help: "Circuit breaker state (0=closed, 1=open, 2=half-open)",
+      labelNames: ["operation"],
     });
 
     this.circuitBreakerTrips = new promClient.Counter({
-      name: 'elasticsearch_mcp_circuit_breaker_trips_total',
-      help: 'Total number of circuit breaker trips',
-      labelNames: ['operation'],
+      name: "elasticsearch_mcp_circuit_breaker_trips_total",
+      help: "Total number of circuit breaker trips",
+      labelNames: ["operation"],
     });
 
     this.circuitBreakerRecoveries = new promClient.Counter({
-      name: 'elasticsearch_mcp_circuit_breaker_recoveries_total',
-      help: 'Total number of circuit breaker recoveries',
-      labelNames: ['operation'],
+      name: "elasticsearch_mcp_circuit_breaker_recoveries_total",
+      help: "Total number of circuit breaker recoveries",
+      labelNames: ["operation"],
     });
 
     // Connection Pool Metrics
     this.connectionPoolSize = new promClient.Gauge({
-      name: 'elasticsearch_mcp_connection_pool_size',
-      help: 'Total size of connection pool',
+      name: "elasticsearch_mcp_connection_pool_size",
+      help: "Total size of connection pool",
     });
 
     this.connectionPoolActive = new promClient.Gauge({
-      name: 'elasticsearch_mcp_connection_pool_active',
-      help: 'Number of active connections in pool',
+      name: "elasticsearch_mcp_connection_pool_active",
+      help: "Number of active connections in pool",
     });
 
     this.connectionPoolHealth = new promClient.Gauge({
-      name: 'elasticsearch_mcp_connection_pool_health_ratio',
-      help: 'Ratio of healthy connections in pool',
+      name: "elasticsearch_mcp_connection_pool_health_ratio",
+      help: "Ratio of healthy connections in pool",
     });
 
     this.connectionPoolResponseTime = new promClient.Histogram({
-      name: 'elasticsearch_mcp_connection_pool_response_time_seconds',
-      help: 'Connection pool response time',
+      name: "elasticsearch_mcp_connection_pool_response_time_seconds",
+      help: "Connection pool response time",
       buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 2],
     });
 
     // Cache Metrics
     this.cacheHitRatio = new promClient.Gauge({
-      name: 'elasticsearch_mcp_cache_hit_ratio',
-      help: 'Cache hit ratio',
-      labelNames: ['cache_type'],
+      name: "elasticsearch_mcp_cache_hit_ratio",
+      help: "Cache hit ratio",
+      labelNames: ["cache_type"],
     });
 
     this.cacheSize = new promClient.Gauge({
-      name: 'elasticsearch_mcp_cache_size',
-      help: 'Current cache size',
-      labelNames: ['cache_type'],
+      name: "elasticsearch_mcp_cache_size",
+      help: "Current cache size",
+      labelNames: ["cache_type"],
     });
 
     this.cacheEvictions = new promClient.Counter({
-      name: 'elasticsearch_mcp_cache_evictions_total',
-      help: 'Total number of cache evictions',
-      labelNames: ['cache_type'],
+      name: "elasticsearch_mcp_cache_evictions_total",
+      help: "Total number of cache evictions",
+      labelNames: ["cache_type"],
     });
 
     this.cacheOperations = new promClient.Counter({
-      name: 'elasticsearch_mcp_cache_operations_total',
-      help: 'Total cache operations',
-      labelNames: ['cache_type', 'operation'],
+      name: "elasticsearch_mcp_cache_operations_total",
+      help: "Total cache operations",
+      labelNames: ["cache_type", "operation"],
     });
 
     // Elasticsearch Metrics
     this.elasticsearchResponseTime = new promClient.Histogram({
-      name: 'elasticsearch_mcp_es_response_time_seconds',
-      help: 'Elasticsearch response time',
-      labelNames: ['operation', 'index'],
+      name: "elasticsearch_mcp_es_response_time_seconds",
+      help: "Elasticsearch response time",
+      labelNames: ["operation", "index"],
       buckets: [0.01, 0.05, 0.1, 0.5, 1, 2, 5, 10],
     });
 
     this.elasticsearchErrors = new promClient.Counter({
-      name: 'elasticsearch_mcp_es_errors_total',
-      help: 'Total Elasticsearch errors',
-      labelNames: ['operation', 'error_code'],
+      name: "elasticsearch_mcp_es_errors_total",
+      help: "Total Elasticsearch errors",
+      labelNames: ["operation", "error_code"],
     });
 
     this.elasticsearchIndexOperations = new promClient.Counter({
-      name: 'elasticsearch_mcp_es_index_operations_total',
-      help: 'Total Elasticsearch index operations',
-      labelNames: ['operation', 'index'],
+      name: "elasticsearch_mcp_es_index_operations_total",
+      help: "Total Elasticsearch index operations",
+      labelNames: ["operation", "index"],
     });
 
     this.elasticsearchSearchOperations = new promClient.Counter({
-      name: 'elasticsearch_mcp_es_search_operations_total',
-      help: 'Total Elasticsearch search operations',
-      labelNames: ['index', 'query_type'],
+      name: "elasticsearch_mcp_es_search_operations_total",
+      help: "Total Elasticsearch search operations",
+      labelNames: ["index", "query_type"],
     });
 
     // Security Metrics
     this.securityValidationFailures = new promClient.Counter({
-      name: 'elasticsearch_mcp_security_validation_failures_total',
-      help: 'Total security validation failures',
-      labelNames: ['tool_name', 'failure_type'],
+      name: "elasticsearch_mcp_security_validation_failures_total",
+      help: "Total security validation failures",
+      labelNames: ["tool_name", "failure_type"],
     });
 
     this.readOnlyModeBlocks = new promClient.Counter({
-      name: 'elasticsearch_mcp_readonly_mode_blocks_total',
-      help: 'Total operations blocked by read-only mode',
-      labelNames: ['tool_name', 'operation_type'],
+      name: "elasticsearch_mcp_readonly_mode_blocks_total",
+      help: "Total operations blocked by read-only mode",
+      labelNames: ["tool_name", "operation_type"],
     });
 
     this.rateLimitHits = new promClient.Counter({
-      name: 'elasticsearch_mcp_rate_limit_hits_total',
-      help: 'Total rate limit hits',
-      labelNames: ['limit_type'],
+      name: "elasticsearch_mcp_rate_limit_hits_total",
+      help: "Total rate limit hits",
+      labelNames: ["limit_type"],
     });
 
     // System Metrics
     this.memoryUsage = new promClient.Gauge({
-      name: 'elasticsearch_mcp_memory_usage_bytes',
-      help: 'Memory usage in bytes',
-      labelNames: ['type'],
+      name: "elasticsearch_mcp_memory_usage_bytes",
+      help: "Memory usage in bytes",
+      labelNames: ["type"],
     });
 
     this.cpuUsage = new promClient.Gauge({
-      name: 'elasticsearch_mcp_cpu_usage_percent',
-      help: 'CPU usage percentage',
+      name: "elasticsearch_mcp_cpu_usage_percent",
+      help: "CPU usage percentage",
     });
 
     // Start system metrics collection
@@ -237,8 +237,8 @@ export class PrometheusMetrics {
   public recordToolExecution(
     toolName: string,
     category: string,
-    duration: number,
-    status: 'success' | 'error' | 'timeout'
+    _duration: number,
+    status: "success" | "error" | "timeout",
   ): void {
     if (!this.isEnabled()) return;
 
@@ -266,10 +266,10 @@ export class PrometheusMetrics {
     });
   }
 
-  public recordCircuitBreakerState(operation: string, state: 'closed' | 'open' | 'half-open'): void {
+  public recordCircuitBreakerState(operation: string, state: "closed" | "open" | "half-open"): void {
     if (!this.isEnabled()) return;
 
-    const stateValue = state === 'closed' ? 0 : state === 'open' ? 1 : 2;
+    const stateValue = state === "closed" ? 0 : state === "open" ? 1 : 2;
     this.circuitBreakerState.set({ operation }, stateValue);
   }
 
@@ -283,11 +283,7 @@ export class PrometheusMetrics {
     this.circuitBreakerRecoveries.inc({ operation });
   }
 
-  public updateConnectionPoolMetrics(
-    totalSize: number,
-    activeConnections: number,
-    healthyRatio: number
-  ): void {
+  public updateConnectionPoolMetrics(totalSize: number, activeConnections: number, healthyRatio: number): void {
     if (!this.isEnabled()) return;
 
     this.connectionPoolSize.set(totalSize);
@@ -300,26 +296,19 @@ export class PrometheusMetrics {
     this.connectionPoolResponseTime.observe(duration);
   }
 
-  public updateCacheMetrics(
-    cacheType: string,
-    size: number,
-    hitRatio: number
-  ): void {
+  public updateCacheMetrics(cacheType: string, size: number, hitRatio: number): void {
     if (!this.isEnabled()) return;
 
     this.cacheSize.set({ cache_type: cacheType }, size);
     this.cacheHitRatio.set({ cache_type: cacheType }, hitRatio);
   }
 
-  public recordCacheOperation(
-    cacheType: string,
-    operation: 'hit' | 'miss' | 'eviction' | 'clear'
-  ): void {
+  public recordCacheOperation(cacheType: string, operation: "hit" | "miss" | "eviction" | "clear"): void {
     if (!this.isEnabled()) return;
 
     this.cacheOperations.inc({ cache_type: cacheType, operation });
 
-    if (operation === 'eviction') {
+    if (operation === "eviction") {
       this.cacheEvictions.inc({ cache_type: cacheType });
     }
   }
@@ -329,7 +318,7 @@ export class PrometheusMetrics {
     index: string,
     duration: number,
     success: boolean,
-    errorCode?: string
+    errorCode?: string,
   ): void {
     if (!this.isEnabled()) return;
 
@@ -373,7 +362,7 @@ export class PrometheusMetrics {
   }
 
   public getMetrics(): string {
-    if (!this.isEnabled()) return '';
+    if (!this.isEnabled()) return "";
     return promClient.register.metrics();
   }
 
@@ -389,19 +378,19 @@ export class PrometheusMetrics {
     setInterval(() => {
       try {
         const memUsage = process.memoryUsage();
-        this.memoryUsage.set({ type: 'rss' }, memUsage.rss);
-        this.memoryUsage.set({ type: 'heapUsed' }, memUsage.heapUsed);
-        this.memoryUsage.set({ type: 'heapTotal' }, memUsage.heapTotal);
-        this.memoryUsage.set({ type: 'external' }, memUsage.external);
+        this.memoryUsage.set({ type: "rss" }, memUsage.rss);
+        this.memoryUsage.set({ type: "heapUsed" }, memUsage.heapUsed);
+        this.memoryUsage.set({ type: "heapTotal" }, memUsage.heapTotal);
+        this.memoryUsage.set({ type: "external" }, memUsage.external);
 
         // CPU usage (simplified - would need more sophisticated tracking in production)
-        if (typeof process.cpuUsage === 'function') {
+        if (typeof process.cpuUsage === "function") {
           const cpuUsage = process.cpuUsage();
           const totalUsage = (cpuUsage.user + cpuUsage.system) / 1000000; // Convert to seconds
           this.cpuUsage.set(totalUsage);
         }
       } catch (error) {
-        console.warn('[PrometheusMetrics] Error collecting system metrics:', error);
+        console.warn("[PrometheusMetrics] Error collecting system metrics:", error);
       }
     }, 10000);
   }

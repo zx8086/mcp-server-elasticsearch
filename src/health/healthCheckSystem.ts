@@ -1,20 +1,20 @@
-import { EventEmitter } from 'events';
-import { logger } from '../utils/logger.js';
-import { metrics } from '../monitoring/prometheusMetrics.js';
-import { Client } from '@elastic/elasticsearch';
+import { EventEmitter } from "node:events";
+import type { Client } from "@elastic/elasticsearch";
+import { metrics } from "../monitoring/prometheusMetrics.js";
+import { logger } from "../utils/logger.js";
 
 export enum HealthStatus {
-  HEALTHY = 'healthy',
-  DEGRADED = 'degraded',
-  UNHEALTHY = 'unhealthy',
-  CRITICAL = 'critical',
-  UNKNOWN = 'unknown'
+  HEALTHY = "healthy",
+  DEGRADED = "degraded",
+  UNHEALTHY = "unhealthy",
+  CRITICAL = "critical",
+  UNKNOWN = "unknown",
 }
 
 export enum HealthCheckType {
-  DEEP = 'deep',
-  SHALLOW = 'shallow',
-  CRITICAL_ONLY = 'critical_only'
+  DEEP = "deep",
+  SHALLOW = "shallow",
+  CRITICAL_ONLY = "critical_only",
 }
 
 export interface HealthCheckResult {
@@ -44,14 +44,14 @@ export interface SystemHealthSnapshot {
   alerts: HealthAlert[];
   trends: {
     status: HealthStatus;
-    direction: 'improving' | 'stable' | 'degrading';
+    direction: "improving" | "stable" | "degrading";
     confidence: number;
   };
 }
 
 export interface HealthAlert {
   id: string;
-  level: 'info' | 'warning' | 'error' | 'critical';
+  level: "info" | "warning" | "error" | "critical";
   message: string;
   component: string;
   timestamp: string;
@@ -64,7 +64,7 @@ interface HealthCheckConfig {
   interval: number;
   timeout: number;
   retries: number;
-  criticality: 'low' | 'medium' | 'high' | 'critical';
+  criticality: "low" | "medium" | "high" | "critical";
   dependencies?: string[];
 }
 
@@ -79,19 +79,14 @@ abstract class BaseHealthCheck {
       interval: 30000, // 30 seconds
       timeout: 5000, // 5 seconds
       retries: 2,
-      criticality: 'medium',
+      criticality: "medium",
       ...config,
     };
   }
 
   public abstract execute(): Promise<HealthCheckResult>;
 
-  protected createResult(
-    status: HealthStatus,
-    duration: number,
-    message?: string,
-    details?: any
-  ): HealthCheckResult {
+  protected createResult(status: HealthStatus, duration: number, message?: string, details?: any): HealthCheckResult {
     return {
       name: this.name,
       status,
@@ -116,8 +111,8 @@ class ElasticsearchConnectionCheck extends BaseHealthCheck {
   private client: Client;
 
   constructor(client: Client) {
-    super('elasticsearch_connection', {
-      criticality: 'critical',
+    super("elasticsearch_connection", {
+      criticality: "critical",
       timeout: 10000,
     });
     this.client = client;
@@ -130,20 +125,14 @@ class ElasticsearchConnectionCheck extends BaseHealthCheck {
       const response = await this.client.ping({ requestTimeout: this.config.timeout });
       const duration = performance.now() - startTime;
 
-      return this.createResult(
-        HealthStatus.HEALTHY,
-        duration,
-        'Elasticsearch connection is healthy',
-        { response: response.body }
-      );
+      return this.createResult(HealthStatus.HEALTHY, duration, "Elasticsearch connection is healthy", {
+        response: response.body,
+      });
     } catch (error) {
       const duration = performance.now() - startTime;
-      return this.createResult(
-        HealthStatus.CRITICAL,
-        duration,
-        `Elasticsearch connection failed: ${error.message}`,
-        { error: error.message }
-      );
+      return this.createResult(HealthStatus.CRITICAL, duration, `Elasticsearch connection failed: ${error.message}`, {
+        error: error.message,
+      });
     }
   }
 }
@@ -152,9 +141,9 @@ class ElasticsearchClusterHealthCheck extends BaseHealthCheck {
   private client: Client;
 
   constructor(client: Client) {
-    super('elasticsearch_cluster_health', {
-      criticality: 'critical',
-      dependencies: ['elasticsearch_connection'],
+    super("elasticsearch_cluster_health", {
+      criticality: "critical",
+      dependencies: ["elasticsearch_connection"],
     });
     this.client = client;
   }
@@ -174,19 +163,19 @@ class ElasticsearchClusterHealthCheck extends BaseHealthCheck {
       const recommendations: string[] = [];
 
       switch (health.status) {
-        case 'green':
+        case "green":
           status = HealthStatus.HEALTHY;
-          message = 'Cluster is healthy (green)';
+          message = "Cluster is healthy (green)";
           break;
-        case 'yellow':
+        case "yellow":
           status = HealthStatus.DEGRADED;
           message = `Cluster is degraded (yellow) - ${health.unassigned_shards} unassigned shards`;
-          recommendations.push('Review unassigned shards and replica settings');
+          recommendations.push("Review unassigned shards and replica settings");
           break;
-        case 'red':
+        case "red":
           status = HealthStatus.UNHEALTHY;
           message = `Cluster is unhealthy (red) - ${health.unassigned_shards} unassigned shards`;
-          recommendations.push('Immediate attention required - cluster has missing primary shards');
+          recommendations.push("Immediate attention required - cluster has missing primary shards");
           break;
         default:
           status = HealthStatus.UNKNOWN;
@@ -195,7 +184,9 @@ class ElasticsearchClusterHealthCheck extends BaseHealthCheck {
 
       // Additional health indicators
       if (health.active_shards_percent_as_number < 100) {
-        recommendations.push(`Active shards: ${health.active_shards_percent_as_number}% - investigate shard allocation`);
+        recommendations.push(
+          `Active shards: ${health.active_shards_percent_as_number}% - investigate shard allocation`,
+        );
       }
 
       if (health.delayed_unassigned_shards > 0) {
@@ -221,12 +212,9 @@ class ElasticsearchClusterHealthCheck extends BaseHealthCheck {
       };
     } catch (error) {
       const duration = performance.now() - startTime;
-      return this.createResult(
-        HealthStatus.CRITICAL,
-        duration,
-        `Cluster health check failed: ${error.message}`,
-        { error: error.message }
-      );
+      return this.createResult(HealthStatus.CRITICAL, duration, `Cluster health check failed: ${error.message}`, {
+        error: error.message,
+      });
     }
   }
 }
@@ -235,15 +223,15 @@ class CircuitBreakerHealthCheck extends BaseHealthCheck {
   private circuitBreakerStates: Map<string, any>;
 
   constructor(circuitBreakerStates: Map<string, any>) {
-    super('circuit_breakers', {
-      criticality: 'high',
+    super("circuit_breakers", {
+      criticality: "high",
     });
     this.circuitBreakerStates = circuitBreakerStates;
   }
 
   public async execute(): Promise<HealthCheckResult> {
     const startTime = performance.now();
-    
+
     try {
       const openBreakers: string[] = [];
       const halfOpenBreakers: string[] = [];
@@ -252,31 +240,31 @@ class CircuitBreakerHealthCheck extends BaseHealthCheck {
 
       for (const [operation, breaker] of this.circuitBreakerStates) {
         const state = breaker.getState();
-        breakerMetrics[`${operation}_state`] = state === 'CLOSED' ? 0 : state === 'OPEN' ? 1 : 2;
+        breakerMetrics[`${operation}_state`] = state === "CLOSED" ? 0 : state === "OPEN" ? 1 : 2;
         breakerMetrics[`${operation}_failures`] = breaker.getFailureCount();
-        
-        if (state === 'OPEN') {
+
+        if (state === "OPEN") {
           openBreakers.push(operation);
-        } else if (state === 'HALF_OPEN') {
+        } else if (state === "HALF_OPEN") {
           halfOpenBreakers.push(operation);
         }
       }
 
       const duration = performance.now() - startTime;
-      
+
       let status: HealthStatus;
       let message: string;
       const recommendations: string[] = [];
 
       if (openBreakers.length > 0) {
         status = HealthStatus.UNHEALTHY;
-        message = `${openBreakers.length} circuit breakers are OPEN: ${openBreakers.join(', ')}`;
-        recommendations.push('Investigate underlying service failures causing circuit breaker trips');
-        recommendations.push('Check Elasticsearch cluster health and network connectivity');
+        message = `${openBreakers.length} circuit breakers are OPEN: ${openBreakers.join(", ")}`;
+        recommendations.push("Investigate underlying service failures causing circuit breaker trips");
+        recommendations.push("Check Elasticsearch cluster health and network connectivity");
       } else if (halfOpenBreakers.length > 0) {
         status = HealthStatus.DEGRADED;
-        message = `${halfOpenBreakers.length} circuit breakers are HALF-OPEN: ${halfOpenBreakers.join(', ')}`;
-        recommendations.push('Monitor circuit breakers recovering from failures');
+        message = `${halfOpenBreakers.length} circuit breakers are HALF-OPEN: ${halfOpenBreakers.join(", ")}`;
+        recommendations.push("Monitor circuit breakers recovering from failures");
       } else {
         status = HealthStatus.HEALTHY;
         message = `All ${totalBreakers} circuit breakers are CLOSED`;
@@ -300,7 +288,7 @@ class CircuitBreakerHealthCheck extends BaseHealthCheck {
         HealthStatus.UNKNOWN,
         duration,
         `Circuit breaker health check failed: ${error.message}`,
-        { error: error.message }
+        { error: error.message },
       );
     }
   }
@@ -310,20 +298,20 @@ class ConnectionPoolHealthCheck extends BaseHealthCheck {
   private connectionPool: any;
 
   constructor(connectionPool: any) {
-    super('connection_pool', {
-      criticality: 'high',
-      dependencies: ['elasticsearch_connection'],
+    super("connection_pool", {
+      criticality: "high",
+      dependencies: ["elasticsearch_connection"],
     });
     this.connectionPool = connectionPool;
   }
 
   public async execute(): Promise<HealthCheckResult> {
     const startTime = performance.now();
-    
+
     try {
       const stats = this.connectionPool.getStats();
       const duration = performance.now() - startTime;
-      
+
       let status: HealthStatus;
       let message: string;
       const recommendations: string[] = [];
@@ -334,16 +322,16 @@ class ConnectionPoolHealthCheck extends BaseHealthCheck {
       if (healthyRatio < 0.5) {
         status = HealthStatus.UNHEALTHY;
         message = `Connection pool unhealthy: ${(healthyRatio * 100).toFixed(1)}% healthy connections`;
-        recommendations.push('Investigate connection failures to Elasticsearch');
-        recommendations.push('Consider increasing connection pool size or timeout settings');
+        recommendations.push("Investigate connection failures to Elasticsearch");
+        recommendations.push("Consider increasing connection pool size or timeout settings");
       } else if (healthyRatio < 0.8) {
         status = HealthStatus.DEGRADED;
         message = `Connection pool degraded: ${(healthyRatio * 100).toFixed(1)}% healthy connections`;
-        recommendations.push('Monitor connection health and consider pool tuning');
+        recommendations.push("Monitor connection health and consider pool tuning");
       } else if (utilizationRatio > 0.9) {
         status = HealthStatus.DEGRADED;
         message = `High connection pool utilization: ${(utilizationRatio * 100).toFixed(1)}%`;
-        recommendations.push('Consider increasing connection pool size to handle load');
+        recommendations.push("Consider increasing connection pool size to handle load");
       } else {
         status = HealthStatus.HEALTHY;
         message = `Connection pool healthy: ${stats.healthyConnections}/${stats.totalConnections} connections`;
@@ -368,7 +356,7 @@ class ConnectionPoolHealthCheck extends BaseHealthCheck {
         HealthStatus.UNKNOWN,
         duration,
         `Connection pool health check failed: ${error.message}`,
-        { error: error.message }
+        { error: error.message },
       );
     }
   }
@@ -378,15 +366,15 @@ class CacheHealthCheck extends BaseHealthCheck {
   private caches: Map<string, any>;
 
   constructor(caches: Map<string, any>) {
-    super('cache_systems', {
-      criticality: 'medium',
+    super("cache_systems", {
+      criticality: "medium",
     });
     this.caches = caches;
   }
 
   public async execute(): Promise<HealthCheckResult> {
     const startTime = performance.now();
-    
+
     try {
       const cacheMetrics: { [key: string]: number } = {};
       const lowPerformanceCaches: string[] = [];
@@ -396,14 +384,14 @@ class CacheHealthCheck extends BaseHealthCheck {
       for (const [cacheName, cache] of this.caches) {
         const stats = cache.getStats();
         const hitRatio = stats.hitRatio || 0;
-        
+
         cacheMetrics[`${cacheName}_size`] = stats.size || 0;
         cacheMetrics[`${cacheName}_hit_ratio`] = hitRatio;
         cacheMetrics[`${cacheName}_evictions`] = stats.evictions || 0;
-        
+
         totalHitRatio += hitRatio;
         totalCaches++;
-        
+
         if (hitRatio < 0.6) {
           lowPerformanceCaches.push(cacheName);
         }
@@ -411,7 +399,7 @@ class CacheHealthCheck extends BaseHealthCheck {
 
       const duration = performance.now() - startTime;
       const averageHitRatio = totalCaches > 0 ? totalHitRatio / totalCaches : 1;
-      
+
       let status: HealthStatus;
       let message: string;
       const recommendations: string[] = [];
@@ -419,12 +407,12 @@ class CacheHealthCheck extends BaseHealthCheck {
       if (averageHitRatio < 0.5) {
         status = HealthStatus.DEGRADED;
         message = `Cache performance degraded: ${(averageHitRatio * 100).toFixed(1)}% average hit ratio`;
-        recommendations.push('Review cache configuration and TTL settings');
-        recommendations.push('Consider increasing cache size or optimizing cache keys');
+        recommendations.push("Review cache configuration and TTL settings");
+        recommendations.push("Consider increasing cache size or optimizing cache keys");
       } else if (lowPerformanceCaches.length > 0) {
         status = HealthStatus.DEGRADED;
-        message = `Some caches underperforming: ${lowPerformanceCaches.join(', ')}`;
-        recommendations.push(`Optimize underperforming caches: ${lowPerformanceCaches.join(', ')}`);
+        message = `Some caches underperforming: ${lowPerformanceCaches.join(", ")}`;
+        recommendations.push(`Optimize underperforming caches: ${lowPerformanceCaches.join(", ")}`);
       } else {
         status = HealthStatus.HEALTHY;
         message = `Cache systems healthy: ${(averageHitRatio * 100).toFixed(1)}% average hit ratio`;
@@ -446,35 +434,32 @@ class CacheHealthCheck extends BaseHealthCheck {
       };
     } catch (error) {
       const duration = performance.now() - startTime;
-      return this.createResult(
-        HealthStatus.UNKNOWN,
-        duration,
-        `Cache health check failed: ${error.message}`,
-        { error: error.message }
-      );
+      return this.createResult(HealthStatus.UNKNOWN, duration, `Cache health check failed: ${error.message}`, {
+        error: error.message,
+      });
     }
   }
 }
 
 class MemoryHealthCheck extends BaseHealthCheck {
   constructor() {
-    super('memory_usage', {
-      criticality: 'high',
+    super("memory_usage", {
+      criticality: "high",
     });
   }
 
   public async execute(): Promise<HealthCheckResult> {
     const startTime = performance.now();
-    
+
     try {
       const memUsage = process.memoryUsage();
       const duration = performance.now() - startTime;
-      
+
       const heapUsedMB = memUsage.heapUsed / 1024 / 1024;
       const heapTotalMB = memUsage.heapTotal / 1024 / 1024;
       const rssMB = memUsage.rss / 1024 / 1024;
       const heapUtilization = memUsage.heapUsed / memUsage.heapTotal;
-      
+
       let status: HealthStatus;
       let message: string;
       const recommendations: string[] = [];
@@ -482,17 +467,17 @@ class MemoryHealthCheck extends BaseHealthCheck {
       if (heapUtilization > 0.9) {
         status = HealthStatus.CRITICAL;
         message = `Critical memory usage: ${(heapUtilization * 100).toFixed(1)}% heap utilization`;
-        recommendations.push('Immediate attention required - high memory pressure');
-        recommendations.push('Consider restarting the service or increasing memory allocation');
+        recommendations.push("Immediate attention required - high memory pressure");
+        recommendations.push("Consider restarting the service or increasing memory allocation");
       } else if (heapUtilization > 0.8) {
         status = HealthStatus.UNHEALTHY;
         message = `High memory usage: ${(heapUtilization * 100).toFixed(1)}% heap utilization`;
-        recommendations.push('Monitor memory usage closely');
-        recommendations.push('Consider memory optimization or scaling up');
+        recommendations.push("Monitor memory usage closely");
+        recommendations.push("Consider memory optimization or scaling up");
       } else if (heapUtilization > 0.7) {
         status = HealthStatus.DEGRADED;
         message = `Elevated memory usage: ${(heapUtilization * 100).toFixed(1)}% heap utilization`;
-        recommendations.push('Monitor memory trends and consider proactive scaling');
+        recommendations.push("Monitor memory trends and consider proactive scaling");
       } else {
         status = HealthStatus.HEALTHY;
         message = `Memory usage healthy: ${heapUsedMB.toFixed(1)}MB used (${(heapUtilization * 100).toFixed(1)}%)`;
@@ -512,12 +497,9 @@ class MemoryHealthCheck extends BaseHealthCheck {
       };
     } catch (error) {
       const duration = performance.now() - startTime;
-      return this.createResult(
-        HealthStatus.UNKNOWN,
-        duration,
-        `Memory health check failed: ${error.message}`,
-        { error: error.message }
-      );
+      return this.createResult(HealthStatus.UNKNOWN, duration, `Memory health check failed: ${error.message}`, {
+        error: error.message,
+      });
     }
   }
 }
@@ -549,19 +531,19 @@ export class HealthCheckSystem extends EventEmitter {
 
     // Run health checks in parallel
     const checkPromises = Array.from(this.healthChecks.values())
-      .filter(check => check.isEnabled())
-      .filter(check => this.shouldRunCheck(check, type))
+      .filter((check) => check.isEnabled())
+      .filter((check) => this.shouldRunCheck(check, type))
       .map(async (check) => {
         try {
           const result = await this.executeHealthCheckWithTimeout(check);
           this.lastResults.set(check.name, result);
-          
+
           // Generate alerts for unhealthy checks
           if (result.status !== HealthStatus.HEALTHY) {
             const alert = this.generateAlert(result);
             alerts.push(alert);
           }
-          
+
           return result;
         } catch (error) {
           logger.error(`Health check failed: ${check.name}`, { error });
@@ -577,7 +559,7 @@ export class HealthCheckSystem extends EventEmitter {
         }
       });
 
-    results.push(...await Promise.all(checkPromises));
+    results.push(...(await Promise.all(checkPromises)));
 
     const duration = performance.now() - startTime;
     const summary = this.calculateSummary(results);
@@ -606,7 +588,7 @@ export class HealthCheckSystem extends EventEmitter {
     return snapshot;
   }
 
-  public startPeriodicHealthChecks(interval: number = 30000): void {
+  public startPeriodicHealthChecks(interval = 30000): void {
     if (this.isRunning) {
       this.stopPeriodicHealthChecks();
     }
@@ -615,7 +597,7 @@ export class HealthCheckSystem extends EventEmitter {
       try {
         await this.runHealthChecks(HealthCheckType.SHALLOW);
       } catch (error) {
-        logger.error('Periodic health check failed', { error });
+        logger.error("Periodic health check failed", { error });
       }
     }, interval);
 
@@ -629,7 +611,7 @@ export class HealthCheckSystem extends EventEmitter {
       this.checkInterval = null;
     }
     this.isRunning = false;
-    logger.info('Periodic health checks stopped');
+    logger.info("Periodic health checks stopped");
   }
 
   public getHealthStatus(): SystemHealthSnapshot | null {
@@ -639,22 +621,22 @@ export class HealthCheckSystem extends EventEmitter {
     return this.healthHistory[this.healthHistory.length - 1];
   }
 
-  public getHealthHistory(limit: number = 100): SystemHealthSnapshot[] {
+  public getHealthHistory(limit = 100): SystemHealthSnapshot[] {
     return this.healthHistory.slice(-limit);
   }
 
   public getActiveAlerts(): HealthAlert[] {
-    return Array.from(this.activeAlerts.values()).filter(alert => !alert.resolved);
+    return Array.from(this.activeAlerts.values()).filter((alert) => !alert.resolved);
   }
 
   private shouldRunCheck(check: BaseHealthCheck, type: HealthCheckType): boolean {
     const config = check.getConfig();
-    
+
     switch (type) {
       case HealthCheckType.CRITICAL_ONLY:
-        return config.criticality === 'critical';
+        return config.criticality === "critical";
       case HealthCheckType.SHALLOW:
-        return config.criticality === 'critical' || config.criticality === 'high';
+        return config.criticality === "critical" || config.criticality === "high";
       case HealthCheckType.DEEP:
         return true;
       default:
@@ -664,18 +646,19 @@ export class HealthCheckSystem extends EventEmitter {
 
   private async executeHealthCheckWithTimeout(check: BaseHealthCheck): Promise<HealthCheckResult> {
     const config = check.getConfig();
-    
+
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error(`Health check timeout after ${config.timeout}ms`));
       }, config.timeout);
 
-      check.execute()
-        .then(result => {
+      check
+        .execute()
+        .then((result) => {
           clearTimeout(timeout);
           resolve(result);
         })
-        .catch(error => {
+        .catch((error) => {
           clearTimeout(timeout);
           reject(error);
         });
@@ -716,9 +699,9 @@ export class HealthCheckSystem extends EventEmitter {
       return HealthStatus.UNKNOWN;
     }
 
-    const hasCritical = results.some(r => r.status === HealthStatus.CRITICAL);
-    const hasUnhealthy = results.some(r => r.status === HealthStatus.UNHEALTHY);
-    const hasDegraded = results.some(r => r.status === HealthStatus.DEGRADED);
+    const hasCritical = results.some((r) => r.status === HealthStatus.CRITICAL);
+    const hasUnhealthy = results.some((r) => r.status === HealthStatus.UNHEALTHY);
+    const hasDegraded = results.some((r) => r.status === HealthStatus.DEGRADED);
 
     if (hasCritical) {
       return HealthStatus.CRITICAL;
@@ -733,28 +716,32 @@ export class HealthCheckSystem extends EventEmitter {
     return HealthStatus.HEALTHY;
   }
 
-  private analyzeTrends(): { status: HealthStatus; direction: 'improving' | 'stable' | 'degrading'; confidence: number } {
+  private analyzeTrends(): {
+    status: HealthStatus;
+    direction: "improving" | "stable" | "degrading";
+    confidence: number;
+  } {
     if (this.healthHistory.length < 3) {
       return {
         status: HealthStatus.UNKNOWN,
-        direction: 'stable',
+        direction: "stable",
         confidence: 0,
       };
     }
 
     const recent = this.healthHistory.slice(-5);
-    const statusValues = recent.map(h => this.statusToNumber(h.overall));
-    
+    const statusValues = recent.map((h) => this.statusToNumber(h.overall));
+
     // Calculate trend direction
     const trend = this.calculateTrend(statusValues);
-    let direction: 'improving' | 'stable' | 'degrading';
-    
+    let direction: "improving" | "stable" | "degrading";
+
     if (trend > 0.1) {
-      direction = 'improving';
+      direction = "improving";
     } else if (trend < -0.1) {
-      direction = 'degrading';
+      direction = "degrading";
     } else {
-      direction = 'stable';
+      direction = "stable";
     }
 
     return {
@@ -766,40 +753,45 @@ export class HealthCheckSystem extends EventEmitter {
 
   private statusToNumber(status: HealthStatus): number {
     switch (status) {
-      case HealthStatus.CRITICAL: return 0;
-      case HealthStatus.UNHEALTHY: return 1;
-      case HealthStatus.DEGRADED: return 2;
-      case HealthStatus.HEALTHY: return 3;
-      default: return 1.5;
+      case HealthStatus.CRITICAL:
+        return 0;
+      case HealthStatus.UNHEALTHY:
+        return 1;
+      case HealthStatus.DEGRADED:
+        return 2;
+      case HealthStatus.HEALTHY:
+        return 3;
+      default:
+        return 1.5;
     }
   }
 
   private calculateTrend(values: number[]): number {
     if (values.length < 2) return 0;
-    
+
     const n = values.length;
-    const sumX = n * (n - 1) / 2;
+    const sumX = (n * (n - 1)) / 2;
     const sumY = values.reduce((sum, val) => sum + val, 0);
     const sumXY = values.reduce((sum, val, i) => sum + i * val, 0);
-    const sumXX = n * (n - 1) * (2 * n - 1) / 6;
-    
+    const sumXX = (n * (n - 1) * (2 * n - 1)) / 6;
+
     return (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
   }
 
   private generateAlert(result: HealthCheckResult): HealthAlert {
-    let level: HealthAlert['level'];
+    let level: HealthAlert["level"];
     switch (result.status) {
       case HealthStatus.CRITICAL:
-        level = 'critical';
+        level = "critical";
         break;
       case HealthStatus.UNHEALTHY:
-        level = 'error';
+        level = "error";
         break;
       case HealthStatus.DEGRADED:
-        level = 'warning';
+        level = "warning";
         break;
       default:
-        level = 'info';
+        level = "info";
     }
 
     const alert: HealthAlert = {
@@ -817,7 +809,7 @@ export class HealthCheckSystem extends EventEmitter {
 
   private updateHealthHistory(snapshot: SystemHealthSnapshot): void {
     this.healthHistory.push(snapshot);
-    
+
     // Keep only last 1000 snapshots
     if (this.healthHistory.length > 1000) {
       this.healthHistory = this.healthHistory.slice(-1000);
@@ -825,14 +817,14 @@ export class HealthCheckSystem extends EventEmitter {
   }
 
   private emitHealthEvents(snapshot: SystemHealthSnapshot): void {
-    this.emit('health_check_complete', snapshot);
-    
+    this.emit("health_check_complete", snapshot);
+
     if (snapshot.overall !== HealthStatus.HEALTHY) {
-      this.emit('health_degraded', snapshot);
+      this.emit("health_degraded", snapshot);
     }
-    
+
     if (snapshot.alerts.length > 0) {
-      this.emit('health_alerts', snapshot.alerts);
+      this.emit("health_alerts", snapshot.alerts);
     }
   }
 
@@ -842,31 +834,40 @@ export class HealthCheckSystem extends EventEmitter {
     }
 
     // Update overall health metric (0=healthy, 1=degraded, 2=unhealthy, 3=critical)
-    let healthValue: number;
+    let _healthValue: number;
     switch (snapshot.overall) {
-      case HealthStatus.HEALTHY: healthValue = 0; break;
-      case HealthStatus.DEGRADED: healthValue = 1; break;
-      case HealthStatus.UNHEALTHY: healthValue = 2; break;
-      case HealthStatus.CRITICAL: healthValue = 3; break;
-      default: healthValue = -1;
+      case HealthStatus.HEALTHY:
+        _healthValue = 0;
+        break;
+      case HealthStatus.DEGRADED:
+        _healthValue = 1;
+        break;
+      case HealthStatus.UNHEALTHY:
+        _healthValue = 2;
+        break;
+      case HealthStatus.CRITICAL:
+        _healthValue = 3;
+        break;
+      default:
+        _healthValue = -1;
     }
-    
+
     // Note: You'd need to add these metrics to the PrometheusMetrics class
     // metrics.setOverallHealth(healthValue);
     // metrics.setHealthCheckDuration(snapshot.duration);
   }
 
   private setupEventHandlers(): void {
-    this.on('health_degraded', (snapshot: SystemHealthSnapshot) => {
-      logger.warn('System health degraded', {
+    this.on("health_degraded", (snapshot: SystemHealthSnapshot) => {
+      logger.warn("System health degraded", {
         overall: snapshot.overall,
-        unhealthyChecks: snapshot.checks.filter(c => c.status !== HealthStatus.HEALTHY).map(c => c.name),
+        unhealthyChecks: snapshot.checks.filter((c) => c.status !== HealthStatus.HEALTHY).map((c) => c.name),
       });
     });
 
-    this.on('health_alerts', (alerts: HealthAlert[]) => {
+    this.on("health_alerts", (alerts: HealthAlert[]) => {
       for (const alert of alerts) {
-        logger.warn('Health alert generated', alert);
+        logger.warn("Health alert generated", alert);
       }
     });
   }
@@ -878,8 +879,8 @@ export class HealthCheckSystem extends EventEmitter {
     this.lastResults.clear();
     this.healthHistory = [];
     this.activeAlerts.clear();
-    
-    logger.info('Health check system destroyed');
+
+    logger.info("Health check system destroyed");
   }
 }
 
@@ -888,7 +889,7 @@ export function createHealthCheckSystem(
   esClient: Client,
   circuitBreakers: Map<string, any>,
   connectionPool: any,
-  caches: Map<string, any>
+  caches: Map<string, any>,
 ): HealthCheckSystem {
   const healthSystem = new HealthCheckSystem();
 
