@@ -1,4 +1,5 @@
 /* src/tools/search/update_by_query.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,69 +10,7 @@ import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const updateByQuerySchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      minLength: 1,
-      description: "Index name or pattern to update",
-    },
-    query: {
-      type: "object",
-      additionalProperties: true,
-      description: "Query DSL to select documents to update",
-    },
-    script: {
-      type: "object",
-      additionalProperties: true,
-      description: "Script to apply to matching documents",
-    },
-    maxDocs: {
-      type: "number",
-    },
-    conflicts: {
-      type: "string",
-      enum: ["abort", "proceed"],
-    },
-    refresh: {
-      type: "boolean",
-    },
-    timeout: {
-      type: "string",
-    },
-    waitForActiveShards: {
-      oneOf: [
-        { type: "string", const: "all" },
-        { type: "number", minimum: 1, maximum: 9 },
-      ],
-    },
-    waitForCompletion: {
-      type: "boolean",
-    },
-    requestsPerSecond: {
-      type: "number",
-    },
-    scroll: {
-      type: "string",
-    },
-    scrollSize: {
-      type: "number",
-    },
-    searchType: {
-      type: "string",
-      enum: ["query_then_fetch", "dfs_query_then_fetch"],
-    },
-    searchTimeout: {
-      type: "string",
-    },
-    slices: {
-      type: "number",
-    },
-  },
-  required: ["index", "query"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const updateByQueryValidator = z.object({
@@ -169,7 +108,23 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpS
   server.tool(
     "elasticsearch_update_by_query",
     "Update documents by query in Elasticsearch. Best for bulk document updates, field modifications, script-based transformations. Use when you need to update multiple documents based on query conditions rather than individual document updates. Uses direct JSON Schema and standardized MCP error codes.",
-    updateByQuerySchema,
+  {
+    index: z.string(), // Index name or pattern to update
+    query: z.object({}), // Query DSL to select documents to update
+    script: z.object({}).optional(), // Script to apply to matching documents
+    maxDocs: z.number().optional(),
+    conflicts: z.enum(["abort", "proceed"]).optional(),
+    refresh: z.boolean().optional(),
+    timeout: z.string().optional(),
+    waitForActiveShards: z.any().optional(),
+    waitForCompletion: z.boolean().optional(),
+    requestsPerSecond: z.number().optional(),
+    scroll: z.string().optional(),
+    scrollSize: z.number().optional(),
+    searchType: z.enum(["query_then_fetch", "dfs_query_then_fetch"]).optional(),
+    searchTimeout: z.string().optional(),
+    slices: z.number().optional(),
+  },
     updateByQueryHandler,
   );
 };

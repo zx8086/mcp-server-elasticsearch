@@ -1,4 +1,5 @@
 /* src/tools/watcher/activate_watch.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,18 +10,7 @@ import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const activateWatchSchema = {
-  type: "object",
-  properties: {
-    watch_id: {
-      type: "string",
-      minLength: 1,
-      description: "Watch ID to activate",
-    },
-  },
-  required: ["watch_id"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const activateWatchValidator = z.object({
@@ -103,7 +93,9 @@ export const registerWatcherActivateWatchTool: ToolRegistrationFunction = (serve
   server.tool(
     "elasticsearch_watcher_activate_watch",
     "Activate a watch in Elasticsearch Watcher. Best for monitoring automation, alerting management, watch lifecycle control. Use when you need to enable watch execution for Elasticsearch alerting and monitoring workflows. Uses direct JSON Schema and standardized MCP error codes.",
-    activateWatchSchema,
+  {
+    watch_id: z.string(), // Watch ID to activate
+  },
     withReadOnlyCheck("elasticsearch_watcher_activate_watch", activateWatchHandler, OperationType.WRITE),
   );
 };

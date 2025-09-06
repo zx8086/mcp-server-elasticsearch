@@ -1,4 +1,5 @@
 /* src/tools/watcher/ack_watch.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,28 +10,7 @@ import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const ackWatchSchema = {
-  type: "object",
-  properties: {
-    watch_id: {
-      type: "string",
-      minLength: 1,
-      description: "Watch ID to acknowledge",
-    },
-    action_id: {
-      oneOf: [
-        { type: "string" },
-        {
-          type: "array",
-          items: { type: "string" },
-        },
-      ],
-      description: "Action ID(s) to acknowledge",
-    },
-  },
-  required: ["watch_id"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const ackWatchValidator = z.object({
@@ -115,7 +95,10 @@ export const registerWatcherAckWatchTool: ToolRegistrationFunction = (server: Mc
   server.tool(
     "elasticsearch_watcher_ack_watch",
     "Acknowledge a watch in Elasticsearch Watcher to throttle actions. Best for alert management, action throttling, notification control. Use when you need to manually acknowledge watch actions to prevent repeated executions in Elasticsearch alerting. Uses direct JSON Schema and standardized MCP error codes.",
-    ackWatchSchema,
+  {
+    watch_id: z.string(), // Watch ID to acknowledge
+    action_id: z.any().optional(), // Action ID(s) to acknowledge
+  },
     withReadOnlyCheck("elasticsearch_watcher_ack_watch", ackWatchHandler, OperationType.WRITE),
   );
 };

@@ -1,4 +1,5 @@
 /* src/tools/watcher/execute_watch.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -10,126 +11,7 @@ import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const executeWatchSchema = {
-  type: "object",
-  properties: {
-    id: {
-      type: "string",
-      description: "Watch ID to execute",
-    },
-    action_modes: {
-      type: "object",
-      additionalProperties: {
-        type: "string",
-        enum: ["simulate", "force_simulate", "execute", "force_execute", "skip"],
-      },
-      description: "Override action execution modes",
-    },
-    alternative_input: {
-      type: "object",
-      additionalProperties: true,
-      description: "Alternative input to use instead of the watch input",
-    },
-    ignore_condition: {
-      type: "boolean",
-      description: "Whether to ignore the condition and always execute the actions",
-    },
-    record_execution: {
-      type: "boolean",
-      description: "Whether to record the execution in the watch history",
-    },
-    simulated_actions: {
-      type: "object",
-      properties: {
-        actions: {
-          type: "array",
-          items: { type: "string" },
-          description: "Actions to simulate",
-        },
-        all: {
-          type: "boolean",
-          description: "Simulate all actions",
-        },
-        use_all: {
-          type: "boolean",
-          description: "Use all actions for simulation",
-        },
-      },
-      additionalProperties: false,
-      description: "Actions to simulate instead of executing",
-    },
-    trigger_data: {
-      type: "object",
-      properties: {
-        scheduled_time: {
-          type: "string",
-          description: "Scheduled execution time",
-        },
-        triggered_time: {
-          type: "string",
-          description: "Trigger execution time",
-        },
-      },
-      additionalProperties: false,
-      description: "Trigger data to use for execution",
-    },
-    watch: {
-      type: "object",
-      properties: {
-        actions: {
-          type: "object",
-          additionalProperties: true,
-          description: "Watch actions definition",
-        },
-        condition: {
-          type: "object",
-          additionalProperties: true,
-          description: "Watch condition definition",
-        },
-        input: {
-          type: "object",
-          additionalProperties: true,
-          description: "Watch input definition",
-        },
-        metadata: {
-          type: "object",
-          additionalProperties: true,
-          description: "Watch metadata",
-        },
-        status: {
-          type: "object",
-          additionalProperties: true,
-          description: "Watch status information",
-        },
-        throttle_period: {
-          type: "string",
-          description: "Throttle period for the watch",
-        },
-        throttle_period_in_millis: {
-          type: "number",
-          description: "Throttle period in milliseconds",
-        },
-        transform: {
-          type: "object",
-          additionalProperties: true,
-          description: "Watch transform definition",
-        },
-        trigger: {
-          type: "object",
-          additionalProperties: true,
-          description: "Watch trigger definition",
-        },
-      },
-      additionalProperties: false,
-      description: "Watch definition to execute inline",
-    },
-    debug: {
-      type: "boolean",
-      description: "Enable debug mode for execution",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const executeWatchValidator = z.object({
@@ -251,7 +133,17 @@ export const registerWatcherExecuteWatchTool: ToolRegistrationFunction = (server
   server.tool(
     "elasticsearch_watcher_execute_watch",
     "Execute a watch in Elasticsearch Watcher for testing or debugging. Best for watch testing, debugging workflows, manual execution. Use when you need to force watch execution outside normal triggers in Elasticsearch alerting systems. Uses direct JSON Schema and standardized MCP error codes.",
-    executeWatchSchema,
+  {
+    id: z.string().optional(), // Watch ID to execute
+    action_modes: z.object({}).optional(), // Override action execution modes
+    alternative_input: z.object({}).optional(), // Alternative input to use instead of the watch input
+    ignore_condition: z.boolean().optional(), // Whether to ignore the condition and always execute the actions
+    record_execution: z.boolean().optional(), // Whether to record the execution in the watch history
+    simulated_actions: z.object({}).optional(), // Actions to simulate instead of executing
+    trigger_data: z.object({}).optional(), // Trigger data to use for execution
+    watch: z.object({}).optional(), // Watch definition to execute inline
+    debug: z.boolean().optional(), // Enable debug mode for execution
+  },
     withReadOnlyCheck("elasticsearch_watcher_execute_watch", executeWatchHandler, OperationType.WRITE),
   );
 };

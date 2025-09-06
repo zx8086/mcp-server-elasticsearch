@@ -6,6 +6,7 @@ import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import { paginateResults, createPaginationHeader, responsePresets } from "../../utils/responseHandling.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
@@ -142,14 +143,15 @@ export const registerListIndicesTool: ToolRegistrationFunction = (server: McpSer
         }
       });
 
-      // Apply limit
-      const totalFound = filteredIndices.length;
-      if (params.limit) {
-        filteredIndices = filteredIndices.slice(0, params.limit);
-      }
+      // Apply pagination
+      const { results: paginatedIndices, metadata } = paginateResults(filteredIndices, {
+        limit: params.limit,
+        defaultLimit: responsePresets.list.defaultLimit,
+        maxLimit: responsePresets.list.maxLimit,
+      });
 
       // Transform to consistent format
-      const indicesInfo = filteredIndices.map((index: any) => ({
+      const indicesInfo = paginatedIndices.map((index: any) => ({
         index: index.index,
         health: index.health,
         status: index.status,
@@ -161,7 +163,7 @@ export const registerListIndicesTool: ToolRegistrationFunction = (server: McpSer
       }));
 
       const summary = {
-        total_found: totalFound,
+        total_found: filteredIndices.length,
         displayed: indicesInfo.length,
         limit_applied: params.limit,
         filters_applied: {
@@ -177,14 +179,11 @@ export const registerListIndicesTool: ToolRegistrationFunction = (server: McpSer
       }
 
       // MCP-compliant response format
-      const warningMessage =
-        totalFound > (params.limit || totalFound)
-          ? `⚠️ Found ${totalFound} indices, showing first ${params.limit}. Use more specific patterns or increase limit.`
-          : `Found ${totalFound} indices matching pattern.`;
+      const headerMessage = createPaginationHeader(metadata, "Indices");
 
       return {
         content: [
-          { type: "text", text: warningMessage },
+          { type: "text", text: headerMessage },
           { type: "text", text: JSON.stringify(summary, null, 2) },
           { type: "text", text: JSON.stringify(indicesInfo, null, 2) },
         ],
@@ -218,11 +217,18 @@ export const registerListIndicesTool: ToolRegistrationFunction = (server: McpSer
     }
   };
 
-  // Tool registration
+  // Tool registration - FIXED: Use Zod schema for proper MCP parameter handling
   server.tool(
     "elasticsearch_list_indices",
-    "List indices with filtering. Uses direct JSON Schema and standardized MCP error codes. TIP: Use this FIRST to check cluster size before other tools. Common patterns: {limit: 50, excludeSystemIndices: true} for overview, {indexPattern: 'logs-*', limit: 100} for specific indices.",
-    listIndicesSchema,
+    "List indices with filtering. Uses Zod Schema for proper MCP parameter handling. TIP: Use this FIRST to check cluster size before other tools. Common patterns: {limit: 50, excludeSystemIndices: true} for overview, {indexPattern: 'logs-*', limit: 100} for specific indices.",
+    {
+      indexPattern: z.string().optional(),
+      limit: z.number().min(1).max(1000).optional(),
+      excludeSystemIndices: z.boolean().optional(),
+      excludeDataStreams: z.boolean().optional(),
+      sortBy: z.enum(["name", "size", "docs", "creation"]).optional(),
+      includeSize: z.boolean().optional(),
+    },
     withReadOnlyCheck("elasticsearch_list_indices", listIndicesHandler, OperationType.READ),
   );
 };

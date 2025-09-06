@@ -1,4 +1,5 @@
 /* src/tools/alias/get_aliases_improved.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -6,51 +7,11 @@ import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import { createPaginationHeader, paginateResults, responsePresets } from "../../utils/responseHandling.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const getAliasesSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      description: "Index pattern to filter by. Use '*' for all indices. Supports wildcards like 'logs-*'",
-    },
-    name: {
-      type: "string",
-      description: "Alias name pattern to filter by. Supports wildcards",
-    },
-    ignoreUnavailable: {
-      type: "boolean",
-      description: "Whether to ignore if a specified index name doesn't exist (default: false)",
-    },
-    allowNoIndices: {
-      type: "boolean",
-      description: "Whether to ignore if a wildcard pattern matches no indices (default: true)",
-    },
-    expandWildcards: {
-      type: "string",
-      enum: ["all", "open", "closed", "hidden", "none"],
-      description: "Whether to expand wildcard expressions to concrete indices",
-    },
-    limit: {
-      type: "number",
-      minimum: 1,
-      maximum: 100,
-      description: "Maximum number of aliases to return. Range: 1-100",
-    },
-    summary: {
-      type: "boolean",
-      description: "Return summarized alias information instead of full details",
-    },
-    sortBy: {
-      type: "string",
-      enum: ["name", "index_count", "alias_name"],
-      description: "Sort aliases by specified field",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const getAliasesValidator = z.object({
@@ -170,7 +131,7 @@ export const registerGetAliasesTool: ToolRegistrationFunction = (server: McpServ
       }
 
       // Convert to array and sort
-      let aliasArray = Array.from(aliasMap.values());
+      const aliasArray = Array.from(aliasMap.values());
 
       // Sort aliases
       aliasArray.sort((a, b) => {
@@ -185,11 +146,11 @@ export const registerGetAliasesTool: ToolRegistrationFunction = (server: McpServ
       });
 
       // Apply pagination
-      const totalFound = aliasArray.length;
-      const limit = params.limit || 25; // Default limit
-      if (limit && totalFound > limit) {
-        aliasArray = aliasArray.slice(0, limit);
-      }
+      const { results: paginatedAliases, metadata } = paginateResults(aliasArray, {
+        limit: params.limit,
+        defaultLimit: responsePresets.list.defaultLimit,
+        maxLimit: responsePresets.list.maxLimit,
+      });
 
       const duration = performance.now() - perfStart;
       if (duration > 5000) {
@@ -200,20 +161,15 @@ export const registerGetAliasesTool: ToolRegistrationFunction = (server: McpServ
       const responseContent: string[] = [];
 
       // Add header with summary stats
-      const headerMessage =
-        totalFound > limit
-          ? `⚠️ Found ${totalFound} aliases, showing first ${limit}. Use limit parameter to see more.`
-          : `Found ${totalFound} aliases`;
+      responseContent.push(createPaginationHeader(metadata, "Aliases"));
 
-      responseContent.push(headerMessage);
-
-      if (aliasArray.length === 0) {
+      if (paginatedAliases.length === 0) {
         responseContent.push("No aliases found matching the specified criteria.");
       } else if (params.summary) {
         // Summary mode - compact view
         responseContent.push("\n## Alias Summary\n");
 
-        for (const alias of aliasArray) {
+        for (const alias of paginatedAliases) {
           responseContent.push(`### ${alias.alias}`);
           responseContent.push(`- **Indices**: ${alias.index_count}`);
 
@@ -269,7 +225,7 @@ export const registerGetAliasesTool: ToolRegistrationFunction = (server: McpServ
 
         const detailedResults: any[] = [];
 
-        for (const alias of aliasArray) {
+        for (const alias of paginatedAliases) {
           // Get the full alias configuration from the original result
           const aliasDetail: any = {
             name: alias.alias,
@@ -334,7 +290,16 @@ export const registerGetAliasesTool: ToolRegistrationFunction = (server: McpServ
   server.tool(
     "elasticsearch_get_aliases",
     "Get index aliases from Elasticsearch with pagination and filtering. Best for alias discovery, configuration review, index mapping analysis. Returns summarized or detailed alias information with configurable limits to handle large responses. TIP: Use {summary: true, limit: 50} for overview, {sortBy: 'index_count'} to find aliases with most indices.",
-    getAliasesSchema,
+  {
+    index: z.string().optional(), // Index pattern to filter by. Use '*' for all indices. Supports wildcards like 'logs-*'
+    name: z.string().optional(), // Alias name pattern to filter by. Supports wildcards
+    ignoreUnavailable: z.boolean().optional(), // Whether to ignore if a specified index name doesn't exist (default: false)
+    allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard pattern matches no indices (default: true)
+    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Whether to expand wildcard expressions to concrete indices
+    limit: z.number().min(1).max(100).optional(), // Maximum number of aliases to return. Range: 1-100
+    summary: z.boolean().optional(), // Return summarized alias information instead of full details
+    sortBy: z.enum(["name", "index_count", "alias_name"]).optional(), // Sort aliases by specified field
+  },
     withReadOnlyCheck("elasticsearch_get_aliases", getAliasesHandler, OperationType.READ),
   );
 };

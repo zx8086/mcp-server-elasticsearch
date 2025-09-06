@@ -1,4 +1,5 @@
 /* src/tools/cluster/get_cluster_health.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -8,67 +9,7 @@ import { logger } from "../../utils/logger.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const clusterHealthSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      description: "Comma-separated list of indices to check health for. Leave empty for cluster-wide health.",
-    },
-    expandWildcards: {
-      type: "string",
-      enum: ["all", "open", "closed", "hidden", "none"],
-      description: "Controls which types of indices to include when using wildcards",
-    },
-    level: {
-      type: "string",
-      enum: ["cluster", "indices", "shards"],
-      description: "Level of detail to return: cluster (default), indices, or shards",
-    },
-    local: {
-      type: "boolean",
-      description: "Return local information, do not retrieve from master node",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Timeout for connecting to master node (e.g., '30s', '1m')",
-    },
-    timeout: {
-      type: "string",
-      description: "Timeout for the request (e.g., '30s', '1m')",
-    },
-    waitForActiveShards: {
-      oneOf: [
-        { type: "string", enum: ["all"] },
-        { type: "number", minimum: 0 },
-      ],
-      description: "Wait until the specified number of shards are active",
-    },
-    waitForEvents: {
-      type: "string",
-      enum: ["immediate", "urgent", "high", "normal", "low", "languid"],
-      description: "Wait until all pending events are processed",
-    },
-    waitForNoInitializingShards: {
-      type: "boolean",
-      description: "Wait until there are no initializing shards",
-    },
-    waitForNoRelocatingShards: {
-      type: "boolean",
-      description: "Wait until there are no relocating shards",
-    },
-    waitForNodes: {
-      type: "string",
-      description: "Wait until the specified number of nodes are available (e.g., '>=2')",
-    },
-    waitForStatus: {
-      type: "string",
-      enum: ["green", "yellow", "red"],
-      description: "Wait until cluster status reaches the specified level",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const clusterHealthValidator = z.object({
@@ -226,7 +167,20 @@ export const registerGetClusterHealthTool: ToolRegistrationFunction = (server: M
   server.tool(
     "elasticsearch_get_cluster_health",
     "Get the health status of the Elasticsearch cluster. Best for cluster monitoring, health checks, system diagnostics. Use when you need to assess cluster status, node availability, and overall Elasticsearch system health. READ operation - safe for production use.",
-    clusterHealthSchema,
+  {
+    index: z.string().optional(), // Comma-separated list of indices to check health for. Leave empty for cluster-wide health.
+    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Controls which types of indices to include when using wildcards
+    level: z.enum(["cluster", "indices", "shards"]).optional(), // Level of detail to return: cluster (default), indices, or shards
+    local: z.boolean().optional(), // Return local information, do not retrieve from master node
+    masterTimeout: z.string().optional(), // Timeout for connecting to master node (e.g., '30s', '1m')
+    timeout: z.string().optional(), // Timeout for the request (e.g., '30s', '1m')
+    waitForActiveShards: z.any().optional(), // Wait until the specified number of shards are active
+    waitForEvents: z.enum(["immediate", "urgent", "high", "normal", "low", "languid"]).optional(), // Wait until all pending events are processed
+    waitForNoInitializingShards: z.boolean().optional(), // Wait until there are no initializing shards
+    waitForNoRelocatingShards: z.boolean().optional(), // Wait until there are no relocating shards
+    waitForNodes: z.string().optional(), // Wait until the specified number of nodes are available (e.g., '>=2')
+    waitForStatus: z.enum(["green", "yellow", "red"]).optional(), // Wait until cluster status reaches the specified level
+  },
     clusterHealthHandler,
   );
 };

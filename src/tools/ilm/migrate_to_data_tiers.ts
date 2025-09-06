@@ -1,4 +1,6 @@
 /* src/tools/ilm/migrate_to_data_tiers.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
+
 /* SIMPLIFIED VERSION: Direct JSON Schema + MCP Error Codes */
 
 import type { Client } from "@elastic/elasticsearch";
@@ -14,28 +16,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 // =============================================================================
 
 // Direct JSON Schema definition
-const migrateToDataTiersSchema = {
-  type: "object",
-  properties: {
-    legacyTemplateToDelete: {
-      type: "string",
-      description: "Name of legacy template to delete during migration",
-    },
-    nodeAttribute: {
-      type: "string",
-      description: "Node attribute to migrate from (e.g., 'box_type')",
-    },
-    dryRun: {
-      type: "boolean",
-      description: "Perform a dry run without making changes",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Master node timeout",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Simple Zod validator for runtime validation only
 const migrateToDataTiersValidator = z.object({
@@ -193,7 +174,12 @@ Operation completed at: ${new Date().toISOString()}`,
   server.tool(
     "elasticsearch_ilm_migrate_to_data_tiers",
     "Migrate to data tiers. Migrate from custom node attributes to data tiers routing in Elasticsearch ILM. Uses direct JSON Schema and standardized MCP error codes. Requires ILM to be stopped first. Examples: {dryRun: true}, {nodeAttribute: 'box_type', legacyTemplateToDelete: 'old-template'}",
-    migrateToDataTiersSchema, // Direct JSON Schema - no Zod conversion
+  {
+    legacyTemplateToDelete: z.string().optional(), // Name of legacy template to delete during migration
+    nodeAttribute: z.string().optional(), // Node attribute to migrate from (e.g., 'box_type')
+    dryRun: z.boolean().optional(), // Perform a dry run without making changes
+    masterTimeout: z.string().optional(), // Master node timeout
+  }, // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_migrate_to_data_tiers", migrateToDataTiersHandler, OperationType.DESTRUCTIVE),
   );
 };

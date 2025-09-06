@@ -1,4 +1,5 @@
 /* src/tools/watcher/query_watches.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -6,52 +7,12 @@ import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import { formatAsMarkdown } from "../../utils/responseHandling.js";
 import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const queryWatchesSchema = {
-  type: "object",
-  properties: {
-    from: {
-      type: "number",
-      minimum: 0,
-      description: "Starting offset for pagination",
-    },
-    size: {
-      type: "number",
-      minimum: 1,
-      maximum: 50,
-      description: "Number of watches to return",
-    },
-    query: {
-      type: "object",
-      additionalProperties: true,
-      description: "Query to filter watches",
-    },
-    sort: {
-      oneOf: [
-        { type: "string" },
-        { type: "object", additionalProperties: true },
-        {
-          type: "array",
-          items: {
-            oneOf: [{ type: "string" }, { type: "object", additionalProperties: true }],
-          },
-        },
-      ],
-      description: "Sort criteria for results",
-    },
-    search_after: {
-      type: "array",
-      items: {
-        oneOf: [{ type: "number" }, { type: "string" }, { type: "boolean" }, { type: "null" }],
-      },
-      description: "Values to search after for pagination",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const queryWatchesValidator = z.object({
@@ -93,7 +54,7 @@ export const registerWatcherQueryWatchesTool: ToolRegistrationFunction = (server
 
       const result = await esClient.watcher.queryWatches({
         from: params.from,
-        size: params.size,
+        size: params.size || 20, // Default size if not specified
         query: params.query,
         sort: params.sort,
         search_after: params.search_after,
@@ -104,11 +65,68 @@ export const registerWatcherQueryWatchesTool: ToolRegistrationFunction = (server
         logger.warn("Slow watcher operation", { duration });
       }
 
+      // Format response for better readability
+      const responseContent: string[] = [];
+
+      // Add header with search results summary
+      const total = result.count || 0;
+      const watches = result.watches || [];
+      const returned = watches.length;
+      const from = params.from || 0;
+
+      responseContent.push(`## Watcher Query Results`);
+      responseContent.push(`Found ${total} watches total, showing ${returned} (from ${from})\n`);
+
+      if (returned === 0) {
+        responseContent.push("No watches found matching the query criteria.");
+      } else {
+        // Display each watch with formatted information
+        for (const watch of watches) {
+          responseContent.push(`### Watch: ${watch._id || "Unknown"}`);
+
+          if (watch._source) {
+            const source = watch._source;
+
+            // Show key watch information
+            if (source.trigger) {
+              responseContent.push(`- **Trigger**: ${Object.keys(source.trigger)[0] || "Unknown"}`);
+            }
+
+            if (source.condition) {
+              responseContent.push(`- **Condition**: ${Object.keys(source.condition)[0] || "Unknown"}`);
+            }
+
+            if (source.actions) {
+              const actionNames = Object.keys(source.actions);
+              responseContent.push(`- **Actions**: ${actionNames.join(", ")}`);
+            }
+
+            if (source.metadata?.description) {
+              responseContent.push(`- **Description**: ${source.metadata.description}`);
+            }
+
+            // Show full watch configuration in collapsible JSON
+            responseContent.push("\n**Full Configuration:**");
+            responseContent.push("```json");
+            responseContent.push(JSON.stringify(source, null, 2));
+            responseContent.push("```\n");
+          }
+        }
+
+        // Add pagination info if results were truncated
+        if (total > returned + from) {
+          const remaining = total - returned - from;
+          responseContent.push(
+            `\n⚠️ ${remaining} more watches available. Use 'from' and 'size' parameters for pagination.`,
+          );
+        }
+      }
+
       return {
         content: [
           {
             type: "text",
-            text: JSON.stringify(result, null, 2),
+            text: responseContent.join("\n"),
           },
         ],
       };
@@ -135,7 +153,13 @@ export const registerWatcherQueryWatchesTool: ToolRegistrationFunction = (server
   server.tool(
     "elasticsearch_watcher_query_watches",
     "Query and filter watches in Elasticsearch Watcher. Best for watch discovery, configuration management, monitoring overview. Use when you need to search and paginate through watch definitions in Elasticsearch alerting system. Uses direct JSON Schema and standardized MCP error codes.",
-    queryWatchesSchema,
+  {
+    from: z.number().min(0).optional(), // Starting offset for pagination
+    size: z.number().min(1).max(50).optional(), // Number of watches to return
+    query: z.object({}).optional(), // Query to filter watches
+    sort: z.any().optional(), // Sort criteria for results
+    search_after: z.array(z.any().optional()).optional(), // Values to search after for pagination
+  },
     withReadOnlyCheck("elasticsearch_watcher_query_watches", queryWatchesHandler, OperationType.READ),
   );
 };

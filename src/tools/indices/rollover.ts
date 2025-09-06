@@ -1,4 +1,5 @@
 /* src/tools/indices/rollover.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -10,154 +11,7 @@ import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const rolloverSchema = {
-  type: "object",
-  properties: {
-    alias: {
-      type: "string",
-      minLength: 1,
-      description: "Alias name for the data stream or index to roll over",
-    },
-    newIndex: {
-      type: "string",
-      description: "Name of the new index to create during rollover",
-    },
-    aliases: {
-      type: "object",
-      additionalProperties: {
-        type: "object",
-        properties: {
-          filter: {
-            type: "object",
-            additionalProperties: true,
-            description: "Query to filter documents for this alias",
-          },
-          indexRouting: {
-            type: "string",
-            description: "Value used for index routing",
-          },
-          isHidden: {
-            type: "boolean",
-            description: "Whether this alias is hidden",
-          },
-          isWriteIndex: {
-            type: "boolean",
-            description: "Whether this alias is the write index",
-          },
-          routing: {
-            type: "string",
-            description: "Value used for both index and search routing",
-          },
-          searchRouting: {
-            type: "string",
-            description: "Value used for search routing",
-          },
-        },
-        additionalProperties: false,
-      },
-      description: "Aliases to add to the new index",
-    },
-    conditions: {
-      type: "object",
-      properties: {
-        minAge: {
-          type: "string",
-          description: "Minimum age of the index before rollover",
-        },
-        maxAge: {
-          type: "string",
-          description: "Maximum age of the index before rollover",
-        },
-        maxAgeMillis: {
-          type: "number",
-          description: "Maximum age in milliseconds before rollover",
-        },
-        minDocs: {
-          type: "number",
-          description: "Minimum number of documents before rollover",
-        },
-        maxDocs: {
-          type: "number",
-          description: "Maximum number of documents before rollover",
-        },
-        maxSize: {
-          type: "string",
-          description: "Maximum size of the index before rollover",
-        },
-        maxSizeBytes: {
-          type: "number",
-          description: "Maximum size in bytes before rollover",
-        },
-        minSize: {
-          type: "string",
-          description: "Minimum size of the index before rollover",
-        },
-        minSizeBytes: {
-          type: "number",
-          description: "Minimum size in bytes before rollover",
-        },
-        maxPrimaryShardSize: {
-          type: "string",
-          description: "Maximum primary shard size before rollover",
-        },
-        maxPrimaryShardSizeBytes: {
-          type: "number",
-          description: "Maximum primary shard size in bytes before rollover",
-        },
-        minPrimaryShardSize: {
-          type: "string",
-          description: "Minimum primary shard size before rollover",
-        },
-        minPrimaryShardSizeBytes: {
-          type: "number",
-          description: "Minimum primary shard size in bytes before rollover",
-        },
-        maxPrimaryShardDocs: {
-          type: "number",
-          description: "Maximum documents per primary shard before rollover",
-        },
-        minPrimaryShardDocs: {
-          type: "number",
-          description: "Minimum documents per primary shard before rollover",
-        },
-      },
-      additionalProperties: false,
-      description: "Rollover conditions",
-    },
-    mappings: {
-      type: "object",
-      additionalProperties: true,
-      description: "Mapping definition for the new index",
-    },
-    settings: {
-      type: "object",
-      additionalProperties: true,
-      description: "Settings for the new index",
-    },
-    dryRun: {
-      type: "boolean",
-      description: "Whether to perform a dry run without actually rolling over",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Timeout for connection to master node",
-    },
-    timeout: {
-      type: "string",
-      description: "Timeout for the rollover operation",
-    },
-    waitForActiveShards: {
-      oneOf: [{ type: "number" }, { type: "string", enum: ["all", "index-setting"] }],
-      description: "Number of active shards to wait for",
-    },
-    lazy: {
-      type: "boolean",
-      description: "Whether to perform lazy rollover",
-    },
-  },
-  required: ["alias"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const rolloverValidator = z.object({
@@ -331,7 +185,19 @@ export const registerRolloverTool: ToolRegistrationFunction = (server: McpServer
   server.tool(
     "elasticsearch_rollover",
     "Roll over to a new index in Elasticsearch for data streams or aliases. Best for index lifecycle management, data stream rotation, automated archiving. Use when you need to create new indices based on size, age, or document count thresholds in Elasticsearch.",
-    rolloverSchema,
+  {
+    alias: z.string(), // Alias name for the data stream or index to roll over
+    newIndex: z.string().optional(), // Name of the new index to create during rollover
+    aliases: z.object({}).optional(), // Aliases to add to the new index
+    conditions: z.object({}).optional(), // Rollover conditions
+    mappings: z.object({}).optional(), // Mapping definition for the new index
+    settings: z.object({}).optional(), // Settings for the new index
+    dryRun: z.boolean().optional(), // Whether to perform a dry run without actually rolling over
+    masterTimeout: z.string().optional(), // Timeout for connection to master node
+    timeout: z.string().optional(), // Timeout for the rollover operation
+    waitForActiveShards: z.any().optional(), // Number of active shards to wait for
+    lazy: z.boolean().optional(), // Whether to perform lazy rollover
+  },
     withReadOnlyCheck("elasticsearch_rollover", rolloverHandler, OperationType.WRITE),
   );
 };

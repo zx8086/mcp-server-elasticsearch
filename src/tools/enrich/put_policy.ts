@@ -1,4 +1,5 @@
 /* src/tools/enrich/put_policy.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,142 +10,7 @@ import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const putPolicySchema = {
-  type: "object",
-  properties: {
-    name: {
-      type: "string",
-      minLength: 1,
-      description: "Name of the enrich policy to create",
-    },
-    geoMatch: {
-      type: "object",
-      properties: {
-        enrichFields: {
-          type: "array",
-          items: { type: "string" },
-          description: "List of fields to be added to documents from the enrich index",
-        },
-        indices: {
-          oneOf: [
-            { type: "string" },
-            {
-              type: "array",
-              items: { type: "string" },
-            },
-          ],
-          description: "Source indices for the enrich policy",
-        },
-        matchField: {
-          type: "string",
-          description: "Field to match between the input document and the enrich index",
-        },
-        query: {
-          type: "object",
-          additionalProperties: true,
-          description: "Query to filter documents in the enrich index",
-        },
-        name: {
-          type: "string",
-          description: "Optional name for the policy configuration",
-        },
-        elasticsearchVersion: {
-          type: "string",
-          description: "Elasticsearch version compatibility",
-        },
-      },
-      required: ["enrichFields", "indices", "matchField"],
-      additionalProperties: false,
-      description: "Configuration for geo_match enrich policy type",
-    },
-    match: {
-      type: "object",
-      properties: {
-        enrichFields: {
-          type: "array",
-          items: { type: "string" },
-          description: "List of fields to be added to documents from the enrich index",
-        },
-        indices: {
-          oneOf: [
-            { type: "string" },
-            {
-              type: "array",
-              items: { type: "string" },
-            },
-          ],
-          description: "Source indices for the enrich policy",
-        },
-        matchField: {
-          type: "string",
-          description: "Field to match between the input document and the enrich index",
-        },
-        query: {
-          type: "object",
-          additionalProperties: true,
-          description: "Query to filter documents in the enrich index",
-        },
-        name: {
-          type: "string",
-          description: "Optional name for the policy configuration",
-        },
-        elasticsearchVersion: {
-          type: "string",
-          description: "Elasticsearch version compatibility",
-        },
-      },
-      required: ["enrichFields", "indices", "matchField"],
-      additionalProperties: false,
-      description: "Configuration for match enrich policy type",
-    },
-    range: {
-      type: "object",
-      properties: {
-        enrichFields: {
-          type: "array",
-          items: { type: "string" },
-          description: "List of fields to be added to documents from the enrich index",
-        },
-        indices: {
-          oneOf: [
-            { type: "string" },
-            {
-              type: "array",
-              items: { type: "string" },
-            },
-          ],
-          description: "Source indices for the enrich policy",
-        },
-        matchField: {
-          type: "string",
-          description: "Field to match between the input document and the enrich index",
-        },
-        query: {
-          type: "object",
-          additionalProperties: true,
-          description: "Query to filter documents in the enrich index",
-        },
-        name: {
-          type: "string",
-          description: "Optional name for the policy configuration",
-        },
-        elasticsearchVersion: {
-          type: "string",
-          description: "Elasticsearch version compatibility",
-        },
-      },
-      required: ["enrichFields", "indices", "matchField"],
-      additionalProperties: false,
-      description: "Configuration for range enrich policy type",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Timeout for master node operations. Examples: '30s', '1m'",
-    },
-  },
-  required: ["name"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const enrichSourceValidator = z.object({
@@ -301,7 +167,13 @@ export const registerEnrichPutPolicyTool: ToolRegistrationFunction = (server: Mc
   server.tool(
     "elasticsearch_enrich_put_policy",
     "Create an enrich policy in Elasticsearch. Best for data enrichment setup, reference data integration, document enhancement workflows. Use when you need to define policies for adding reference data to documents during ingestion in Elasticsearch.",
-    putPolicySchema,
+  {
+    name: z.string(), // Name of the enrich policy to create
+    geoMatch: z.object({}).optional(), // Configuration for geo_match enrich policy type
+    match: z.object({}).optional(), // Configuration for match enrich policy type
+    range: z.object({}).optional(), // Configuration for range enrich policy type
+    masterTimeout: z.string().optional(), // Timeout for master node operations. Examples: '30s', '1m'
+  },
     withReadOnlyCheck("elasticsearch_enrich_put_policy", putPolicyImpl, OperationType.WRITE),
   );
 };

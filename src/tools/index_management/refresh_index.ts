@@ -1,4 +1,5 @@
 /* src/tools/index_management/refresh_index.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -10,31 +11,7 @@ import { coerceBoolean } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const refreshIndexSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      minLength: 1,
-      description: "Name of the index to refresh",
-    },
-    ignoreUnavailable: {
-      type: "boolean",
-      description: "Ignore unavailable indices",
-    },
-    allowNoIndices: {
-      type: "boolean",
-      description: "Allow wildcards that match no indices",
-    },
-    expandWildcards: {
-      type: "string",
-      enum: ["all", "open", "closed", "hidden", "none"],
-      description: "Which indices to expand wildcards to",
-    },
-  },
-  required: ["index"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const refreshIndexValidator = z.object({
@@ -123,7 +100,12 @@ export const registerRefreshIndexTool: ToolRegistrationFunction = (server: McpSe
   server.tool(
     "elasticsearch_refresh_index",
     "Refresh an index in Elasticsearch. Best for data visibility, search consistency, real-time operations. Use when you need to make recently indexed documents immediately searchable in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
-    refreshIndexSchema,
+  {
+    index: z.string(), // Name of the index to refresh
+    ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+    allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
+  },
     withReadOnlyCheck("elasticsearch_refresh_index", refreshIndexHandler, OperationType.WRITE),
   );
 };

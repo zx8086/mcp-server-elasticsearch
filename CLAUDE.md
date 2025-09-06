@@ -61,13 +61,48 @@ curl http://localhost:9090/health
 ## Architecture & Key Patterns
 
 ### Configuration System
-The project uses a type-safe, layered configuration system:
+The project uses a type-safe, layered configuration system with single source of truth for defaults:
 - **Primary**: Environment variables (`.env` file)
 - **Validation**: Zod schemas in `src/config.ts`
 - **Structure**: Defaults → Environment → Validation → Runtime
 
+#### Configuration Architecture Pattern:
+```typescript
+// ✅ SINGLE SOURCE OF TRUTH: Defaults in defaultConfig object only
+const defaultConfig: Config = {
+  server: { name: "elasticsearch-mcp-server", version: "0.1.1", /* ... */ },
+  elasticsearch: { url: "http://localhost:9200", /* ... */ },
+  // ...
+};
+
+// ✅ CLEAN SCHEMAS: No .default() calls - pure validation
+const ServerConfigSchema = z.object({
+  name: z.string().min(1),           // No .default()
+  version: z.string().min(1),        // No .default()
+  readOnlyMode: z.boolean(),         // No .default()
+  // ...
+});
+
+// ✅ MERGE PATTERN: Environment overrides defaults
+const envConfig = loadConfigFromEnv();
+const mergedConfig = {
+  server: { ...defaultConfig.server, ...envConfig.server },
+  elasticsearch: { ...defaultConfig.elasticsearch, ...envConfig.elasticsearch },
+  // ...
+};
+
+// ✅ VALIDATION: Schemas validate merged config
+config = ConfigSchema.parse(mergedConfig);
+```
+
+**Benefits of This Pattern:**
+- **Single Source of Truth**: All defaults centralized in `defaultConfig` object
+- **No Redundancy**: Eliminates duplicate defaults in Zod schemas and config object
+- **Clear Separation**: Schemas handle validation, defaultConfig handles defaults
+- **Maintainability**: Changes to defaults only need to be made in one place
+
 Key configuration files:
-- `src/config.ts`: Central configuration with Zod schemas
+- `src/config.ts`: Central configuration with Zod schemas and single default source
 - `src/validation.ts`: Environment and connection validation
 - `.env.example`: Configuration template
 
@@ -94,10 +129,29 @@ Tools are organized by functionality in `src/tools/`:
 Each tool category has an index file that exports all tools.
 
 ### Security Model
-Read-only mode implementation in `src/utils/readOnlyMode.ts`:
+Multi-layered security implementation:
+
+#### Read-Only Mode (`src/utils/readOnlyMode.ts`):
 - **Strict mode**: Blocks all write/destructive operations
 - **Warning mode**: Allows operations with warnings
 - Operations classified as: read, write, or destructive
+
+#### Security Validation (`src/utils/securityEnhancer.ts`):
+- **Comprehensive validation**: SQL injection, XSS, command injection detection
+- **Elasticsearch exemptions**: Legitimate patterns like `logs-*,metrics-*` are allowed
+- **Read-only tool exemptions**: Search and listing tools skip security validation
+
+**Critical Pattern for Elasticsearch:**
+```typescript
+// Security validation with Elasticsearch-specific exemptions
+const isElasticsearchField = field.toLowerCase().includes('index');
+const isIndexPattern = /^[a-zA-Z0-9\-_*,.\s]+$/.test(value) && value.includes('*');
+
+// Skip command injection checks for legitimate Elasticsearch index patterns
+if (category === 'command_injection' && isElasticsearchField && isIndexPattern) {
+  continue; // Allow patterns like "logs-*,metrics-*"
+}
+```
 
 ### Error Handling
 Consistent error handling pattern:
@@ -119,6 +173,7 @@ MCP-compatible logging in `src/utils/logger.ts`:
 ### Universal Tool Tracing
 Production-ready tracing system with LangSmith integration:
 - **Dynamic Tool Names**: Each tool trace appears with its actual name (e.g., `elasticsearch_search`)
+- **Input/Output Capture**: Both tool parameters and results captured in traces
 - **Automatic Wrapping**: All tools are traced without conditional checks
 - **Performance Tracking**: Execution time and performance metrics captured
 - **Graceful Degradation**: Works without tracing dependencies installed
@@ -126,19 +181,19 @@ Production-ready tracing system with LangSmith integration:
 
 #### Tracing Implementation Pattern:
 ```typescript
-// Universal tool tracing function
-export function traceToolExecution(toolName: string, _args: any, handler: () => Promise<any>) {
+// Universal tool tracing function with proper input capture
+export function traceToolExecution(toolName: string, toolArgs: any, extra: any, handler: (toolArgs: any, extra: any) => Promise<any>) {
   const toolTracer = traceable(
-    async () => {
+    async (inputs: any) => { // ← Accepts inputs for LangSmith capture
       const startTime = Date.now();
       
       try {
-        const result = await handler();
+        const result = await handler(toolArgs, extra);
         const executionTime = Date.now() - startTime;
         
         return {
           ...result,
-          _trace: { runId: currentRun?.id, executionTime }
+          _trace: { runId: currentRun?.id, executionTime, project }
         };
       } catch (error) {
         // Error tracking and re-throw
@@ -148,26 +203,37 @@ export function traceToolExecution(toolName: string, _args: any, handler: () => 
     {
       name: toolName, // Dynamic tool name for proper identification
       run_type: "tool",
+      project_name: project, // Ensure traces go to correct project
     }
   );
 
-  return toolTracer();
+  // Pass structured inputs to capture in trace
+  return toolTracer({
+    tool_name: toolName,
+    arguments: toolArgs,     // User parameters
+    extra_context: extra,    // MCP context
+    timestamp: new Date().toISOString(),
+  });
 }
 
-// Tool registration with automatic tracing
+// Tool registration with automatic tracing and security validation
 server.tool = (name: string, description: string, inputSchema: any, handler: any) => {
-  // Wrap ALL tools with tracing (no conditions)
-  const tracedHandler = async (args: any) => {
-    return traceToolExecution(name, args, async () => {
-      return handler(args);
-    });
+  // Enhanced handler with tracing
+  let enhancedHandler = async (toolArgs: any, extra: any) => {
+    return traceToolExecution(name, toolArgs, extra, handler);
   };
   
-  return originalTool(name, description, inputSchema, tracedHandler);
+  // Add security validation for write operations
+  const readOnlyTools = ["elasticsearch_search", "elasticsearch_list_indices", "elasticsearch_get_mappings", "elasticsearch_get_shards"];
+  if (!readOnlyTools.includes(name)) {
+    enhancedHandler = withSecurityValidation(name, enhancedHandler);
+  }
+  
+  return originalTool(name, description, inputSchema, enhancedHandler);
 };
 ```
 
-This pattern ensures every tool execution is automatically traced with proper naming in LangSmith or compatible tracing systems.
+This pattern ensures every tool execution is automatically traced with proper input/output capture in LangSmith.
 
 ### Production Readiness Features
 The server includes enterprise-grade infrastructure components:
@@ -188,6 +254,17 @@ All infrastructure components are automatically initialized and require no manua
 
 ## Development Workflow
 
+### Documentation Structure
+The project uses a comprehensive documentation system:
+- **Root**: `README.md` (main project docs) and `CLAUDE.md` (this file)
+- **guides/**: Complete development knowledge base with 11+ comprehensive guides
+- **dev-testing/**: Development test files and debugging scripts
+
+**Essential Reading for MCP Development:**
+- `guides/MCP_DEVELOPMENT_PATTERNS.md` - Complete MCP development patterns
+- `guides/AGENT_DEVELOPMENT_INSTRUCTIONS.md` - AI agent specific instructions
+- `guides/PARAMETER_DEBUGGING_GUIDE.md` - Quick troubleshooting guide
+
 ### Important: Always Check Existing Code First
 **Before creating any new files or modifying existing ones:**
 1. Search for existing implementations using `Grep` or `Glob`
@@ -195,6 +272,7 @@ All infrastructure components are automatically initialized and require no manua
 3. Review related files to understand existing patterns
 4. Avoid creating duplicate functionality
 5. Run existing tests with `bun test` to understand current coverage
+6. **Review guides/**: Check comprehensive documentation for patterns and solutions
 
 ### Critical: Always Create Validation Tests
 **After making any code changes or fixes:**
@@ -234,6 +312,8 @@ Standard testing workflow:
 2. Run `bun run validate-config:full` to verify connection
 3. Use `bun run inspector` to test tool interactively
 4. Run `bun run scripts/run-working-tests.ts` for validation
+5. **Debug parameter issues**: Check `guides/PARAMETER_DEBUGGING_GUIDE.md`
+6. **Development testing**: Files available in `dev-testing/` directory
 
 ### Building for Production
 1. Run `bun run build`
@@ -260,6 +340,33 @@ Standard testing workflow:
 - Comprehensive type definitions for all tools
 - Input/output validation for each operation
 
+### Critical MCP Parameter Handling
+**ESSENTIAL**: The MCP SDK requires Zod schema objects in `server.tool()` calls for proper parameter extraction.
+
+#### The JSON Schema vs Zod Schema Issue:
+```typescript
+// ❌ BROKEN: JSON Schema (parameters lost)
+const schema = {
+  type: "object",
+  properties: {
+    limit: { type: "number", minimum: 1, maximum: 100 }
+  }
+};
+server.tool("name", "description", schema, handler);
+
+// ✅ FIXED: Zod Schema (parameters flow correctly)
+server.tool("name", "description", {
+  limit: z.number().min(1).max(100).optional()
+}, handler);
+```
+
+**Symptoms of JSON Schema Issue:**
+- User sends `{limit: 50}` but handler receives `{limit: 20}` (defaults applied)
+- Parameters are completely lost or incorrect
+- Handler receives MCP protocol context instead of user arguments
+
+**Solution**: Always use Zod schema objects directly in tool registration. All 78+ tools have been converted to use this pattern.
+
 ## Critical Dependencies
 
 ### Zod 3.x Support with Compatibility Wrapper
@@ -279,13 +386,53 @@ The compatibility wrapper enhances zod-to-json-schema with:
 
 ### Tool Implementation Pattern
 ```typescript
-export const toolName = {
-  name: 'tool_name',
-  description: 'Clear description',
-  inputSchema: zodSchema,
-  handler: async (client: Client, args: ValidatedArgs, logger: Logger) => {
-    // Implementation
-  }
+// Define Zod validator
+const toolValidator = z.object({
+  limit: z.number().min(1).max(100).optional(),
+  summary: z.boolean().optional(),
+  index: z.string().optional(),
+});
+
+type ToolParams = z.infer<typeof toolValidator>;
+
+// Tool registration function
+export const registerToolName: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
+  const handler = async (toolArgs: any, extra: any): Promise<SearchResult> => {
+    try {
+      // ALWAYS validate parameters
+      const params = toolValidator.parse(toolArgs);
+      
+      // Tool implementation
+      const result = await esClient.someOperation({
+        // Use params.* here
+      });
+      
+      return {
+        content: [{
+          type: "text",
+          text: "Response content"
+        }],
+      };
+    } catch (error) {
+      // Proper error handling
+      if (error instanceof z.ZodError) {
+        throw new McpError(ErrorCode.InvalidParams, `Validation failed: ${error.errors.map(e => e.message).join(", ")}`);
+      }
+      throw new McpError(ErrorCode.InternalError, error.message);
+    }
+  };
+
+  // Register with Zod schema (NOT JSON schema)
+  server.tool(
+    "tool_name",
+    "Tool description with examples",
+    {
+      limit: z.number().min(1).max(100).optional(),
+      summary: z.boolean().optional(),
+      index: z.string().optional(),
+    }, // ← Zod schema object directly
+    handler
+  );
 };
 ```
 

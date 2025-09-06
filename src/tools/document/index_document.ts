@@ -1,4 +1,5 @@
 /* src/tools/document/index_document.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,39 +10,7 @@ import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const indexDocumentSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      minLength: 1,
-      description: "REQUIRED: Name of the Elasticsearch index to store the document. Example: 'users', 'logs-2024.01'",
-    },
-    id: {
-      type: "string",
-      description: "Optional: Unique identifier for the document. If not provided, Elasticsearch will generate one",
-    },
-    document: {
-      type: "object",
-      description: "REQUIRED: The JSON document to index",
-    },
-    refresh: {
-      type: "string",
-      enum: ["true", "false", "wait_for"],
-      description: "Whether to refresh the index after the operation",
-    },
-    routing: {
-      type: "string",
-      description: "Custom routing value for document placement",
-    },
-    pipeline: {
-      type: "string",
-      description: "Ingest pipeline to use for document processing",
-    },
-  },
-  required: ["index", "document"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const indexDocumentValidator = z.object({
@@ -149,7 +118,14 @@ export const registerIndexDocumentTool: ToolRegistrationFunction = (server: McpS
   server.tool(
     "elasticsearch_index_document",
     "Index a JSON document into Elasticsearch. Best for adding new documents, bulk data ingestion, real-time indexing. Use when you need to store structured JSON documents in Elasticsearch indices with optional routing and pipeline processing. Uses direct JSON Schema and standardized MCP error codes.",
-    indexDocumentSchema,
+  {
+    index: z.string(), // REQUIRED: Name of the Elasticsearch index to store the document. Example: 'users', 'logs-2024.01'
+    id: z.string().optional(), // Optional: Unique identifier for the document. If not provided, Elasticsearch will generate one
+    document: z.object({}), // REQUIRED: The JSON document to index
+    refresh: z.enum(["true", "false", "wait_for"]).optional(), // Whether to refresh the index after the operation
+    routing: z.string().optional(), // Custom routing value for document placement
+    pipeline: z.string().optional(), // Ingest pipeline to use for document processing
+  },
     withReadOnlyCheck("elasticsearch_index_document", indexDocumentHandler, OperationType.WRITE),
   );
 };

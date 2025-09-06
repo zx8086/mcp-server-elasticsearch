@@ -7,20 +7,20 @@ import { z } from "zod";
 // =============================================================================
 
 const ServerConfigSchema = z.object({
-  name: z.string().min(1).default("elasticsearch-mcp-server"),
-  version: z.string().min(1).default("0.1.1"),
-  readOnlyMode: z.boolean().default(false),
-  readOnlyStrictMode: z.boolean().default(true),
-  maxQueryTimeout: z.number().min(1000).max(300000).default(30000),
-  maxResultsPerQuery: z.number().min(1).max(10000).default(1000),
-  transportMode: z.enum(["stdio", "sse"]).default("stdio"),
-  port: z.number().default(8080),
+  name: z.string().min(1),
+  version: z.string().min(1),
+  readOnlyMode: z.boolean(),
+  readOnlyStrictMode: z.boolean(),
+  maxQueryTimeout: z.number().min(1000).max(300000),
+  maxResultsPerQuery: z.number().min(1).max(10000),
+  transportMode: z.enum(["stdio", "sse"]),
+  port: z.number(),
   // Enhanced response handling configuration
-  maxResponseSizeBytes: z.number().min(1000).max(10000000).default(1000000), // 1MB default
-  defaultPageSize: z.number().min(1).max(1000).default(20),
-  maxPageSize: z.number().min(10).max(10000).default(100),
-  enableResponseCompression: z.boolean().default(true),
-  autoSummarizeLargeResponses: z.boolean().default(true),
+  maxResponseSizeBytes: z.number().min(1000).max(10000000),
+  defaultPageSize: z.number().min(1).max(1000),
+  maxPageSize: z.number().min(10).max(10000),
+  enableResponseCompression: z.boolean(),
+  autoSummarizeLargeResponses: z.boolean(),
 });
 
 const ElasticsearchConfigSchema = z
@@ -30,11 +30,11 @@ const ElasticsearchConfigSchema = z
     username: z.string().optional(),
     password: z.string().optional(),
     caCert: z.string().optional(),
-    maxRetries: z.number().min(0).max(10).default(3),
-    requestTimeout: z.number().min(1000).max(60000).default(30000),
-    compression: z.boolean().default(true),
-    enableMetaHeader: z.boolean().default(true),
-    disablePrototypePoisoningProtection: z.boolean().default(true),
+    maxRetries: z.number().min(0).max(10),
+    requestTimeout: z.number().min(1000).max(60000),
+    compression: z.boolean(),
+    enableMetaHeader: z.boolean(),
+    disablePrototypePoisoningProtection: z.boolean(),
   })
   .refine(
     (data) => {
@@ -64,23 +64,23 @@ const ElasticsearchConfigSchema = z
   );
 
 const LoggingConfigSchema = z.object({
-  level: z.enum(["debug", "info", "warn", "error"]).default("info"),
-  format: z.enum(["json", "text"]).default("json"),
-  includeMetadata: z.boolean().default(true),
+  level: z.enum(["debug", "info", "warn", "error"]),
+  format: z.enum(["json", "text"]),
+  includeMetadata: z.boolean(),
 });
 
 const SecurityConfigSchema = z.object({
-  allowDestructiveOperations: z.boolean().default(false),
-  allowSchemaModifications: z.boolean().default(false),
-  allowIndexManagement: z.boolean().default(false),
-  maxBulkOperations: z.number().min(1).max(10000).default(1000),
+  allowDestructiveOperations: z.boolean(),
+  allowSchemaModifications: z.boolean(),
+  allowIndexManagement: z.boolean(),
+  maxBulkOperations: z.number().min(1).max(10000),
 });
 
 const LangSmithConfigSchema = z.object({
-  tracing: z.boolean().default(false),
-  endpoint: z.string().url().default("https://api.smith.langchain.com"),
+  tracing: z.boolean(),
+  endpoint: z.string().url(),
   apiKey: z.string().optional(),
-  project: z.string().default("elasticsearch-mcp-server"),
+  project: z.string(),
 });
 
 const ConfigSchema = z.object({
@@ -224,6 +224,21 @@ function loadConfigFromEnv(): Partial<Config> {
       (parseEnvVar(Bun.env[envVarMapping.server.transportMode], "string") as "stdio" | "sse") ||
       defaultConfig.server.transportMode,
     port: (parseEnvVar(Bun.env[envVarMapping.server.port], "number") as number) || defaultConfig.server.port,
+    maxResponseSizeBytes:
+      (parseEnvVar(Bun.env[envVarMapping.server.maxResponseSizeBytes], "number") as number) ||
+      defaultConfig.server.maxResponseSizeBytes,
+    defaultPageSize:
+      (parseEnvVar(Bun.env[envVarMapping.server.defaultPageSize], "number") as number) ||
+      defaultConfig.server.defaultPageSize,
+    maxPageSize:
+      (parseEnvVar(Bun.env[envVarMapping.server.maxPageSize], "number") as number) ||
+      defaultConfig.server.maxPageSize,
+    enableResponseCompression:
+      (parseEnvVar(Bun.env[envVarMapping.server.enableResponseCompression], "boolean") as boolean) ??
+      defaultConfig.server.enableResponseCompression,
+    autoSummarizeLargeResponses:
+      (parseEnvVar(Bun.env[envVarMapping.server.autoSummarizeLargeResponses], "boolean") as boolean) ??
+      defaultConfig.server.autoSummarizeLargeResponses,
   };
 
   // Load elasticsearch config
@@ -392,7 +407,7 @@ try {
     langsmith: { ...defaultConfig.langsmith, ...envConfig.langsmith },
   };
 
-  // Validate and set configuration
+  // Validate merged configuration against schemas
   config = ConfigSchema.parse(mergedConfig);
 
   // Store warnings in config for later logging

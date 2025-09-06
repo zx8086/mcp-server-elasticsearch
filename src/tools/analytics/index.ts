@@ -245,6 +245,6 @@ export const getMultiTermVectors = {
   },
 };
 
-// Export all tools  
+// Export all tools
 export { registerTimestampAnalysisTool } from "./timestamp_analysis.js";
 export const analyticsTools = [getTermVectors, getMultiTermVectors] as const;

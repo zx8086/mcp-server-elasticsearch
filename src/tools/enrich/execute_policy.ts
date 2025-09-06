@@ -1,4 +1,5 @@
 /* src/tools/enrich/execute_policy.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -10,26 +11,7 @@ import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const executePolicySchema = {
-  type: "object",
-  properties: {
-    name: {
-      type: "string",
-      minLength: 1,
-      description: "Name of the enrich policy to execute",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Timeout for master node operations. Examples: '30s', '1m'",
-    },
-    waitForCompletion: {
-      type: "boolean",
-      description: "Whether to wait for the policy execution to complete before returning",
-    },
-  },
-  required: ["name"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const executePolicyValidator = z.object({
@@ -142,7 +124,11 @@ export const registerEnrichExecutePolicyTool: ToolRegistrationFunction = (server
   server.tool(
     "elasticsearch_enrich_execute_policy",
     "Execute Elasticsearch enrich policy to create the enrich index. Best for policy activation, data preparation, enrichment setup. Use when you need to build the enrich index from source data for document enrichment in Elasticsearch.",
-    executePolicySchema,
+  {
+    name: z.string(), // Name of the enrich policy to execute
+    masterTimeout: z.string().optional(), // Timeout for master node operations. Examples: '30s', '1m'
+    waitForCompletion: z.boolean().optional(), // Whether to wait for the policy execution to complete before returning
+  },
     withReadOnlyCheck("elasticsearch_enrich_execute_policy", executePolicyImpl, OperationType.WRITE),
   );
 };

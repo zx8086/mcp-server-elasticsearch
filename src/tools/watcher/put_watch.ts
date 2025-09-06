@@ -1,4 +1,5 @@
 /* src/tools/watcher/put_watch.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -10,160 +11,7 @@ import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const putWatchSchema = {
-  type: "object",
-  properties: {
-    id: {
-      type: "string",
-      minLength: 1,
-      description: "Watch ID",
-    },
-    actions: {
-      type: "object",
-      additionalProperties: {
-        type: "object",
-        properties: {
-          add_backing_index: {
-            type: "object",
-            additionalProperties: true,
-            description: "Add backing index action",
-          },
-          remove_backing_index: {
-            type: "object",
-            additionalProperties: true,
-            description: "Remove backing index action",
-          },
-        },
-        additionalProperties: true,
-      },
-      description: "Actions to execute when watch triggers",
-    },
-    condition: {
-      type: "object",
-      properties: {
-        always: {
-          type: "object",
-          additionalProperties: true,
-          description: "Always condition",
-        },
-        array_compare: {
-          type: "object",
-          additionalProperties: true,
-          description: "Array compare condition",
-        },
-        compare: {
-          type: "object",
-          additionalProperties: true,
-          description: "Compare condition",
-        },
-        never: {
-          type: "object",
-          additionalProperties: true,
-          description: "Never condition",
-        },
-        script: {
-          type: "object",
-          additionalProperties: true,
-          description: "Script condition",
-        },
-      },
-      additionalProperties: true,
-      description: "Condition that determines when to execute actions",
-    },
-    input: {
-      type: "object",
-      properties: {
-        chain: {
-          type: "object",
-          additionalProperties: true,
-          description: "Chain input",
-        },
-        http: {
-          type: "object",
-          additionalProperties: true,
-          description: "HTTP input",
-        },
-        search: {
-          type: "object",
-          additionalProperties: true,
-          description: "Search input",
-        },
-        simple: {
-          type: "object",
-          additionalProperties: true,
-          description: "Simple input",
-        },
-      },
-      additionalProperties: true,
-      description: "Input for the watch execution",
-    },
-    metadata: {
-      type: "object",
-      additionalProperties: true,
-      description: "Watch metadata",
-    },
-    throttle_period: {
-      type: "string",
-      description: "Throttle period for watch execution",
-    },
-    throttle_period_in_millis: {
-      type: "number",
-      description: "Throttle period in milliseconds",
-    },
-    transform: {
-      type: "object",
-      properties: {
-        chain: {
-          type: "object",
-          additionalProperties: true,
-          description: "Chain transform",
-        },
-        script: {
-          type: "object",
-          additionalProperties: true,
-          description: "Script transform",
-        },
-        search: {
-          type: "object",
-          additionalProperties: true,
-          description: "Search transform",
-        },
-      },
-      additionalProperties: true,
-      description: "Transform to apply to watch payload",
-    },
-    trigger: {
-      type: "object",
-      properties: {
-        schedule: {
-          type: "object",
-          additionalProperties: true,
-          description: "Schedule trigger",
-        },
-      },
-      additionalProperties: true,
-      description: "Trigger that determines when watch should run",
-    },
-    active: {
-      type: "boolean",
-      description: "Whether the watch is active",
-    },
-    if_primary_term: {
-      type: "number",
-      description: "Only perform operation if primary term matches",
-    },
-    if_seq_no: {
-      type: "number",
-      description: "Only perform operation if sequence number matches",
-    },
-    version: {
-      type: "number",
-      description: "Explicit version number for concurrency control",
-    },
-  },
-  required: ["id"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const putWatchValidator = z.object({
@@ -302,7 +150,21 @@ export const registerWatcherPutWatchTool: ToolRegistrationFunction = (server: Mc
   server.tool(
     "elasticsearch_watcher_put_watch",
     "Create or update a watch in Elasticsearch Watcher. Best for alerting setup, monitoring automation, notification configuration. Use when you need to define watch triggers and actions for Elasticsearch alerting workflows. IMPORTANT: Use only this API, not direct index operations. Uses direct JSON Schema and standardized MCP error codes.",
-    putWatchSchema,
+  {
+    id: z.string(), // Watch ID
+    actions: z.object({}).optional(), // Actions to execute when watch triggers
+    condition: z.object({}).optional(), // Condition that determines when to execute actions
+    input: z.object({}).optional(), // Input for the watch execution
+    metadata: z.object({}).optional(), // Watch metadata
+    throttle_period: z.string().optional(), // Throttle period for watch execution
+    throttle_period_in_millis: z.number().optional(), // Throttle period in milliseconds
+    transform: z.object({}).optional(), // Transform to apply to watch payload
+    trigger: z.object({}).optional(), // Trigger that determines when watch should run
+    active: z.boolean().optional(), // Whether the watch is active
+    if_primary_term: z.number().optional(), // Only perform operation if primary term matches
+    if_seq_no: z.number().optional(), // Only perform operation if sequence number matches
+    version: z.number().optional(), // Explicit version number for concurrency control
+  },
     withReadOnlyCheck("elasticsearch_watcher_put_watch", putWatchHandler, OperationType.WRITE),
   );
 };

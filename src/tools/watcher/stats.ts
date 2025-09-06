@@ -1,4 +1,5 @@
 /* src/tools/watcher/stats.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -10,32 +11,7 @@ import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const watcherStatsSchema = {
-  type: "object",
-  properties: {
-    metric: {
-      oneOf: [
-        {
-          type: "string",
-          enum: ["_all", "queued_watches", "current_watches", "pending_watches"],
-        },
-        {
-          type: "array",
-          items: {
-            type: "string",
-            enum: ["_all", "queued_watches", "current_watches", "pending_watches"],
-          },
-        },
-      ],
-      description: "Limit the information returned to specific metrics",
-    },
-    emit_stacktraces: {
-      type: "boolean",
-      description: "Whether to emit stack traces of currently running watches",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const watcherStatsValidator = z.object({
@@ -116,7 +92,10 @@ export const registerWatcherStatsTool: ToolRegistrationFunction = (server: McpSe
   server.tool(
     "elasticsearch_watcher_stats",
     "Get Elasticsearch Watcher statistics and metrics. Best for performance monitoring, service analysis, execution tracking. Use when you need to monitor Watcher service performance and execution statistics in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
-    watcherStatsSchema,
+  {
+    metric: z.any().optional(), // Limit the information returned to specific metrics
+    emit_stacktraces: z.boolean().optional(), // Whether to emit stack traces of currently running watches
+  },
     withReadOnlyCheck("elasticsearch_watcher_stats", watcherStatsHandler, OperationType.READ),
   );
 };

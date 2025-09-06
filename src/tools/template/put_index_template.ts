@@ -1,4 +1,5 @@
 /* src/tools/template/put_index_template.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -8,58 +9,7 @@ import { logger } from "../../utils/logger.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const putIndexTemplateSchema = {
-  type: "object",
-  properties: {
-    name: {
-      type: "string",
-      minLength: 1,
-      description: "Template name (cannot be empty)",
-    },
-    indexPatterns: {
-      type: "array",
-      items: { type: "string" },
-      description: "Array of index patterns that this template applies to",
-    },
-    template: {
-      type: "object",
-      description: "Template definition containing settings, mappings, and/or aliases",
-      additionalProperties: true,
-    },
-    composedOf: {
-      type: "array",
-      items: { type: "string" },
-      description: "Array of component template names this template is composed of",
-    },
-    priority: {
-      type: "number",
-      description: "Template priority (higher number = higher priority)",
-    },
-    version: {
-      type: "number",
-      description: "Template version number",
-    },
-    meta: {
-      type: "object",
-      description: "Metadata about the template",
-      additionalProperties: true,
-    },
-    allowAutoCreate: {
-      type: "boolean",
-      description: "Allow automatic index creation",
-    },
-    create: {
-      type: "boolean",
-      description: "If true, only create if template doesn't exist",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Timeout for master node operations",
-    },
-  },
-  required: ["name"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const putIndexTemplateValidator = z.object({
@@ -196,7 +146,18 @@ export const registerPutIndexTemplateTool: ToolRegistrationFunction = (server: M
   server.tool(
     "elasticsearch_put_index_template",
     "Create or update an index template in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes. Best for index standardization, mapping management, settings automation. Use when you need to define templates for automatic index configuration in Elasticsearch. TIP: Define 'indexPatterns' to control which indices use this template, set 'priority' for template precedence.",
-    putIndexTemplateSchema,
+  {
+    name: z.string(), // Template name (cannot be empty)
+    indexPatterns: z.array(z.string().optional()).optional(), // Array of index patterns that this template applies to
+    template: z.object({}).optional(), // Template definition containing settings, mappings, and/or aliases
+    composedOf: z.array(z.string().optional()).optional(), // Array of component template names this template is composed of
+    priority: z.number().optional(), // Template priority (higher number = higher priority)
+    version: z.number().optional(), // Template version number
+    meta: z.object({}).optional(), // Metadata about the template
+    allowAutoCreate: z.boolean().optional(), // Allow automatic index creation
+    create: z.boolean().optional(), // If true, only create if template doesn't exist
+    masterTimeout: z.string().optional(), // Timeout for master node operations
+  },
     putIndexTemplateHandler,
   );
 };

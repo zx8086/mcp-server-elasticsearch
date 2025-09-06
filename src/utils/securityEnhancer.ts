@@ -83,9 +83,9 @@ export class SecurityEnhancer {
       [
         "command_injection",
         [
-          /(\||&&|;|`|\$\(|\$\{)/g,
+          /(\|\||&&|;|`|\$\(|\$\{)/g, // Removed single | and comma from dangerous patterns
           /(nc|netcat|wget|curl|bash|sh|cmd|powershell)/gi,
-          /(>|<|>>|<<|\|)/g,
+          /(>>|<<)/g, // Removed single < > as they can be in Elasticsearch queries
           /(\.\.|\/etc\/|\/bin\/|\/usr\/)/gi,
         ],
       ],
@@ -220,8 +220,21 @@ export class SecurityEnhancer {
   private validateString(value: string, field: string): SecurityViolation[] {
     const violations: SecurityViolation[] = [];
 
+    // Elasticsearch-specific exemptions
+    const isElasticsearchField = field.toLowerCase().includes('index') || 
+                                 field.toLowerCase().includes('pattern') ||
+                                 field.toLowerCase().includes('query');
+    
+    // If this is an Elasticsearch index pattern, skip command injection checks for commas
+    const isIndexPattern = /^[a-zA-Z0-9\-_*,.\s]+$/.test(value) && value.includes('*');
+
     // Check each pattern category
     for (const [category, patterns] of this.suspiciousPatterns.entries()) {
+      // Skip command injection checks for legitimate Elasticsearch index patterns
+      if (category === 'command_injection' && isElasticsearchField && isIndexPattern) {
+        continue;
+      }
+
       for (const pattern of patterns) {
         if (pattern.test(value)) {
           const severity = this.getSeverityForCategory(category);
@@ -388,13 +401,13 @@ export const defaultSecurityEnhancer = new SecurityEnhancer();
 // Security wrapper for tool handlers
 export function withSecurityValidation<_T extends any[], R>(
   toolName: string,
-  toolFunction: (args: any) => Promise<R>,
+  toolFunction: (toolArgs: any, extra: any) => Promise<R>,
   securityConfig?: Partial<SecurityConfig>,
 ) {
   const enhancer = securityConfig ? new SecurityEnhancer(securityConfig) : defaultSecurityEnhancer;
 
-  return async (args: any): Promise<R> => {
-    const { sanitized, violations } = enhancer.validateAndSanitizeInput(toolName, args);
+  return async (toolArgs: any, extra: any): Promise<R> => {
+    const { sanitized, violations } = enhancer.validateAndSanitizeInput(toolName, toolArgs);
 
     // Log security metrics
     logger.debug("Security validation completed", {
@@ -403,6 +416,6 @@ export function withSecurityValidation<_T extends any[], R>(
       blocked: violations.some((v) => v.blocked),
     });
 
-    return toolFunction(sanitized);
+    return toolFunction(sanitized, extra);
   };
 }

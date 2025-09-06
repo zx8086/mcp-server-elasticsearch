@@ -1,4 +1,5 @@
 /* src/tools/search/clear_scroll.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -8,18 +9,7 @@ import { logger } from "../../utils/logger.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const clearScrollSchema = {
-  type: "object",
-  properties: {
-    scrollId: {
-      type: "string",
-      minLength: 1,
-      description: "Scroll ID to clear from memory",
-    },
-  },
-  required: ["scrollId"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const clearScrollValidator = z.object({
@@ -84,7 +74,9 @@ export const registerClearScrollTool: ToolRegistrationFunction = (server: McpSer
   server.tool(
     "elasticsearch_clear_scroll",
     "Clear a scroll context in Elasticsearch to free resources. Best for cleanup operations, memory management, scroll lifecycle management. Use when you need to explicitly release scroll contexts after completing large result set iterations in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
-    clearScrollSchema,
+  {
+    scrollId: z.string(), // Scroll ID to clear from memory
+  },
     clearScrollHandler,
   );
 };

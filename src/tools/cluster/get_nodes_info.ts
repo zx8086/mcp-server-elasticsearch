@@ -1,4 +1,5 @@
 /* src/tools/cluster/get_nodes_info.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -8,33 +9,7 @@ import { logger } from "../../utils/logger.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const nodesInfoSchema = {
-  type: "object",
-  properties: {
-    nodeId: {
-      type: "string",
-      description: "Specific node ID, or '_local' for current node, or leave empty for all",
-    },
-    metric: {
-      type: "string",
-      description:
-        "Specific metrics: 'name', 'os', 'jvm', 'process', 'thread_pool', 'transport', 'http', 'plugins', 'ingest'. Combine: 'os,jvm'",
-    },
-    flatSettings: {
-      type: "boolean",
-      description: "Return settings in flat format",
-    },
-    timeout: {
-      type: "string",
-      description: "Timeout for the request (e.g., '30s', '1m')",
-    },
-    compact: {
-      type: "boolean",
-      description: "Auto-select essential metrics (os,jvm,process,transport). Overrides 'metric' parameter",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const nodesInfoValidator = z.object({
@@ -43,9 +18,58 @@ const nodesInfoValidator = z.object({
   flatSettings: z.boolean().optional(),
   timeout: z.string().optional(),
   compact: z.boolean().optional(),
+  summary: z.boolean().optional(),
 });
 
 type NodesInfoParams = z.infer<typeof nodesInfoValidator>;
+
+// Helper function to format node info summary
+function formatNodeInfoSummary(result: any): string {
+  if (!result.nodes) return "No node information available";
+  
+  const summary: string[] = ["## Node Information Summary\n"];
+  
+  for (const [nodeId, node] of Object.entries(result.nodes)) {
+    const nodeInfo = node as any;
+    summary.push(`### Node: ${nodeInfo.name || nodeId}`);
+    summary.push(`- **ID**: ${nodeId}`);
+    
+    if (nodeInfo.ip) {
+      summary.push(`- **IP**: ${nodeInfo.ip}`);
+    }
+    
+    if (nodeInfo.roles) {
+      summary.push(`- **Roles**: ${nodeInfo.roles.join(', ')}`);
+    }
+    
+    if (nodeInfo.version) {
+      summary.push(`- **Version**: ${nodeInfo.version}`);
+    }
+    
+    if (nodeInfo.os) {
+      summary.push(`- **OS**: ${nodeInfo.os.pretty_name || nodeInfo.os.name || 'Unknown'}`);
+      if (nodeInfo.os.arch) summary.push(`- **Architecture**: ${nodeInfo.os.arch}`);
+    }
+    
+    if (nodeInfo.jvm) {
+      summary.push(`- **JVM**: ${nodeInfo.jvm.vm_name} ${nodeInfo.jvm.version}`);
+      if (nodeInfo.jvm.mem) {
+        summary.push(`- **JVM Heap**: ${Math.round(nodeInfo.jvm.mem.heap_max_in_bytes / 1024 / 1024 / 1024)}GB`);
+      }
+    }
+    
+    if (nodeInfo.process) {
+      summary.push(`- **CPU Cores**: ${nodeInfo.process.cpu.total_cores || 'Unknown'}`);
+      if (nodeInfo.process.mem) {
+        summary.push(`- **System Memory**: ${Math.round(nodeInfo.process.mem.total_in_bytes / 1024 / 1024 / 1024)}GB`);
+      }
+    }
+    
+    summary.push(""); // Empty line between nodes
+  }
+  
+  return summary.join("\n");
+}
 
 // MCP error handling
 function createNodesInfoMcpError(
@@ -76,7 +100,7 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (server: McpSe
     try {
       // Validate parameters
       const params = nodesInfoValidator.parse(args);
-      const { nodeId, metric, flatSettings, timeout, compact } = params;
+      const { nodeId, metric, flatSettings, timeout, compact, summary } = params;
 
       logger.info(`[${requestId}] Nodes info request received`, {
         params: {
@@ -141,13 +165,18 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (server: McpSe
           logger.warn("Slow nodes info operation", { duration, requestId });
         }
 
+        // Format compact response
+        const responseContent = summary ? 
+          formatNodeInfoSummary(result) : 
+          JSON.stringify(result, null, 2);
+          
         return {
           content: [
             {
               type: "text",
               text: "📊 Compact node information (os,jvm,process,transport metrics)",
             } as TextContent,
-            { type: "text", text: JSON.stringify(result, null, 2) } as TextContent,
+            { type: "text", text: responseContent } as TextContent,
           ],
         };
       }
@@ -176,8 +205,13 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (server: McpSe
         logger.warn("Slow nodes info operation", { duration, requestId });
       }
 
+      // Format final response
+      const responseContent = summary ? 
+        formatNodeInfoSummary(result) : 
+        JSON.stringify(result, null, 2);
+
       return {
-        content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
+        content: [{ type: "text", text: responseContent } as TextContent],
       };
     } catch (error) {
       // Error handling
@@ -233,7 +267,14 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (server: McpSe
   server.tool(
     "elasticsearch_get_nodes_info",
     "Get node information (static configuration). WARNING: Full info exceeds 1MB per node. SAFE OPTIONS: {metric: 'name'} for node list, {metric: 'os,jvm'} for basic info, {metric: 'process,transport'} for network info. The 'compact' parameter auto-selects essential metrics. NEVER use empty {} - it will fail. READ operation - safe for production use.",
-    nodesInfoSchema,
+  {
+    nodeId: z.string().optional(), // Specific node ID, or '_local' for current node, or leave empty for all
+    metric: z.string().optional(), // Specific metrics: 'name', 'os', 'jvm', 'process', 'thread_pool', 'transport', 'http', 'plugins', 'ingest'. Combine: 'os,jvm'
+    flatSettings: z.boolean().optional(), // Return settings in flat format
+    timeout: z.string().optional(), // Timeout for the request (e.g., '30s', '1m')
+    compact: z.boolean().optional(), // Auto-select essential metrics (os,jvm,process,transport). Overrides 'metric' parameter
+    summary: z.boolean().optional(), // Return summarized node information instead of full details
+  },
     nodesInfoHandler,
   );
 };

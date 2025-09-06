@@ -1,4 +1,5 @@
 /* src/tools/watcher/start.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,16 +10,7 @@ import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const startWatcherSchema = {
-  type: "object",
-  properties: {
-    master_timeout: {
-      type: "string",
-      description: "Explicit operation timeout for connection to master node",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const startWatcherValidator = z.object({
@@ -92,7 +84,9 @@ export const registerWatcherStartTool: ToolRegistrationFunction = (server: McpSe
   server.tool(
     "elasticsearch_watcher_start",
     "Start the Elasticsearch Watcher service. Best for service management, monitoring activation, system initialization. Use when you need to enable the Watcher service for Elasticsearch alerting and monitoring capabilities. Uses direct JSON Schema and standardized MCP error codes.",
-    startWatcherSchema,
+  {
+    master_timeout: z.string().optional(), // Explicit operation timeout for connection to master node
+  },
     withReadOnlyCheck("elasticsearch_watcher_start", startWatcherHandler, OperationType.WRITE),
   );
 };

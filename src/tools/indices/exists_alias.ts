@@ -1,4 +1,5 @@
 /* src/tools/indices/exists_alias.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,40 +10,7 @@ import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const existsAliasSchema = {
-  type: "object",
-  properties: {
-    name: {
-      oneOf: [{ type: "string" }, { type: "array", items: { type: "string" } }],
-      description: "Alias name(s) to check existence for. Examples: 'logs', ['alias1', 'alias2']",
-    },
-    index: {
-      oneOf: [{ type: "string" }, { type: "array", items: { type: "string" } }],
-      description: "Index name(s) or pattern(s) to check for aliases",
-    },
-    allowNoIndices: {
-      type: "boolean",
-      description: "Whether to ignore if a wildcard indices expression resolves into no concrete indices",
-    },
-    expandWildcards: {
-      oneOf: [
-        { type: "string", enum: ["all", "open", "closed", "hidden", "none"] },
-        { type: "array", items: { type: "string", enum: ["all", "open", "closed", "hidden", "none"] } },
-      ],
-      description: "Type of index that wildcard patterns can match",
-    },
-    ignoreUnavailable: {
-      type: "boolean",
-      description: "Whether specified concrete indices should be ignored when unavailable",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Timeout for connection to master node",
-    },
-  },
-  required: ["name"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const existsAliasValidator = z.object({
@@ -141,7 +109,14 @@ export const registerExistsAliasTool: ToolRegistrationFunction = (server: McpSer
   server.tool(
     "elasticsearch_exists_alias",
     "Check if index or data stream aliases exist in Elasticsearch. Best for alias validation, deployment verification, configuration checks. Use when you need to verify alias presence before operations in Elasticsearch.",
-    existsAliasSchema,
+  {
+    name: z.any(), // Alias name(s) to check existence for. Examples: 'logs', ['alias1', 'alias2']
+    index: z.any().optional(), // Index name(s) or pattern(s) to check for aliases
+    allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard indices expression resolves into no concrete indices
+    expandWildcards: z.any().optional(), // Type of index that wildcard patterns can match
+    ignoreUnavailable: z.boolean().optional(), // Whether specified concrete indices should be ignored when unavailable
+    masterTimeout: z.string().optional(), // Timeout for connection to master node
+  },
     existsAliasHandler,
   );
 };

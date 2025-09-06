@@ -1,4 +1,5 @@
 /* src/tools/indices/exists_index_template.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,30 +10,7 @@ import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const existsIndexTemplateSchema = {
-  type: "object",
-  properties: {
-    name: {
-      type: "string",
-      minLength: 1,
-      description: "Index template name to check existence for. Example: 'logs-template'",
-    },
-    local: {
-      type: "boolean",
-      description: "Return local information, do not retrieve the state from master node",
-    },
-    flatSettings: {
-      type: "boolean",
-      description: "Return settings in flat format",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Timeout for connection to master node",
-    },
-  },
-  required: ["name"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const existsIndexTemplateValidator = z.object({
@@ -127,7 +105,12 @@ export const registerExistsIndexTemplateTool: ToolRegistrationFunction = (server
   server.tool(
     "elasticsearch_exists_index_template",
     "Check if index templates exist in Elasticsearch. Best for template validation, deployment verification, configuration checks. Use when you need to verify index template presence before operations in Elasticsearch.",
-    existsIndexTemplateSchema,
+  {
+    name: z.string(), // Index template name to check existence for. Example: 'logs-template'
+    local: z.boolean().optional(), // Return local information, do not retrieve the state from master node
+    flatSettings: z.boolean().optional(), // Return settings in flat format
+    masterTimeout: z.string().optional(), // Timeout for connection to master node
+  },
     existsIndexTemplateHandler,
   );
 };

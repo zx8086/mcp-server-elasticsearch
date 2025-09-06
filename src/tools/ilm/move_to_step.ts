@@ -1,4 +1,6 @@
 /* src/tools/ilm/move_to_step.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
+
 /* SIMPLIFIED VERSION: Direct JSON Schema + MCP Error Codes */
 
 import type { Client } from "@elastic/elasticsearch";
@@ -14,58 +16,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 // =============================================================================
 
 // Direct JSON Schema definition
-const moveToStepSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      minLength: 1,
-      description: "Index name (cannot be empty)",
-    },
-    currentStep: {
-      type: "object",
-      description: "Current ILM step the index is in",
-      properties: {
-        phase: {
-          type: "string",
-          description: "Current phase (hot, warm, cold, delete)",
-        },
-        action: {
-          type: "string",
-          description: "Current action within the phase",
-        },
-        name: {
-          type: "string",
-          description: "Current step name",
-        },
-      },
-      required: ["phase", "action", "name"],
-      additionalProperties: false,
-    },
-    nextStep: {
-      type: "object",
-      description: "Target ILM step to move the index to",
-      properties: {
-        phase: {
-          type: "string",
-          description: "Target phase (hot, warm, cold, delete)",
-        },
-        action: {
-          type: "string",
-          description: "Target action within the phase",
-        },
-        name: {
-          type: "string",
-          description: "Target step name",
-        },
-      },
-      required: ["phase"],
-      additionalProperties: false,
-    },
-  },
-  required: ["index", "currentStep", "nextStep"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Simple Zod validator for runtime validation only
 const moveToStepValidator = z.object({
@@ -237,7 +188,11 @@ Operation completed at: ${new Date().toISOString()}`,
   server.tool(
     "elasticsearch_ilm_move_to_step",
     "Move index to ILM step. Manually move an index to a specific ILM policy step. Uses direct JSON Schema and standardized MCP error codes. Expert-level operation for troubleshooting. Examples: {index: 'my-index', currentStep: {phase: 'hot', action: 'rollover', name: 'check-rollover-ready'}, nextStep: {phase: 'warm'}}",
-    moveToStepSchema, // Direct JSON Schema - no Zod conversion
+  {
+    index: z.string(), // Index name (cannot be empty)
+    currentStep: z.object({}), // Current ILM step the index is in
+    nextStep: z.object({}), // Target ILM step to move the index to
+  }, // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_move_to_step", moveToStepHandler, OperationType.DESTRUCTIVE),
   );
 };

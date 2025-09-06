@@ -46,10 +46,11 @@ export function initializeTracing(): void {
     process.env.LANGSMITH_PROJECT = project;
     process.env.LANGCHAIN_PROJECT = project;
 
-    // Initialize LangSmith client
+    // Initialize LangSmith client with EXPLICIT project routing
     langsmithClient = new LangSmithClient({
       apiKey: apiKey,
       apiUrl: endpoint,
+      projectName: project, // CRITICAL: Explicit project routing to prevent traces going to wrong project
     });
 
     isTracingEnabled = true;
@@ -151,25 +152,39 @@ export const traceMcpConnection = traceable(
 // TOOL EXECUTION TRACING
 // =============================================================================
 
-export function traceToolExecution(toolName: string, _args: any, handler: () => Promise<any>) {
-  // Create a traceable function with the specific tool name
+export function traceToolExecution(toolName: string, toolArgs: any, extra: any, handler: (toolArgs: any, extra: any) => Promise<any>) {
+  // Get configured project for consistent routing
+  const project = process.env.LANGSMITH_PROJECT || config.langsmith.project;
+
+  // Create a traceable function with the specific tool name and project
   const toolTracer = traceable(
-    async () => {
+    async (inputs: any) => {
       const startTime = Date.now();
       const currentRun = getCurrentRunTree();
 
       logger.debug("Executing tool with tracing", {
         toolName,
+        project,
         hasParentTrace: !!currentRun,
         parentTraceId: currentRun?.id,
+        toolArgsProvided: !!toolArgs,
+        toolArgKeys: toolArgs ? Object.keys(toolArgs) : [],
+        limitParam: toolArgs?.limit,
+        summaryParam: toolArgs?.summary,
+        extraProvided: !!extra,
+        extraKeys: extra ? Object.keys(extra) : [],
+        // Deep inspection of all args
+        fullToolArgs: toolArgs,
+        fullExtra: extra,
       });
 
       try {
-        const result = await handler();
+        const result = await handler(toolArgs, extra);
 
         const executionTime = Date.now() - startTime;
         logger.debug("Tool execution completed", {
           toolName,
+          project,
           executionTime,
           hasResult: !!result,
         });
@@ -179,12 +194,14 @@ export function traceToolExecution(toolName: string, _args: any, handler: () => 
           _trace: {
             runId: currentRun?.id,
             executionTime,
+            project,
           },
         };
       } catch (error) {
         const executionTime = Date.now() - startTime;
         logger.error("Tool execution failed", {
           toolName,
+          project,
           executionTime,
           error: error instanceof Error ? error.message : String(error),
         });
@@ -194,10 +211,17 @@ export function traceToolExecution(toolName: string, _args: any, handler: () => 
     {
       name: toolName, // Use the dynamic tool name
       run_type: "tool",
+      project_name: project, // CRITICAL: Ensure traces go to correct project
     },
   );
 
-  return toolTracer();
+  // Pass the toolArgs as inputs to the trace AND execute the function
+  return toolTracer({
+    tool_name: toolName,
+    arguments: toolArgs,
+    extra_context: extra,
+    timestamp: new Date().toISOString(),
+  });
 }
 
 // =============================================================================

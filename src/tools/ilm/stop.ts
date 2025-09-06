@@ -1,4 +1,6 @@
 /* src/tools/ilm/stop.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
+
 /* SIMPLIFIED VERSION: Direct JSON Schema + MCP Error Codes */
 
 import type { Client } from "@elastic/elasticsearch";
@@ -14,20 +16,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 // =============================================================================
 
 // Direct JSON Schema definition
-const stopSchema = {
-  type: "object",
-  properties: {
-    masterTimeout: {
-      type: "string",
-      description: "Master node timeout",
-    },
-    timeout: {
-      type: "string",
-      description: "Request timeout",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Simple Zod validator for runtime validation only
 const stopValidator = z.object({
@@ -155,7 +144,10 @@ Operation completed at: ${new Date().toISOString()}`,
   server.tool(
     "elasticsearch_ilm_stop",
     "Stop ILM. Stop the Index Lifecycle Management plugin to halt automated operations. Uses direct JSON Schema and standardized MCP error codes. Examples: {} (no params needed), {masterTimeout: '30s'}.",
-    stopSchema, // Direct JSON Schema - no Zod conversion
+  {
+    masterTimeout: z.string().optional(), // Master node timeout
+    timeout: z.string().optional(), // Request timeout
+  }, // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_stop", stopHandler, OperationType.WRITE),
   );
 };

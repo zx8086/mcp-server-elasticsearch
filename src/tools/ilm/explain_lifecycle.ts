@@ -1,4 +1,6 @@
 /* src/tools/ilm/explain_lifecycle_simplified.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
+
 /* SIMPLIFIED VERSION: Direct JSON Schema + MCP Error Codes */
 
 import type { Client } from "@elastic/elasticsearch";
@@ -6,6 +8,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { createPaginationHeader, paginateResults, responsePresets } from "../../utils/responseHandling.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // =============================================================================
@@ -13,38 +16,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 // =============================================================================
 
 // Direct JSON Schema definition (no complex Zod conversion)
-const explainLifecycleSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      description: "Index pattern. Use '*' for all indices",
-    },
-    onlyErrors: {
-      type: "boolean",
-      description: "Only show indices with ILM errors",
-    },
-    onlyManaged: {
-      type: "boolean",
-      description: "Only show ILM-managed indices. Highly recommended for large clusters",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Master node timeout",
-    },
-    limit: {
-      type: "number",
-      minimum: 1,
-      maximum: 500,
-      description: "Maximum number of indices to return. Without this, returns ALL matching indices",
-    },
-    includeDetails: {
-      type: "boolean",
-      description: "Include full lifecycle details (false for compact output)",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Simple Zod validator for runtime validation only
 const explainLifecycleValidator = z.object({
@@ -126,37 +98,21 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
         };
       }
 
-      // Apply limit with smart auto-limiting
-      const totalFound = indices.length;
-      let displayedIndices = indices;
-      let autoLimited = false;
-
-      if (params.limit) {
-        displayedIndices = indices.slice(0, params.limit);
-      } else if (totalFound > 100) {
-        // Auto-limit large result sets to prevent overwhelming responses
-        displayedIndices = indices.slice(0, 50);
-        autoLimited = true;
-      }
+      // Apply pagination with smart defaults for large datasets
+      const { results: displayedIndices, metadata } = paginateResults(indices, {
+        limit: params.limit,
+        defaultLimit: indices.length > 100 ? 50 : responsePresets.list.defaultLimit,
+        maxLimit: responsePresets.list.maxLimit,
+      });
 
       // Build response content
       const content: string[] = [];
 
       // Header with summary
-      content.push(
-        `## ILM Status for Indices (${displayedIndices.length}${totalFound > displayedIndices.length ? ` of ${totalFound}` : ""})`,
-      );
+      content.push(createPaginationHeader(metadata, "ILM Status for Indices"));
       content.push(
         `Pattern: \`${index}\`${params.onlyManaged ? " | Managed only" : ""}${params.onlyErrors ? " | Errors only" : ""}\n`,
       );
-
-      if (autoLimited) {
-        content.push(
-          `⚠️ Auto-limited to 50 indices (found ${totalFound}). Use 'limit' parameter or more specific pattern.\n`,
-        );
-      } else if (params.limit && totalFound > params.limit) {
-        content.push(`⚠️ Showing first ${params.limit} indices (found ${totalFound}).\n`);
-      }
 
       // Group indices by status for summary
       const statusGroups: Record<string, number> = {};
@@ -288,7 +244,14 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
   server.tool(
     "elasticsearch_ilm_explain_lifecycle",
     "Explain ILM status for indices. WARNING: Large clusters have 1000+ indices! ALWAYS specify filters to avoid truncation. Examples: {onlyManaged: true, limit: 50}, {index: 'logs-*', limit: 100}, {onlyErrors: true}. Uses direct JSON Schema and standardized MCP error codes.",
-    explainLifecycleSchema, // Direct JSON Schema - no Zod conversion
+  {
+    index: z.string().optional(), // Index pattern. Use '*' for all indices
+    onlyErrors: z.boolean().optional(), // Only show indices with ILM errors
+    onlyManaged: z.boolean().optional(), // Only show ILM-managed indices. Highly recommended for large clusters
+    masterTimeout: z.string().optional(), // Master node timeout
+    limit: z.number().min(1).max(500).optional(), // Maximum number of indices to return. Without this, returns ALL matching indices
+    includeDetails: z.boolean().optional(), // Include full lifecycle details (false for compact output)
+  }, // Direct JSON Schema - no Zod conversion
     explainLifecycleHandler,
   );
 };

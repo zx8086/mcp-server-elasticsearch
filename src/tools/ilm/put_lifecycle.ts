@@ -1,4 +1,6 @@
 /* src/tools/ilm/put_lifecycle.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
+
 /* SIMPLIFIED VERSION: Direct JSON Schema + MCP Error Codes */
 
 import type { Client } from "@elastic/elasticsearch";
@@ -7,6 +9,7 @@ import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import { withSecurityValidation } from "../../utils/securityEnhancer.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // =============================================================================
@@ -14,56 +17,34 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 // =============================================================================
 
 // Direct JSON Schema definition
-const putLifecycleSchema = {
-  type: "object",
-  properties: {
-    policy: {
-      type: "string",
-      minLength: 1,
-      description: "Policy identifier (cannot be empty)",
-    },
-    body: {
-      type: "object",
-      description: "ILM policy definition with phases and actions",
-      additionalProperties: true,
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Master node timeout",
-    },
-    timeout: {
-      type: "string",
-      description: "Request timeout",
-    },
-  },
-  required: ["policy"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
+
+// Flexible phase structure for ILM policies
+const phaseSchema = z
+  .object({
+    actions: z.record(z.string(), z.unknown()).optional(),
+    min_age: z.string().optional(),
+  })
+  .passthrough();
+
+// Flexible body schema that supports both wrapped and direct formats
+const bodySchema = z.union([
+  // Format 1: {policy: {phases: {...}}} - wrapped format
+  z.object({
+    policy: z.object({
+      phases: z.record(z.string(), phaseSchema).optional(),
+    }).passthrough(),
+  }).passthrough(),
+  // Format 2: {phases: {...}} - direct format
+  z.object({
+    phases: z.record(z.string(), phaseSchema).optional(),
+  }).passthrough(),
+]);
 
 // Simple Zod validator for runtime validation only
 const putLifecycleValidator = z.object({
   policy: z.string().min(1, "Policy identifier cannot be empty"),
-  body: z
-    .object({
-      policy: z
-        .object({
-          phases: z
-            .record(
-              z.string(),
-              z
-                .object({
-                  actions: z.record(z.string(), z.unknown()).optional(),
-                  min_age: z.string().optional(),
-                })
-                .passthrough(),
-            )
-            .optional(),
-        })
-        .passthrough()
-        .optional(),
-    })
-    .passthrough()
-    .optional(),
+  body: bodySchema,
   masterTimeout: z.string().optional(),
   timeout: z.string().optional(),
 });
@@ -196,11 +177,54 @@ Operation completed at: ${new Date().toISOString()}`,
     }
   };
 
-  // Direct tool registration with JSON Schema + read-only protection
+  // Custom security configuration for ILM JSON data
+  const ilmSecurityConfig = {
+    maxInputSize: 1024 * 1024, // 1MB for large policies
+    enableInjectionDetection: true,
+    enableXssProtection: true,
+    enableCommandInjectionProtection: false, // Disable for JSON containing pipes
+    sensitiveFields: ["password", "api_key", "apiKey", "secret", "token", "auth"],
+    maxQueryComplexity: 200, // Higher for complex ILM policies
+  };
+
+  // Enhanced handler with custom security validation
+  const secureHandler = withSecurityValidation(
+    "elasticsearch_ilm_put_lifecycle",
+    putLifecycleHandler,
+    ilmSecurityConfig,
+  );
+
+  // Direct tool registration with flexible Zod schema matching validator
   server.tool(
     "elasticsearch_ilm_put_lifecycle",
-    "Create or update ILM policy. Define Index Lifecycle Management policy with automated transitions through hot, warm, cold, and delete phases. Uses direct JSON Schema and standardized MCP error codes. Examples: {policy: 'my-policy', body: {policy: {phases: {hot: {actions: {}}}}}}",
-    putLifecycleSchema, // Direct JSON Schema - no Zod conversion
-    withReadOnlyCheck("elasticsearch_ilm_put_lifecycle", putLifecycleHandler, OperationType.WRITE),
+    "Create or update ILM policy. Define Index Lifecycle Management policy with automated transitions through hot, warm, cold, and delete phases. FIXED: Uses flexible Zod Schema supporting both wrapped ({policy: {phases: {...}}}) and direct ({phases: {...}}) formats for proper MCP parameter handling.",
+    {
+      policy: z.string().min(1),
+      body: z.union([
+        // Format 1: {policy: {phases: {...}}} - wrapped format
+        z.object({
+          policy: z.object({
+            phases: z.record(z.string(), z
+              .object({
+                actions: z.record(z.string(), z.unknown()).optional(),
+                min_age: z.string().optional(),
+              })
+              .passthrough()).optional(),
+          }).passthrough(),
+        }).passthrough(),
+        // Format 2: {phases: {...}} - direct format
+        z.object({
+          phases: z.record(z.string(), z
+            .object({
+              actions: z.record(z.string(), z.unknown()).optional(),
+              min_age: z.string().optional(),
+            })
+            .passthrough()).optional(),
+        }).passthrough(),
+      ]),
+      masterTimeout: z.string().optional(),
+      timeout: z.string().optional(),
+    },
+    withReadOnlyCheck("elasticsearch_ilm_put_lifecycle", secureHandler, OperationType.WRITE),
   );
 };

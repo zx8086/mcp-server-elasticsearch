@@ -29,22 +29,37 @@ interface SearchQueryBody {
 
 // Zod schema for Elasticsearch search parameters - OBJECT ONLY format
 const SearchParams = z.object({
-  index: z.string().optional().describe("Name of the Elasticsearch index to search. Use '*' to search all indices. Examples: 'logs-*', 'metrics-*'"),
-  query: z.object({}).passthrough().optional().describe("Elasticsearch query object. Example: { range: { '@timestamp': { gte: 'now-24h' } } }"),
-  size: z.number().optional().describe("Number of documents to return. Default is 10. Use 0 for pure analytics (aggregations only), 10+ to include documents"),
+  index: z
+    .string()
+    .optional()
+    .describe(
+      "Name of the Elasticsearch index to search. Use '*' to search all indices. Examples: 'logs-*', 'metrics-*'",
+    ),
+  query: z
+    .object({})
+    .passthrough()
+    .optional()
+    .describe("Elasticsearch query object. Example: { range: { '@timestamp': { gte: 'now-24h' } } }"),
+  size: z
+    .number()
+    .optional()
+    .describe(
+      "Number of documents to return. Default is 10. Use 0 for pure analytics (aggregations only), 10+ to include documents",
+    ),
   from: z.number().optional().describe("Starting offset for pagination. Default is 0"),
-  sort: z.array(z.object({}).passthrough()).optional().describe("Sort order. Example: [{ '@timestamp': { order: 'desc' } }]"),
+  sort: z
+    .array(z.object({}).passthrough())
+    .optional()
+    .describe("Sort order. Example: [{ '@timestamp': { order: 'desc' } }]"),
   aggs: z.object({}).passthrough().optional().describe("Aggregations object for analytics queries"),
-  _source: z.union([
-    z.array(z.string()),
-    z.boolean(),
-    z.string()
-  ]).optional().describe("Fields to return in results"),
-  highlight: z.object({}).passthrough().optional().describe("Highlight configuration")
+  _source: z
+    .union([z.array(z.string()), z.boolean(), z.string()])
+    .optional()
+    .describe("Fields to return in results"),
+  highlight: z.object({}).passthrough().optional().describe("Highlight configuration"),
 });
 
 type SearchParamsType = z.infer<typeof SearchParams>;
-
 
 // MCP error handling
 function createSearchMcpError(
@@ -72,35 +87,35 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
     const perfStart = performance.now();
 
     try {
-      // DEBUG: Check what we actually receive  
+      // DEBUG: Check what we actually receive
       logger.debug("SEARCH PARAMS DEBUG", {
         paramsExists: !!params,
         paramsType: typeof params,
-        paramsKeys: params ? Object.keys(params) : 'NO PARAMS',
+        paramsKeys: params ? Object.keys(params) : "NO PARAMS",
         hasIndex: !!params?.index,
         hasQuery: !!params?.query,
         hasSize: params?.size !== undefined,
         hasAggs: !!params?.aggs,
         indexValue: params?.index,
-        sizeValue: params?.size
+        sizeValue: params?.size,
       });
 
       // Zod has already parsed and transformed the parameters
       const { index, query, size, from, sort, aggs, _source, highlight } = params;
 
-      logger.debug("Parsed search parameters", { 
-        index, 
+      logger.debug("Parsed search parameters", {
+        index,
         queryType: typeof query,
-        queryKeys: query && typeof query === 'object' ? Object.keys(query) : undefined,
+        queryKeys: query && typeof query === "object" ? Object.keys(query) : undefined,
         size,
         from,
         hasAggs: !!aggs,
-        hasSort: !!sort
+        hasSort: !!sort,
       });
-      
+
       // Log warning for potential timestamp issues if range queries are used
-      if (query && typeof query === 'object' && query.range?.['@timestamp']) {
-        const rangeQuery = query.range['@timestamp'];
+      if (query && typeof query === "object" && query.range?.["@timestamp"]) {
+        const rangeQuery = query.range["@timestamp"];
         logger.debug("Time range query detected", { rangeQuery, currentTime: new Date().toISOString() });
       }
 
@@ -114,16 +129,20 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
         });
       }
 
+      // Ensure we have a valid query - handle empty objects correctly
+      const isEmptyQuery = !query || (typeof query === 'object' && Object.keys(query).length === 0);
+      const finalQuery = isEmptyQuery ? { match_all: {} } : query;
+
       // Build search request from natural parameters
       const searchRequest: SearchQueryBody & { index: string } = {
         index: index || "*",
-        query: query || { match_all: {} },
+        query: finalQuery,
         size: size ?? 10,
         ...(from !== undefined && { from }),
         ...(sort && { sort }),
         ...(aggs && { aggs }),
         ...(_source !== undefined && { _source }),
-        ...(highlight && { highlight })
+        ...(highlight && { highlight }),
       };
 
       // DEBUG: Log the exact request being sent to Elasticsearch
@@ -168,11 +187,14 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
         const metadata = {
           totalHits: typeof result.hits.total === "number" ? result.hits.total : result.hits.total?.value || 0,
           tookMs: result.took,
-          currentTime: new Date().toISOString()
+          currentTime: new Date().toISOString(),
         };
         return {
           content: [
-            { type: "text", text: `Search results with aggregations (${metadata.totalHits} total hits, ${metadata.tookMs}ms, current time: ${metadata.currentTime}):` } as TextContent,
+            {
+              type: "text",
+              text: `Search results with aggregations (${metadata.totalHits} total hits, ${metadata.tookMs}ms, current time: ${metadata.currentTime}):`,
+            } as TextContent,
             {
               type: "text",
               text: JSON.stringify(result.aggregations || {}, null, 2),
@@ -223,7 +245,7 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
 
       // If we have aggregations AND documents, show both
       const responseContent: TextContent[] = [metadataFragment, ...contentFragments];
-      
+
       if (hasAggregations && result.aggregations) {
         const aggregationsFragment: TextContent = {
           type: "text",
@@ -237,7 +259,7 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
       };
     } catch (error) {
       // Error handling - JSON parsing errors
-      if (error instanceof SyntaxError && error.message.includes('JSON')) {
+      if (error instanceof SyntaxError && error.message.includes("JSON")) {
         throw createSearchMcpError(`JSON parsing failed: ${error.message}`, {
           type: "validation",
           details: { originalError: error.message, providedParams: params },

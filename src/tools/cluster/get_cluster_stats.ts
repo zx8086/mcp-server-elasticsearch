@@ -1,4 +1,5 @@
 /* src/tools/cluster/get_cluster_stats.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -8,21 +9,7 @@ import { logger } from "../../utils/logger.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const clusterStatsSchema = {
-  type: "object",
-  properties: {
-    nodeId: {
-      type: "string",
-      description:
-        "A comma-separated list of node IDs or names to limit returned information. Leave empty for all nodes.",
-    },
-    timeout: {
-      type: "string",
-      description: "Explicit operation timeout (e.g., '30s', '1m')",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const clusterStatsValidator = z.object({
@@ -158,7 +145,10 @@ export const registerGetClusterStatsTool: ToolRegistrationFunction = (server: Mc
   server.tool(
     "elasticsearch_get_cluster_stats",
     "Get comprehensive cluster statistics from Elasticsearch. Best for cluster monitoring, capacity planning, performance analysis. Use when you need detailed metrics about cluster-wide operations, storage, and resource utilization in Elasticsearch. READ operation - safe for production use.",
-    clusterStatsSchema,
+  {
+    nodeId: z.string().optional(), // A comma-separated list of node IDs or names to limit returned information. Leave empty for all nodes.
+    timeout: z.string().optional(), // Explicit operation timeout (e.g., '30s', '1m')
+  },
     clusterStatsHandler,
   );
 };

@@ -6,6 +6,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { createPaginationHeader, paginateResults, responsePresets } from "../../utils/responseHandling.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // =============================================================================
@@ -18,7 +19,7 @@ const getLifecycleSchema = {
   properties: {
     policy: {
       type: "string",
-      description: "Specific policy name to retrieve",
+      description: "Policy name(s) to retrieve. Supports comma-separated list for multiple policies (e.g., 'policy1,policy2,policy3')",
     },
     masterTimeout: {
       type: "string",
@@ -92,10 +93,19 @@ function createIlmMcpError(
 // =============================================================================
 
 export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  const getLifecycleHandler = async (args: any): Promise<SearchResult> => {
+  const getLifecycleHandler = async (args: any, extra?: any): Promise<SearchResult> => {
     const perfStart = performance.now();
 
     try {
+      logger.debug("ILM Handler received", {
+        argsType: typeof args,
+        argsKeys: args ? Object.keys(args) : "NO ARGS",
+        hasExtra: !!extra,
+        extraKeys: extra ? Object.keys(extra) : "NO EXTRA", 
+        fullArgs: args,
+        fullExtra: extra,
+      });
+      
       // Simple validation - no complex parameter extraction
       const params = getLifecycleValidator.parse(args);
 
@@ -104,6 +114,8 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
         limit: params.limit,
         summary: params.summary,
         sortBy: params.sortBy,
+        originalArgs: args,
+        paramsKeys: Object.keys(params),
       });
 
       // Fetch policies from Elasticsearch
@@ -119,16 +131,33 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
         ...policy,
       }));
 
-      // If a specific policy was requested, filter results
+      // If specific policies were requested, filter results
       if (params.policy) {
-        policies = policies.filter((policy) => policy.name === params.policy);
-
-        if (policies.length === 0) {
-          throw createIlmMcpError(`Policy '${params.policy}' not found`, {
+        // Handle comma-separated policy names
+        const requestedPolicies = params.policy.split(',').map(p => p.trim());
+        const foundPolicies = policies.filter((policy) => 
+          requestedPolicies.includes(policy.name)
+        );
+        
+        // Check if all requested policies were found
+        const foundPolicyNames = foundPolicies.map(p => p.name);
+        const missingPolicies = requestedPolicies.filter(name => 
+          !foundPolicyNames.includes(name)
+        );
+        
+        if (missingPolicies.length > 0) {
+          throw createIlmMcpError(
+            `${missingPolicies.length === 1 ? 'Policy' : 'Policies'} '${missingPolicies.join(', ')}' not found`, {
             type: "not_found",
-            details: { requestedPolicy: params.policy },
+            details: { 
+              requestedPolicies, 
+              foundPolicies: foundPolicyNames,
+              missingPolicies 
+            },
           });
         }
+        
+        policies = foundPolicies;
       }
 
       // Calculate retention days and usage metrics
@@ -166,18 +195,16 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
         }
       });
 
-      // Apply limit
-      const totalPolicies = sortedPolicies.length;
-      const limitedPolicies = sortedPolicies.slice(0, params.limit);
-      const isLimited = totalPolicies > (params.limit || totalPolicies);
+      // Apply pagination
+      const { results: limitedPolicies, metadata } = paginateResults(sortedPolicies, {
+        limit: params.limit,
+        defaultLimit: responsePresets.list.defaultLimit,
+        maxLimit: responsePresets.list.maxLimit,
+      });
 
       // Build response content
       const responseContent: string[] = [];
-      responseContent.push(`## ILM Policies (${limitedPolicies.length}${isLimited ? ` of ${totalPolicies}` : ""})\n`);
-
-      if (isLimited) {
-        responseContent.push(`⚠️ Showing first ${params.limit} policies. Use 'limit' parameter to see more.\n`);
-      }
+      responseContent.push(createPaginationHeader(metadata, "ILM Policies"));
 
       // Process each policy
       for (const policy of limitedPolicies) {
@@ -293,11 +320,16 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
     }
   };
 
-  // Direct tool registration with JSON Schema
+  // Test with Zod schema instead of JSON schema
   server.tool(
-    "elasticsearch_ilm_get_lifecycle",
-    "Get ILM policies. PARAMETERS: 'policy' (string, optional), 'limit' (number 1-100), 'summary' (boolean), 'sortBy' (enum). Example: {limit: 50, summary: true}. Uses direct JSON Schema and standardized MCP error codes.",
-    getLifecycleSchema, // Direct JSON Schema - no Zod conversion
+    "elasticsearch_ilm_get_lifecycle", 
+    "Get ILM policies. PARAMETERS: 'policy' (string, optional - supports comma-separated list for multiple policies), 'limit' (number 1-100), 'summary' (boolean), 'sortBy' (enum). Examples: {limit: 50, summary: true} or {policy: 'policy1,policy2,policy3'}. Uses Zod Schema for proper MCP parameter handling.",
+    {
+      policy: z.string().optional(),
+      limit: z.number().min(1).max(100).optional(),
+      summary: z.boolean().optional(),
+      sortBy: z.enum(["name", "modified_date", "version", "indices_count"]).optional(),
+    }, // Use Zod schema instead
     getLifecycleHandler,
   );
 };

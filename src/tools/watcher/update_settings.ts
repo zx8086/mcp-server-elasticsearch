@@ -1,4 +1,5 @@
 /* src/tools/watcher/update_settings.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,28 +10,7 @@ import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const updateWatcherSettingsSchema = {
-  type: "object",
-  properties: {
-    "index.auto_expand_replicas": {
-      type: "string",
-      description: "Auto expand replicas setting",
-    },
-    "index.number_of_replicas": {
-      type: "number",
-      description: "Number of replica shards",
-    },
-    master_timeout: {
-      type: "string",
-      description: "Explicit operation timeout for connection to master node",
-    },
-    timeout: {
-      type: "string",
-      description: "Explicit operation timeout",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const updateWatcherSettingsValidator = z.object({
@@ -116,7 +96,12 @@ export const registerWatcherUpdateSettingsTool: ToolRegistrationFunction = (serv
   server.tool(
     "elasticsearch_watcher_update_settings",
     "Update Elasticsearch Watcher index settings for .watches index. Best for configuration management, performance tuning, allocation control. Use when you need to modify Watcher internal index settings like replicas and allocation in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
-    updateWatcherSettingsSchema,
+  {
+    "index.auto_expand_replicas": z.string().optional(), // Auto expand replicas setting
+    "index.number_of_replicas": z.number().optional(), // Number of replica shards
+    master_timeout: z.string().optional(), // Explicit operation timeout for connection to master node
+    timeout: z.string().optional(), // Explicit operation timeout
+  },
     withReadOnlyCheck("elasticsearch_watcher_update_settings", updateWatcherSettingsHandler, OperationType.WRITE),
   );
 };

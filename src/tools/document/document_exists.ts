@@ -1,4 +1,5 @@
 /* src/tools/document/document_exists.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,49 +10,7 @@ import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const documentExistsSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      minLength: 1,
-      description:
-        "REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'",
-    },
-    id: {
-      type: "string",
-      minLength: 1,
-      description: "REQUIRED: Unique identifier of the document to check",
-    },
-    routing: {
-      type: "string",
-      description: "Custom routing value for document placement",
-    },
-    preference: {
-      type: "string",
-      description: "Preference for shard selection",
-    },
-    realtime: {
-      type: "boolean",
-      description: "Whether to perform a real-time check",
-    },
-    refresh: {
-      type: "boolean",
-      description: "Whether to refresh before checking existence",
-    },
-    version: {
-      type: "number",
-      description: "Expected document version for optimistic concurrency control",
-    },
-    versionType: {
-      type: "string",
-      enum: ["internal", "external", "external_gte", "force"],
-      description: "Version type for concurrency control",
-    },
-  },
-  required: ["index", "id"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const documentExistsValidator = z.object({
@@ -146,7 +105,16 @@ export const registerDocumentExistsTool: ToolRegistrationFunction = (server: Mcp
   server.tool(
     "elasticsearch_document_exists",
     "Check if a document exists in Elasticsearch by index and id. Best for document validation, existence checks, conditional operations. Use when you need to verify document presence in Elasticsearch indices before performing operations. Uses direct JSON Schema and standardized MCP error codes.",
-    documentExistsSchema,
+  {
+    index: z.string(), // REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'
+    id: z.string(), // REQUIRED: Unique identifier of the document to check
+    routing: z.string().optional(), // Custom routing value for document placement
+    preference: z.string().optional(), // Preference for shard selection
+    realtime: z.boolean().optional(), // Whether to perform a real-time check
+    refresh: z.boolean().optional(), // Whether to refresh before checking existence
+    version: z.number().optional(), // Expected document version for optimistic concurrency control
+    versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(), // Version type for concurrency control
+  },
     documentExistsHandler,
   );
 };

@@ -1,4 +1,5 @@
 /* src/tools/indices/exists_template.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,29 +10,7 @@ import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const existsTemplateSchema = {
-  type: "object",
-  properties: {
-    name: {
-      oneOf: [{ type: "string" }, { type: "array", items: { type: "string" } }],
-      description: "Legacy template name(s) to check existence for. Examples: 'template1', ['template1', 'template2']",
-    },
-    flatSettings: {
-      type: "boolean",
-      description: "Return settings in flat format",
-    },
-    local: {
-      type: "boolean",
-      description: "Return local information, do not retrieve the state from master node",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Timeout for connection to master node",
-    },
-  },
-  required: ["name"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const existsTemplateValidator = z.object({
@@ -126,7 +105,12 @@ export const registerExistsTemplateTool: ToolRegistrationFunction = (server: Mcp
   server.tool(
     "elasticsearch_exists_template",
     "Check existence of legacy index templates in Elasticsearch. Best for legacy template validation, migration planning, compatibility checks. Use when you need to verify legacy index template presence in Elasticsearch (deprecated, use composable templates instead).",
-    existsTemplateSchema,
+  {
+    name: z.any(), // Legacy template name(s) to check existence for. Examples: 'template1', ['template1', 'template2']
+    flatSettings: z.boolean().optional(), // Return settings in flat format
+    local: z.boolean().optional(), // Return local information, do not retrieve the state from master node
+    masterTimeout: z.string().optional(), // Timeout for connection to master node
+  },
     existsTemplateHandler,
   );
 };

@@ -1,4 +1,6 @@
 /* src/tools/ilm/remove_policy.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
+
 /* SIMPLIFIED VERSION: Direct JSON Schema + MCP Error Codes */
 
 import type { Client } from "@elastic/elasticsearch";
@@ -14,18 +16,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 // =============================================================================
 
 // Direct JSON Schema definition
-const removePolicySchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      minLength: 1,
-      description: "Index name or pattern to remove ILM policy from (cannot be empty)",
-    },
-  },
-  required: ["index"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Simple Zod validator for runtime validation only
 const removePolicyValidator = z.object({
@@ -169,7 +160,9 @@ Operation completed at: ${new Date().toISOString()}`,
   server.tool(
     "elasticsearch_ilm_remove_policy",
     "Remove ILM policy from indices. Remove Index Lifecycle Management policy assignment from indices, stopping automated lifecycle management. Uses direct JSON Schema and standardized MCP error codes. Examples: {index: 'logs-*'}, {index: 'my-index-000001'}",
-    removePolicySchema, // Direct JSON Schema - no Zod conversion
+  {
+    index: z.string(), // Index name or pattern to remove ILM policy from (cannot be empty)
+  }, // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_remove_policy", removePolicyHandler, OperationType.WRITE),
   );
 };

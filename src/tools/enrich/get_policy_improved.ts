@@ -1,4 +1,5 @@
 /* src/tools/enrich/get_policy_improved.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -14,41 +15,7 @@ import {
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const getPolicySchema = {
-  type: "object",
-  properties: {
-    name: {
-      oneOf: [
-        { type: "string" },
-        {
-          type: "array",
-          items: { type: "string" },
-        },
-      ],
-      description: "Policy name(s) to retrieve. Can be a single policy name or array of names",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Timeout for master node operations. Examples: '30s', '1m'",
-    },
-    limit: {
-      type: "number",
-      minimum: 1,
-      maximum: 50,
-      description: "Maximum number of policies to return. Range: 1-50",
-    },
-    summary: {
-      type: "boolean",
-      description: "Return summarized policy information instead of full details",
-    },
-    sortBy: {
-      type: "string",
-      enum: ["name", "type", "indices_count"],
-      description: "Sort policies by specified field",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const getPolicyValidator = z.object({
@@ -354,7 +321,13 @@ export const registerEnrichGetPolicyTool: ToolRegistrationFunction = (server: Mc
   server.tool(
     "elasticsearch_enrich_get_policy",
     "Get enrich policies from Elasticsearch with pagination and filtering. Best for data enrichment configuration, policy inspection, document enhancement workflows. Returns summarized or detailed policy information with configurable limits.",
-    getPolicySchema,
+  {
+    name: z.any().optional(), // Policy name(s) to retrieve. Can be a single policy name or array of names
+    masterTimeout: z.string().optional(), // Timeout for master node operations. Examples: '30s', '1m'
+    limit: z.number().min(1).max(50).optional(), // Maximum number of policies to return. Range: 1-50
+    summary: z.boolean().optional(), // Return summarized policy information instead of full details
+    sortBy: z.enum(["name", "type", "indices_count"]).optional(), // Sort policies by specified field
+  },
     getPolicyHandler,
   );
 };

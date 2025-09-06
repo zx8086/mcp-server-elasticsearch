@@ -1,4 +1,5 @@
 /* src/tools/template/search_template.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -8,73 +9,7 @@ import { logger } from "../../utils/logger.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const searchTemplateSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      description: "Index name or pattern to search",
-    },
-    id: {
-      type: "string",
-      description: "Template ID stored in Elasticsearch",
-    },
-    source: {
-      type: "string",
-      description: "Inline template source (Mustache template)",
-    },
-    params: {
-      type: "object",
-      description: "Parameters to substitute in the template",
-      additionalProperties: true,
-    },
-    explain: {
-      type: "boolean",
-      description: "Return detailed explanation of how each hit is scored",
-    },
-    profile: {
-      type: "boolean",
-      description: "Return timing information about the execution of individual components",
-    },
-    allowNoIndices: {
-      type: "boolean",
-      description: "Allow no indices when resolving wildcards",
-    },
-    expandWildcards: {
-      type: "string",
-      description: "Type of index wildcards to expand (open, closed, hidden, none, all)",
-    },
-    ignoreUnavailable: {
-      type: "boolean",
-      description: "Ignore unavailable indices",
-    },
-    ignoreThrottled: {
-      type: "boolean",
-      description: "Ignore throttled indices",
-    },
-    preference: {
-      type: "string",
-      description: "Specify the node or shard to perform the search on",
-    },
-    routing: {
-      type: "string",
-      description: "Routing value",
-    },
-    scroll: {
-      type: "string",
-      description: "Scroll timeout",
-    },
-    searchType: {
-      type: "string",
-      description: "Search operation type",
-    },
-    typedKeys: {
-      type: "boolean",
-      description: "Specify whether aggregation names should be prefixed by their type",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const searchTemplateValidator = z.object({
@@ -226,7 +161,23 @@ export const registerSearchTemplateTool: ToolRegistrationFunction = (server: Mcp
   server.tool(
     "elasticsearch_search_template",
     "Execute a search template in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes. Best for parameterized queries, reusable search patterns, query standardization. Use when you need to run templated searches with dynamic parameters in Elasticsearch. TIP: Use either 'id' for stored templates or 'source' for inline templates, provide 'params' for variable substitution.",
-    searchTemplateSchema,
+  {
+    index: z.string().optional(), // Index name or pattern to search
+    id: z.string().optional(), // Template ID stored in Elasticsearch
+    source: z.string().optional(), // Inline template source (Mustache template)
+    params: z.object({}).optional(), // Parameters to substitute in the template
+    explain: z.boolean().optional(), // Return detailed explanation of how each hit is scored
+    profile: z.boolean().optional(), // Return timing information about the execution of individual components
+    allowNoIndices: z.boolean().optional(), // Allow no indices when resolving wildcards
+    expandWildcards: z.string().optional(), // Type of index wildcards to expand (open, closed, hidden, none, all)
+    ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+    ignoreThrottled: z.boolean().optional(), // Ignore throttled indices
+    preference: z.string().optional(), // Specify the node or shard to perform the search on
+    routing: z.string().optional(), // Routing value
+    scroll: z.string().optional(), // Scroll timeout
+    searchType: z.string().optional(), // Search operation type
+    typedKeys: z.boolean().optional(), // Specify whether aggregation names should be prefixed by their type
+  },
     searchTemplateHandler,
   );
 };

@@ -1,4 +1,5 @@
 /* src/tools/watcher/delete_watch.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,18 +10,7 @@ import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const deleteWatchSchema = {
-  type: "object",
-  properties: {
-    id: {
-      type: "string",
-      minLength: 1,
-      description: "Watch ID to delete",
-    },
-  },
-  required: ["id"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const deleteWatchValidator = z.object({
@@ -103,7 +93,9 @@ export const registerWatcherDeleteWatchTool: ToolRegistrationFunction = (server:
   server.tool(
     "elasticsearch_watcher_delete_watch",
     "Delete a watch from Elasticsearch Watcher. Best for watch cleanup, configuration management, removing unused monitors. Use when you need to permanently remove watch definitions from Elasticsearch alerting system. IMPORTANT: Use only this API, not direct index deletion. Uses direct JSON Schema and standardized MCP error codes.",
-    deleteWatchSchema,
+  {
+    id: z.string(), // Watch ID to delete
+  },
     withReadOnlyCheck("elasticsearch_watcher_delete_watch", deleteWatchHandler, OperationType.WRITE),
   );
 };

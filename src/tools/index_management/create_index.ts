@@ -1,4 +1,5 @@
 /* src/tools/index_management/create_index.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,48 +10,7 @@ import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const createIndexSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      minLength: 1,
-      description: "Name of the index to create",
-    },
-    aliases: {
-      type: "object",
-      additionalProperties: true,
-      description: "Index aliases to set during creation",
-    },
-    mappings: {
-      type: "object",
-      additionalProperties: true,
-      description: "Field mappings for the index",
-    },
-    settings: {
-      type: "object",
-      additionalProperties: true,
-      description: "Index settings configuration",
-    },
-    timeout: {
-      type: "string",
-      description: "Operation timeout (e.g., '30s')",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Master node timeout (e.g., '30s')",
-    },
-    waitForActiveShards: {
-      oneOf: [
-        { type: "string", enum: ["all"] },
-        { type: "integer", minimum: 1, maximum: 9 },
-      ],
-      description: "Number of active shards to wait for",
-    },
-  },
-  required: ["index"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const createIndexValidator = z.object({
@@ -151,7 +111,15 @@ export const registerCreateIndexTool: ToolRegistrationFunction = (server: McpSer
   server.tool(
     "elasticsearch_create_index",
     "Create an index in Elasticsearch with custom settings and mappings. Best for index initialization, schema definition, data structure setup. Use when you need to create new Elasticsearch indices with specific configurations for document storage. Uses direct JSON Schema and standardized MCP error codes.",
-    createIndexSchema,
+  {
+    index: z.string(), // Name of the index to create
+    aliases: z.object({}).optional(), // Index aliases to set during creation
+    mappings: z.object({}).optional(), // Field mappings for the index
+    settings: z.object({}).optional(), // Index settings configuration
+    timeout: z.string().optional(), // Operation timeout (e.g., '30s')
+    masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
+    waitForActiveShards: z.any().optional(), // Number of active shards to wait for
+  },
     withReadOnlyCheck("elasticsearch_create_index", createIndexHandler, OperationType.WRITE),
   );
 };

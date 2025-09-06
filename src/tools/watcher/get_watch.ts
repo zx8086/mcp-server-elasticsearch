@@ -1,4 +1,5 @@
 /* src/tools/watcher/get_watch.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,18 +10,7 @@ import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const getWatchSchema = {
-  type: "object",
-  properties: {
-    id: {
-      type: "string",
-      minLength: 1,
-      description: "Watch ID to retrieve",
-    },
-  },
-  required: ["id"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const getWatchValidator = z.object({
@@ -103,7 +93,9 @@ export const registerWatcherGetWatchTool: ToolRegistrationFunction = (server: Mc
   server.tool(
     "elasticsearch_watcher_get_watch",
     "Get a watch configuration from Elasticsearch Watcher. Best for monitoring automation, alerting configuration, watch inspection. Use when you need to retrieve watch definitions for Elasticsearch alerting and monitoring workflows. Uses direct JSON Schema and standardized MCP error codes.",
-    getWatchSchema,
+  {
+    id: z.string(), // Watch ID to retrieve
+  },
     withReadOnlyCheck("elasticsearch_watcher_get_watch", getWatchHandler, OperationType.READ),
   );
 };

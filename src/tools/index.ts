@@ -156,19 +156,25 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
     registeredTools.push({ name, description, inputSchema });
 
     // Skip security validation for read-only search operations
-    const readOnlyTools = ['elasticsearch_search', 'elasticsearch_list_indices', 'elasticsearch_get_mappings', 'elasticsearch_get_shards', 'elasticsearch_indices_summary'];
+    const readOnlyTools = [
+      "elasticsearch_search",
+      "elasticsearch_list_indices",
+      "elasticsearch_get_mappings",
+      "elasticsearch_get_shards",
+      "elasticsearch_indices_summary",
+    ];
     const shouldValidate = !readOnlyTools.includes(name);
-    
+
     // Create enhanced handler with both tracing and security validation
     let enhancedHandler = handler;
-    
-    // Add tracing wrapper to ALL tools (always enabled)
-    enhancedHandler = async (args: any) => {
-      return traceToolExecution(name, args, async () => {
-        return handler(args);
+
+    // Add tracing wrapper to ALL tools (always enabled) - NOW WITH CORRECT SIGNATURE
+    enhancedHandler = async (toolArgs: any, extra: any) => {
+      return traceToolExecution(name, toolArgs, extra, async (toolArgs: any, extra: any) => {
+        return handler(toolArgs, extra);
       });
     };
-    
+
     // Add security validation wrapper for write operations
     if (shouldValidate) {
       enhancedHandler = withSecurityValidation(name, enhancedHandler);

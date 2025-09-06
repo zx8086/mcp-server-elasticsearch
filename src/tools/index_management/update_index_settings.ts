@@ -1,4 +1,5 @@
 /* src/tools/index_management/update_index_settings.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -10,52 +11,7 @@ import { coerceBoolean } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const updateIndexSettingsSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      minLength: 1,
-      description: "Name of the index to update settings for",
-    },
-    settings: {
-      type: "object",
-      additionalProperties: true,
-      description: "Index settings to update",
-    },
-    preserveExisting: {
-      type: "boolean",
-      description: "Preserve existing settings that are not specified",
-    },
-    timeout: {
-      type: "string",
-      description: "Operation timeout (e.g., '30s')",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Master node timeout (e.g., '30s')",
-    },
-    ignoreUnavailable: {
-      type: "boolean",
-      description: "Ignore unavailable indices",
-    },
-    allowNoIndices: {
-      type: "boolean",
-      description: "Allow wildcards that match no indices",
-    },
-    expandWildcards: {
-      type: "string",
-      enum: ["all", "open", "closed", "hidden", "none"],
-      description: "Which indices to expand wildcards to",
-    },
-    flatSettings: {
-      type: "boolean",
-      description: "Accept settings in flat format",
-    },
-  },
-  required: ["index", "settings"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const updateIndexSettingsValidator = z.object({
@@ -168,7 +124,17 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (server
   server.tool(
     "elasticsearch_update_index_settings",
     "Update index settings in Elasticsearch. Best for performance tuning, configuration changes, index optimization. Use when you need to modify index settings for better performance or functionality in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
-    updateIndexSettingsSchema,
+  {
+    index: z.string(), // Name of the index to update settings for
+    settings: z.object({}), // Index settings to update
+    preserveExisting: z.boolean().optional(), // Preserve existing settings that are not specified
+    timeout: z.string().optional(), // Operation timeout (e.g., '30s')
+    masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
+    ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+    allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
+    flatSettings: z.boolean().optional(), // Accept settings in flat format
+  },
     withReadOnlyCheck("elasticsearch_update_index_settings", updateIndexSettingsHandler, OperationType.WRITE),
   );
 };

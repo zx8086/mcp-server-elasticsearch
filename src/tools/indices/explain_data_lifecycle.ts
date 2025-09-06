@@ -1,4 +1,5 @@
 /* src/tools/indices/explain_data_lifecycle.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,25 +10,7 @@ import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const explainDataLifecycleSchema = {
-  type: "object",
-  properties: {
-    index: {
-      oneOf: [{ type: "string" }, { type: "array", items: { type: "string" } }],
-      description: "Data stream or index name(s) to explain lifecycle for. Examples: 'logs-*', ['stream1', 'stream2']",
-    },
-    includeDefaults: {
-      type: "boolean",
-      description: "Whether to return default values in the response",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Timeout for connection to master node",
-    },
-  },
-  required: ["index"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const explainDataLifecycleValidator = z.object({
@@ -128,7 +111,11 @@ export const registerExplainDataLifecycleTool: ToolRegistrationFunction = (serve
   server.tool(
     "elasticsearch_explain_data_lifecycle",
     "Get data stream lifecycle status and execution details in Elasticsearch. Best for lifecycle monitoring, troubleshooting, policy analysis. Use when you need to understand data stream lifecycle execution status and configuration in Elasticsearch.",
-    explainDataLifecycleSchema,
+  {
+    index: z.any(), // Data stream or index name(s) to explain lifecycle for. Examples: 'logs-*', ['stream1', 'stream2']
+    includeDefaults: z.boolean().optional(), // Whether to return default values in the response
+    masterTimeout: z.string().optional(), // Timeout for connection to master node
+  },
     explainDataLifecycleHandler,
   );
 };

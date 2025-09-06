@@ -1,4 +1,6 @@
 /* src/tools/ilm/get_status.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
+
 /* SIMPLIFIED VERSION: Direct JSON Schema + MCP Error Codes */
 
 import type { Client } from "@elastic/elasticsearch";
@@ -12,11 +14,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 // =============================================================================
 
 // Direct JSON Schema definition (no parameters needed)
-const getStatusSchema = {
-  type: "object",
-  properties: {},
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // =============================================================================
 // 2. STANDARDIZED MCP ERROR HANDLING
@@ -116,7 +114,9 @@ Status checked at: ${new Date().toISOString()}`,
   server.tool(
     "elasticsearch_ilm_get_status",
     "Get ILM status. Check if Index Lifecycle Management is running and operational. Uses direct JSON Schema and standardized MCP error codes. No parameters required.",
-    getStatusSchema, // Direct JSON Schema
+  {
+
+  }, // Direct JSON Schema
     getStatusHandler,
   );
 };

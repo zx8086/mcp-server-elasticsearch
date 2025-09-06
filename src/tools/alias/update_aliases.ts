@@ -1,4 +1,5 @@
 /* src/tools/alias/update_aliases.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,31 +10,7 @@ import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const updateAliasesSchema = {
-  type: "object",
-  properties: {
-    actions: {
-      type: "array",
-      description:
-        "Array of alias actions to perform atomically. Each action should have 'add', 'remove', or 'remove_index' key with appropriate configuration",
-      items: {
-        type: "object",
-        description:
-          "Alias action: {add: {index: 'idx', alias: 'alias'}}, {remove: {index: 'idx', alias: 'alias'}}, or {remove_index: {index: 'idx'}}",
-      },
-    },
-    timeout: {
-      type: "string",
-      description: "Timeout for the request (e.g., '30s', '1m'). Optional",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Timeout for waiting for master node response (e.g., '30s', '1m'). Optional",
-    },
-  },
-  required: ["actions"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const updateAliasesValidator = z.object({
@@ -266,7 +243,11 @@ export const registerUpdateAliasesTool: ToolRegistrationFunction = (server: McpS
   server.tool(
     "elasticsearch_update_aliases",
     "Update index aliases in Elasticsearch using the aliases API. Best for alias management, index switching, zero-downtime deployments. Use when you need to atomically add, remove, or modify multiple index aliases in Elasticsearch. DESTRUCTIVE: Actions are performed atomically but modify alias configurations permanently. TIP: Use [{add: {index: 'new-index', alias: 'my-alias'}}, {remove: {index: 'old-index', alias: 'my-alias'}}] for zero-downtime index switching.",
-    updateAliasesSchema,
+  {
+    actions: z.array(z.object({}).optional()), // Array of alias actions to perform atomically. Each action should have 'add', 'remove', or 'remove_index' key with appropriate configuration
+    timeout: z.string().optional(), // Timeout for the request (e.g., '30s', '1m'). Optional
+    masterTimeout: z.string().optional(), // Timeout for waiting for master node response (e.g., '30s', '1m'). Optional
+  },
     withReadOnlyCheck("elasticsearch_update_aliases", updateAliasesHandler, OperationType.DESTRUCTIVE),
   );
 };

@@ -1,4 +1,5 @@
 /* src/tools/core/indices_summary.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -7,21 +8,7 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
-const indicesSummarySchema = {
-  type: "object",
-  properties: {
-    indexPattern: {
-      type: "string",
-      description: "Elasticsearch index pattern to summarize (supports wildcards like logs-*, app-*)",
-    },
-    groupBy: {
-      type: "string",
-      enum: ["prefix", "date", "type"],
-      description: "How to group Elasticsearch indices for summary analysis",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 const indicesSummaryValidator = z.object({
   indexPattern: z.string().optional(),
@@ -209,7 +196,10 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: Mcp
   server.tool(
     "elasticsearch_indices_summary",
     "Get a high-level summary of indices without overwhelming detail in Elasticsearch. Best for cluster overview, index organization analysis, storage planning. Use when you need to understand index patterns, health distribution, and storage usage across your Elasticsearch cluster. Uses direct JSON Schema and standardized MCP error codes.",
-    indicesSummarySchema,
+  {
+    indexPattern: z.string().optional(), // Elasticsearch index pattern to summarize (supports wildcards like logs-*, app-*)
+    groupBy: z.enum(["prefix", "date", "type"]).optional(), // How to group Elasticsearch indices for summary analysis
+  },
     indicesSummaryHandler,
   );
 };

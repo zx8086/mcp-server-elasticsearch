@@ -1,4 +1,5 @@
 /* src/tools/watcher/get_settings.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,16 +10,7 @@ import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const getWatcherSettingsSchema = {
-  type: "object",
-  properties: {
-    masterTimeout: {
-      type: "string",
-      description: "Explicit operation timeout for connection to master node",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const getWatcherSettingsValidator = z.object({
@@ -92,7 +84,9 @@ export const registerWatcherGetSettingsTool: ToolRegistrationFunction = (server:
   server.tool(
     "elasticsearch_watcher_get_settings",
     "Get Elasticsearch Watcher index settings for .watches index. Best for configuration review, troubleshooting, system analysis. Use when you need to inspect Watcher internal index settings in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
-    getWatcherSettingsSchema,
+  {
+    masterTimeout: z.string().optional(), // Explicit operation timeout for connection to master node
+  },
     withReadOnlyCheck("elasticsearch_watcher_get_settings", getWatcherSettingsHandler, OperationType.READ),
   );
 };

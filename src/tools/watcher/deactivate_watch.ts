@@ -1,4 +1,5 @@
 /* src/tools/watcher/deactivate_watch.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,18 +10,7 @@ import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const deactivateWatchSchema = {
-  type: "object",
-  properties: {
-    watch_id: {
-      type: "string",
-      minLength: 1,
-      description: "Watch ID to deactivate",
-    },
-  },
-  required: ["watch_id"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const deactivateWatchValidator = z.object({
@@ -103,7 +93,9 @@ export const registerWatcherDeactivateWatchTool: ToolRegistrationFunction = (ser
   server.tool(
     "elasticsearch_watcher_deactivate_watch",
     "Deactivate a watch in Elasticsearch Watcher. Best for monitoring control, alerting management, watch lifecycle control. Use when you need to disable watch execution while preserving the watch definition in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
-    deactivateWatchSchema,
+  {
+    watch_id: z.string(), // Watch ID to deactivate
+  },
     withReadOnlyCheck("elasticsearch_watcher_deactivate_watch", deactivateWatchHandler, OperationType.WRITE),
   );
 };

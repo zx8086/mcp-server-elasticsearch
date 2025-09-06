@@ -1,4 +1,6 @@
 /* src/tools/ilm/retry.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
+
 /* SIMPLIFIED VERSION: Direct JSON Schema + MCP Error Codes */
 
 import type { Client } from "@elastic/elasticsearch";
@@ -14,18 +16,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 // =============================================================================
 
 // Direct JSON Schema definition
-const retrySchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      minLength: 1,
-      description: "Index name or pattern to retry ILM policy execution for (cannot be empty)",
-    },
-  },
-  required: ["index"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Simple Zod validator for runtime validation only
 const retryValidator = z.object({
@@ -165,7 +156,9 @@ Operation completed at: ${new Date().toISOString()}`,
   server.tool(
     "elasticsearch_ilm_retry",
     "Retry ILM policy execution. Retry Index Lifecycle Management policy execution for indices in ERROR state. Uses direct JSON Schema and standardized MCP error codes. Examples: {index: 'logs-*'}, {index: 'failed-index-000001'}",
-    retrySchema, // Direct JSON Schema - no Zod conversion
+  {
+    index: z.string(), // Index name or pattern to retry ILM policy execution for (cannot be empty)
+  }, // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_retry", retryHandler, OperationType.WRITE),
   );
 };

@@ -1,4 +1,5 @@
 /* src/tools/search/count_documents.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -8,62 +9,7 @@ import { logger } from "../../utils/logger.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const countDocumentsSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      description: "Index pattern to count documents in. Use '*' for all indices",
-    },
-    query: {
-      type: "object",
-      description: "Query DSL to filter documents. Default matches all",
-      additionalProperties: true,
-    },
-    analyzer: {
-      type: "string",
-    },
-    analyzeWildcard: {
-      type: "boolean",
-    },
-    defaultOperator: {
-      type: "string",
-      enum: ["AND", "OR"],
-    },
-    df: {
-      type: "string",
-    },
-    expandWildcards: {
-      type: "string",
-      enum: ["all", "open", "closed", "hidden", "none"],
-    },
-    ignoreThrottled: {
-      type: "boolean",
-    },
-    ignoreUnavailable: {
-      type: "boolean",
-    },
-    allowNoIndices: {
-      type: "boolean",
-    },
-    minScore: {
-      type: "number",
-    },
-    preference: {
-      type: "string",
-    },
-    routing: {
-      type: "string",
-    },
-    q: {
-      type: "string",
-    },
-    terminateAfter: {
-      type: "number",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const countDocumentsValidator = z.object({
@@ -161,7 +107,23 @@ export const registerCountDocumentsTool: ToolRegistrationFunction = (server: Mcp
   server.tool(
     "elasticsearch_count_documents",
     "Count documents in Elasticsearch. PARAMETERS: 'index' (string, default '*'), 'query' (object, default match_all). Best for data analysis, result set sizing. Example: {index: 'logs-*', query: {match: {status: 'error'}}}. Uses direct JSON Schema and standardized MCP error codes.",
-    countDocumentsSchema,
+  {
+    index: z.string().optional(), // Index pattern to count documents in. Use '*' for all indices
+    query: z.object({}).optional(), // Query DSL to filter documents. Default matches all
+    analyzer: z.string().optional(),
+    analyzeWildcard: z.boolean().optional(),
+    defaultOperator: z.enum(["AND", "OR"]).optional(),
+    df: z.string().optional(),
+    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
+    ignoreThrottled: z.boolean().optional(),
+    ignoreUnavailable: z.boolean().optional(),
+    allowNoIndices: z.boolean().optional(),
+    minScore: z.number().optional(),
+    preference: z.string().optional(),
+    routing: z.string().optional(),
+    q: z.string().optional(),
+    terminateAfter: z.number().optional(),
+  },
     countDocumentsHandler,
   );
 };

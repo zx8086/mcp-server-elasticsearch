@@ -1,4 +1,5 @@
 /* src/tools/indices/get_data_lifecycle_stats.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -8,11 +9,7 @@ import { logger } from "../../utils/logger.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition - This tool has no parameters according to the API documentation
-const getDataLifecycleStatsSchema = {
-  type: "object",
-  properties: {},
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation (empty object)
 const getDataLifecycleStatsValidator = z.object({});
@@ -93,7 +90,9 @@ export const registerGetDataLifecycleStatsTool: ToolRegistrationFunction = (serv
   server.tool(
     "elasticsearch_get_data_lifecycle_stats",
     "Get data stream lifecycle statistics from Elasticsearch. Best for data stream monitoring, lifecycle analysis, storage planning. Use when you need to track data stream lifecycle management and retention policies in Elasticsearch.",
-    getDataLifecycleStatsSchema,
+  {
+
+  },
     getDataLifecycleStatsHandler,
   );
 };

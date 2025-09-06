@@ -1,4 +1,5 @@
 /* src/tools/indices/disk_usage.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,40 +10,7 @@ import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const diskUsageSchema = {
-  type: "object",
-  properties: {
-    index: {
-      oneOf: [{ type: "string" }, { type: "array", items: { type: "string" } }],
-      description: "Index name(s) or pattern(s) to analyze disk usage for. Examples: 'logs-*', ['users', 'products']",
-    },
-    allowNoIndices: {
-      type: "boolean",
-      description: "Whether to ignore if a wildcard indices expression resolves into no concrete indices",
-    },
-    expandWildcards: {
-      oneOf: [
-        { type: "string", enum: ["all", "open", "closed", "hidden", "none"] },
-        { type: "array", items: { type: "string", enum: ["all", "open", "closed", "hidden", "none"] } },
-      ],
-      description: "Type of index that wildcard patterns can match",
-    },
-    flush: {
-      type: "boolean",
-      description: "Whether to flush the index before getting the disk usage",
-    },
-    ignoreUnavailable: {
-      type: "boolean",
-      description: "Whether specified concrete indices should be ignored when unavailable",
-    },
-    runExpensiveTasks: {
-      type: "boolean",
-      description: "Whether to run expensive disk usage tasks",
-    },
-  },
-  required: ["index"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const diskUsageValidator = z.object({
@@ -141,7 +109,14 @@ export const registerDiskUsageTool: ToolRegistrationFunction = (server: McpServe
   server.tool(
     "elasticsearch_disk_usage",
     "Analyze index disk usage per field in Elasticsearch. Best for storage optimization, field analysis, capacity planning. Use when you need to understand disk consumption patterns and optimize storage usage for Elasticsearch indices and data streams.",
-    diskUsageSchema,
+  {
+    index: z.any(), // Index name(s) or pattern(s) to analyze disk usage for. Examples: 'logs-*', ['users', 'products']
+    allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard indices expression resolves into no concrete indices
+    expandWildcards: z.any().optional(), // Type of index that wildcard patterns can match
+    flush: z.boolean().optional(), // Whether to flush the index before getting the disk usage
+    ignoreUnavailable: z.boolean().optional(), // Whether specified concrete indices should be ignored when unavailable
+    runExpensiveTasks: z.boolean().optional(), // Whether to run expensive disk usage tasks
+  },
     diskUsageHandler,
   );
 };

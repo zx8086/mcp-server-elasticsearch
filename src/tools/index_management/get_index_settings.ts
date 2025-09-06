@@ -1,4 +1,5 @@
 /* src/tools/index_management/get_index_settings.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -10,51 +11,7 @@ import { coerceBoolean } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const getIndexSettingsSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      minLength: 1,
-      description: "Name of the index to get settings for",
-    },
-    name: {
-      type: "string",
-      description: "Specific setting name to retrieve",
-    },
-    ignoreUnavailable: {
-      type: "boolean",
-      description: "Ignore unavailable indices",
-    },
-    allowNoIndices: {
-      type: "boolean",
-      description: "Allow wildcards that match no indices",
-    },
-    expandWildcards: {
-      type: "string",
-      enum: ["all", "open", "closed", "hidden", "none"],
-      description: "Which indices to expand wildcards to",
-    },
-    flatSettings: {
-      type: "boolean",
-      description: "Return settings in flat format",
-    },
-    includeDefaults: {
-      type: "boolean",
-      description: "Include default settings",
-    },
-    local: {
-      type: "boolean",
-      description: "Return local information only",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Master node timeout (e.g., '30s')",
-    },
-  },
-  required: ["index"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const getIndexSettingsValidator = z.object({
@@ -153,7 +110,17 @@ export const registerGetIndexSettingsTool: ToolRegistrationFunction = (server: M
   server.tool(
     "elasticsearch_get_index_settings",
     "Get index settings from Elasticsearch. Best for configuration review, performance analysis, troubleshooting. Use when you need to inspect index-level settings and configurations in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
-    getIndexSettingsSchema,
+  {
+    index: z.string(), // Name of the index to get settings for
+    name: z.string().optional(), // Specific setting name to retrieve
+    ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+    allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
+    flatSettings: z.boolean().optional(), // Return settings in flat format
+    includeDefaults: z.boolean().optional(), // Include default settings
+    local: z.boolean().optional(), // Return local information only
+    masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
+  },
     withReadOnlyCheck("elasticsearch_get_index_settings", getIndexSettingsHandler, OperationType.READ),
   );
 };

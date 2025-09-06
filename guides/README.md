@@ -98,4 +98,20 @@ When adding new documentation:
 | Examples | 1 document | ✅ Complete |
 | Integration | 3 documents | ✅ Complete |
 
-Last Updated: January 2025
+### 📁 **Latest Documentation (September 2025)**
+**Critical MCP Development Knowledge Base:**
+
+- **[MCP_DEVELOPMENT_PATTERNS.md](MCP_DEVELOPMENT_PATTERNS.md)** - ⭐ **ESSENTIAL** - Complete reference for MCP development patterns, parameter handling, security, and tracing
+- **[AGENT_DEVELOPMENT_INSTRUCTIONS.md](AGENT_DEVELOPMENT_INSTRUCTIONS.md)** - ⭐ **FOR AI AGENTS** - Specific instructions for AI agents working on MCP servers
+- **[PARAMETER_DEBUGGING_GUIDE.md](PARAMETER_DEBUGGING_GUIDE.md)** - 🔧 **TROUBLESHOOTING** - Quick debugging guide for MCP parameter flow issues
+- **[LANGSMITH_TRACING_IMPLEMENTATION.md](LANGSMITH_TRACING_IMPLEMENTATION.md)** - 📊 **OBSERVABILITY** - Complete LangSmith tracing integration
+- **[JSON_TO_ZOD_CONVERSION_REPORT.md](JSON_TO_ZOD_CONVERSION_REPORT.md)** - 🔄 **MIGRATION** - Automated schema conversion results
+- **[MCP_FILTERING_SYSTEM.md](MCP_FILTERING_SYSTEM.md)** - 🏗 **ARCHITECTURE** - MCP filtering patterns from Kong Konnect
+- **[PAGINATION_AUDIT_REPORT.md](PAGINATION_AUDIT_REPORT.md)** - 🐛 **ANALYSIS** - Comprehensive pagination issue analysis
+- **[PAGINATION_FIXES_SUMMARY.md](PAGINATION_FIXES_SUMMARY.md)** - ✅ **FIXES** - Summary of pagination fixes applied
+- **[CONTEXT_SYNTHESIS.md](CONTEXT_SYNTHESIS.md)** - 🤖 **MULTI-AGENT** - Multi-agent development analysis
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - 🚀 **PRODUCTION** - Infrastructure and deployment guide
+
+**🚨 CRITICAL FOR MCP DEVELOPERS:** Start with [MCP_DEVELOPMENT_PATTERNS.md](MCP_DEVELOPMENT_PATTERNS.md) and [AGENT_DEVELOPMENT_INSTRUCTIONS.md](AGENT_DEVELOPMENT_INSTRUCTIONS.md) - these contain essential knowledge about MCP parameter handling that prevents major issues.
+
+Last Updated: September 2025

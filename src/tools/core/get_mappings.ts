@@ -1,4 +1,5 @@
 /* src/tools/core/get_mappings.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -8,16 +9,7 @@ import { logger } from "../../utils/logger.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const getMappingsSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      description: "Name of the Elasticsearch index to get mappings for. Use '*' for all indices",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const getMappingsValidator = z.object({
@@ -104,7 +96,9 @@ export const registerGetMappingsTool: ToolRegistrationFunction = (server: McpSer
   server.tool(
     "elasticsearch_get_mappings",
     "Get field mappings for Elasticsearch indices. Uses direct JSON Schema and standardized MCP error codes. PARAMETER: 'index' (string, default '*'). Best for understanding document structure, field types, and analyzers. Example: {index: 'logs-*'}",
-    getMappingsSchema,
+  {
+    index: z.string().optional(), // Name of the Elasticsearch index to get mappings for. Use '*' for all indices
+  },
     getMappingsHandler,
   );
 };

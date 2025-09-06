@@ -1,4 +1,6 @@
 /* src/tools/ilm/delete_lifecycle_simplified.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
+
 /* SIMPLIFIED VERSION: Direct JSON Schema + MCP Error Codes */
 
 import type { Client } from "@elastic/elasticsearch";
@@ -14,26 +16,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 // =============================================================================
 
 // Direct JSON Schema definition (no complex Zod conversion)
-const deleteLifecycleSchema = {
-  type: "object",
-  properties: {
-    policy: {
-      type: "string",
-      minLength: 1,
-      description: "Policy name to delete (required)",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Master node timeout",
-    },
-    timeout: {
-      type: "string",
-      description: "Request timeout",
-    },
-  },
-  required: ["policy"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Simple Zod validator for runtime validation only
 const deleteLifecycleValidator = z.object({
@@ -196,7 +179,11 @@ export const registerDeleteLifecycleTool: ToolRegistrationFunction = (server: Mc
   server.tool(
     "elasticsearch_ilm_delete_lifecycle",
     "Delete an ILM policy. ⚠️ DESTRUCTIVE OPERATION: Cannot be undone. Policy must not be in use by any indices or templates. Examples: {policy: 'old-logs-policy'}. Uses direct JSON Schema and standardized MCP error codes.",
-    deleteLifecycleSchema, // Direct JSON Schema - no Zod conversion
+  {
+    policy: z.string(), // Policy name to delete (required)
+    masterTimeout: z.string().optional(), // Master node timeout
+    timeout: z.string().optional(), // Request timeout
+  }, // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_delete_lifecycle", deleteLifecycleHandler, OperationType.DELETE),
   );
 };

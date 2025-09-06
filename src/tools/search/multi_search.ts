@@ -1,4 +1,5 @@
 /* src/tools/search/multi_search.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,34 +10,7 @@ import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const multiSearchSchema = {
-  type: "object",
-  properties: {
-    searches: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: true,
-      },
-    },
-    index: {
-      type: "string",
-    },
-    maxConcurrentSearches: {
-      type: "number",
-    },
-    ccsMinimizeRoundtrips: {
-      type: "boolean",
-    },
-    restTotalHitsAsInt: {
-      type: "boolean",
-    },
-    typedKeys: {
-      type: "boolean",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const multiSearchValidator = z.object({
@@ -111,7 +85,14 @@ export const registerMultiSearchTool: ToolRegistrationFunction = (server: McpSer
   server.tool(
     "elasticsearch_multi_search",
     "Perform multiple searches in Elasticsearch in a single request. Best for batch search operations, dashboard queries, parallel search execution. Use when you need to execute multiple Query DSL searches across different Elasticsearch indices efficiently. Uses direct JSON Schema and standardized MCP error codes.",
-    multiSearchSchema,
+  {
+    searches: z.array(z.object({}).optional()).optional(),
+    index: z.string().optional(),
+    maxConcurrentSearches: z.number().optional(),
+    ccsMinimizeRoundtrips: z.boolean().optional(),
+    restTotalHitsAsInt: z.boolean().optional(),
+    typedKeys: z.boolean().optional(),
+  },
     multiSearchHandler,
   );
 };

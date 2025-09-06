@@ -1,4 +1,5 @@
 /* src/tools/index_management/delete_index.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -10,39 +11,7 @@ import { coerceBoolean } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const deleteIndexSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      minLength: 1,
-      description: "Name of the index to delete",
-    },
-    timeout: {
-      type: "string",
-      description: "Operation timeout (e.g., '30s')",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Master node timeout (e.g., '30s')",
-    },
-    ignoreUnavailable: {
-      type: "boolean",
-      description: "Ignore unavailable indices",
-    },
-    allowNoIndices: {
-      type: "boolean",
-      description: "Allow wildcards that match no indices",
-    },
-    expandWildcards: {
-      type: "string",
-      enum: ["all", "open", "closed", "hidden", "none"],
-      description: "Which indices to expand wildcards to",
-    },
-  },
-  required: ["index"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const deleteIndexValidator = z.object({
@@ -135,7 +104,14 @@ export const registerDeleteIndexTool: ToolRegistrationFunction = (server: McpSer
   server.tool(
     "elasticsearch_delete_index",
     "Delete an entire index in Elasticsearch. Best for index cleanup, data lifecycle management, removing obsolete indices. Use when you need to permanently remove complete Elasticsearch indices and all their documents. DESTRUCTIVE OPERATION. Uses direct JSON Schema and standardized MCP error codes.",
-    deleteIndexSchema,
+  {
+    index: z.string(), // Name of the index to delete
+    timeout: z.string().optional(), // Operation timeout (e.g., '30s')
+    masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
+    ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+    allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
+  },
     withReadOnlyCheck("elasticsearch_delete_index", deleteIndexHandler, OperationType.DESTRUCTIVE),
   );
 };

@@ -43,3 +43,7 @@ scripts/test-*.js
 # Local testing scripts
 scripts/local-*
 scripts/*-local.*
+
+
+.mcp.json
+.mcp.json.example

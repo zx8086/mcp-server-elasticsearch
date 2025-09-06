@@ -1,4 +1,5 @@
 /* src/tools/template/multi_search_template.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -8,41 +9,7 @@ import { logger } from "../../utils/logger.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const multiSearchTemplateSchema = {
-  type: "object",
-  properties: {
-    searches: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: true,
-      },
-      description: "Array of search requests to execute",
-    },
-    index: {
-      type: "string",
-      description: "Default index to search if not specified in individual searches",
-    },
-    maxConcurrentSearches: {
-      type: "number",
-      description: "Maximum number of concurrent searches",
-    },
-    ccsMinimizeRoundtrips: {
-      type: "boolean",
-      description: "Minimize roundtrips for cross-cluster searches",
-    },
-    restTotalHitsAsInt: {
-      type: "boolean",
-      description: "Return total hits as integer instead of object",
-    },
-    typedKeys: {
-      type: "boolean",
-      description: "Specify whether aggregation names should be prefixed by their type",
-    },
-  },
-  required: ["searches"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const multiSearchTemplateValidator = z.object({
@@ -160,7 +127,14 @@ export const registerMultiSearchTemplateTool: ToolRegistrationFunction = (server
   server.tool(
     "elasticsearch_multi_search_template",
     "Execute multiple search templates in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes. Best for batch search operations, templated queries, performance optimization. Use when you need to run multiple parameterized searches efficiently using Elasticsearch search templates. TIP: Each search in 'searches' array can specify its own template and parameters.",
-    multiSearchTemplateSchema,
+  {
+    searches: z.array(z.object({}).optional()), // Array of search requests to execute
+    index: z.string().optional(), // Default index to search if not specified in individual searches
+    maxConcurrentSearches: z.number().optional(), // Maximum number of concurrent searches
+    ccsMinimizeRoundtrips: z.boolean().optional(), // Minimize roundtrips for cross-cluster searches
+    restTotalHitsAsInt: z.boolean().optional(), // Return total hits as integer instead of object
+    typedKeys: z.boolean().optional(), // Specify whether aggregation names should be prefixed by their type
+  },
     multiSearchTemplateHandler,
   );
 };

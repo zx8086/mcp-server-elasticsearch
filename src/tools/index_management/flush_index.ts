@@ -1,4 +1,5 @@
 /* src/tools/index_management/flush_index.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -10,39 +11,7 @@ import { coerceBoolean } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const flushIndexSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      minLength: 1,
-      description: "Name of the index to flush",
-    },
-    ignoreUnavailable: {
-      type: "boolean",
-      description: "Ignore unavailable indices",
-    },
-    allowNoIndices: {
-      type: "boolean",
-      description: "Allow wildcards that match no indices",
-    },
-    expandWildcards: {
-      type: "string",
-      enum: ["all", "open", "closed", "hidden", "none"],
-      description: "Which indices to expand wildcards to",
-    },
-    force: {
-      type: "boolean",
-      description: "Force the flush operation even if not required",
-    },
-    waitIfOngoing: {
-      type: "boolean",
-      description: "Wait if another flush operation is ongoing",
-    },
-  },
-  required: ["index"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const flushIndexValidator = z.object({
@@ -135,7 +104,14 @@ export const registerFlushIndexTool: ToolRegistrationFunction = (server: McpServ
   server.tool(
     "elasticsearch_flush_index",
     "Flush an Elasticsearch index to ensure all data is written to disk. Best for data persistence, index optimization, ensuring durability. Use when you need to force Elasticsearch to write buffered data to storage for consistency. Uses direct JSON Schema and standardized MCP error codes.",
-    flushIndexSchema,
+  {
+    index: z.string(), // Name of the index to flush
+    ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+    allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
+    force: z.boolean().optional(), // Force the flush operation even if not required
+    waitIfOngoing: z.boolean().optional(), // Wait if another flush operation is ongoing
+  },
     withReadOnlyCheck("elasticsearch_flush_index", flushIndexHandler, OperationType.WRITE),
   );
 };

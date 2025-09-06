@@ -1,4 +1,5 @@
 /* src/tools/enrich/delete_policy.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,22 +10,7 @@ import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const deletePolicySchema = {
-  type: "object",
-  properties: {
-    name: {
-      type: "string",
-      minLength: 1,
-      description: "Name of the enrich policy to delete",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Timeout for master node operations. Examples: '30s', '1m'",
-    },
-  },
-  required: ["name"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const deletePolicyValidator = z.object({
@@ -138,7 +124,10 @@ export const registerEnrichDeletePolicyTool: ToolRegistrationFunction = (server:
   server.tool(
     "elasticsearch_enrich_delete_policy",
     "Delete an enrich policy and its index in Elasticsearch. Best for policy cleanup, configuration management, removing unused enrichment. Use when you need to remove enrich policies and their associated indices from Elasticsearch.",
-    deletePolicySchema,
+  {
+    name: z.string(), // Name of the enrich policy to delete
+    masterTimeout: z.string().optional(), // Timeout for master node operations. Examples: '30s', '1m'
+  },
     withReadOnlyCheck("elasticsearch_enrich_delete_policy", deletePolicyImpl, OperationType.DELETE),
   );
 };

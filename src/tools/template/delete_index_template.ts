@@ -1,4 +1,5 @@
 /* src/tools/template/delete_index_template.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -8,22 +9,7 @@ import { logger } from "../../utils/logger.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const deleteIndexTemplateSchema = {
-  type: "object",
-  properties: {
-    name: {
-      type: "string",
-      minLength: 1,
-      description: "Template name (cannot be empty)",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Timeout for master node operations",
-    },
-  },
-  required: ["name"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const deleteIndexTemplateValidator = z.object({
@@ -125,7 +111,10 @@ export const registerDeleteIndexTemplateTool: ToolRegistrationFunction = (server
   server.tool(
     "elasticsearch_delete_index_template",
     "Delete an index template in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes. Best for template management, configuration cleanup, removing unused templates. Use when you need to remove Elasticsearch index templates that define settings and mappings for new indices. WARNING: This is a destructive operation that cannot be undone.",
-    deleteIndexTemplateSchema,
+  {
+    name: z.string(), // Template name (cannot be empty)
+    masterTimeout: z.string().optional(), // Timeout for master node operations
+  },
     deleteIndexTemplateHandler,
   );
 };

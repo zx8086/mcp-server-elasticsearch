@@ -1,0 +1,908 @@
+{
+  "totalFiles": 105,
+  "processedFiles": 105,
+  "successfulConversions": 74,
+  "failedConversions": 0,
+  "skippedFiles": 31,
+  "results": [
+    {
+      "filePath": "src/tools/cluster/get_nodes_info.ts",
+      "success": true,
+      "changes": [
+        "Replaced nodesInfoSchema with Zod schema in server.tool() call",
+        "Commented out original nodesInfoSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/cluster/.backups/1757162111229-cluster-get_nodes_info.ts"
+    },
+    {
+      "filePath": "src/tools/cluster/get_nodes_stats.ts",
+      "success": true,
+      "changes": [
+        "Replaced nodesStatsSchema with Zod schema in server.tool() call",
+        "Commented out original nodesStatsSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/cluster/.backups/1757162111334-cluster-get_nodes_stats.ts"
+    },
+    {
+      "filePath": "src/tools/alias/get_aliases_improved.ts",
+      "success": true,
+      "changes": [
+        "Replaced getAliasesSchema with Zod schema in server.tool() call",
+        "Commented out original getAliasesSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/alias/.backups/1757162111438-alias-get_aliases_improved.ts"
+    },
+    {
+      "filePath": "src/tools/analytics/timestamp_analysis.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/mapping/index.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/mapping/clear_sql_cursor.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/mapping/get_field_mapping.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/advanced/delete_by_query.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/advanced/translate_sql_query.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/advanced/index.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/cluster/get_cluster_stats.ts",
+      "success": true,
+      "changes": [
+        "Replaced clusterStatsSchema with Zod schema in server.tool() call",
+        "Commented out original clusterStatsSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/cluster/.backups/1757162112259-cluster-get_cluster_stats.ts"
+    },
+    {
+      "filePath": "src/tools/cluster/get_cluster_health.ts",
+      "success": true,
+      "changes": [
+        "Replaced clusterHealthSchema with Zod schema in server.tool() call",
+        "Commented out original clusterHealthSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/cluster/.backups/1757162112365-cluster-get_cluster_health.ts"
+    },
+    {
+      "filePath": "src/tools/alias/update_aliases.ts",
+      "success": true,
+      "changes": [
+        "Replaced updateAliasesSchema with Zod schema in server.tool() call",
+        "Commented out original updateAliasesSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/alias/.backups/1757162112469-alias-update_aliases.ts"
+    },
+    {
+      "filePath": "src/tools/alias/delete_alias.ts",
+      "success": true,
+      "changes": [
+        "Replaced deleteAliasSchema with Zod schema in server.tool() call",
+        "Commented out original deleteAliasSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/alias/.backups/1757162112574-alias-delete_alias.ts"
+    },
+    {
+      "filePath": "src/tools/alias/put_alias.ts",
+      "success": true,
+      "changes": [
+        "Replaced putAliasSchema with Zod schema in server.tool() call",
+        "Commented out original putAliasSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/alias/.backups/1757162112678-alias-put_alias.ts"
+    },
+    {
+      "filePath": "src/tools/tasks/list_tasks.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/tasks/get_task.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/tasks/cancel_task.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/tasks/index.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/indices/exists_alias.ts",
+      "success": true,
+      "changes": [
+        "Replaced existsAliasSchema with Zod schema in server.tool() call",
+        "Commented out original existsAliasSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/indices/.backups/1757162113188-indices-exists_alias.ts"
+    },
+    {
+      "filePath": "src/tools/indices/field_usage_stats.ts",
+      "success": true,
+      "changes": [
+        "Replaced fieldUsageStatsSchema with Zod schema in server.tool() call",
+        "Commented out original fieldUsageStatsSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/indices/.backups/1757162113291-indices-field_usage_stats.ts"
+    },
+    {
+      "filePath": "src/tools/indices/get_index_info.ts",
+      "success": true,
+      "changes": [
+        "Replaced getIndexInfoSchema with Zod schema in server.tool() call",
+        "Commented out original getIndexInfoSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/indices/.backups/1757162113393-indices-get_index_info.ts"
+    },
+    {
+      "filePath": "src/tools/indices/exists_template.ts",
+      "success": true,
+      "changes": [
+        "Replaced existsTemplateSchema with Zod schema in server.tool() call",
+        "Commented out original existsTemplateSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/indices/.backups/1757162113494-indices-exists_template.ts"
+    },
+    {
+      "filePath": "src/tools/indices/disk_usage.ts",
+      "success": true,
+      "changes": [
+        "Replaced diskUsageSchema with Zod schema in server.tool() call",
+        "Commented out original diskUsageSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/indices/.backups/1757162113596-indices-disk_usage.ts"
+    },
+    {
+      "filePath": "src/tools/indices/exists_index_template.ts",
+      "success": true,
+      "changes": [
+        "Replaced existsIndexTemplateSchema with Zod schema in server.tool() call",
+        "Commented out original existsIndexTemplateSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/indices/.backups/1757162113699-indices-exists_index_template.ts"
+    },
+    {
+      "filePath": "src/tools/indices/get_index_settings_advanced.ts",
+      "success": true,
+      "changes": [
+        "Replaced getIndexSettingsAdvancedSchema with Zod schema in server.tool() call",
+        "Commented out original getIndexSettingsAdvancedSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/indices/.backups/1757162113804-indices-get_index_settings_advanced.ts"
+    },
+    {
+      "filePath": "src/tools/indices/index.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/indices/explain_data_lifecycle.ts",
+      "success": true,
+      "changes": [
+        "Replaced explainDataLifecycleSchema with Zod schema in server.tool() call",
+        "Commented out original explainDataLifecycleSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/indices/.backups/1757162114008-indices-explain_data_lifecycle.ts"
+    },
+    {
+      "filePath": "src/tools/indices/rollover.ts",
+      "success": true,
+      "changes": [
+        "Replaced rolloverSchema with Zod schema in server.tool() call",
+        "Commented out original rolloverSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/indices/.backups/1757162114111-indices-rollover.ts"
+    },
+    {
+      "filePath": "src/tools/indices/get_data_lifecycle_stats.ts",
+      "success": true,
+      "changes": [
+        "Replaced getDataLifecycleStatsSchema with Zod schema in server.tool() call",
+        "Commented out original getDataLifecycleStatsSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/indices/.backups/1757162114213-indices-get_data_lifecycle_stats.ts"
+    },
+    {
+      "filePath": "src/tools/bulk/multi_get.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/bulk/bulk_operations.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/bulk/index.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/core/search.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/core/list_indices.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/core/get_mappings.ts",
+      "success": true,
+      "changes": [
+        "Replaced getMappingsSchema with Zod schema in server.tool() call",
+        "Commented out original getMappingsSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/core/.backups/1757162114828-core-get_mappings.ts"
+    },
+    {
+      "filePath": "src/tools/core/indices_summary.ts",
+      "success": true,
+      "changes": [
+        "Replaced indicesSummarySchema with Zod schema in server.tool() call",
+        "Commented out original indicesSummarySchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/core/.backups/1757162114931-core-indices_summary.ts"
+    },
+    {
+      "filePath": "src/tools/core/get_shards.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/index_management/flush_index.ts",
+      "success": true,
+      "changes": [
+        "Replaced flushIndexSchema with Zod schema in server.tool() call",
+        "Commented out original flushIndexSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/index_management/.backups/1757162115136-index_management-flush_index.ts"
+    },
+    {
+      "filePath": "src/tools/index_management/reindex_documents.ts",
+      "success": true,
+      "changes": [
+        "Replaced reindexDocumentsSchema with Zod schema in server.tool() call",
+        "Commented out original reindexDocumentsSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/index_management/.backups/1757162115239-index_management-reindex_documents.ts"
+    },
+    {
+      "filePath": "src/tools/index_management/put_mapping.ts",
+      "success": true,
+      "changes": [
+        "Replaced putMappingSchema with Zod schema in server.tool() call",
+        "Commented out original putMappingSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/index_management/.backups/1757162115343-index_management-put_mapping.ts"
+    },
+    {
+      "filePath": "src/tools/index_management/index_exists.ts",
+      "success": true,
+      "changes": [
+        "Replaced indexExistsSchema with Zod schema in server.tool() call",
+        "Commented out original indexExistsSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/index_management/.backups/1757162115446-index_management-index_exists.ts"
+    },
+    {
+      "filePath": "src/tools/index_management/refresh_index.ts",
+      "success": true,
+      "changes": [
+        "Replaced refreshIndexSchema with Zod schema in server.tool() call",
+        "Commented out original refreshIndexSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/index_management/.backups/1757162115549-index_management-refresh_index.ts"
+    },
+    {
+      "filePath": "src/tools/index_management/delete_index.ts",
+      "success": true,
+      "changes": [
+        "Replaced deleteIndexSchema with Zod schema in server.tool() call",
+        "Commented out original deleteIndexSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/index_management/.backups/1757162115652-index_management-delete_index.ts"
+    },
+    {
+      "filePath": "src/tools/index_management/update_index_settings.ts",
+      "success": true,
+      "changes": [
+        "Replaced updateIndexSettingsSchema with Zod schema in server.tool() call",
+        "Commented out original updateIndexSettingsSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/index_management/.backups/1757162115754-index_management-update_index_settings.ts"
+    },
+    {
+      "filePath": "src/tools/index_management/create_index.ts",
+      "success": true,
+      "changes": [
+        "Replaced createIndexSchema with Zod schema in server.tool() call",
+        "Commented out original createIndexSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/index_management/.backups/1757162115856-index_management-create_index.ts"
+    },
+    {
+      "filePath": "src/tools/index_management/get_index.ts",
+      "success": true,
+      "changes": [
+        "Replaced getIndexSchema with Zod schema in server.tool() call",
+        "Commented out original getIndexSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/index_management/.backups/1757162115959-index_management-get_index.ts"
+    },
+    {
+      "filePath": "src/tools/index_management/get_index_settings.ts",
+      "success": true,
+      "changes": [
+        "Replaced getIndexSettingsSchema with Zod schema in server.tool() call",
+        "Commented out original getIndexSettingsSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/index_management/.backups/1757162116063-index_management-get_index_settings.ts"
+    },
+    {
+      "filePath": "src/tools/watcher/get_watch.ts",
+      "success": true,
+      "changes": [
+        "Replaced getWatchSchema with Zod schema in server.tool() call",
+        "Commented out original getWatchSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/watcher/.backups/1757162116166-watcher-get_watch.ts"
+    },
+    {
+      "filePath": "src/tools/watcher/deactivate_watch.ts",
+      "success": true,
+      "changes": [
+        "Replaced deactivateWatchSchema with Zod schema in server.tool() call",
+        "Commented out original deactivateWatchSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/watcher/.backups/1757162116269-watcher-deactivate_watch.ts"
+    },
+    {
+      "filePath": "src/tools/watcher/stats.ts",
+      "success": true,
+      "changes": [
+        "Replaced watcherStatsSchema with Zod schema in server.tool() call",
+        "Commented out original watcherStatsSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/watcher/.backups/1757162116372-watcher-stats.ts"
+    },
+    {
+      "filePath": "src/tools/watcher/delete_watch.ts",
+      "success": true,
+      "changes": [
+        "Replaced deleteWatchSchema with Zod schema in server.tool() call",
+        "Commented out original deleteWatchSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/watcher/.backups/1757162116475-watcher-delete_watch.ts"
+    },
+    {
+      "filePath": "src/tools/watcher/update_settings.ts",
+      "success": true,
+      "changes": [
+        "Replaced updateWatcherSettingsSchema with Zod schema in server.tool() call",
+        "Commented out original updateWatcherSettingsSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/watcher/.backups/1757162116578-watcher-update_settings.ts"
+    },
+    {
+      "filePath": "src/tools/watcher/put_watch.ts",
+      "success": true,
+      "changes": [
+        "Replaced putWatchSchema with Zod schema in server.tool() call",
+        "Commented out original putWatchSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/watcher/.backups/1757162116681-watcher-put_watch.ts"
+    },
+    {
+      "filePath": "src/tools/watcher/activate_watch.ts",
+      "success": true,
+      "changes": [
+        "Replaced activateWatchSchema with Zod schema in server.tool() call",
+        "Commented out original activateWatchSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/watcher/.backups/1757162116783-watcher-activate_watch.ts"
+    },
+    {
+      "filePath": "src/tools/watcher/start.ts",
+      "success": true,
+      "changes": [
+        "Replaced startWatcherSchema with Zod schema in server.tool() call",
+        "Commented out original startWatcherSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/watcher/.backups/1757162116887-watcher-start.ts"
+    },
+    {
+      "filePath": "src/tools/watcher/stop.ts",
+      "success": true,
+      "changes": [
+        "Replaced stopWatcherSchema with Zod schema in server.tool() call",
+        "Commented out original stopWatcherSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/watcher/.backups/1757162116992-watcher-stop.ts"
+    },
+    {
+      "filePath": "src/tools/watcher/query_watches.ts",
+      "success": true,
+      "changes": [
+        "Replaced queryWatchesSchema with Zod schema in server.tool() call",
+        "Commented out original queryWatchesSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/watcher/.backups/1757162117095-watcher-query_watches.ts"
+    },
+    {
+      "filePath": "src/tools/watcher/execute_watch.ts",
+      "success": true,
+      "changes": [
+        "Replaced executeWatchSchema with Zod schema in server.tool() call",
+        "Commented out original executeWatchSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/watcher/.backups/1757162117198-watcher-execute_watch.ts"
+    },
+    {
+      "filePath": "src/tools/watcher/index.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/watcher/get_settings.ts",
+      "success": true,
+      "changes": [
+        "Replaced getWatcherSettingsSchema with Zod schema in server.tool() call",
+        "Commented out original getWatcherSettingsSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/watcher/.backups/1757162117404-watcher-get_settings.ts"
+    },
+    {
+      "filePath": "src/tools/watcher/ack_watch.ts",
+      "success": true,
+      "changes": [
+        "Replaced ackWatchSchema with Zod schema in server.tool() call",
+        "Commented out original ackWatchSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/watcher/.backups/1757162117510-watcher-ack_watch.ts"
+    },
+    {
+      "filePath": "src/tools/template/put_index_template.ts",
+      "success": true,
+      "changes": [
+        "Replaced putIndexTemplateSchema with Zod schema in server.tool() call",
+        "Commented out original putIndexTemplateSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/template/.backups/1757162117612-template-put_index_template.ts"
+    },
+    {
+      "filePath": "src/tools/template/search_template.ts",
+      "success": true,
+      "changes": [
+        "Replaced searchTemplateSchema with Zod schema in server.tool() call",
+        "Commented out original searchTemplateSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/template/.backups/1757162117714-template-search_template.ts"
+    },
+    {
+      "filePath": "src/tools/template/multi_search_template.ts",
+      "success": true,
+      "changes": [
+        "Replaced multiSearchTemplateSchema with Zod schema in server.tool() call",
+        "Commented out original multiSearchTemplateSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/template/.backups/1757162117818-template-multi_search_template.ts"
+    },
+    {
+      "filePath": "src/tools/template/delete_index_template.ts",
+      "success": true,
+      "changes": [
+        "Replaced deleteIndexTemplateSchema with Zod schema in server.tool() call",
+        "Commented out original deleteIndexTemplateSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/template/.backups/1757162117920-template-delete_index_template.ts"
+    },
+    {
+      "filePath": "src/tools/template/get_index_template_improved.ts",
+      "success": true,
+      "changes": [
+        "Replaced getIndexTemplateSchema with Zod schema in server.tool() call",
+        "Commented out original getIndexTemplateSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/template/.backups/1757162118022-template-get_index_template_improved.ts"
+    },
+    {
+      "filePath": "src/tools/document/delete_document.ts",
+      "success": true,
+      "changes": [
+        "Replaced deleteDocumentSchema with Zod schema in server.tool() call",
+        "Commented out original deleteDocumentSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/document/.backups/1757162118125-document-delete_document.ts"
+    },
+    {
+      "filePath": "src/tools/document/update_document.ts",
+      "success": true,
+      "changes": [
+        "Replaced updateDocumentSchema with Zod schema in server.tool() call",
+        "Commented out original updateDocumentSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/document/.backups/1757162118228-document-update_document.ts"
+    },
+    {
+      "filePath": "src/tools/document/index_document.ts",
+      "success": true,
+      "changes": [
+        "Replaced indexDocumentSchema with Zod schema in server.tool() call",
+        "Commented out original indexDocumentSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/document/.backups/1757162118332-document-index_document.ts"
+    },
+    {
+      "filePath": "src/tools/document/document_exists.ts",
+      "success": true,
+      "changes": [
+        "Replaced documentExistsSchema with Zod schema in server.tool() call",
+        "Commented out original documentExistsSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/document/.backups/1757162118435-document-document_exists.ts"
+    },
+    {
+      "filePath": "src/tools/document/get_document.ts",
+      "success": true,
+      "changes": [
+        "Replaced getDocumentSchema with Zod schema in server.tool() call",
+        "Commented out original getDocumentSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/document/.backups/1757162118538-document-get_document.ts"
+    },
+    {
+      "filePath": "src/tools/search/clear_scroll.ts",
+      "success": true,
+      "changes": [
+        "Replaced clearScrollSchema with Zod schema in server.tool() call",
+        "Commented out original clearScrollSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/search/.backups/1757162118642-search-clear_scroll.ts"
+    },
+    {
+      "filePath": "src/tools/search/scroll_search.ts",
+      "success": true,
+      "changes": [
+        "Replaced scrollSearchSchema with Zod schema in server.tool() call",
+        "Commented out original scrollSearchSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/search/.backups/1757162118745-search-scroll_search.ts"
+    },
+    {
+      "filePath": "src/tools/search/execute_sql_query.ts",
+      "success": true,
+      "changes": [
+        "Replaced executeSqlQuerySchema with Zod schema in server.tool() call",
+        "Commented out original executeSqlQuerySchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/search/.backups/1757162118850-search-execute_sql_query.ts"
+    },
+    {
+      "filePath": "src/tools/search/count_documents.ts",
+      "success": true,
+      "changes": [
+        "Replaced countDocumentsSchema with Zod schema in server.tool() call",
+        "Commented out original countDocumentsSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/search/.backups/1757162118953-search-count_documents.ts"
+    },
+    {
+      "filePath": "src/tools/search/update_by_query.ts",
+      "success": true,
+      "changes": [
+        "Replaced updateByQuerySchema with Zod schema in server.tool() call",
+        "Commented out original updateByQuerySchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/search/.backups/1757162119056-search-update_by_query.ts"
+    },
+    {
+      "filePath": "src/tools/search/multi_search.ts",
+      "success": true,
+      "changes": [
+        "Replaced multiSearchSchema with Zod schema in server.tool() call",
+        "Commented out original multiSearchSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/search/.backups/1757162119159-search-multi_search.ts"
+    },
+    {
+      "filePath": "src/tools/types.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/enrich/execute_policy.ts",
+      "success": true,
+      "changes": [
+        "Replaced executePolicySchema with Zod schema in server.tool() call",
+        "Commented out original executePolicySchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/enrich/.backups/1757162119366-enrich-execute_policy.ts"
+    },
+    {
+      "filePath": "src/tools/enrich/put_policy.ts",
+      "success": true,
+      "changes": [
+        "Replaced putPolicySchema with Zod schema in server.tool() call",
+        "Commented out original putPolicySchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/enrich/.backups/1757162119470-enrich-put_policy.ts"
+    },
+    {
+      "filePath": "src/tools/enrich/stats.ts",
+      "success": true,
+      "changes": [
+        "Replaced statsSchema with Zod schema in server.tool() call",
+        "Commented out original statsSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/enrich/.backups/1757162119572-enrich-stats.ts"
+    },
+    {
+      "filePath": "src/tools/enrich/delete_policy.ts",
+      "success": true,
+      "changes": [
+        "Replaced deletePolicySchema with Zod schema in server.tool() call",
+        "Commented out original deletePolicySchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/enrich/.backups/1757162119675-enrich-delete_policy.ts"
+    },
+    {
+      "filePath": "src/tools/enrich/get_policy_improved.ts",
+      "success": true,
+      "changes": [
+        "Replaced getPolicySchema with Zod schema in server.tool() call",
+        "Commented out original getPolicySchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/enrich/.backups/1757162119778-enrich-get_policy_improved.ts"
+    },
+    {
+      "filePath": "src/tools/index.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/autoscaling/put_policy.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/autoscaling/get_policy.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/autoscaling/get_capacity.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/autoscaling/delete_policy.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/autoscaling/index.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/ilm/remove_policy.ts",
+      "success": true,
+      "changes": [
+        "Replaced removePolicySchema with Zod schema in server.tool() call",
+        "Commented out original removePolicySchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/ilm/.backups/1757162120492-ilm-remove_policy.ts"
+    },
+    {
+      "filePath": "src/tools/ilm/retry.ts",
+      "success": true,
+      "changes": [
+        "Replaced retrySchema with Zod schema in server.tool() call",
+        "Commented out original retrySchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/ilm/.backups/1757162120595-ilm-retry.ts"
+    },
+    {
+      "filePath": "src/tools/ilm/start.ts",
+      "success": true,
+      "changes": [
+        "Replaced startSchema with Zod schema in server.tool() call",
+        "Commented out original startSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/ilm/.backups/1757162120699-ilm-start.ts"
+    },
+    {
+      "filePath": "src/tools/ilm/stop.ts",
+      "success": true,
+      "changes": [
+        "Replaced stopSchema with Zod schema in server.tool() call",
+        "Commented out original stopSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/ilm/.backups/1757162120802-ilm-stop.ts"
+    },
+    {
+      "filePath": "src/tools/ilm/explain_lifecycle.ts",
+      "success": true,
+      "changes": [
+        "Replaced explainLifecycleSchema with Zod schema in server.tool() call",
+        "Commented out original explainLifecycleSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/ilm/.backups/1757162120905-ilm-explain_lifecycle.ts"
+    },
+    {
+      "filePath": "src/tools/ilm/get_lifecycle.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/ilm/migrate_to_data_tiers.ts",
+      "success": true,
+      "changes": [
+        "Replaced migrateToDataTiersSchema with Zod schema in server.tool() call",
+        "Commented out original migrateToDataTiersSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/ilm/.backups/1757162121112-ilm-migrate_to_data_tiers.ts"
+    },
+    {
+      "filePath": "src/tools/ilm/index.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/ilm/delete_lifecycle.ts",
+      "success": true,
+      "changes": [
+        "Replaced deleteLifecycleSchema with Zod schema in server.tool() call",
+        "Commented out original deleteLifecycleSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/ilm/.backups/1757162121317-ilm-delete_lifecycle.ts"
+    },
+    {
+      "filePath": "src/tools/ilm/move_to_step.ts",
+      "success": true,
+      "changes": [
+        "Replaced moveToStepSchema with Zod schema in server.tool() call",
+        "Commented out original moveToStepSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/ilm/.backups/1757162121419-ilm-move_to_step.ts"
+    },
+    {
+      "filePath": "src/tools/ilm/get_status.ts",
+      "success": true,
+      "changes": [
+        "Replaced getStatusSchema with Zod schema in server.tool() call",
+        "Commented out original getStatusSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/ilm/.backups/1757162121522-ilm-get_status.ts"
+    },
+    {
+      "filePath": "src/tools/ilm/put_lifecycle.ts",
+      "success": true,
+      "changes": [
+        "Replaced putLifecycleSchema with Zod schema in server.tool() call",
+        "Commented out original putLifecycleSchema definition",
+        "Added FIXED header comment"
+      ],
+      "backupPath": "src/tools/ilm/.backups/1757162121626-ilm-put_lifecycle.ts"
+    },
+    {
+      "filePath": "src/tools/analytics/get_term_vectors.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/analytics/get_multi_term_vectors.ts",
+      "success": true,
+      "changes": []
+    },
+    {
+      "filePath": "src/tools/analytics/index.ts",
+      "success": true,
+      "changes": []
+    }
+  ],
+  "buildTestResult": {
+    "success": false,
+    "output": "$ bun build ./src/index.ts --outdir ./dist --target bun --minify --sourcemap=external --splitting --public-path=/assets/\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/delete_document.ts:17:13\n\n20 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/delete_document.ts:20:16\n\n21 |       description:\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/delete_document.ts:21:18\n\n23 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/delete_document.ts:23:5\n\n15 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/core/indices_summary.ts:15:13\n\n18 |       description: \"Elasticsearch index pattern to summarize (supports wildcards like logs-*, app\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/core/indices_summary.ts:18:18\n\n19 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/core/indices_summary.ts:19:5\n\n16 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/cluster/get_cluster_stats.ts:16:13\n\n19 |       description:\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/cluster/get_cluster_stats.ts:19:18\n\n21 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/cluster/get_cluster_stats.ts:21:5\n\n18 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/rollover.ts:18:13\n\n21 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/rollover.ts:21:16\n\n22 |       description: \"Alias name for the data stream or index to roll over\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/rollover.ts:22:18\n\n23 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/rollover.ts:23:5\n\n16 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/cluster/get_cluster_health.ts:16:13\n\n19 |       description: \"Comma-separated list of indices to check health for. Leave empty for cluster-\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/cluster/get_cluster_health.ts:19:18\n\n20 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/cluster/get_cluster_health.ts:20:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/get_index_settings_advanced.ts:17:13\n\n20 |       description: \"Index name(s) or pattern(s) to get settings for. Examples: 'logs-*', ['users'\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/get_index_settings_advanced.ts:20:18\n\n21 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/get_index_settings_advanced.ts:21:5\n\n16 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/core/get_mappings.ts:16:13\n\n19 |       description: \"Name of the Elasticsearch index to get mappings for. Use '*' for all indices\"\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/core/get_mappings.ts:19:18\n\n20 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/core/get_mappings.ts:20:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/alias/update_aliases.ts:17:13\n\n20 |       description:\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/alias/update_aliases.ts:20:18\n\n22 |       items: {\n                ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/alias/update_aliases.ts:22:12\n\n24 |         description:\n                        ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/alias/update_aliases.ts:24:20\n\n26 |       },\n           ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/alias/update_aliases.ts:26:7\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/get_index_info.ts:17:13\n\n20 |       description:\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/get_index_info.ts:20:18\n\n22 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/get_index_info.ts:22:5\n\n18 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/index_exists.ts:18:13\n\n21 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/index_exists.ts:21:16\n\n22 |       description: \"Name of the index to check existence for\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/index_exists.ts:22:18\n\n23 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/index_exists.ts:23:5\n\n16 |   properties: {},\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/get_data_lifecycle_stats.ts:16:13\n\n16 |   properties: {},\n                     ^\nerror: Unexpected ,\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/get_data_lifecycle_stats.ts:16:17\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/alias/put_alias.ts:17:13\n\n20 |       description: \"Index name to add the alias to. Cannot be empty. Supports patterns with wildc\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/alias/put_alias.ts:20:18\n\n21 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/alias/put_alias.ts:21:5\n\n18 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/get_index_settings.ts:18:13\n\n21 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/get_index_settings.ts:21:16\n\n22 |       description: \"Name of the index to get settings for\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/get_index_settings.ts:22:18\n\n23 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/get_index_settings.ts:23:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/field_usage_stats.ts:17:13\n\n20 |       description:\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/field_usage_stats.ts:20:18\n\n22 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/field_usage_stats.ts:22:5\n\n18 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/alias/get_aliases_improved.ts:18:13\n\n21 |       description: \"Index pattern to filter by. Use '*' for all indices. Supports wildcards like\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/alias/get_aliases_improved.ts:21:18\n\n22 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/alias/get_aliases_improved.ts:22:5\n\n18 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/get_index.ts:18:13\n\n21 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/get_index.ts:21:16\n\n22 |       description: \"Index pattern to get information for. Use '*' for all indices. Supports wildc\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/get_index.ts:22:18\n\n23 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/get_index.ts:23:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/explain_data_lifecycle.ts:17:13\n\n20 |       description: \"Data stream or index name(s) to explain lifecycle for. Examples: 'logs-*', ['\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/explain_data_lifecycle.ts:20:18\n\n21 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/explain_data_lifecycle.ts:21:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/alias/delete_alias.ts:17:13\n\n20 |       description: \"Index name to remove the alias from. Cannot be empty. Supports patterns with\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/alias/delete_alias.ts:20:18\n\n21 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/alias/delete_alias.ts:21:5\n\n18 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/flush_index.ts:18:13\n\n21 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/flush_index.ts:21:16\n\n22 |       description: \"Name of the index to flush\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/flush_index.ts:22:18\n\n23 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/flush_index.ts:23:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/exists_template.ts:17:13\n\n20 |       description: \"Legacy template name(s) to check existence for. Examples: 'template1', ['temp\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/exists_template.ts:20:18\n\n21 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/exists_template.ts:21:5\n\n18 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/delete_index.ts:18:13\n\n21 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/delete_index.ts:21:16\n\n22 |       description: \"Name of the index to delete\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/delete_index.ts:22:18\n\n23 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/delete_index.ts:23:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/exists_index_template.ts:17:13\n\n20 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/exists_index_template.ts:20:16\n\n21 |       description: \"Index template name to check existence for. Example: 'logs-template'\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/exists_index_template.ts:21:18\n\n22 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/exists_index_template.ts:22:5\n\n16 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/search_template.ts:16:13\n\n19 |       description: \"Index name or pattern to search\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/search_template.ts:19:18\n\n20 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/search_template.ts:20:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/exists_alias.ts:17:13\n\n20 |       description: \"Alias name(s) to check existence for. Examples: 'logs', ['alias1', 'alias2']\"\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/exists_alias.ts:20:18\n\n21 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/exists_alias.ts:21:5\n\n16 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/put_index_template.ts:16:13\n\n19 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/put_index_template.ts:19:16\n\n20 |       description: \"Template name (cannot be empty)\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/put_index_template.ts:20:18\n\n21 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/put_index_template.ts:21:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/disk_usage.ts:17:13\n\n20 |       description: \"Index name(s) or pattern(s) to analyze disk usage for. Examples: 'logs-*', ['\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/disk_usage.ts:20:18\n\n21 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/indices/disk_usage.ts:21:5\n\n16 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/multi_search_template.ts:16:13\n\n19 |       items: {\n                ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/multi_search_template.ts:19:12\n\n21 |         additionalProperties: true,\n                                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/multi_search_template.ts:21:29\n\n22 |       },\n           ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/multi_search_template.ts:22:7\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/create_index.ts:17:13\n\n20 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/create_index.ts:20:16\n\n21 |       description: \"Name of the index to create\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/create_index.ts:21:18\n\n22 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/create_index.ts:22:5\n\n37 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/get_index_template_improved.ts:37:13\n\n40 |       description: \"Template name pattern to filter by (supports wildcards)\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/get_index_template_improved.ts:40:18\n\n41 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/get_index_template_improved.ts:41:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/update_by_query.ts:17:13\n\n20 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/update_by_query.ts:20:16\n\n21 |       description: \"Index name or pattern to update\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/update_by_query.ts:21:18\n\n22 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/update_by_query.ts:22:5\n\n16 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/delete_index_template.ts:16:13\n\n19 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/delete_index_template.ts:19:16\n\n20 |       description: \"Template name (cannot be empty)\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/delete_index_template.ts:20:18\n\n21 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/template/delete_index_template.ts:21:5\n\n16 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/stats.ts:16:13\n\n19 |       description: \"Timeout for master node operations. Examples: '30s', '1m'\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/stats.ts:19:18\n\n20 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/stats.ts:20:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/scroll_search.ts:17:13\n\n20 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/scroll_search.ts:20:16\n\n21 |       description: \"Index name or pattern to search\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/scroll_search.ts:21:18\n\n22 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/scroll_search.ts:22:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/put_policy.ts:17:13\n\n20 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/put_policy.ts:20:16\n\n21 |       description: \"Name of the enrich policy to create\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/put_policy.ts:21:18\n\n22 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/put_policy.ts:22:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/multi_search.ts:17:13\n\n20 |       items: {\n                ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/multi_search.ts:20:12\n\n22 |         additionalProperties: true,\n                                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/multi_search.ts:22:29\n\n23 |       },\n           ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/multi_search.ts:23:7\n\n18 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/update_index_settings.ts:18:13\n\n21 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/update_index_settings.ts:21:16\n\n22 |       description: \"Name of the index to update settings for\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/update_index_settings.ts:22:18\n\n23 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/update_index_settings.ts:23:5\n\n22 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/get_policy_improved.ts:22:13\n\n31 |       description: \"Policy name(s) to retrieve. Can be a single policy name or array of names\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/get_policy_improved.ts:31:18\n\n32 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/get_policy_improved.ts:32:5\n\n18 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/reindex_documents.ts:18:13\n\n21 |       properties: {\n                     ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/reindex_documents.ts:21:17\n\n24 |           description: \"Source index name\",\n                          ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/reindex_documents.ts:24:22\n\n25 |         },\n             ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/reindex_documents.ts:25:9\n\n18 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/execute_policy.ts:18:13\n\n21 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/execute_policy.ts:21:16\n\n22 |       description: \"Name of the enrich policy to execute\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/execute_policy.ts:22:18\n\n23 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/execute_policy.ts:23:5\n\n18 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/refresh_index.ts:18:13\n\n21 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/refresh_index.ts:21:16\n\n22 |       description: \"Name of the index to refresh\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/refresh_index.ts:22:18\n\n23 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/refresh_index.ts:23:5\n\n18 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/put_mapping.ts:18:13\n\n21 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/put_mapping.ts:21:16\n\n22 |       description: \"Name of the index to update mapping for\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/put_mapping.ts:22:18\n\n23 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/index_management/put_mapping.ts:23:5\n\n16 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/execute_sql_query.ts:16:13\n\n19 |       description: \"SQL query to execute. Example: 'SELECT * FROM logs-* LIMIT 10'\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/execute_sql_query.ts:19:18\n\n20 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/execute_sql_query.ts:20:5\n\n16 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/count_documents.ts:16:13\n\n19 |       description: \"Index pattern to count documents in. Use '*' for all indices\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/count_documents.ts:19:18\n\n20 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/count_documents.ts:20:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/delete_policy.ts:17:13\n\n20 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/delete_policy.ts:20:16\n\n21 |       description: \"Name of the enrich policy to delete\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/delete_policy.ts:21:18\n\n22 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/enrich/delete_policy.ts:22:5\n\n16 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/clear_scroll.ts:16:13\n\n19 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/clear_scroll.ts:19:16\n\n20 |       description: \"Scroll ID to clear from memory\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/clear_scroll.ts:20:18\n\n21 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/search/clear_scroll.ts:21:5\n\n22 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/stop.ts:22:13\n\n25 |       description: \"Master node timeout\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/stop.ts:25:18\n\n26 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/stop.ts:26:5\n\n22 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/start.ts:22:13\n\n25 |       description: \"Master node timeout\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/start.ts:25:18\n\n26 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/start.ts:26:5\n\n18 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/update_document.ts:18:13\n\n21 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/update_document.ts:21:16\n\n22 |       description:\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/update_document.ts:22:18\n\n24 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/update_document.ts:24:5\n\n22 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/retry.ts:22:13\n\n25 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/retry.ts:25:16\n\n26 |       description: \"Index name or pattern to retry ILM policy execution for (cannot be empty)\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/retry.ts:26:18\n\n27 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/retry.ts:27:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/index_document.ts:17:13\n\n20 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/index_document.ts:20:16\n\n21 |       description: \"REQUIRED: Name of the Elasticsearch index to store the document. Example: 'us\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/index_document.ts:21:18\n\n22 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/index_document.ts:22:5\n\n22 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/remove_policy.ts:22:13\n\n25 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/remove_policy.ts:25:16\n\n26 |       description: \"Index name or pattern to remove ILM policy from (cannot be empty)\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/remove_policy.ts:26:18\n\n27 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/remove_policy.ts:27:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/get_document.ts:17:13\n\n20 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/get_document.ts:20:16\n\n21 |       description:\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/get_document.ts:21:18\n\n23 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/get_document.ts:23:5\n\n23 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/put_lifecycle.ts:23:13\n\n26 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/put_lifecycle.ts:26:16\n\n27 |       description: \"Policy identifier (cannot be empty)\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/put_lifecycle.ts:27:18\n\n28 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/put_lifecycle.ts:28:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/document_exists.ts:17:13\n\n20 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/document_exists.ts:20:16\n\n21 |       description:\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/document_exists.ts:21:18\n\n23 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/document/document_exists.ts:23:5\n\n22 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/move_to_step.ts:22:13\n\n25 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/move_to_step.ts:25:16\n\n26 |       description: \"Index name (cannot be empty)\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/move_to_step.ts:26:18\n\n27 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/move_to_step.ts:27:5\n\n22 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/delete_lifecycle.ts:22:13\n\n25 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/delete_lifecycle.ts:25:16\n\n26 |       description: \"Policy name to delete (required)\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/delete_lifecycle.ts:26:18\n\n27 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/delete_lifecycle.ts:27:5\n\n22 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/migrate_to_data_tiers.ts:22:13\n\n25 |       description: \"Name of legacy template to delete during migration\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/migrate_to_data_tiers.ts:25:18\n\n26 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/migrate_to_data_tiers.ts:26:5\n\n20 |   properties: {},\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/get_status.ts:20:13\n\n20 |   properties: {},\n                     ^\nerror: Unexpected ,\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/get_status.ts:20:17\n\n22 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/explain_lifecycle.ts:22:13\n\n25 |       description: \"Index pattern. Use '*' for all indices\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/explain_lifecycle.ts:25:18\n\n26 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/ilm/explain_lifecycle.ts:26:5\n\n16 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/cluster/get_nodes_info.ts:16:13\n\n19 |       description: \"Specific node ID, or '_local' for current node, or leave empty for all\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/cluster/get_nodes_info.ts:19:18\n\n20 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/cluster/get_nodes_info.ts:20:5\n\n16 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/cluster/get_nodes_stats.ts:16:13\n\n19 |       description: \"Specific node ID, or leave empty for all nodes\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/cluster/get_nodes_stats.ts:19:18\n\n20 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/cluster/get_nodes_stats.ts:20:5\n\n18 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/execute_watch.ts:18:13\n\n21 |       description: \"Watch ID to execute\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/execute_watch.ts:21:18\n\n22 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/execute_watch.ts:22:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/ack_watch.ts:17:13\n\n20 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/ack_watch.ts:20:16\n\n21 |       description: \"Watch ID to acknowledge\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/ack_watch.ts:21:18\n\n22 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/ack_watch.ts:22:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/delete_watch.ts:17:13\n\n20 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/delete_watch.ts:20:16\n\n21 |       description: \"Watch ID to delete\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/delete_watch.ts:21:18\n\n22 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/delete_watch.ts:22:5\n\n18 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/put_watch.ts:18:13\n\n21 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/put_watch.ts:21:16\n\n22 |       description: \"Watch ID\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/put_watch.ts:22:18\n\n23 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/put_watch.ts:23:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/deactivate_watch.ts:17:13\n\n20 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/deactivate_watch.ts:20:16\n\n21 |       description: \"Watch ID to deactivate\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/deactivate_watch.ts:21:18\n\n22 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/deactivate_watch.ts:22:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/get_watch.ts:17:13\n\n20 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/get_watch.ts:20:16\n\n21 |       description: \"Watch ID to retrieve\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/get_watch.ts:21:18\n\n22 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/get_watch.ts:22:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/activate_watch.ts:17:13\n\n20 |       minLength: 1,\n                    ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/activate_watch.ts:20:16\n\n21 |       description: \"Watch ID to activate\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/activate_watch.ts:21:18\n\n22 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/activate_watch.ts:22:5\n\n19 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/query_watches.ts:19:13\n\n22 |       minimum: 0,\n                  ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/query_watches.ts:22:14\n\n23 |       description: \"Starting offset for pagination\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/query_watches.ts:23:18\n\n24 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/query_watches.ts:24:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/update_settings.ts:17:13\n\n18 |     \"index.auto_expand_replicas\": {\n                                     ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/update_settings.ts:18:33\n\n20 |       description: \"Auto expand replicas setting\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/update_settings.ts:20:18\n\n21 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/update_settings.ts:21:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/get_settings.ts:17:13\n\n20 |       description: \"Explicit operation timeout for connection to master node\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/get_settings.ts:20:18\n\n21 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/get_settings.ts:21:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/stop.ts:17:13\n\n20 |       description: \"Explicit operation timeout for connection to master node\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/stop.ts:20:18\n\n21 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/stop.ts:21:5\n\n18 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/stats.ts:18:13\n\n33 |       description: \"Limit the information returned to specific metrics\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/stats.ts:33:18\n\n34 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/stats.ts:34:5\n\n17 |   properties: {\n                 ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/start.ts:17:13\n\n20 |       description: \"Explicit operation timeout for connection to master node\",\n                      ^\nerror: Expected \";\" but found \":\"\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/start.ts:20:18\n\n21 |     },\n         ^\nerror: Unexpected }\n    at /Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/tools/watcher/start.ts:21:5\nerror: script \"build\" exited with code 1\n"
+  }
+}

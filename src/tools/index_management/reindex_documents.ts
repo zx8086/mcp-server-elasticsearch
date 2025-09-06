@@ -1,4 +1,5 @@
 /* src/tools/index_management/reindex_documents.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -10,110 +11,7 @@ import { coerceBoolean } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const reindexDocumentsSchema = {
-  type: "object",
-  properties: {
-    source: {
-      type: "object",
-      properties: {
-        index: {
-          type: "string",
-          description: "Source index name",
-        },
-        query: {
-          type: "object",
-          additionalProperties: true,
-          description: "Query to filter source documents",
-        },
-        size: {
-          type: "integer",
-          minimum: 1,
-          description: "Number of documents per batch",
-        },
-        sort: {
-          type: "array",
-          items: { type: "object", additionalProperties: true },
-          description: "Sort order for source documents",
-        },
-      },
-      required: ["index"],
-      additionalProperties: false,
-      description: "Source index configuration",
-    },
-    dest: {
-      type: "object",
-      properties: {
-        index: {
-          type: "string",
-          description: "Destination index name",
-        },
-        version_type: {
-          type: "string",
-          enum: ["internal", "external", "external_gte"],
-          description: "Version type for destination documents",
-        },
-        op_type: {
-          type: "string",
-          enum: ["index", "create"],
-          description: "Operation type for destination documents",
-        },
-      },
-      required: ["index"],
-      additionalProperties: false,
-      description: "Destination index configuration",
-    },
-    script: {
-      type: "object",
-      additionalProperties: true,
-      description: "Script to transform documents during reindexing",
-    },
-    conflicts: {
-      type: "string",
-      enum: ["abort", "proceed"],
-      description: "How to handle version conflicts",
-    },
-    maxDocs: {
-      type: "integer",
-      minimum: 1,
-      description: "Maximum number of documents to reindex",
-    },
-    refresh: {
-      type: "boolean",
-      description: "Refresh the destination index after completion",
-    },
-    timeout: {
-      type: "string",
-      description: "Operation timeout (e.g., '1m')",
-    },
-    waitForActiveShards: {
-      oneOf: [
-        { type: "string", enum: ["all"] },
-        { type: "integer", minimum: 1, maximum: 9 },
-      ],
-      description: "Number of active shards to wait for",
-    },
-    waitForCompletion: {
-      type: "boolean",
-      description: "Wait for the operation to complete",
-    },
-    requestsPerSecond: {
-      type: "number",
-      minimum: 0,
-      description: "Throttle requests per second",
-    },
-    scroll: {
-      type: "string",
-      description: "Scroll timeout for source index (e.g., '5m')",
-    },
-    slices: {
-      type: "integer",
-      minimum: 1,
-      description: "Number of slices for parallel processing",
-    },
-  },
-  required: ["source", "dest"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const reindexDocumentsValidator = z.object({
@@ -241,7 +139,20 @@ export const registerReindexDocumentsTool: ToolRegistrationFunction = (server: M
   server.tool(
     "elasticsearch_reindex_documents",
     "Reindex documents from source to destination index in Elasticsearch. Best for data migration, index restructuring, mapping changes. Use when you need to copy documents between Elasticsearch indices with optional transformations. Uses direct JSON Schema and standardized MCP error codes.",
-    reindexDocumentsSchema,
+  {
+    source: z.object({}), // Source index configuration
+    dest: z.object({}), // Destination index configuration
+    script: z.object({}).optional(), // Script to transform documents during reindexing
+    conflicts: z.enum(["abort", "proceed"]).optional(), // How to handle version conflicts
+    maxDocs: z.number().int().min(1).optional(), // Maximum number of documents to reindex
+    refresh: z.boolean().optional(), // Refresh the destination index after completion
+    timeout: z.string().optional(), // Operation timeout (e.g., '1m')
+    waitForActiveShards: z.any().optional(), // Number of active shards to wait for
+    waitForCompletion: z.boolean().optional(), // Wait for the operation to complete
+    requestsPerSecond: z.number().min(0).optional(), // Throttle requests per second
+    scroll: z.string().optional(), // Scroll timeout for source index (e.g., '5m')
+    slices: z.number().int().min(1).optional(), // Number of slices for parallel processing
+  },
     withReadOnlyCheck("elasticsearch_reindex_documents", reindexDocumentsHandler, OperationType.WRITE),
   );
 };

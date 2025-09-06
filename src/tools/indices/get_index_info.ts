@@ -1,4 +1,5 @@
 /* src/tools/indices/get_index_info.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,56 +10,7 @@ import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const getIndexInfoSchema = {
-  type: "object",
-  properties: {
-    index: {
-      oneOf: [{ type: "string" }, { type: "array", items: { type: "string" } }],
-      description:
-        "Index name(s) or pattern(s) to get info for. Use '*' for all indices. Examples: 'logs-*', ['users', 'products'], '*'",
-    },
-    allowNoIndices: {
-      type: "boolean",
-      description: "Whether to ignore if a wildcard indices expression resolves into no concrete indices",
-    },
-    expandWildcards: {
-      oneOf: [
-        { type: "string", enum: ["all", "open", "closed", "hidden", "none"] },
-        { type: "array", items: { type: "string", enum: ["all", "open", "closed", "hidden", "none"] } },
-      ],
-      description: "Type of index that wildcard patterns can match",
-    },
-    flatSettings: {
-      type: "boolean",
-      description: "Return settings in flat format",
-    },
-    ignoreUnavailable: {
-      type: "boolean",
-      description: "Whether specified concrete indices should be ignored when unavailable",
-    },
-    includeDefaults: {
-      type: "boolean",
-      description: "Whether to return default values in the response",
-    },
-    local: {
-      type: "boolean",
-      description: "Return local information, do not retrieve the state from master node",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Timeout for connection to master node",
-    },
-    features: {
-      oneOf: [
-        { type: "string", enum: ["aliases", "mappings", "settings"] },
-        { type: "array", items: { type: "string", enum: ["aliases", "mappings", "settings"] } },
-      ],
-      description: "Feature(s) to retrieve from indices. Allows filtering response content",
-    },
-  },
-  required: ["index"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const getIndexInfoValidator = z.object({
@@ -169,7 +121,17 @@ export const registerGetIndexInfoTool: ToolRegistrationFunction = (server: McpSe
   server.tool(
     "elasticsearch_get_index_info",
     "Get comprehensive index information from Elasticsearch including aliases, mappings, and settings. Best for index inspection, configuration analysis, data stream monitoring. Empty {} parameters will default to getting info for all indices ('*'). Use when you need detailed metadata about Elasticsearch indices with feature filtering capabilities for selective information retrieval.",
-    getIndexInfoSchema,
+  {
+    index: z.any(), // Index name(s) or pattern(s) to get info for. Use '*' for all indices. Examples: 'logs-*', ['users', 'products'], '*'
+    allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard indices expression resolves into no concrete indices
+    expandWildcards: z.any().optional(), // Type of index that wildcard patterns can match
+    flatSettings: z.boolean().optional(), // Return settings in flat format
+    ignoreUnavailable: z.boolean().optional(), // Whether specified concrete indices should be ignored when unavailable
+    includeDefaults: z.boolean().optional(), // Whether to return default values in the response
+    local: z.boolean().optional(), // Return local information, do not retrieve the state from master node
+    masterTimeout: z.string().optional(), // Timeout for connection to master node
+    features: z.any().optional(), // Feature(s) to retrieve from indices. Allows filtering response content
+  },
     getIndexInfoHandler,
   );
 };

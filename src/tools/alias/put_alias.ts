@@ -1,4 +1,5 @@
 /* src/tools/alias/put_alias.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,33 +10,7 @@ import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const putAliasSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      description: "Index name to add the alias to. Cannot be empty. Supports patterns with wildcards",
-    },
-    name: {
-      type: "string",
-      description: "Alias name to create. Cannot be empty. Will overwrite existing alias with same name",
-    },
-    filter: {
-      type: "object",
-      description: "Optional query filter to apply when accessing data through this alias",
-    },
-    routing: {
-      type: "string",
-      description: "Optional routing value for operations performed through this alias",
-    },
-    isWriteIndex: {
-      type: "boolean",
-      description: "Set to true to designate this as the write index for the alias (default: false)",
-    },
-  },
-  required: ["index", "name"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const putAliasValidator = z.object({
@@ -188,7 +163,13 @@ export const registerPutAliasTool: ToolRegistrationFunction = (server: McpServer
   server.tool(
     "elasticsearch_put_alias",
     "Add an alias to an index in Elasticsearch. Best for alias creation, index abstraction, application decoupling. Use when you need to create named references to Elasticsearch indices for easier management and zero-downtime operations. DESTRUCTIVE: Creates permanent alias configuration that affects index access patterns.",
-    putAliasSchema,
+  {
+    index: z.string(), // Index name to add the alias to. Cannot be empty. Supports patterns with wildcards
+    name: z.string(), // Alias name to create. Cannot be empty. Will overwrite existing alias with same name
+    filter: z.object({}).optional(), // Optional query filter to apply when accessing data through this alias
+    routing: z.string().optional(), // Optional routing value for operations performed through this alias
+    isWriteIndex: z.boolean().optional(), // Set to true to designate this as the write index for the alias (default: false)
+  },
     withReadOnlyCheck("elasticsearch_put_alias", putAliasHandler, OperationType.WRITE),
   );
 };

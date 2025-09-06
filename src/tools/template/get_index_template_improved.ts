@@ -1,4 +1,5 @@
 /* src/tools/template/get_index_template_improved.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -29,48 +30,7 @@ interface TemplateSummary {
 }
 
 // Direct JSON Schema definition
-const getIndexTemplateSchema = {
-  type: "object",
-  properties: {
-    name: {
-      type: "string",
-      description: "Template name pattern to filter by (supports wildcards)",
-    },
-    flatSettings: {
-      type: "boolean",
-      description: "Return settings in flat format",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Timeout for master node operations",
-    },
-    local: {
-      type: "boolean",
-      description: "Retrieve information from local node only",
-    },
-    limit: {
-      oneOf: [
-        { type: "number", minimum: 1, maximum: 50 },
-        { type: "string", pattern: "^\\d+$" },
-      ],
-      description: "Maximum number of templates to return. Range: 1-50",
-    },
-    summary: {
-      type: "boolean",
-      description: "Return summarized template information instead of full details",
-    },
-    includeComposed: {
-      type: "boolean",
-      description: "Include composed_of templates in the response",
-    },
-    sortBy: {
-      type: "string",
-      enum: ["name", "priority", "index_patterns", "version"],
-      description: "Sort templates by specified field",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const getIndexTemplateValidator = z.object({
@@ -376,7 +336,16 @@ export const registerGetIndexTemplateTool: ToolRegistrationFunction = (server: M
   server.tool(
     "elasticsearch_get_index_template",
     "Get index templates from Elasticsearch with pagination and filtering. Uses direct JSON Schema and standardized MCP error codes. Best for template management, configuration review, index pattern analysis. Returns summarized or detailed template information with configurable limits to handle large responses. TIP: Use 'summary: true' for overview, 'name' with wildcards for filtering.",
-    getIndexTemplateSchema,
+  {
+    name: z.string().optional(), // Template name pattern to filter by (supports wildcards)
+    flatSettings: z.boolean().optional(), // Return settings in flat format
+    masterTimeout: z.string().optional(), // Timeout for master node operations
+    local: z.boolean().optional(), // Retrieve information from local node only
+    limit: z.any().optional(), // Maximum number of templates to return. Range: 1-50
+    summary: z.boolean().optional(), // Return summarized template information instead of full details
+    includeComposed: z.boolean().optional(), // Include composed_of templates in the response
+    sortBy: z.enum(["name", "priority", "index_patterns", "version"]).optional(), // Sort templates by specified field
+  },
     getIndexTemplateHandler,
   );
 };

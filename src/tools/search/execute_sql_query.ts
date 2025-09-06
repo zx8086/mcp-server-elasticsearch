@@ -1,4 +1,5 @@
 /* src/tools/search/execute_sql_query.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -8,23 +9,7 @@ import { logger } from "../../utils/logger.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const executeSqlQuerySchema = {
-  type: "object",
-  properties: {
-    query: {
-      type: "string",
-      description: "SQL query to execute. Example: 'SELECT * FROM logs-* LIMIT 10'",
-    },
-    format: {
-      type: "string",
-      enum: ["json", "csv", "tsv", "txt", "yaml", "cbor", "smile"],
-    },
-    fetchSize: {
-      type: "number",
-    },
-  },
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const executeSqlQueryValidator = z.object({
@@ -98,7 +83,11 @@ export const registerExecuteSqlQueryTool: ToolRegistrationFunction = (server: Mc
   server.tool(
     "elasticsearch_execute_sql_query",
     "Execute a SQL query using Elasticsearch SQL API. PARAMETER: 'query' (SQL string). Best for familiar SQL syntax, structured queries, data analysis. Example: {query: 'SELECT * FROM logs-* WHERE status = 500 LIMIT 100'}. Uses direct JSON Schema and standardized MCP error codes.",
-    executeSqlQuerySchema,
+  {
+    query: z.string().optional(), // SQL query to execute. Example: 'SELECT * FROM logs-* LIMIT 10'
+    format: z.enum(["json", "csv", "tsv", "txt", "yaml", "cbor", "smile"]).optional(),
+    fetchSize: z.number().optional(),
+  },
     executeSqlQueryHandler,
   );
 };

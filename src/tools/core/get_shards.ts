@@ -5,6 +5,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { paginateResults, createPaginationHeader, responsePresets } from "../../utils/responseHandling.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 const getShardsSchema = {
@@ -110,10 +111,16 @@ export const registerGetShardsTool: ToolRegistrationFunction = (server: McpServe
         sortedShards.sort((a, b) => (a.index as string).localeCompare(b.index as string));
       }
 
-      const limitedShards = limit ? sortedShards.slice(0, limit) : sortedShards;
+      // Apply pagination
+      const { results: paginatedShards, metadata } = paginateResults(sortedShards, {
+        limit: limit,
+        defaultLimit: responsePresets.list.defaultLimit,
+        maxLimit: responsePresets.list.maxLimit,
+      });
+      
       const unhealthyCount = response.filter((s) => s.state !== "STARTED").length;
 
-      const shardsInfo = limitedShards.map((shard) => ({
+      const shardsInfo = paginatedShards.map((shard) => ({
         index: shard.index,
         shard: shard.shard,
         prirep: shard.prirep,
@@ -124,23 +131,20 @@ export const registerGetShardsTool: ToolRegistrationFunction = (server: McpServe
         node: shard.node,
       }));
 
-      let metadataText = `Found ${totalShards} total shards${index ? ` for index ${index}` : ""}`;
-
-      if (!limit && totalShards > 1000) {
-        metadataText = `⚠️ Response contains ${totalShards} shards. Consider using 'limit' parameter to reduce response size.`;
-        if (unhealthyCount > 0) {
-          metadataText += `\n📊 ${unhealthyCount} unhealthy shards in cluster`;
-        }
-        metadataText += `\n💡 Example: {limit: 100, sortBy: 'state'} to see top 100 shards with unhealthy first`;
-      } else if (limit && totalShards > limit) {
-        metadataText = `📊 Showing ${limit} of ${totalShards} shards${sortBy ? ` (sorted by ${sortBy})` : ""}`;
-        if (unhealthyCount > 0) {
-          metadataText += `\n⚠️ ${unhealthyCount} unhealthy shards in cluster`;
-        }
+      // Create pagination header and metadata
+      const headerText = createPaginationHeader(metadata, `Shards${index ? ` for index ${index}` : ""}`);
+      
+      let metadataText = `Total: ${totalShards} shards`;
+      if (index) metadataText += ` for index ${index}`;
+      if (sortBy) metadataText += ` (sorted by ${sortBy})`;
+      
+      if (unhealthyCount > 0) {
+        metadataText += `\n⚠️ ${unhealthyCount} unhealthy shards found`;
       }
 
       return {
         content: [
+          { type: "text", text: headerText },
           { type: "text", text: metadataText },
           { type: "text", text: JSON.stringify(shardsInfo, null, 2) },
         ],
@@ -160,8 +164,12 @@ export const registerGetShardsTool: ToolRegistrationFunction = (server: McpServe
 
   server.tool(
     "elasticsearch_get_shards",
-    "Get shard information. WARNING: Clusters often have 1000+ shards. Check cluster stats first to see shard count. If >500 shards, MUST use 'limit' or will fail. Patterns: {limit: 100, sortBy: 'state'} for health check, {limit: 50, sortBy: 'size'} for storage analysis. Empty {} only works for small clusters (<500 shards). Uses direct JSON Schema and standardized MCP error codes.",
-    getShardsSchema,
+    "Get shard information. WARNING: Clusters often have 1000+ shards. Check cluster stats first to see shard count. If >500 shards, MUST use 'limit' or will fail. Patterns: {limit: 100, sortBy: 'state'} for health check, {limit: 50, sortBy: 'size'} for storage analysis. Empty {} only works for small clusters (<500 shards). FIXED: Uses Zod Schema for proper MCP parameter handling.",
+    {
+      index: z.string().optional(),
+      limit: z.number().min(1).max(1000).optional(),
+      sortBy: z.enum(["state", "index", "size", "docs"]).optional(),
+    },
     getShardsHandler,
   );
 };

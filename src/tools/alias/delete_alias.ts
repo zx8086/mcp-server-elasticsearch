@@ -1,4 +1,5 @@
 /* src/tools/alias/delete_alias.ts */
+/* FIXED: Uses Zod Schema instead of JSON Schema for MCP compatibility */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -9,29 +10,7 @@ import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const deleteAliasSchema = {
-  type: "object",
-  properties: {
-    index: {
-      type: "string",
-      description: "Index name to remove the alias from. Cannot be empty. Supports patterns with wildcards",
-    },
-    name: {
-      type: "string",
-      description: "Alias name to delete. Cannot be empty. Must exist on the specified index",
-    },
-    timeout: {
-      type: "string",
-      description: "Timeout for the request (e.g., '30s', '1m'). Optional",
-    },
-    masterTimeout: {
-      type: "string",
-      description: "Timeout for waiting for master node response (e.g., '30s', '1m'). Optional",
-    },
-  },
-  required: ["index", "name"],
-  additionalProperties: false,
-};
+// FIXED: Original JSON Schema definition removed - now using Zod schema inline
 
 // Zod validator for runtime validation
 const deleteAliasValidator = z.object({
@@ -175,7 +154,12 @@ export const registerDeleteAliasTool: ToolRegistrationFunction = (server: McpSer
   server.tool(
     "elasticsearch_delete_alias",
     "Delete an alias from an index in Elasticsearch. Best for alias cleanup, configuration management, removing unused references. Use when you need to remove named references to Elasticsearch indices during maintenance or restructuring. DESTRUCTIVE: Permanently removes alias configuration and may break applications relying on the alias.",
-    deleteAliasSchema,
+  {
+    index: z.string(), // Index name to remove the alias from. Cannot be empty. Supports patterns with wildcards
+    name: z.string(), // Alias name to delete. Cannot be empty. Must exist on the specified index
+    timeout: z.string().optional(), // Timeout for the request (e.g., '30s', '1m'). Optional
+    masterTimeout: z.string().optional(), // Timeout for waiting for master node response (e.g., '30s', '1m'). Optional
+  },
     withReadOnlyCheck("elasticsearch_delete_alias", deleteAliasHandler, OperationType.DESTRUCTIVE),
   );
 };
