@@ -83,12 +83,21 @@ const LangSmithConfigSchema = z.object({
   project: z.string(),
 });
 
+const SessionTrackingConfigSchema = z.object({
+  enabled: z.boolean(),
+  sessionTimeoutMinutes: z.number().min(0.5).max(120),
+  includeSessionInTraceName: z.boolean(),
+  maxConcurrentSessions: z.number().min(10).max(1000),
+  conversationDetectionThresholdSeconds: z.number().min(10).max(300),
+});
+
 const ConfigSchema = z.object({
   server: ServerConfigSchema,
   elasticsearch: ElasticsearchConfigSchema,
   logging: LoggingConfigSchema,
   security: SecurityConfigSchema,
   langsmith: LangSmithConfigSchema,
+  sessionTracking: SessionTrackingConfigSchema,
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -136,6 +145,13 @@ const defaultConfig: Config = {
     tracing: false,
     endpoint: "https://api.smith.langchain.com",
     project: "elasticsearch-mcp-server",
+  },
+  sessionTracking: {
+    enabled: true,
+    sessionTimeoutMinutes: 0.5, // 30 seconds for better conversation separation
+    includeSessionInTraceName: false,
+    maxConcurrentSessions: 100,
+    conversationDetectionThresholdSeconds: 30, // Detect new conversation after 30s gap
   },
 };
 
@@ -187,6 +203,13 @@ const envVarMapping = {
     endpoint: "LANGSMITH_ENDPOINT",
     apiKey: "LANGSMITH_API_KEY",
     project: "LANGSMITH_PROJECT",
+  },
+  sessionTracking: {
+    enabled: "SESSION_TRACKING_ENABLED",
+    sessionTimeoutMinutes: "SESSION_TIMEOUT_MINUTES",
+    includeSessionInTraceName: "SESSION_ID_IN_TRACE_NAME",
+    maxConcurrentSessions: "MAX_CONCURRENT_SESSIONS",
+    conversationDetectionThresholdSeconds: "CONVERSATION_DETECTION_THRESHOLD_SECONDS",
   },
 } as const;
 
@@ -303,6 +326,24 @@ function loadConfigFromEnv(): Partial<Config> {
       (parseEnvVar(Bun.env[envVarMapping.langsmith.project], "string") as string) || defaultConfig.langsmith.project,
   };
 
+  // Load Session Tracking config
+  config.sessionTracking = {
+    enabled:
+      (parseEnvVar(Bun.env[envVarMapping.sessionTracking.enabled], "boolean") as boolean) ?? defaultConfig.sessionTracking.enabled,
+    sessionTimeoutMinutes:
+      (parseEnvVar(Bun.env[envVarMapping.sessionTracking.sessionTimeoutMinutes], "number") as number) ||
+      defaultConfig.sessionTracking.sessionTimeoutMinutes,
+    includeSessionInTraceName:
+      (parseEnvVar(Bun.env[envVarMapping.sessionTracking.includeSessionInTraceName], "boolean") as boolean) ??
+      defaultConfig.sessionTracking.includeSessionInTraceName,
+    maxConcurrentSessions:
+      (parseEnvVar(Bun.env[envVarMapping.sessionTracking.maxConcurrentSessions], "number") as number) ||
+      defaultConfig.sessionTracking.maxConcurrentSessions,
+    conversationDetectionThresholdSeconds:
+      (parseEnvVar(Bun.env[envVarMapping.sessionTracking.conversationDetectionThresholdSeconds], "number") as number) ||
+      defaultConfig.sessionTracking.conversationDetectionThresholdSeconds,
+  };
+
   return config;
 }
 
@@ -404,6 +445,7 @@ try {
     logging: { ...defaultConfig.logging, ...envConfig.logging },
     security: { ...defaultConfig.security, ...envConfig.security },
     langsmith: { ...defaultConfig.langsmith, ...envConfig.langsmith },
+    sessionTracking: { ...defaultConfig.sessionTracking, ...envConfig.sessionTracking },
   };
 
   // Validate merged configuration against schemas

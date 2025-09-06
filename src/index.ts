@@ -9,7 +9,7 @@ import { SSETransportManager } from "./transport/sseTransport.js";
 import { logger } from "./utils/logger.js";
 import { createSessionContext, runWithSession } from "./utils/sessionContext.js";
 import { createConnectionMetadata, initializeTracing, traceMcpConnection } from "./utils/tracing.js";
-import { detectClient, generateSessionId, traceNamedMcpConnection } from "./utils/tracingEnhanced.js";
+import { detectClient, traceNamedMcpConnection } from "./utils/tracingEnhanced.js";
 
 async function main() {
   try {
@@ -106,10 +106,9 @@ async function main() {
 
       // Detect client information (Claude Desktop for stdio)
       const clientInfo = detectClient("stdio");
-      const sessionId = generateSessionId(connectionId, clientInfo);
 
-      // Create session context
-      const sessionContext = createSessionContext(connectionId, "stdio", sessionId, clientInfo);
+      // Create session context without a static sessionId - let SessionManager handle it dynamically
+      const sessionContext = createSessionContext(connectionId, "stdio", connectionId, clientInfo);
 
       // Connect with session context and enhanced tracing if enabled
       await runWithSession(sessionContext, async () => {
@@ -118,7 +117,7 @@ async function main() {
             connectionId,
             transportMode: "stdio",
             clientInfo,
-            sessionId,
+            sessionId: connectionId, // Use connectionId as initial sessionId
           });
           await tracedConnection(async () => server.connect(transport));
         } else {

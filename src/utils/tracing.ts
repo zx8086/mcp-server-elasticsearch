@@ -6,6 +6,7 @@ import { getCurrentRunTree, withRunTree } from "langsmith/singletons/traceable";
 import { traceable } from "langsmith/traceable";
 import { config } from "../config.js";
 import { logger } from "./logger.js";
+import type { Session } from "./sessionManager.js";
 
 // =============================================================================
 // LANGSMITH CLIENT INITIALIZATION
@@ -175,31 +176,35 @@ export function traceToolExecution(
   toolName: string,
   toolArgs: any,
   extra: any,
+  session: Session,
   handler: (toolArgs: any, extra: any) => Promise<any>,
 ) {
   // Get configured project for consistent routing
   const project = process.env.LANGSMITH_PROJECT || config.langsmith.project;
 
-  // Create a traceable function with the specific tool name and project
+  // Create session-aware trace name
+  const shortSessionId = session.sessionId.split("-").pop()?.substring(0, 6) || "unknown";
+  const sessionAwareToolName = `${toolName} [${shortSessionId}]`;
+
+  // Create a traceable function with session-aware naming
   const toolTracer = traceable(
     async (inputs: any) => {
       const startTime = Date.now();
       const currentRun = getCurrentRunTree();
 
-      logger.debug("Executing tool with tracing", {
+      logger.debug("Executing tool with session-aware tracing", {
         toolName,
+        sessionAwareToolName,
+        sessionId: shortSessionId,
+        fullSessionId: session.sessionId,
+        messageCount: session.messageCount,
+        sessionDuration: Date.now() - session.startTime,
+        clientName: session.clientInfo?.name,
         project,
         hasParentTrace: !!currentRun,
         parentTraceId: currentRun?.id,
         toolArgsProvided: !!toolArgs,
-        toolArgKeys: toolArgs ? Object.keys(toolArgs) : [],
-        limitParam: toolArgs?.limit,
-        summaryParam: toolArgs?.summary,
         extraProvided: !!extra,
-        extraKeys: extra ? Object.keys(extra) : [],
-        // Deep inspection of all args
-        fullToolArgs: toolArgs,
-        fullExtra: extra,
       });
 
       try {
@@ -219,6 +224,8 @@ export function traceToolExecution(
             runId: currentRun?.id,
             executionTime,
             project,
+            sessionId: session.sessionId,
+            messageCount: session.messageCount,
           },
         };
       } catch (error) {
@@ -233,9 +240,29 @@ export function traceToolExecution(
       }
     },
     {
-      name: toolName, // Use the dynamic tool name
+      name: sessionAwareToolName, // Use session-aware tool name for grouping
       run_type: "tool",
       project_name: project, // CRITICAL: Ensure traces go to correct project
+      metadata: {
+        // Session metadata for LangSmith grouping
+        session_id: session.sessionId,
+        connection_id: session.connectionId,
+        client_name: session.clientInfo?.name || "unknown",
+        client_platform: session.clientInfo?.platform || "unknown",
+        session_start_time: new Date(session.startTime).toISOString(),
+        message_count: session.messageCount,
+        session_duration_ms: Date.now() - session.startTime,
+        
+        // Tool-specific metadata
+        tool_name: toolName,
+        original_tool_name: toolName,
+      },
+      tags: [
+        "mcp-tool",
+        `session:${shortSessionId}`,
+        `client:${session.clientInfo?.name?.toLowerCase().replace(/\s+/g, "-") || "unknown"}`,
+        `tool:${toolName}`,
+      ],
     },
   );
 
@@ -245,6 +272,16 @@ export function traceToolExecution(
     arguments: toolArgs,
     extra_context: extra,
     timestamp: new Date().toISOString(),
+    
+    // Session context for trace grouping
+    session: {
+      session_id: session.sessionId,
+      connection_id: session.connectionId,
+      message_count: session.messageCount,
+      client_info: session.clientInfo,
+      session_start: new Date(session.startTime).toISOString(),
+      session_duration_ms: Date.now() - session.startTime,
+    },
   });
 }
 
