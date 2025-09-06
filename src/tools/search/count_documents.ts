@@ -53,10 +53,20 @@ export const registerCountDocumentsTool: ToolRegistrationFunction = (server: Mcp
       // Validate parameters
       const params = countDocumentsValidator.parse(args);
 
+      // Handle empty query object - Elasticsearch rejects empty queries
+      const isEmptyQuery = !params.query || (typeof params.query === 'object' && Object.keys(params.query).length === 0);
+      const finalQuery = isEmptyQuery ? undefined : params.query; // Let Elasticsearch default to match_all
+
+      logger.debug("Count documents request", {
+        index: params.index || "*",
+        hasQuery: !!finalQuery,
+        queryType: isEmptyQuery ? "match_all (default)" : "custom",
+      });
+
       const result = await esClient.count(
         {
           index: params.index,
-          query: params.query,
+          ...(finalQuery && { query: finalQuery }), // Only include query if not empty
           analyzer: params.analyzer,
           analyze_wildcard: params.analyzeWildcard,
           default_operator: params.defaultOperator,
@@ -91,6 +101,40 @@ export const registerCountDocumentsTool: ToolRegistrationFunction = (server: Mcp
           type: "validation",
           details: { validationErrors: error.errors, providedArgs: args },
         });
+      }
+
+      // Handle specific query parsing errors
+      if (error instanceof Error) {
+        if (error.message.includes("parsing_exception") && error.message.includes("query malformed")) {
+          let enhancedMessage = `Query parsing failed: ${error.message}`;
+          
+          if (error.message.includes("empty clause found")) {
+            enhancedMessage += "\n\nThis error occurs when an empty query object {} is provided.";
+            enhancedMessage += "\nSolutions:";
+            enhancedMessage += "\n• Omit the query parameter to count all documents";
+            enhancedMessage += "\n• Provide a valid query like {match_all: {}} or {match: {field: 'value'}}";
+            enhancedMessage += "\n• Use the 'q' parameter for simple string queries instead";
+          }
+
+          throw createCountDocumentsMcpError(enhancedMessage, {
+            type: "validation",
+            details: {
+              originalError: error.message,
+              providedQuery: args.query,
+              suggestion: "Remove query parameter or provide valid Query DSL",
+            },
+          });
+        }
+
+        if (error.message.includes("index_not_found_exception")) {
+          throw createCountDocumentsMcpError(`Index not found: ${args.index || "*"}`, {
+            type: "validation",
+            details: { 
+              providedIndex: args.index,
+              suggestion: "Verify the index name or pattern exists" 
+            },
+          });
+        }
       }
 
       throw createCountDocumentsMcpError(error instanceof Error ? error.message : String(error), {

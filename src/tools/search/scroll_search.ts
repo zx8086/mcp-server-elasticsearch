@@ -6,6 +6,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { createProgressTracker, notificationManager } from "../../utils/notifications.js";
 import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
@@ -45,8 +46,35 @@ export const registerScrollSearchTool: ToolRegistrationFunction = (server: McpSe
       // Validate parameters
       const params = scrollSearchValidator.parse(args);
 
+      // Create progress tracker for scroll operation
+      const tracker = await createProgressTracker(
+        "scroll_search",
+        params.maxDocuments || 10000, // Use maxDocuments or estimated count
+        `Scrolling through documents in ${params.index}${params.maxDocuments ? ` (max ${params.maxDocuments})` : ''}`
+      );
+
+      logger.debug("Starting scroll search operation", {
+        index: params.index,
+        maxDocuments: params.maxDocuments,
+        hasScrollId: !!params.scrollId,
+      });
+
+      // Send initial notification
+      await notificationManager.sendInfo(
+        `Starting scroll search operation`,
+        {
+          operation_type: "scroll_search",
+          target_index: params.index,
+          max_documents: params.maxDocuments,
+          scroll_duration: params.scroll,
+          mode: params.scrollId ? "continuation" : "new",
+        }
+      );
+
       // If scrollId is provided, use the traditional scroll API
       if (params.scrollId) {
+        await tracker.updateProgress(50, "Continuing scroll with existing scroll ID");
+        
         const result = await esClient.scroll(
           {
             scroll_id: params.scrollId,
@@ -63,6 +91,23 @@ export const registerScrollSearchTool: ToolRegistrationFunction = (server: McpSe
           logger.warn("Slow operation", { duration });
         }
 
+        const resultSize = result.hits?.hits?.length || 0;
+        
+        await tracker.complete(
+          { documents_retrieved: resultSize, scroll_id: result._scroll_id },
+          `Scroll continuation completed: retrieved ${resultSize} documents`
+        );
+
+        await notificationManager.sendInfo(
+          `Scroll continuation completed: ${resultSize} documents retrieved`,
+          {
+            operation_type: "scroll_search",
+            documents_retrieved: resultSize,
+            duration_ms: duration,
+            has_more: !!result._scroll_id,
+          }
+        );
+
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
         };
@@ -71,6 +116,10 @@ export const registerScrollSearchTool: ToolRegistrationFunction = (server: McpSe
       // Otherwise, use the helper API for better memory management
       const documents = [];
       let count = 0;
+      let batchCount = 0;
+      const startTime = Date.now();
+
+      await tracker.updateProgress(10, "Initializing scroll search");
 
       const scrollSearch = esClient.helpers.scrollSearch({
         index: params.index,
@@ -78,10 +127,58 @@ export const registerScrollSearchTool: ToolRegistrationFunction = (server: McpSe
         scroll: params.scroll,
       });
 
+      // Memory usage warnings
+      if (params.maxDocuments && params.maxDocuments > 50000) {
+        await notificationManager.sendWarning(
+          `⚠️  Large dataset retrieval: ${params.maxDocuments} documents may consume significant memory`,
+          {
+            operation_type: "scroll_search",
+            max_documents: params.maxDocuments,
+            memory_warning: true,
+            recommendation: "Consider processing in smaller batches if memory issues occur",
+          }
+        );
+      }
+
       for await (const result of scrollSearch) {
+        batchCount++;
+        const batchSize = result.documents.length;
+        
         for (const doc of result.documents) {
           documents.push(doc);
           count++;
+
+          // Update progress every 1000 documents or 10% of max, whichever is smaller
+          const progressInterval = params.maxDocuments ? 
+            Math.min(1000, Math.max(100, Math.floor(params.maxDocuments / 10))) : 
+            1000;
+          
+          if (count % progressInterval === 0) {
+            const elapsed = (Date.now() - startTime) / 1000;
+            const rate = elapsed > 0 ? count / elapsed : 0;
+            const progressPercent = params.maxDocuments ? 
+              Math.min(90, (count / params.maxDocuments) * 80 + 10) : // 10-90% range
+              Math.min(90, Math.log10(count) * 20); // Logarithmic for unknown total
+            
+            await tracker.updateProgress(
+              progressPercent,
+              `Retrieved ${count} documents from ${batchCount} batches (${Math.round(rate)} docs/sec)`
+            );
+
+            // Memory usage check every 10,000 documents
+            if (count % 10000 === 0) {
+              await notificationManager.sendInfo(
+                `Progress: ${count} documents retrieved`,
+                {
+                  operation_type: "scroll_search",
+                  documents_retrieved: count,
+                  batches_processed: batchCount,
+                  retrieval_rate: Math.round(rate),
+                  memory_note: count > 25000 ? "Consider processing data to free memory" : undefined,
+                }
+              );
+            }
+          }
 
           if (params.maxDocuments && count >= params.maxDocuments) {
             await result.clear();
@@ -99,6 +196,48 @@ export const registerScrollSearchTool: ToolRegistrationFunction = (server: McpSe
         logger.warn("Slow operation", { duration });
       }
 
+      // Calculate final metrics
+      const avgRate = duration > 0 ? (count / (duration / 1000)) : 0;
+      const totalMemoryMB = Math.round((JSON.stringify(documents).length / 1024 / 1024) * 100) / 100;
+
+      await tracker.complete(
+        {
+          total_documents: count,
+          total_batches: batchCount,
+          duration_ms: duration,
+          avg_rate: Math.round(avgRate),
+          memory_mb: totalMemoryMB,
+        },
+        `Scroll search completed: ${count} documents retrieved in ${Math.round(duration)}ms`
+      );
+
+      await notificationManager.sendInfo(
+        `Scroll search completed: ${count} documents retrieved`,
+        {
+          operation_type: "scroll_search",
+          total_documents: count,
+          total_batches: batchCount,
+          duration_ms: duration,
+          avg_retrieval_rate: Math.round(avgRate),
+          memory_usage_mb: totalMemoryMB,
+          performance_note: avgRate > 1000 ? "Excellent performance" : 
+                          avgRate > 100 ? "Good performance" : "Consider optimizing query or index",
+        }
+      );
+
+      // Memory warning if result set is very large
+      if (totalMemoryMB > 100) {
+        await notificationManager.sendWarning(
+          `Memory usage: ${totalMemoryMB}MB for ${count} documents`,
+          {
+            operation_type: "scroll_search",
+            memory_usage_mb: totalMemoryMB,
+            documents_count: count,
+            recommendation: "Consider streaming results or processing in batches for very large datasets",
+          }
+        );
+      }
+
       return {
         content: [
           { type: "text", text: `Retrieved ${documents.length} documents` },
@@ -106,6 +245,21 @@ export const registerScrollSearchTool: ToolRegistrationFunction = (server: McpSe
         ],
       };
     } catch (error) {
+      await tracker.fail(
+        error instanceof Error ? error : new Error(String(error)),
+        "Scroll search operation failed"
+      );
+      
+      await notificationManager.sendError(
+        "Scroll search operation failed",
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          operation_type: "scroll_search",
+          target_index: params?.index,
+          duration_ms: performance.now() - perfStart,
+        }
+      );
+
       // Error handling
       if (error instanceof z.ZodError) {
         throw createScrollSearchMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {

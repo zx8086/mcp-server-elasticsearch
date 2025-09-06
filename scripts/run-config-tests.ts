@@ -83,7 +83,7 @@ export class ConfigurationTestRunner {
     console.log("🔍 Configuration Refactoring Validation");
     console.log("════════════════════════════════════════════════════════");
 
-    const criticalTests = [
+    const _criticalTests = [
       "should have no .default() calls in Zod schemas",
       "should use defaultConfig as single source",
       "should merge environment variables correctly",

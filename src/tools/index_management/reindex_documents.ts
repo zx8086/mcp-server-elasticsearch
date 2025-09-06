@@ -140,18 +140,27 @@ export const registerReindexDocumentsTool: ToolRegistrationFunction = (server: M
     "elasticsearch_reindex_documents",
     "Reindex documents from source to destination index in Elasticsearch. Best for data migration, index restructuring, mapping changes. Use when you need to copy documents between Elasticsearch indices with optional transformations. Uses direct JSON Schema and standardized MCP error codes.",
     {
-      source: z.object({}), // Source index configuration
-      dest: z.object({}), // Destination index configuration
-      script: z.object({}).optional(), // Script to transform documents during reindexing
-      conflicts: z.enum(["abort", "proceed"]).optional(), // How to handle version conflicts
-      maxDocs: z.number().int().min(1).optional(), // Maximum number of documents to reindex
-      refresh: z.boolean().optional(), // Refresh the destination index after completion
-      timeout: z.string().optional(), // Operation timeout (e.g., '1m')
-      waitForActiveShards: z.any().optional(), // Number of active shards to wait for
-      waitForCompletion: z.boolean().optional(), // Wait for the operation to complete
-      requestsPerSecond: z.number().min(0).optional(), // Throttle requests per second
-      scroll: z.string().optional(), // Scroll timeout for source index (e.g., '5m')
-      slices: z.number().int().min(1).optional(), // Number of slices for parallel processing
+      source: z.object({
+        index: z.string().min(1, "Source index name is required"),
+        query: z.object({}).passthrough().optional().describe("Optional query to filter source documents"),
+        size: z.number().int().min(1).optional().describe("Batch size for reindexing"),
+        sort: z.array(z.object({}).passthrough()).optional().describe("Sort order for source documents"),
+      }).describe("Source index configuration"),
+      dest: z.object({
+        index: z.string().min(1, "Destination index name is required"),
+        version_type: z.enum(["internal", "external", "external_gte"]).optional().describe("Version handling strategy"),
+        op_type: z.enum(["index", "create"]).optional().describe("Operation type for documents"),
+      }).describe("Destination index configuration"),
+      script: z.object({}).passthrough().optional().describe("Script to transform documents during reindexing"),
+      conflicts: z.enum(["abort", "proceed"]).optional().describe("How to handle version conflicts"),
+      maxDocs: z.number().int().min(1).optional().describe("Maximum number of documents to reindex"),
+      refresh: z.boolean().optional().describe("Refresh the destination index after completion"),
+      timeout: z.string().optional().describe("Operation timeout (e.g., '1m')"),
+      waitForActiveShards: z.union([z.literal("all"), z.number().int().min(1)]).optional().describe("Number of active shards to wait for"),
+      waitForCompletion: z.boolean().optional().describe("Wait for the operation to complete"),
+      requestsPerSecond: z.number().min(0).optional().describe("Throttle requests per second"),
+      scroll: z.string().optional().describe("Scroll timeout for source index (e.g., '5m')"),
+      slices: z.number().int().min(1).optional().describe("Number of slices for parallel processing"),
     },
     withReadOnlyCheck("elasticsearch_reindex_documents", reindexDocumentsHandler, OperationType.WRITE),
   );

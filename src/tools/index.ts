@@ -140,6 +140,9 @@ import {
 // Diagnostics Tools
 import { registerElasticsearchDiagnostics } from "./diagnostics/index.js";
 
+// Notification Tools (Progress tracking and status updates)
+import { notificationTools } from "./notifications/index.js";
+
 interface ToolInfo {
   name: string;
   description: string;
@@ -315,10 +318,16 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
   // Register Diagnostics Tools
   registerElasticsearchDiagnostics(server, esClient);
 
+  // Register Notification Tools (with progress tracking)
+  for (const registerTool of notificationTools) {
+    registerTool(server, esClient);
+  }
+
   logger.info("✅ All tools registered with automatic tracing and security validation", {
     toolCount: registeredTools.length,
     tracingActive: true, // All tools are traced
     enhancementsEnabled: true,
+    notificationTools: notificationTools.length,
   });
 
   return registeredTools;

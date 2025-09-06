@@ -32,9 +32,10 @@ export class MCPCompatibleLogger {
       ...metadata,
     };
 
-    // Remove undefined values
+    // Remove undefined, null, and empty values to prevent client-side issues
     for (const key of Object.keys(logData)) {
-      if (logData[key] === undefined) {
+      if (logData[key] === undefined || logData[key] === null || 
+          (typeof logData[key] === 'object' && Object.keys(logData[key] || {}).length === 0)) {
         delete logData[key];
       }
     }

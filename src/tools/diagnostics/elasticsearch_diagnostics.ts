@@ -1,12 +1,12 @@
 /* src/tools/diagnostics/elasticsearch_diagnostics.ts */
 
 import type { Client } from "@elastic/elasticsearch";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import type { ToolRegistrationFunction } from "../../types.js";
+import { ElasticsearchDiagnostics, ObservableTransport } from "../../utils/elasticsearchObservability.js";
 import { logger } from "../../utils/logger.js";
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
-import { ObservableTransport, ElasticsearchDiagnostics } from "../../utils/elasticsearchObservability.js";
 
 // Schema for diagnostic options
 const diagnosticsValidator = z.object({
@@ -18,14 +18,11 @@ const diagnosticsValidator = z.object({
 
 type DiagnosticsParams = z.infer<typeof diagnosticsValidator>;
 
-export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (
-  server: McpServer,
-  esClient: Client
-) => {
+export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const handler = async (toolArgs: any): Promise<any> => {
     try {
       const params = diagnosticsValidator.parse(toolArgs);
-      
+
       // Generate basic health report using standard client info
       let clusterInfo;
       try {
@@ -33,14 +30,14 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (
       } catch (error) {
         throw new McpError(
           ErrorCode.InternalError,
-          `Failed to connect to Elasticsearch: ${error instanceof Error ? error.message : String(error)}`
+          `Failed to connect to Elasticsearch: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
-      
+
       let output = "# Elasticsearch Diagnostics Report\n\n";
       output += `**Generated:** ${new Date().toISOString()}\n`;
       output += `**Analysis Mode:** Basic (Standard Client)\n\n`;
-      
+
       // Cluster Information
       output += "## Cluster Information\n\n";
       output += `- **Cluster Name:** ${clusterInfo.cluster_name}\n`;
@@ -50,11 +47,11 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (
       output += `- **Build Hash:** ${clusterInfo.version?.build_hash}\n\n`;
 
       // Basic health check
-      let healthStatus = 'healthy';
+      let healthStatus = "healthy";
       try {
         const health = await esClient.cluster.health();
         healthStatus = health.status;
-        
+
         output += "## Cluster Health\n\n";
         output += `- **Status:** ${health.status.toUpperCase()}\n`;
         output += `- **Active Shards:** ${health.active_shards}\n`;
@@ -63,7 +60,7 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (
         output += `- **Initializing Shards:** ${health.initializing_shards}\n`;
         output += `- **Relocating Shards:** ${health.relocating_shards}\n`;
         output += `- **Unassigned Shards:** ${health.unassigned_shards}\n`;
-        
+
         if (health.unassigned_shards > 0) {
           output += "\n⚠️ **Warning:** Unassigned shards detected - this may indicate cluster issues\n";
         }
@@ -77,12 +74,12 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (
         // Basic node stats
         try {
           const stats = await esClient.cluster.stats();
-          
+
           output += "## Cluster Statistics\n\n";
-          output += `- **Total Indices:** ${stats.indices?.count || 'N/A'}\n`;
-          output += `- **Total Documents:** ${stats.indices?.docs?.count || 'N/A'}\n`;
-          output += `- **Store Size:** ${stats.indices?.store?.size_in_bytes ? Math.round(stats.indices.store.size_in_bytes / 1024 / 1024 / 1024 * 100) / 100 + 'GB' : 'N/A'}\n`;
-          output += `- **Memory Usage:** ${stats.nodes?.jvm?.mem?.heap_used_in_bytes ? Math.round(stats.nodes.jvm.mem.heap_used_in_bytes / 1024 / 1024) + 'MB' : 'N/A'}\n\n`;
+          output += `- **Total Indices:** ${stats.indices?.count || "N/A"}\n`;
+          output += `- **Total Documents:** ${stats.indices?.docs?.count || "N/A"}\n`;
+          output += `- **Store Size:** ${stats.indices?.store?.size_in_bytes ? Math.round((stats.indices.store.size_in_bytes / 1024 / 1024 / 1024) * 100) / 100 + "GB" : "N/A"}\n`;
+          output += `- **Memory Usage:** ${stats.nodes?.jvm?.mem?.heap_used_in_bytes ? Math.round(stats.nodes.jvm.mem.heap_used_in_bytes / 1024 / 1024) + "MB" : "N/A"}\n\n`;
         } catch (error) {
           output += "## Cluster Statistics\n\n";
           output += `⚠️ Could not retrieve cluster stats: ${error instanceof Error ? error.message : String(error)}\n\n`;
@@ -91,16 +88,16 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (
 
       // Performance recommendations
       output += "## Performance Recommendations\n\n";
-      
+
       const majorVersion = clusterInfo.version?.number ? Number.parseInt(clusterInfo.version.number.split(".")[0]) : 0;
       if (majorVersion < 8) {
         output += "- Consider upgrading to Elasticsearch 8.x for better performance and security\n";
       }
-      
-      if (healthStatus !== 'green') {
+
+      if (healthStatus !== "green") {
         output += "- Cluster health is not green - investigate shard allocation issues\n";
       }
-      
+
       output += "- Monitor the metrics endpoint at `/metrics` for detailed Prometheus metrics\n";
       output += "- Use the health endpoint at `/health` for basic status checks\n";
       output += "- Consider using the LangSmith tracing features to monitor tool performance\n\n";
@@ -108,10 +105,10 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (
       // Test basic operations
       if (params.includeRecentRequests) {
         output += "## Basic Operations Test\n\n";
-        
+
         try {
           const startTime = Date.now();
-          await esClient.cat.indices({ format: 'json', h: 'index,docs.count,store.size' });
+          await esClient.cat.indices({ format: "json", h: "index,docs.count,store.size" });
           const duration = Date.now() - startTime;
           output += `✅ Index listing: ${duration}ms\n`;
         } catch (error) {
@@ -137,17 +134,18 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (
       });
 
       return {
-        content: [{
-          type: "text",
-          text: output
-        }],
+        content: [
+          {
+            type: "text",
+            text: output,
+          },
+        ],
       };
-
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new McpError(
           ErrorCode.InvalidParams,
-          `Validation failed: ${error.errors.map(e => e.message).join(", ")}`
+          `Validation failed: ${error.errors.map((e) => e.message).join(", ")}`,
         );
       }
 
@@ -157,7 +155,7 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (
 
       throw new McpError(
         ErrorCode.InternalError,
-        `Failed to generate diagnostics: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to generate diagnostics: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   };
@@ -167,10 +165,24 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (
     "Generate comprehensive Elasticsearch transport and performance diagnostics report. Provides insights into connection health, request patterns, slow queries, error rates, and performance recommendations.",
     {
       includeMetrics: z.boolean().optional().default(true).describe("Include detailed transport metrics in the report"),
-      includeRecentRequests: z.boolean().optional().default(false).describe("Include list of recent requests (can be verbose)"),
-      includeSlowQueries: z.boolean().optional().default(true).describe("Include details about slow queries (>2 seconds)"),
-      timeWindowMinutes: z.number().min(1).max(60).optional().default(5).describe("Time window for analysis in minutes (1-60)"),
+      includeRecentRequests: z
+        .boolean()
+        .optional()
+        .default(false)
+        .describe("Include list of recent requests (can be verbose)"),
+      includeSlowQueries: z
+        .boolean()
+        .optional()
+        .default(true)
+        .describe("Include details about slow queries (>2 seconds)"),
+      timeWindowMinutes: z
+        .number()
+        .min(1)
+        .max(60)
+        .optional()
+        .default(5)
+        .describe("Time window for analysis in minutes (1-60)"),
     },
-    handler
+    handler,
   );
 };

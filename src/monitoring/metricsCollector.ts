@@ -26,7 +26,7 @@ class MetricsCollectorService {
     toolName: string,
     category: string,
     duration: number,
-    status: "success" | "error" | "timeout"
+    status: "success" | "error" | "timeout",
   ): void {
     metrics.recordToolExecution(toolName, category, duration, status);
   }
@@ -36,7 +36,7 @@ class MetricsCollectorService {
     index: string,
     duration: number,
     success: boolean,
-    errorCode?: string
+    errorCode?: string,
   ): void {
     metrics.recordElasticsearchOperation(operation, index, duration, success, errorCode);
   }

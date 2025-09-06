@@ -5,6 +5,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { notificationManager, createProgressTracker, withNotificationContext } from "../../utils/notifications.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 interface MappingResponse {
@@ -86,6 +87,13 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
   const searchHandler = async (params: SearchParamsType): Promise<SearchResult> => {
     const perfStart = performance.now();
 
+    // Create progress tracker for the search operation
+    const progressTracker = await createProgressTracker(
+      "elasticsearch_search",
+      100,
+      `Elasticsearch search on ${params?.index || "*"}`
+    );
+
     try {
       // DEBUG: Check what we actually receive
       logger.debug("SEARCH PARAMS DEBUG", {
@@ -99,6 +107,17 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
         indexValue: params?.index,
         sizeValue: params?.size,
       });
+
+      // Send initial notification
+      await notificationManager.sendInfo("Starting Elasticsearch search operation", {
+        tool: "elasticsearch_search",
+        index: params?.index || "*",
+        hasQuery: !!params?.query,
+        hasAggregations: !!params?.aggs,
+        expectedSize: params?.size || 10,
+      });
+
+      await progressTracker.updateProgress(10, "Validating and parsing search parameters");
 
       // Zod has already parsed and transformed the parameters
       const { index, query, size, from, sort, aggs, _source, highlight } = params;
@@ -117,21 +136,42 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
       if (query && typeof query === "object" && query.range?.["@timestamp"]) {
         const rangeQuery = query.range["@timestamp"];
         logger.debug("Time range query detected", { rangeQuery, currentTime: new Date().toISOString() });
+        
+        await notificationManager.sendInfo("Time range query detected", {
+          timeRange: rangeQuery,
+          currentTime: new Date().toISOString(),
+        });
       }
+
+      await progressTracker.updateProgress(25, "Retrieving index mappings for highlighting configuration");
 
       let indexMappings: { properties?: Record<string, { type: string }> } = {};
       try {
         const mappingResponse = (await esClient.indices.getMapping({ index })) as MappingResponse;
         indexMappings = mappingResponse[index as string]?.mappings || {};
+        await progressTracker.updateProgress(35, "Index mappings retrieved successfully");
       } catch (mappingError) {
         logger.warn("Could not retrieve mappings for highlighting", {
           mappingError,
         });
+        await notificationManager.sendWarning("Could not retrieve index mappings", {
+          error: mappingError instanceof Error ? mappingError.message : String(mappingError),
+          impact: "Highlighting may be disabled",
+        });
+        await progressTracker.updateProgress(35, "Index mappings retrieval failed (non-critical)");
       }
+
+      await progressTracker.updateProgress(45, "Building search query and request parameters");
 
       // Ensure we have a valid query - handle empty objects correctly
       const isEmptyQuery = !query || (typeof query === "object" && Object.keys(query).length === 0);
       const finalQuery = isEmptyQuery ? { match_all: {} } : query;
+
+      if (isEmptyQuery) {
+        await notificationManager.sendInfo("Using match_all query", {
+          reason: "No query provided or empty query object",
+        });
+      }
 
       // Build search request from natural parameters
       const searchRequest: SearchQueryBody & { index: string } = {
@@ -145,8 +185,36 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
         ...(highlight && { highlight }),
       };
 
+      // Check for potentially expensive operations
+      const isLargeRequest = (size ?? 10) > 1000;
+      const hasComplexAggregations = aggs && Object.keys(aggs).length > 3;
+      const isWildcardSearch = (index || "*") === "*" || (index || "").includes("*");
+
+      if (isLargeRequest) {
+        await notificationManager.sendWarning("Large result set requested", {
+          requestedSize: size,
+          recommendation: "Consider using scroll API for large result sets",
+        });
+      }
+
+      if (hasComplexAggregations) {
+        await notificationManager.sendInfo("Complex aggregations detected", {
+          aggregationCount: Object.keys(aggs!).length,
+          note: "This may increase query execution time",
+        });
+      }
+
+      if (isWildcardSearch) {
+        await notificationManager.sendInfo("Wildcard index search", {
+          pattern: index || "*",
+          note: "Searching across multiple indices",
+        });
+      }
+
       // DEBUG: Log the exact request being sent to Elasticsearch
       logger.debug("🔍 EXACT Elasticsearch request:", JSON.stringify(searchRequest, null, 2));
+
+      await progressTracker.updateProgress(55, "Search request prepared, configuring highlighting");
 
       if (indexMappings.properties) {
         const textFields: Record<string, any> = {};
@@ -170,12 +238,28 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
             pre_tags: ["<em>"],
             post_tags: ["</em>"],
           };
+          await progressTracker.updateProgress(65, `Configured highlighting for ${Object.keys(textFields).length} text fields`);
+        } else {
+          await progressTracker.updateProgress(65, "No text fields found for highlighting");
         }
       }
+
+      await progressTracker.updateProgress(70, "Executing search query against Elasticsearch");
+      
+      // Send notification before the potentially long-running search
+      await notificationManager.sendInfo("Executing search query", {
+        index: searchRequest.index,
+        queryType: isEmptyQuery ? "match_all" : "custom",
+        size: searchRequest.size,
+        hasAggregations: !!searchRequest.aggs,
+        note: "This may take several seconds for large datasets",
+      });
 
       const result = await esClient.search(searchRequest, {
         opaqueId: "elasticsearch_search",
       });
+
+      await progressTracker.updateProgress(85, `Search completed in ${result.took}ms, processing results`);
 
       // Safe property access to avoid undefined errors
       const fromOffset = from ?? 0;
@@ -238,9 +322,26 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
         text: `Total results: ${totalHits}, showing ${result.hits.hits.length} from position ${fromOffset}`,
       };
 
+      await progressTracker.updateProgress(95, "Formatting search results for display");
+
       const duration = performance.now() - perfStart;
+      
+      // Performance and result notifications
+      const resultMetrics = {
+        totalHits,
+        returnedDocuments: result.hits.hits.length,
+        executionTime: duration,
+        elasticsearchTime: result.took,
+        hasAggregations: !!result.aggregations,
+        fromOffset,
+      };
+
       if (duration > 10000) {
-        logger.warn("Slow search operation", { duration });
+        await notificationManager.sendWarning("Slow search operation detected", {
+          totalDuration: `${Math.round(duration)}ms`,
+          elasticsearchTime: `${result.took}ms`,
+          recommendation: "Consider optimizing query or adding indices",
+        });
       }
 
       // If we have aggregations AND documents, show both
@@ -252,12 +353,40 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
           text: `\n=== AGGREGATIONS ===\n${JSON.stringify(result.aggregations, null, 2)}`,
         };
         responseContent.push(aggregationsFragment);
+        await progressTracker.updateProgress(98, "Added aggregation results to response");
       }
+
+      // Complete the operation with comprehensive metrics
+      await progressTracker.complete(resultMetrics, 
+        `Search completed: ${totalHits} total hits, ${result.hits.hits.length} returned in ${Math.round(duration)}ms`
+      );
+
+      // Send final success notification
+      await notificationManager.sendInfo("Elasticsearch search completed successfully", {
+        ...resultMetrics,
+        performance: duration < 1000 ? "excellent" : duration < 5000 ? "good" : duration < 15000 ? "acceptable" : "slow",
+      });
 
       return {
         content: responseContent,
       };
     } catch (error) {
+      // Fail the progress tracker and send error notifications
+      const duration = performance.now() - perfStart;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      await progressTracker.fail(error instanceof Error ? error : new Error(errorMessage), 
+        `Search failed after ${Math.round(duration)}ms`
+      );
+
+      // Send detailed error notification
+      await notificationManager.sendError("Elasticsearch search failed", error instanceof Error ? error : errorMessage, {
+        tool: "elasticsearch_search",
+        duration: Math.round(duration),
+        index: params?.index || "*",
+        hasQuery: !!params?.query,
+      });
+
       // Error handling - JSON parsing errors
       if (error instanceof SyntaxError && error.message.includes("JSON")) {
         throw createSearchMcpError(`JSON parsing failed: ${error.message}`, {
@@ -268,6 +397,11 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
 
       if (error instanceof Error) {
         if (error.message.includes("index_not_found_exception")) {
+          await notificationManager.sendError("Index not found", error, {
+            searchedIndex: params?.index || "*",
+            suggestion: "Verify index name and ensure it exists",
+          });
+          
           throw createSearchMcpError(`Index not found: ${params?.index || "*"}`, {
             type: "index_not_found",
             details: { originalError: error.message },
@@ -275,6 +409,11 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
         }
 
         if (error.message.includes("parsing_exception") || error.message.includes("query_shard_exception")) {
+          await notificationManager.sendError("Query parsing failed", error, {
+            providedQuery: params?.query,
+            suggestion: "Check query syntax and field names",
+          });
+          
           throw createSearchMcpError(`Query parsing failed: ${error.message}`, {
             type: "query_parsing",
             details: { query: params?.query },
@@ -282,10 +421,10 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
         }
       }
 
-      throw createSearchMcpError(error instanceof Error ? error.message : String(error), {
+      throw createSearchMcpError(errorMessage, {
         type: "execution",
         details: {
-          duration: performance.now() - perfStart,
+          duration,
           params,
         },
       });
@@ -297,6 +436,6 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
     "elasticsearch_search",
     "Search Elasticsearch with natural Query DSL parameters. Supports both document search and analytics. Parameters: query (filter), size (document count), from (pagination), sort, aggs (analytics), _source (fields), highlight. Use size=0 for pure analytics, size=10+ for documents. Both documents and aggregations can be returned together. Example: {index: 'logs-*', query: {range: {'@timestamp': {gte: 'now-24h'}}}, size: 50, aggs: {hourly: {date_histogram: {field: '@timestamp', fixed_interval: '1h'}}}}",
     SearchParams.shape,
-    searchHandler,
+    withNotificationContext(searchHandler),
   );
 };

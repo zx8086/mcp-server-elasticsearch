@@ -370,10 +370,10 @@ export class PrometheusMetrics {
   }): void {
     if (!this.isEnabled()) return;
 
-    this.elasticsearchResponseTime.observe({ operation: 'transport', index: '*' }, metrics.averageResponseTime / 1000);
+    this.elasticsearchResponseTime.observe({ operation: "transport", index: "*" }, metrics.averageResponseTime / 1000);
     this.setRequestsPerSecond(metrics.requestsPerSecond);
     this.setActiveConnections(metrics.activeConnections);
-    
+
     // Record error rate as a gauge if needed
     if (this.elasticsearchErrors) {
       // Note: Error rate is tracked via individual error recordings

@@ -5,7 +5,6 @@
 import { readFileSync } from "node:fs";
 import { Client, type ClientOptions, Transport, TransportRequestParams, type estypes } from "@elastic/elasticsearch";
 import { HttpConnection } from "@elastic/transport";
-import { ObservableTransport, enhanceElasticsearchClient, ElasticsearchDiagnostics } from "./utils/elasticsearchObservability.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Config } from "./config.js";
 import { MetricsEndpoint } from "./monitoring/metricsEndpoint.js";
@@ -14,12 +13,18 @@ import { initializeCaches } from "./utils/cache.js";
 import { initializeDefaultCircuitBreakers } from "./utils/circuitBreaker.js";
 import { getGlobalConnectionPool } from "./utils/connectionPooling.js";
 import { initializeConnectionWarming, preWarmEndpoints } from "./utils/connectionWarming.js";
+import {
+  ElasticsearchDiagnostics,
+  ObservableTransport,
+  enhanceElasticsearchClient,
+} from "./utils/elasticsearchObservability.js";
 import { initializeHealthMonitor } from "./utils/healthCheck.js";
 import { logger } from "./utils/logger.js";
 import { createEnhancedMcpServer } from "./utils/mcpEnhancer.js";
 import { initializeRateLimiters, initializeResourceMonitor } from "./utils/rateLimiter.js";
 import { initializeReadOnlyManager } from "./utils/readOnlyMode.js";
 import { createConnectionMetadata, initializeTracing, traceMcpConnection } from "./utils/tracing.js";
+import { notificationManager } from "./utils/notifications.js";
 import { checkElasticsearchConnection, testBasicOperations, testModernFeatures } from "./validation.js";
 
 export async function createElasticsearchMcpServer(config: Config): Promise<McpServer> {
@@ -35,9 +40,6 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
   });
 
   try {
-    // Initialize tracing if enabled
-    initializeTracing();
-
     // Initialize read-only mode manager with config values
     initializeReadOnlyManager(config.server.readOnlyMode, config.server.readOnlyStrictMode);
 
@@ -112,10 +114,10 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
     });
 
     const esClient = new Client(clientOptions);
-    
+
     // Enhance client with additional observability features
     enhanceElasticsearchClient(esClient);
-    
+
     logger.info("✅ Elasticsearch client created successfully with enhanced observability");
 
     // Initialize connection pool with the primary client
@@ -216,10 +218,28 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
     }
 
     logger.info("🏗️ Creating MCP Server instance");
-    const server = new McpServer({
-      name: config.server.name,
-      version: config.server.version,
-    });
+    const server = new McpServer(
+      {
+        name: config.server.name,
+        version: config.server.version,
+      },
+      {
+        capabilities: {
+          notifications: {
+            // Specify notification capabilities to avoid empty object
+            supportsProgress: true,
+            supportsLogging: true,
+          },
+          tools: {
+            listChanged: true,
+          },
+        },
+        instructions: `Elasticsearch MCP Server (${config.server.version}) - Comprehensive Elasticsearch operations with ${config.server.readOnlyMode ? 'READ-ONLY' : 'FULL-ACCESS'} mode`,
+      }
+    );
+
+    // Notification manager will be initialized per-request with context
+    logger.info("📢 Notification manager ready for per-request context");
 
     // Register all tools with the validated client
     const registeredTools = registerAllTools(server, esClient);

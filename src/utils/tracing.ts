@@ -13,13 +13,32 @@ import { logger } from "./logger.js";
 
 let langsmithClient: LangSmithClient | null = null;
 let isTracingEnabled = false;
+let isInitialized = false;
 
 export function initializeTracing(): void {
+  // Guard against multiple initializations
+  if (isInitialized) {
+    logger.debug("LangSmith tracing already initialized, skipping", {
+      alreadyInitialized: true,
+      tracingEnabled: isTracingEnabled,
+      clientExists: !!langsmithClient,
+    });
+    return;
+  }
+
+  logger.debug("Starting LangSmith tracing initialization", {
+    processId: process.pid,
+    callStack: new Error().stack?.split('\n')[1]?.trim(),
+  });
+
   // Also check environment variables directly for runtime configuration
   const tracingEnabled =
     config.langsmith.tracing || process.env.LANGSMITH_TRACING === "true" || process.env.LANGCHAIN_TRACING_V2 === "true";
 
   const apiKey = config.langsmith.apiKey || process.env.LANGSMITH_API_KEY || process.env.LANGCHAIN_API_KEY;
+
+  // Mark as initialized regardless of success to prevent retries
+  isInitialized = true;
 
   if (!tracingEnabled) {
     logger.info("LangSmith tracing is disabled");
@@ -424,5 +443,5 @@ export async function submitFeedback(
 // INITIALIZATION
 // =============================================================================
 
-// Initialize tracing on module load
-initializeTracing();
+// Note: Tracing is now initialized explicitly in index.ts main() function
+// to prevent multiple initializations when this module is imported

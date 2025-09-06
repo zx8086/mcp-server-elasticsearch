@@ -55,10 +55,86 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (server
       // Validate parameters
       const params = updateIndexSettingsValidator.parse(args);
 
+      // Log the settings being applied for debugging
+      logger.debug("Updating index settings", {
+        index: params.index,
+        settings: JSON.stringify(params.settings, null, 2),
+      });
+
+      // Check if settings object is empty or contains only empty objects
+      const hasValidSettings = (settings: any): boolean => {
+        if (!settings || typeof settings !== 'object') return false;
+        
+        // Check for deeply nested empty objects
+        const checkNested = (obj: any): boolean => {
+          if (typeof obj !== 'object' || obj === null) return true;
+          const keys = Object.keys(obj);
+          if (keys.length === 0) return false;
+          
+          return keys.some(key => {
+            const value = obj[key];
+            if (typeof value === 'object' && value !== null) {
+              return checkNested(value);
+            }
+            return true; // Primitive values are valid
+          });
+        };
+        
+        return checkNested(settings);
+      };
+
+      if (!hasValidSettings(params.settings)) {
+        throw new Error("Settings object is empty or contains no valid settings to update");
+      }
+
+      // Filter out common read-only settings that cause validation errors
+      const filterReadOnlySettings = (settings: any): any => {
+        const readOnlyPrefixes = [
+          'index.uuid',
+          'index.version',
+          'index.provided_name',
+          'index.creation_date',
+          'index.history',
+          'index.verified_before_close',
+        ];
+        
+        const filterObject = (obj: any): any => {
+          if (typeof obj !== 'object' || obj === null) return obj;
+          
+          const filtered: any = {};
+          for (const [key, value] of Object.entries(obj)) {
+            const fullPath = key;
+            const isReadOnly = readOnlyPrefixes.some(prefix => fullPath.startsWith(prefix));
+            
+            if (!isReadOnly) {
+              if (typeof value === 'object' && value !== null) {
+                const filteredValue = filterObject(value);
+                if (Object.keys(filteredValue).length > 0) {
+                  filtered[key] = filteredValue;
+                }
+              } else {
+                filtered[key] = value;
+              }
+            } else {
+              logger.debug(`Filtering out read-only setting: ${fullPath}`);
+            }
+          }
+          return filtered;
+        };
+        
+        return filterObject(settings);
+      };
+
+      const filteredSettings = filterReadOnlySettings(params.settings);
+      
+      if (!hasValidSettings(filteredSettings)) {
+        throw new Error("All provided settings are read-only and cannot be updated");
+      }
+
       const result = await esClient.indices.putSettings(
         {
           index: params.index,
-          settings: params.settings,
+          body: filteredSettings, // Use body parameter for settings
           preserve_existing: params.preserveExisting,
           timeout: params.timeout,
           master_timeout: params.masterTimeout,
@@ -99,6 +175,29 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (server
         throw createUpdateIndexSettingsMcpError(`Index not found: ${args.index}`, {
           type: "index_not_found",
           details: { index: args.index },
+        });
+      }
+
+      // Handle validation errors (action_request_validation_exception)
+      if (error instanceof Error && error.message.includes("action_request_validation_exception")) {
+        let enhancedMessage = `Settings validation failed: ${error.message}`;
+        
+        if (error.message.includes("no settings to update")) {
+          enhancedMessage += "\n\nPossible causes:\n" +
+            "1. The settings object is empty or contains only read-only settings\n" +
+            "2. The settings are nested incorrectly (try flattening: 'index.lifecycle.name' instead of nested objects)\n" +
+            "3. Some settings may be read-only for data stream backing indices\n" +
+            "\nFor ILM settings on data streams, consider using ILM policy tools instead.";
+        }
+        
+        throw createUpdateIndexSettingsMcpError(enhancedMessage, {
+          type: "validation",
+          details: { 
+            index: args.index, 
+            settings: args.settings,
+            isDataStream: (args.index as string).startsWith('.ds-'),
+            suggestion: "Try using flat setting names like 'index.lifecycle.name' instead of nested objects"
+          },
         });
       }
 

@@ -6,6 +6,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import { createProgressTracker, notificationManager } from "../../utils/notifications.js";
 import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
@@ -54,6 +55,58 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpS
       // Validate parameters
       const params = updateByQueryValidator.parse(args);
 
+      // Create progress tracker
+      const tracker = await createProgressTracker(
+        "update_by_query",
+        100, // percentage-based for async operations
+        `Updating documents in ${params.index} matching query`
+      );
+
+      logger.debug("Starting update by query operation", {
+        index: params.index,
+        hasScript: !!params.script,
+        maxDocs: params.maxDocs,
+        waitForCompletion: params.waitForCompletion,
+      });
+
+      // Send initial notification
+      await notificationManager.sendInfo(
+        `Starting update by query operation`,
+        {
+          operation_type: "update_by_query",
+          target_index: params.index,
+          max_docs: params.maxDocs,
+          wait_for_completion: params.waitForCompletion,
+          requests_per_second: params.requestsPerSecond,
+        }
+      );
+
+      // First, get a count of documents that match the query for progress estimation
+      let estimatedTotal = 0;
+      try {
+        await tracker.updateProgress(10, "Counting documents matching query");
+        const countResult = await esClient.count({
+          index: params.index,
+          body: { query: params.query },
+        });
+        estimatedTotal = countResult.count;
+        
+        await notificationManager.sendInfo(
+          `Found ${estimatedTotal} documents matching update query`,
+          {
+            operation_type: "update_by_query",
+            estimated_documents: estimatedTotal,
+            index: params.index,
+          }
+        );
+      } catch (countError) {
+        logger.warn("Could not get document count for progress estimation", {
+          error: countError instanceof Error ? countError.message : String(countError),
+        });
+      }
+
+      await tracker.updateProgress(20, "Starting document update operation");
+
       const result = await esClient.updateByQuery(
         {
           index: params.index,
@@ -82,10 +135,104 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpS
         logger.warn("Slow operation", { duration });
       }
 
-      return {
-        content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-      };
+      // Handle different response types based on wait_for_completion
+      if (params.waitForCompletion === false && result.task) {
+        // Asynchronous mode - return task ID
+        await tracker.complete(
+          { task: result.task },
+          `Update by query task created: ${result.task}`
+        );
+        
+        await notificationManager.sendInfo(
+          `Update by query task created: ${result.task}`,
+          {
+            operation_type: "update_by_query",
+            mode: "asynchronous",
+            task_id: result.task,
+            note: "Use task management API to monitor progress",
+          }
+        );
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                task: result.task,
+                message: "Update by query started asynchronously. Use task management API to monitor progress.",
+                monitor_command: `elasticsearch_tasks_get_task with taskId: "${result.task}"`,
+              }, null, 2),
+            },
+          ],
+        };
+      } else {
+        // Synchronous mode - operation completed
+        const summary = {
+          total: result.total || 0,
+          updated: result.updated || 0,
+          version_conflicts: result.version_conflicts || 0,
+          noops: result.noops || 0,
+          retries: result.retries || { bulk: 0, search: 0 },
+          throttled_millis: result.throttled_millis || 0,
+          requests_per_second: result.requests_per_second || 0,
+          throttled_until_millis: result.throttled_until_millis || 0,
+          took: result.took || 0,
+          timed_out: result.timed_out || false,
+          failures: result.failures || [],
+        };
+
+        if (summary.failures.length > 0 || summary.version_conflicts > 0) {
+          await tracker.complete(
+            summary,
+            `Update completed with issues: ${summary.updated} updated, ${summary.version_conflicts} conflicts, ${summary.failures.length} failures`
+          );
+          
+          await notificationManager.sendWarning(
+            `Update by query completed with issues`,
+            {
+              ...summary,
+              operation_type: "update_by_query",
+              duration_ms: duration,
+              success_rate: summary.total > 0 ? ((summary.updated / summary.total) * 100).toFixed(1) + "%" : "N/A",
+            }
+          );
+        } else {
+          await tracker.complete(
+            summary,
+            `Update by query completed successfully: ${summary.updated} documents updated in ${summary.took}ms`
+          );
+          
+          await notificationManager.sendInfo(
+            `Update by query completed: ${summary.updated} documents updated`,
+            {
+              ...summary,
+              operation_type: "update_by_query",
+              duration_ms: duration,
+              success_rate: "100%",
+            }
+          );
+        }
+
+        return {
+          content: [{ type: "text", text: JSON.stringify(summary, null, 2) }],
+        };
+      }
     } catch (error) {
+      await tracker.fail(
+        error instanceof Error ? error : new Error(String(error)),
+        "Update by query operation failed"
+      );
+      
+      await notificationManager.sendError(
+        "Update by query operation failed",
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          operation_type: "update_by_query",
+          target_index: params?.index,
+          duration_ms: performance.now() - perfStart,
+        }
+      );
+      
       // Error handling
       if (error instanceof z.ZodError) {
         throw createUpdateByQueryMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {

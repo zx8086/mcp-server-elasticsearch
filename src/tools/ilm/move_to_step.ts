@@ -189,10 +189,18 @@ Operation completed at: ${new Date().toISOString()}`,
     "elasticsearch_ilm_move_to_step",
     "Move index to ILM step. Manually move an index to a specific ILM policy step. Uses direct JSON Schema and standardized MCP error codes. Expert-level operation for troubleshooting. Examples: {index: 'my-index', currentStep: {phase: 'hot', action: 'rollover', name: 'check-rollover-ready'}, nextStep: {phase: 'warm'}}",
     {
-      index: z.string(), // Index name (cannot be empty)
-      currentStep: z.object({}), // Current ILM step the index is in
-      nextStep: z.object({}), // Target ILM step to move the index to
-    }, // Direct JSON Schema - no Zod conversion
+      index: z.string().min(1, "Index name cannot be empty"),
+      currentStep: z.object({
+        phase: z.string().min(1, "Phase is required"),
+        action: z.string().min(1, "Action is required"),  
+        name: z.string().min(1, "Step name is required"),
+      }).describe("Current ILM step the index is in"),
+      nextStep: z.object({
+        phase: z.string().min(1, "Phase is required"),
+        action: z.string().optional().describe("Action (optional, will use default if not provided)"),
+        name: z.string().optional().describe("Step name (optional, will use default if not provided)"),
+      }).describe("Target ILM step to move the index to"),
+    },
     withReadOnlyCheck("elasticsearch_ilm_move_to_step", moveToStepHandler, OperationType.DESTRUCTIVE),
   );
 };

@@ -65,6 +65,41 @@ export const registerRetryTool: ToolRegistrationFunction = (server: McpServer, e
         index: params.index,
       });
 
+      // First, check if the index has any ILM errors to retry
+      try {
+        const explainResult = await esClient.ilm.explainLifecycle({
+          index: params.index,
+        });
+        
+        // Check if any indices have failed steps
+        const hasFailedSteps = Object.values(explainResult.indices || {}).some((indexInfo: any) => 
+          indexInfo.step_info?.failed_step || 
+          indexInfo.phase_execution?.failed_step ||
+          (indexInfo.step_info && indexInfo.step_info.error)
+        );
+
+        if (!hasFailedSteps) {
+          const indexNames = Object.keys(explainResult.indices || {});
+          throw new Error(`No ILM errors found for indices matching pattern '${params.index}'. Found ${indexNames.length} indices: ${indexNames.slice(0, 5).join(', ')}${indexNames.length > 5 ? '...' : ''}. None are in ERROR state requiring retry.`);
+        }
+
+        logger.info("Found ILM errors to retry", {
+          index: params.index,
+          indicesWithErrors: Object.keys(explainResult.indices || {}).filter((name: string) => {
+            const indexInfo = explainResult.indices[name] as any;
+            return indexInfo.step_info?.failed_step || 
+                   indexInfo.phase_execution?.failed_step ||
+                   (indexInfo.step_info && indexInfo.step_info.error);
+          }),
+        });
+
+      } catch (explainError) {
+        logger.warn("Could not pre-check ILM status", {
+          error: explainError instanceof Error ? explainError.message : String(explainError),
+        });
+        // Continue with retry attempt - the error might be more informative
+      }
+
       const result = await esClient.ilm.retry({
         index: params.index,
       });
@@ -131,6 +166,32 @@ Operation completed at: ${new Date().toISOString()}`,
           throw createIlmRetryMcpError(`Index not found: ${params?.index || "unknown"}`, {
             type: "index_not_found",
             details: { suggestion: "Verify the index name or pattern exists" },
+          });
+        }
+
+        // Handle the specific "cannot retry an action" error
+        if (error.message.includes("illegal_argument_exception") && 
+            error.message.includes("cannot retry an action for an index")) {
+          
+          let enhancedMessage = `Cannot retry ILM for index '${params?.index}': ${error.message}`;
+          
+          if (error.message.includes("has not encountered an error")) {
+            enhancedMessage += "\n\nThis means the index is not currently in an ERROR state in its ILM lifecycle.";
+            enhancedMessage += "\n\nPossible reasons:";
+            enhancedMessage += "\n• The index is progressing normally through its ILM policy";
+            enhancedMessage += "\n• Previous errors have already been resolved";
+            enhancedMessage += "\n• The index doesn't have an ILM policy assigned";
+            enhancedMessage += "\n• The specified index pattern doesn't match any indices with ILM errors";
+            enhancedMessage += "\n\n💡 Suggestion: Use 'elasticsearch_ilm_explain_lifecycle' to check the current ILM status.";
+          }
+
+          throw createIlmRetryMcpError(enhancedMessage, {
+            type: "no_failed_step",
+            details: { 
+              index: params?.index,
+              originalError: error.message,
+              suggestion: "Use elasticsearch_ilm_explain_lifecycle to verify ILM status and identify indices in ERROR state" 
+            },
           });
         }
 
