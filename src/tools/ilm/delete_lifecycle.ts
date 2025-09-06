@@ -179,11 +179,11 @@ export const registerDeleteLifecycleTool: ToolRegistrationFunction = (server: Mc
   server.tool(
     "elasticsearch_ilm_delete_lifecycle",
     "Delete an ILM policy. ⚠️ DESTRUCTIVE OPERATION: Cannot be undone. Policy must not be in use by any indices or templates. Examples: {policy: 'old-logs-policy'}. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    policy: z.string(), // Policy name to delete (required)
-    masterTimeout: z.string().optional(), // Master node timeout
-    timeout: z.string().optional(), // Request timeout
-  }, // Direct JSON Schema - no Zod conversion
+    {
+      policy: z.string(), // Policy name to delete (required)
+      masterTimeout: z.string().optional(), // Master node timeout
+      timeout: z.string().optional(), // Request timeout
+    }, // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_delete_lifecycle", deleteLifecycleHandler, OperationType.DELETE),
   );
 };

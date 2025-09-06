@@ -84,9 +84,9 @@ export const registerWatcherGetSettingsTool: ToolRegistrationFunction = (server:
   server.tool(
     "elasticsearch_watcher_get_settings",
     "Get Elasticsearch Watcher index settings for .watches index. Best for configuration review, troubleshooting, system analysis. Use when you need to inspect Watcher internal index settings in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    masterTimeout: z.string().optional(), // Explicit operation timeout for connection to master node
-  },
+    {
+      masterTimeout: z.string().optional(), // Explicit operation timeout for connection to master node
+    },
     withReadOnlyCheck("elasticsearch_watcher_get_settings", getWatcherSettingsHandler, OperationType.READ),
   );
 };

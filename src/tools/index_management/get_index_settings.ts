@@ -110,17 +110,17 @@ export const registerGetIndexSettingsTool: ToolRegistrationFunction = (server: M
   server.tool(
     "elasticsearch_get_index_settings",
     "Get index settings from Elasticsearch. Best for configuration review, performance analysis, troubleshooting. Use when you need to inspect index-level settings and configurations in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    index: z.string(), // Name of the index to get settings for
-    name: z.string().optional(), // Specific setting name to retrieve
-    ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
-    allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
-    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
-    flatSettings: z.boolean().optional(), // Return settings in flat format
-    includeDefaults: z.boolean().optional(), // Include default settings
-    local: z.boolean().optional(), // Return local information only
-    masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
-  },
+    {
+      index: z.string(), // Name of the index to get settings for
+      name: z.string().optional(), // Specific setting name to retrieve
+      ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+      allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
+      flatSettings: z.boolean().optional(), // Return settings in flat format
+      includeDefaults: z.boolean().optional(), // Include default settings
+      local: z.boolean().optional(), // Return local information only
+      masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
+    },
     withReadOnlyCheck("elasticsearch_get_index_settings", getIndexSettingsHandler, OperationType.READ),
   );
 };

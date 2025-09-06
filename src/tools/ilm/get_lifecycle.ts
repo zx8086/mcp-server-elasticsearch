@@ -19,7 +19,8 @@ const getLifecycleSchema = {
   properties: {
     policy: {
       type: "string",
-      description: "Policy name(s) to retrieve. Supports comma-separated list for multiple policies (e.g., 'policy1,policy2,policy3')",
+      description:
+        "Policy name(s) to retrieve. Supports comma-separated list for multiple policies (e.g., 'policy1,policy2,policy3')",
     },
     masterTimeout: {
       type: "string",
@@ -101,11 +102,11 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
         argsType: typeof args,
         argsKeys: args ? Object.keys(args) : "NO ARGS",
         hasExtra: !!extra,
-        extraKeys: extra ? Object.keys(extra) : "NO EXTRA", 
+        extraKeys: extra ? Object.keys(extra) : "NO EXTRA",
         fullArgs: args,
         fullExtra: extra,
       });
-      
+
       // Simple validation - no complex parameter extraction
       const params = getLifecycleValidator.parse(args);
 
@@ -134,29 +135,27 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
       // If specific policies were requested, filter results
       if (params.policy) {
         // Handle comma-separated policy names
-        const requestedPolicies = params.policy.split(',').map(p => p.trim());
-        const foundPolicies = policies.filter((policy) => 
-          requestedPolicies.includes(policy.name)
-        );
-        
+        const requestedPolicies = params.policy.split(",").map((p) => p.trim());
+        const foundPolicies = policies.filter((policy) => requestedPolicies.includes(policy.name));
+
         // Check if all requested policies were found
-        const foundPolicyNames = foundPolicies.map(p => p.name);
-        const missingPolicies = requestedPolicies.filter(name => 
-          !foundPolicyNames.includes(name)
-        );
-        
+        const foundPolicyNames = foundPolicies.map((p) => p.name);
+        const missingPolicies = requestedPolicies.filter((name) => !foundPolicyNames.includes(name));
+
         if (missingPolicies.length > 0) {
           throw createIlmMcpError(
-            `${missingPolicies.length === 1 ? 'Policy' : 'Policies'} '${missingPolicies.join(', ')}' not found`, {
-            type: "not_found",
-            details: { 
-              requestedPolicies, 
-              foundPolicies: foundPolicyNames,
-              missingPolicies 
+            `${missingPolicies.length === 1 ? "Policy" : "Policies"} '${missingPolicies.join(", ")}' not found`,
+            {
+              type: "not_found",
+              details: {
+                requestedPolicies,
+                foundPolicies: foundPolicyNames,
+                missingPolicies,
+              },
             },
-          });
+          );
         }
-        
+
         policies = foundPolicies;
       }
 
@@ -322,7 +321,7 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
 
   // Test with Zod schema instead of JSON schema
   server.tool(
-    "elasticsearch_ilm_get_lifecycle", 
+    "elasticsearch_ilm_get_lifecycle",
     "Get ILM policies. PARAMETERS: 'policy' (string, optional - supports comma-separated list for multiple policies), 'limit' (number 1-100), 'summary' (boolean), 'sortBy' (enum). Examples: {limit: 50, summary: true} or {policy: 'policy1,policy2,policy3'}. Uses Zod Schema for proper MCP parameter handling.",
     {
       policy: z.string().optional(),

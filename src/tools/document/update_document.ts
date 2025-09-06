@@ -135,22 +135,22 @@ export const registerUpdateDocumentTool: ToolRegistrationFunction = (server: Mcp
   server.tool(
     "elasticsearch_update_document",
     "Update a JSON document in Elasticsearch by index and id. Best for partial document updates, scripted updates, upsert operations. Use when you need to modify existing documents in Elasticsearch indices with optimistic concurrency control. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    index: z.string(), // REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'
-    id: z.string(), // REQUIRED: Unique identifier of the document to update
-    doc: z.object({}).optional(), // Partial document with fields to update
-    script: z.object({}).optional(), // Script to run for updating the document
-    upsert: z.object({}).optional(), // Document to create if the document doesn't exist
-    docAsUpsert: z.boolean().optional(), // Use the doc as upsert value if document doesn't exist
-    detectNoop: z.boolean().optional(), // Whether to detect if the update is a no-op
-    scriptedUpsert: z.boolean().optional(), // Whether to run the script during upsert
-    refresh: z.enum(["true", "false", "wait_for"]).optional(), // Whether to refresh the index after the operation
-    routing: z.string().optional(), // Custom routing value for document placement
-    timeout: z.string().optional(), // Operation timeout (e.g., '5s', '1m')
-    waitForActiveShards: z.any().optional(), // Number of active shards to wait for
-    ifSeqNo: z.number().optional(), // Sequence number for optimistic concurrency control
-    ifPrimaryTerm: z.number().optional(), // Primary term for optimistic concurrency control
-  },
+    {
+      index: z.string(), // REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'
+      id: z.string(), // REQUIRED: Unique identifier of the document to update
+      doc: z.object({}).optional(), // Partial document with fields to update
+      script: z.object({}).optional(), // Script to run for updating the document
+      upsert: z.object({}).optional(), // Document to create if the document doesn't exist
+      docAsUpsert: z.boolean().optional(), // Use the doc as upsert value if document doesn't exist
+      detectNoop: z.boolean().optional(), // Whether to detect if the update is a no-op
+      scriptedUpsert: z.boolean().optional(), // Whether to run the script during upsert
+      refresh: z.enum(["true", "false", "wait_for"]).optional(), // Whether to refresh the index after the operation
+      routing: z.string().optional(), // Custom routing value for document placement
+      timeout: z.string().optional(), // Operation timeout (e.g., '5s', '1m')
+      waitForActiveShards: z.any().optional(), // Number of active shards to wait for
+      ifSeqNo: z.number().optional(), // Sequence number for optimistic concurrency control
+      ifPrimaryTerm: z.number().optional(), // Primary term for optimistic concurrency control
+    },
     withReadOnlyCheck("elasticsearch_update_document", updateDocumentHandler, OperationType.WRITE),
   );
 };

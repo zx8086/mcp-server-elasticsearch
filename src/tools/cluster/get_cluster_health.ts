@@ -167,20 +167,20 @@ export const registerGetClusterHealthTool: ToolRegistrationFunction = (server: M
   server.tool(
     "elasticsearch_get_cluster_health",
     "Get the health status of the Elasticsearch cluster. Best for cluster monitoring, health checks, system diagnostics. Use when you need to assess cluster status, node availability, and overall Elasticsearch system health. READ operation - safe for production use.",
-  {
-    index: z.string().optional(), // Comma-separated list of indices to check health for. Leave empty for cluster-wide health.
-    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Controls which types of indices to include when using wildcards
-    level: z.enum(["cluster", "indices", "shards"]).optional(), // Level of detail to return: cluster (default), indices, or shards
-    local: z.boolean().optional(), // Return local information, do not retrieve from master node
-    masterTimeout: z.string().optional(), // Timeout for connecting to master node (e.g., '30s', '1m')
-    timeout: z.string().optional(), // Timeout for the request (e.g., '30s', '1m')
-    waitForActiveShards: z.any().optional(), // Wait until the specified number of shards are active
-    waitForEvents: z.enum(["immediate", "urgent", "high", "normal", "low", "languid"]).optional(), // Wait until all pending events are processed
-    waitForNoInitializingShards: z.boolean().optional(), // Wait until there are no initializing shards
-    waitForNoRelocatingShards: z.boolean().optional(), // Wait until there are no relocating shards
-    waitForNodes: z.string().optional(), // Wait until the specified number of nodes are available (e.g., '>=2')
-    waitForStatus: z.enum(["green", "yellow", "red"]).optional(), // Wait until cluster status reaches the specified level
-  },
+    {
+      index: z.string().optional(), // Comma-separated list of indices to check health for. Leave empty for cluster-wide health.
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Controls which types of indices to include when using wildcards
+      level: z.enum(["cluster", "indices", "shards"]).optional(), // Level of detail to return: cluster (default), indices, or shards
+      local: z.boolean().optional(), // Return local information, do not retrieve from master node
+      masterTimeout: z.string().optional(), // Timeout for connecting to master node (e.g., '30s', '1m')
+      timeout: z.string().optional(), // Timeout for the request (e.g., '30s', '1m')
+      waitForActiveShards: z.any().optional(), // Wait until the specified number of shards are active
+      waitForEvents: z.enum(["immediate", "urgent", "high", "normal", "low", "languid"]).optional(), // Wait until all pending events are processed
+      waitForNoInitializingShards: z.boolean().optional(), // Wait until there are no initializing shards
+      waitForNoRelocatingShards: z.boolean().optional(), // Wait until there are no relocating shards
+      waitForNodes: z.string().optional(), // Wait until the specified number of nodes are available (e.g., '>=2')
+      waitForStatus: z.enum(["green", "yellow", "red"]).optional(), // Wait until cluster status reaches the specified level
+    },
     clusterHealthHandler,
   );
 };

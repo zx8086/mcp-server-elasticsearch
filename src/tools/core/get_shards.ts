@@ -5,7 +5,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { paginateResults, createPaginationHeader, responsePresets } from "../../utils/responseHandling.js";
+import { createPaginationHeader, paginateResults, responsePresets } from "../../utils/responseHandling.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 const getShardsSchema = {
@@ -117,7 +117,7 @@ export const registerGetShardsTool: ToolRegistrationFunction = (server: McpServe
         defaultLimit: responsePresets.list.defaultLimit,
         maxLimit: responsePresets.list.maxLimit,
       });
-      
+
       const unhealthyCount = response.filter((s) => s.state !== "STARTED").length;
 
       const shardsInfo = paginatedShards.map((shard) => ({
@@ -133,11 +133,11 @@ export const registerGetShardsTool: ToolRegistrationFunction = (server: McpServe
 
       // Create pagination header and metadata
       const headerText = createPaginationHeader(metadata, `Shards${index ? ` for index ${index}` : ""}`);
-      
+
       let metadataText = `Total: ${totalShards} shards`;
       if (index) metadataText += ` for index ${index}`;
       if (sortBy) metadataText += ` (sorted by ${sortBy})`;
-      
+
       if (unhealthyCount > 0) {
         metadataText += `\n⚠️ ${unhealthyCount} unhealthy shards found`;
       }

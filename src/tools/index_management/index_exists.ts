@@ -97,15 +97,15 @@ export const registerIndexExistsTool: ToolRegistrationFunction = (server: McpSer
   server.tool(
     "elasticsearch_index_exists",
     "Check if an index exists in Elasticsearch. Best for index validation, conditional operations, deployment checks. Use when you need to verify index presence in Elasticsearch clusters before performing operations or creating indices. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    index: z.string(), // Name of the index to check existence for
-    ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
-    allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
-    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
-    flatSettings: z.boolean().optional(), // Return settings in flat format
-    includeDefaults: z.boolean().optional(), // Include default settings
-    local: z.boolean().optional(), // Return local information only
-  },
+    {
+      index: z.string(), // Name of the index to check existence for
+      ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+      allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
+      flatSettings: z.boolean().optional(), // Return settings in flat format
+      includeDefaults: z.boolean().optional(), // Include default settings
+      local: z.boolean().optional(), // Return local information only
+    },
     withReadOnlyCheck("elasticsearch_index_exists", indexExistsHandler, OperationType.READ),
   );
 };

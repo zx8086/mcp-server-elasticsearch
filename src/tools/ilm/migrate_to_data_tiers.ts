@@ -174,12 +174,12 @@ Operation completed at: ${new Date().toISOString()}`,
   server.tool(
     "elasticsearch_ilm_migrate_to_data_tiers",
     "Migrate to data tiers. Migrate from custom node attributes to data tiers routing in Elasticsearch ILM. Uses direct JSON Schema and standardized MCP error codes. Requires ILM to be stopped first. Examples: {dryRun: true}, {nodeAttribute: 'box_type', legacyTemplateToDelete: 'old-template'}",
-  {
-    legacyTemplateToDelete: z.string().optional(), // Name of legacy template to delete during migration
-    nodeAttribute: z.string().optional(), // Node attribute to migrate from (e.g., 'box_type')
-    dryRun: z.boolean().optional(), // Perform a dry run without making changes
-    masterTimeout: z.string().optional(), // Master node timeout
-  }, // Direct JSON Schema - no Zod conversion
+    {
+      legacyTemplateToDelete: z.string().optional(), // Name of legacy template to delete during migration
+      nodeAttribute: z.string().optional(), // Node attribute to migrate from (e.g., 'box_type')
+      dryRun: z.boolean().optional(), // Perform a dry run without making changes
+      masterTimeout: z.string().optional(), // Master node timeout
+    }, // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_migrate_to_data_tiers", migrateToDataTiersHandler, OperationType.DESTRUCTIVE),
   );
 };

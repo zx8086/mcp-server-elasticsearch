@@ -105,12 +105,12 @@ export const registerExistsIndexTemplateTool: ToolRegistrationFunction = (server
   server.tool(
     "elasticsearch_exists_index_template",
     "Check if index templates exist in Elasticsearch. Best for template validation, deployment verification, configuration checks. Use when you need to verify index template presence before operations in Elasticsearch.",
-  {
-    name: z.string(), // Index template name to check existence for. Example: 'logs-template'
-    local: z.boolean().optional(), // Return local information, do not retrieve the state from master node
-    flatSettings: z.boolean().optional(), // Return settings in flat format
-    masterTimeout: z.string().optional(), // Timeout for connection to master node
-  },
+    {
+      name: z.string(), // Index template name to check existence for. Example: 'logs-template'
+      local: z.boolean().optional(), // Return local information, do not retrieve the state from master node
+      flatSettings: z.boolean().optional(), // Return settings in flat format
+      masterTimeout: z.string().optional(), // Timeout for connection to master node
+    },
     existsIndexTemplateHandler,
   );
 };

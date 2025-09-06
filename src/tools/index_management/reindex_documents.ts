@@ -139,20 +139,20 @@ export const registerReindexDocumentsTool: ToolRegistrationFunction = (server: M
   server.tool(
     "elasticsearch_reindex_documents",
     "Reindex documents from source to destination index in Elasticsearch. Best for data migration, index restructuring, mapping changes. Use when you need to copy documents between Elasticsearch indices with optional transformations. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    source: z.object({}), // Source index configuration
-    dest: z.object({}), // Destination index configuration
-    script: z.object({}).optional(), // Script to transform documents during reindexing
-    conflicts: z.enum(["abort", "proceed"]).optional(), // How to handle version conflicts
-    maxDocs: z.number().int().min(1).optional(), // Maximum number of documents to reindex
-    refresh: z.boolean().optional(), // Refresh the destination index after completion
-    timeout: z.string().optional(), // Operation timeout (e.g., '1m')
-    waitForActiveShards: z.any().optional(), // Number of active shards to wait for
-    waitForCompletion: z.boolean().optional(), // Wait for the operation to complete
-    requestsPerSecond: z.number().min(0).optional(), // Throttle requests per second
-    scroll: z.string().optional(), // Scroll timeout for source index (e.g., '5m')
-    slices: z.number().int().min(1).optional(), // Number of slices for parallel processing
-  },
+    {
+      source: z.object({}), // Source index configuration
+      dest: z.object({}), // Destination index configuration
+      script: z.object({}).optional(), // Script to transform documents during reindexing
+      conflicts: z.enum(["abort", "proceed"]).optional(), // How to handle version conflicts
+      maxDocs: z.number().int().min(1).optional(), // Maximum number of documents to reindex
+      refresh: z.boolean().optional(), // Refresh the destination index after completion
+      timeout: z.string().optional(), // Operation timeout (e.g., '1m')
+      waitForActiveShards: z.any().optional(), // Number of active shards to wait for
+      waitForCompletion: z.boolean().optional(), // Wait for the operation to complete
+      requestsPerSecond: z.number().min(0).optional(), // Throttle requests per second
+      scroll: z.string().optional(), // Scroll timeout for source index (e.g., '5m')
+      slices: z.number().int().min(1).optional(), // Number of slices for parallel processing
+    },
     withReadOnlyCheck("elasticsearch_reindex_documents", reindexDocumentsHandler, OperationType.WRITE),
   );
 };

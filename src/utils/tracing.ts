@@ -152,7 +152,12 @@ export const traceMcpConnection = traceable(
 // TOOL EXECUTION TRACING
 // =============================================================================
 
-export function traceToolExecution(toolName: string, toolArgs: any, extra: any, handler: (toolArgs: any, extra: any) => Promise<any>) {
+export function traceToolExecution(
+  toolName: string,
+  toolArgs: any,
+  extra: any,
+  handler: (toolArgs: any, extra: any) => Promise<any>,
+) {
   // Get configured project for consistent routing
   const project = process.env.LANGSMITH_PROJECT || config.langsmith.project;
 

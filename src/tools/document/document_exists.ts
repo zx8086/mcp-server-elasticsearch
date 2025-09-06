@@ -105,16 +105,16 @@ export const registerDocumentExistsTool: ToolRegistrationFunction = (server: Mcp
   server.tool(
     "elasticsearch_document_exists",
     "Check if a document exists in Elasticsearch by index and id. Best for document validation, existence checks, conditional operations. Use when you need to verify document presence in Elasticsearch indices before performing operations. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    index: z.string(), // REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'
-    id: z.string(), // REQUIRED: Unique identifier of the document to check
-    routing: z.string().optional(), // Custom routing value for document placement
-    preference: z.string().optional(), // Preference for shard selection
-    realtime: z.boolean().optional(), // Whether to perform a real-time check
-    refresh: z.boolean().optional(), // Whether to refresh before checking existence
-    version: z.number().optional(), // Expected document version for optimistic concurrency control
-    versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(), // Version type for concurrency control
-  },
+    {
+      index: z.string(), // REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'
+      id: z.string(), // REQUIRED: Unique identifier of the document to check
+      routing: z.string().optional(), // Custom routing value for document placement
+      preference: z.string().optional(), // Preference for shard selection
+      realtime: z.boolean().optional(), // Whether to perform a real-time check
+      refresh: z.boolean().optional(), // Whether to refresh before checking existence
+      version: z.number().optional(), // Expected document version for optimistic concurrency control
+      versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(), // Version type for concurrency control
+    },
     documentExistsHandler,
   );
 };

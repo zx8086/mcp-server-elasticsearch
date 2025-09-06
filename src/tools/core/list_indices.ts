@@ -6,7 +6,7 @@ import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
-import { paginateResults, createPaginationHeader, responsePresets } from "../../utils/responseHandling.js";
+import { createPaginationHeader, paginateResults, responsePresets } from "../../utils/responseHandling.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
@@ -110,7 +110,7 @@ export const registerListIndicesTool: ToolRegistrationFunction = (server: McpSer
       const response = await esClient.cat.indices(catParams);
 
       // Apply filtering
-      let filteredIndices = response.filter((index: any) => {
+      const filteredIndices = response.filter((index: any) => {
         if (params.excludeSystemIndices && index.index.startsWith(".")) {
           return false;
         }

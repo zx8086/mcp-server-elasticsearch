@@ -30,15 +30,21 @@ const phaseSchema = z
 // Flexible body schema that supports both wrapped and direct formats
 const bodySchema = z.union([
   // Format 1: {policy: {phases: {...}}} - wrapped format
-  z.object({
-    policy: z.object({
-      phases: z.record(z.string(), phaseSchema).optional(),
-    }).passthrough(),
-  }).passthrough(),
+  z
+    .object({
+      policy: z
+        .object({
+          phases: z.record(z.string(), phaseSchema).optional(),
+        })
+        .passthrough(),
+    })
+    .passthrough(),
   // Format 2: {phases: {...}} - direct format
-  z.object({
-    phases: z.record(z.string(), phaseSchema).optional(),
-  }).passthrough(),
+  z
+    .object({
+      phases: z.record(z.string(), phaseSchema).optional(),
+    })
+    .passthrough(),
 ]);
 
 // Simple Zod validator for runtime validation only
@@ -202,25 +208,41 @@ Operation completed at: ${new Date().toISOString()}`,
       policy: z.string().min(1),
       body: z.union([
         // Format 1: {policy: {phases: {...}}} - wrapped format
-        z.object({
-          policy: z.object({
-            phases: z.record(z.string(), z
+        z
+          .object({
+            policy: z
               .object({
-                actions: z.record(z.string(), z.unknown()).optional(),
-                min_age: z.string().optional(),
+                phases: z
+                  .record(
+                    z.string(),
+                    z
+                      .object({
+                        actions: z.record(z.string(), z.unknown()).optional(),
+                        min_age: z.string().optional(),
+                      })
+                      .passthrough(),
+                  )
+                  .optional(),
               })
-              .passthrough()).optional(),
-          }).passthrough(),
-        }).passthrough(),
+              .passthrough(),
+          })
+          .passthrough(),
         // Format 2: {phases: {...}} - direct format
-        z.object({
-          phases: z.record(z.string(), z
-            .object({
-              actions: z.record(z.string(), z.unknown()).optional(),
-              min_age: z.string().optional(),
-            })
-            .passthrough()).optional(),
-        }).passthrough(),
+        z
+          .object({
+            phases: z
+              .record(
+                z.string(),
+                z
+                  .object({
+                    actions: z.record(z.string(), z.unknown()).optional(),
+                    min_age: z.string().optional(),
+                  })
+                  .passthrough(),
+              )
+              .optional(),
+          })
+          .passthrough(),
       ]),
       masterTimeout: z.string().optional(),
       timeout: z.string().optional(),

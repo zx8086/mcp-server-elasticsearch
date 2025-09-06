@@ -144,10 +144,10 @@ Operation completed at: ${new Date().toISOString()}`,
   server.tool(
     "elasticsearch_ilm_stop",
     "Stop ILM. Stop the Index Lifecycle Management plugin to halt automated operations. Uses direct JSON Schema and standardized MCP error codes. Examples: {} (no params needed), {masterTimeout: '30s'}.",
-  {
-    masterTimeout: z.string().optional(), // Master node timeout
-    timeout: z.string().optional(), // Request timeout
-  }, // Direct JSON Schema - no Zod conversion
+    {
+      masterTimeout: z.string().optional(), // Master node timeout
+      timeout: z.string().optional(), // Request timeout
+    }, // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_stop", stopHandler, OperationType.WRITE),
   );
 };

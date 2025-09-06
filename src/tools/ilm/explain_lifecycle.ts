@@ -244,14 +244,14 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
   server.tool(
     "elasticsearch_ilm_explain_lifecycle",
     "Explain ILM status for indices. WARNING: Large clusters have 1000+ indices! ALWAYS specify filters to avoid truncation. Examples: {onlyManaged: true, limit: 50}, {index: 'logs-*', limit: 100}, {onlyErrors: true}. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    index: z.string().optional(), // Index pattern. Use '*' for all indices
-    onlyErrors: z.boolean().optional(), // Only show indices with ILM errors
-    onlyManaged: z.boolean().optional(), // Only show ILM-managed indices. Highly recommended for large clusters
-    masterTimeout: z.string().optional(), // Master node timeout
-    limit: z.number().min(1).max(500).optional(), // Maximum number of indices to return. Without this, returns ALL matching indices
-    includeDetails: z.boolean().optional(), // Include full lifecycle details (false for compact output)
-  }, // Direct JSON Schema - no Zod conversion
+    {
+      index: z.string().optional(), // Index pattern. Use '*' for all indices
+      onlyErrors: z.boolean().optional(), // Only show indices with ILM errors
+      onlyManaged: z.boolean().optional(), // Only show ILM-managed indices. Highly recommended for large clusters
+      masterTimeout: z.string().optional(), // Master node timeout
+      limit: z.number().min(1).max(500).optional(), // Maximum number of indices to return. Without this, returns ALL matching indices
+      includeDetails: z.boolean().optional(), // Include full lifecycle details (false for compact output)
+    }, // Direct JSON Schema - no Zod conversion
     explainLifecycleHandler,
   );
 };

@@ -108,16 +108,16 @@ export const registerGetIndexTool: ToolRegistrationFunction = (server: McpServer
   server.tool(
     "elasticsearch_get_index",
     "Get comprehensive index information from Elasticsearch including settings, mappings, and aliases. Best for index inspection, configuration analysis, troubleshooting. Empty {} parameters will default to getting information for all indices. Use when you need detailed metadata about Elasticsearch indices structure and configuration. Parameters have smart defaults: index='*', ignoreUnavailable=true, allowNoIndices=true. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    index: z.string(), // Index pattern to get information for. Use '*' for all indices. Supports wildcards.
-    ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
-    allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
-    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to: 'all', 'open', 'closed', 'hidden', or 'none'
-    flatSettings: z.boolean().optional(), // Return settings in flat format
-    includeDefaults: z.boolean().optional(), // Include default settings
-    local: z.boolean().optional(), // Return local information only
-    masterTimeout: z.string().optional(), // Timeout for connection to master node
-  },
+    {
+      index: z.string(), // Index pattern to get information for. Use '*' for all indices. Supports wildcards.
+      ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+      allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to: 'all', 'open', 'closed', 'hidden', or 'none'
+      flatSettings: z.boolean().optional(), // Return settings in flat format
+      includeDefaults: z.boolean().optional(), // Include default settings
+      local: z.boolean().optional(), // Return local information only
+      masterTimeout: z.string().optional(), // Timeout for connection to master node
+    },
     withReadOnlyCheck("elasticsearch_get_index", getIndexHandler, OperationType.READ),
   );
 };

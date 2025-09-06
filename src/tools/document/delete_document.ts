@@ -121,18 +121,18 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (server: Mcp
   server.tool(
     "elasticsearch_delete_document",
     "Delete a document from Elasticsearch by index and id. Best for removing specific documents, data cleanup, document lifecycle management. Use when you need to permanently remove individual JSON documents from Elasticsearch indices with optimistic concurrency control. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    index: z.string(), // REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'
-    id: z.string(), // REQUIRED: Unique identifier of the document to delete
-    routing: z.string().optional(), // Custom routing value for document placement
-    refresh: z.enum(["true", "false", "wait_for"]).optional(), // Whether to refresh the index after the operation
-    version: z.number().optional(), // Expected document version for optimistic concurrency control
-    versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(), // Version type for concurrency control
-    ifSeqNo: z.number().optional(), // Sequence number for optimistic concurrency control
-    ifPrimaryTerm: z.number().optional(), // Primary term for optimistic concurrency control
-    timeout: z.string().optional(), // Operation timeout (e.g., '5s', '1m')
-    waitForActiveShards: z.any().optional(), // Number of active shards to wait for
-  },
+    {
+      index: z.string(), // REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'
+      id: z.string(), // REQUIRED: Unique identifier of the document to delete
+      routing: z.string().optional(), // Custom routing value for document placement
+      refresh: z.enum(["true", "false", "wait_for"]).optional(), // Whether to refresh the index after the operation
+      version: z.number().optional(), // Expected document version for optimistic concurrency control
+      versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(), // Version type for concurrency control
+      ifSeqNo: z.number().optional(), // Sequence number for optimistic concurrency control
+      ifPrimaryTerm: z.number().optional(), // Primary term for optimistic concurrency control
+      timeout: z.string().optional(), // Operation timeout (e.g., '5s', '1m')
+      waitForActiveShards: z.any().optional(), // Number of active shards to wait for
+    },
     withReadOnlyCheck("elasticsearch_delete_document", deleteDocumentHandler, OperationType.DESTRUCTIVE),
   );
 };

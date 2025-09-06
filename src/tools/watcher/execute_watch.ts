@@ -133,17 +133,17 @@ export const registerWatcherExecuteWatchTool: ToolRegistrationFunction = (server
   server.tool(
     "elasticsearch_watcher_execute_watch",
     "Execute a watch in Elasticsearch Watcher for testing or debugging. Best for watch testing, debugging workflows, manual execution. Use when you need to force watch execution outside normal triggers in Elasticsearch alerting systems. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    id: z.string().optional(), // Watch ID to execute
-    action_modes: z.object({}).optional(), // Override action execution modes
-    alternative_input: z.object({}).optional(), // Alternative input to use instead of the watch input
-    ignore_condition: z.boolean().optional(), // Whether to ignore the condition and always execute the actions
-    record_execution: z.boolean().optional(), // Whether to record the execution in the watch history
-    simulated_actions: z.object({}).optional(), // Actions to simulate instead of executing
-    trigger_data: z.object({}).optional(), // Trigger data to use for execution
-    watch: z.object({}).optional(), // Watch definition to execute inline
-    debug: z.boolean().optional(), // Enable debug mode for execution
-  },
+    {
+      id: z.string().optional(), // Watch ID to execute
+      action_modes: z.object({}).optional(), // Override action execution modes
+      alternative_input: z.object({}).optional(), // Alternative input to use instead of the watch input
+      ignore_condition: z.boolean().optional(), // Whether to ignore the condition and always execute the actions
+      record_execution: z.boolean().optional(), // Whether to record the execution in the watch history
+      simulated_actions: z.object({}).optional(), // Actions to simulate instead of executing
+      trigger_data: z.object({}).optional(), // Trigger data to use for execution
+      watch: z.object({}).optional(), // Watch definition to execute inline
+      debug: z.boolean().optional(), // Enable debug mode for execution
+    },
     withReadOnlyCheck("elasticsearch_watcher_execute_watch", executeWatchHandler, OperationType.WRITE),
   );
 };

@@ -85,14 +85,14 @@ export const registerMultiSearchTool: ToolRegistrationFunction = (server: McpSer
   server.tool(
     "elasticsearch_multi_search",
     "Perform multiple searches in Elasticsearch in a single request. Best for batch search operations, dashboard queries, parallel search execution. Use when you need to execute multiple Query DSL searches across different Elasticsearch indices efficiently. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    searches: z.array(z.object({}).optional()).optional(),
-    index: z.string().optional(),
-    maxConcurrentSearches: z.number().optional(),
-    ccsMinimizeRoundtrips: z.boolean().optional(),
-    restTotalHitsAsInt: z.boolean().optional(),
-    typedKeys: z.boolean().optional(),
-  },
+    {
+      searches: z.array(z.object({}).optional()).optional(),
+      index: z.string().optional(),
+      maxConcurrentSearches: z.number().optional(),
+      ccsMinimizeRoundtrips: z.boolean().optional(),
+      restTotalHitsAsInt: z.boolean().optional(),
+      typedKeys: z.boolean().optional(),
+    },
     multiSearchHandler,
   );
 };

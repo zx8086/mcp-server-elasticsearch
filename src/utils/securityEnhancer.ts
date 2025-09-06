@@ -221,17 +221,18 @@ export class SecurityEnhancer {
     const violations: SecurityViolation[] = [];
 
     // Elasticsearch-specific exemptions
-    const isElasticsearchField = field.toLowerCase().includes('index') || 
-                                 field.toLowerCase().includes('pattern') ||
-                                 field.toLowerCase().includes('query');
-    
+    const isElasticsearchField =
+      field.toLowerCase().includes("index") ||
+      field.toLowerCase().includes("pattern") ||
+      field.toLowerCase().includes("query");
+
     // If this is an Elasticsearch index pattern, skip command injection checks for commas
-    const isIndexPattern = /^[a-zA-Z0-9\-_*,.\s]+$/.test(value) && value.includes('*');
+    const isIndexPattern = /^[a-zA-Z0-9\-_*,.\s]+$/.test(value) && value.includes("*");
 
     // Check each pattern category
     for (const [category, patterns] of this.suspiciousPatterns.entries()) {
       // Skip command injection checks for legitimate Elasticsearch index patterns
-      if (category === 'command_injection' && isElasticsearchField && isIndexPattern) {
+      if (category === "command_injection" && isElasticsearchField && isIndexPattern) {
         continue;
       }
 

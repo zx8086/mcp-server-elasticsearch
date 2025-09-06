@@ -150,21 +150,21 @@ export const registerWatcherPutWatchTool: ToolRegistrationFunction = (server: Mc
   server.tool(
     "elasticsearch_watcher_put_watch",
     "Create or update a watch in Elasticsearch Watcher. Best for alerting setup, monitoring automation, notification configuration. Use when you need to define watch triggers and actions for Elasticsearch alerting workflows. IMPORTANT: Use only this API, not direct index operations. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    id: z.string(), // Watch ID
-    actions: z.object({}).optional(), // Actions to execute when watch triggers
-    condition: z.object({}).optional(), // Condition that determines when to execute actions
-    input: z.object({}).optional(), // Input for the watch execution
-    metadata: z.object({}).optional(), // Watch metadata
-    throttle_period: z.string().optional(), // Throttle period for watch execution
-    throttle_period_in_millis: z.number().optional(), // Throttle period in milliseconds
-    transform: z.object({}).optional(), // Transform to apply to watch payload
-    trigger: z.object({}).optional(), // Trigger that determines when watch should run
-    active: z.boolean().optional(), // Whether the watch is active
-    if_primary_term: z.number().optional(), // Only perform operation if primary term matches
-    if_seq_no: z.number().optional(), // Only perform operation if sequence number matches
-    version: z.number().optional(), // Explicit version number for concurrency control
-  },
+    {
+      id: z.string(), // Watch ID
+      actions: z.object({}).optional(), // Actions to execute when watch triggers
+      condition: z.object({}).optional(), // Condition that determines when to execute actions
+      input: z.object({}).optional(), // Input for the watch execution
+      metadata: z.object({}).optional(), // Watch metadata
+      throttle_period: z.string().optional(), // Throttle period for watch execution
+      throttle_period_in_millis: z.number().optional(), // Throttle period in milliseconds
+      transform: z.object({}).optional(), // Transform to apply to watch payload
+      trigger: z.object({}).optional(), // Trigger that determines when watch should run
+      active: z.boolean().optional(), // Whether the watch is active
+      if_primary_term: z.number().optional(), // Only perform operation if primary term matches
+      if_seq_no: z.number().optional(), // Only perform operation if sequence number matches
+      version: z.number().optional(), // Explicit version number for concurrency control
+    },
     withReadOnlyCheck("elasticsearch_watcher_put_watch", putWatchHandler, OperationType.WRITE),
   );
 };

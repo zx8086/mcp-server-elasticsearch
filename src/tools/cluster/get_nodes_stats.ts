@@ -26,17 +26,17 @@ type NodesStatsParams = z.infer<typeof nodesStatsValidator>;
 // Helper function to format node stats summary
 function formatNodeStatsSummary(result: any): string {
   if (!result.nodes) return "No node statistics available";
-  
+
   const summary: string[] = ["## Node Statistics Summary\n"];
-  
+
   for (const [nodeId, node] of Object.entries(result.nodes)) {
     const nodeStats = node as any;
     summary.push(`### Node: ${nodeStats.name || nodeId}`);
     summary.push(`- **ID**: ${nodeId}`);
-    
+
     // OS Stats
     if (nodeStats.os) {
-      summary.push(`- **CPU Usage**: ${nodeStats.os.cpu?.percent || 'N/A'}%`);
+      summary.push(`- **CPU Usage**: ${nodeStats.os.cpu?.percent || "N/A"}%`);
       if (nodeStats.os.mem) {
         const usedMemPct = nodeStats.os.mem.used_percent || 0;
         const totalMemGB = Math.round((nodeStats.os.mem.total_in_bytes || 0) / 1024 / 1024 / 1024);
@@ -46,7 +46,7 @@ function formatNodeStatsSummary(result: any): string {
         summary.push(`- **Swap Usage**: ${Math.round((nodeStats.os.swap.used_in_bytes || 0) / 1024 / 1024)}MB`);
       }
     }
-    
+
     // JVM Stats
     if (nodeStats.jvm) {
       if (nodeStats.jvm.mem) {
@@ -64,7 +64,7 @@ function formatNodeStatsSummary(result: any): string {
         summary.push(`- **JVM Uptime**: ${uptimeHours}h`);
       }
     }
-    
+
     // File System Stats
     if (nodeStats.fs) {
       if (nodeStats.fs.total) {
@@ -74,19 +74,19 @@ function formatNodeStatsSummary(result: any): string {
         summary.push(`- **Disk Usage**: ${usedPct}% (${freeGB}GB free of ${totalGB}GB)`);
       }
     }
-    
+
     // Process Stats
     if (nodeStats.process) {
       if (nodeStats.process.cpu) {
-        summary.push(`- **Process CPU**: ${nodeStats.process.cpu.percent || 'N/A'}%`);
+        summary.push(`- **Process CPU**: ${nodeStats.process.cpu.percent || "N/A"}%`);
       }
       if (nodeStats.process.open_file_descriptors) {
         const openFDs = nodeStats.process.open_file_descriptors;
-        const maxFDs = nodeStats.process.max_file_descriptors || 'N/A';
+        const maxFDs = nodeStats.process.max_file_descriptors || "N/A";
         summary.push(`- **File Descriptors**: ${openFDs}/${maxFDs}`);
       }
     }
-    
+
     // Indices Stats (if available)
     if (nodeStats.indices) {
       if (nodeStats.indices.docs) {
@@ -98,10 +98,10 @@ function formatNodeStatsSummary(result: any): string {
         summary.push(`- **Index Size**: ${sizeGB}GB`);
       }
     }
-    
+
     summary.push(""); // Empty line between nodes
   }
-  
+
   return summary.join("\n");
 }
 
@@ -170,9 +170,9 @@ export const registerGetNodesStatsTool: ToolRegistrationFunction = (server: McpS
         }
 
         // Format response based on summary parameter
-        const responseContent = summary ? 
-          formatNodeStatsSummary(minimalResult) : 
-          JSON.stringify(minimalResult, null, 2);
+        const responseContent = summary
+          ? formatNodeStatsSummary(minimalResult)
+          : JSON.stringify(minimalResult, null, 2);
 
         return {
           content: [
@@ -209,9 +209,7 @@ export const registerGetNodesStatsTool: ToolRegistrationFunction = (server: McpS
         }
 
         // Format response based on summary parameter
-        const responseContent = summary ? 
-          formatNodeStatsSummary(result) : 
-          JSON.stringify(result, null, 2);
+        const responseContent = summary ? formatNodeStatsSummary(result) : JSON.stringify(result, null, 2);
 
         return {
           content: [
@@ -251,9 +249,7 @@ export const registerGetNodesStatsTool: ToolRegistrationFunction = (server: McpS
       }
 
       // Format final response based on summary parameter
-      const responseContent = summary ? 
-        formatNodeStatsSummary(result) : 
-        JSON.stringify(result, null, 2);
+      const responseContent = summary ? formatNodeStatsSummary(result) : JSON.stringify(result, null, 2);
 
       return {
         content: [{ type: "text", text: responseContent } as TextContent],
@@ -312,14 +308,14 @@ export const registerGetNodesStatsTool: ToolRegistrationFunction = (server: McpS
   server.tool(
     "elasticsearch_get_nodes_stats",
     "Get node statistics. WARNING: Returns massive data without metric filter. BEST PRACTICES: {metric: 'jvm', level: 'node'} for JVM summary, {metric: 'os'} for system stats, {metric: 'fs'} for disk only, {metric: 'indices', indexMetric: 'docs,store'} for index metrics. NEVER use empty {} or {metric: 'indices'} without indexMetric. READ operation - safe for production use.",
-  {
-    nodeId: z.string().optional(), // Specific node ID, or leave empty for all nodes
-    metric: z.string().optional(), // CRITICAL: Specify exact metrics needed. Options: 'os', 'jvm', 'fs', 'process', 'http', 'transport', 'indices'. Combine: 'os,jvm'
-    indexMetric: z.string().optional(), // When using 'indices' metric, MUST specify: 'docs', 'store', 'indexing', 'search', 'segments', etc.
-    level: z.enum(["node", "indices", "shards"]).optional(), // Aggregation level. Use 'node' for node-level stats (default)
-    timeout: z.string().optional(), // Timeout for the request (e.g., '30s', '1m')
-    summary: z.boolean().optional(), // Return summarized node statistics instead of full details
-  },
+    {
+      nodeId: z.string().optional(), // Specific node ID, or leave empty for all nodes
+      metric: z.string().optional(), // CRITICAL: Specify exact metrics needed. Options: 'os', 'jvm', 'fs', 'process', 'http', 'transport', 'indices'. Combine: 'os,jvm'
+      indexMetric: z.string().optional(), // When using 'indices' metric, MUST specify: 'docs', 'store', 'indexing', 'search', 'segments', etc.
+      level: z.enum(["node", "indices", "shards"]).optional(), // Aggregation level. Use 'node' for node-level stats (default)
+      timeout: z.string().optional(), // Timeout for the request (e.g., '30s', '1m')
+      summary: z.boolean().optional(), // Return summarized node statistics instead of full details
+    },
     nodesStatsHandler,
   );
 };

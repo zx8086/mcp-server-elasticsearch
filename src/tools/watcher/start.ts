@@ -84,9 +84,9 @@ export const registerWatcherStartTool: ToolRegistrationFunction = (server: McpSe
   server.tool(
     "elasticsearch_watcher_start",
     "Start the Elasticsearch Watcher service. Best for service management, monitoring activation, system initialization. Use when you need to enable the Watcher service for Elasticsearch alerting and monitoring capabilities. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    master_timeout: z.string().optional(), // Explicit operation timeout for connection to master node
-  },
+    {
+      master_timeout: z.string().optional(), // Explicit operation timeout for connection to master node
+    },
     withReadOnlyCheck("elasticsearch_watcher_start", startWatcherHandler, OperationType.WRITE),
   );
 };

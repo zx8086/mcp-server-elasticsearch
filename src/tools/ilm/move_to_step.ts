@@ -188,11 +188,11 @@ Operation completed at: ${new Date().toISOString()}`,
   server.tool(
     "elasticsearch_ilm_move_to_step",
     "Move index to ILM step. Manually move an index to a specific ILM policy step. Uses direct JSON Schema and standardized MCP error codes. Expert-level operation for troubleshooting. Examples: {index: 'my-index', currentStep: {phase: 'hot', action: 'rollover', name: 'check-rollover-ready'}, nextStep: {phase: 'warm'}}",
-  {
-    index: z.string(), // Index name (cannot be empty)
-    currentStep: z.object({}), // Current ILM step the index is in
-    nextStep: z.object({}), // Target ILM step to move the index to
-  }, // Direct JSON Schema - no Zod conversion
+    {
+      index: z.string(), // Index name (cannot be empty)
+      currentStep: z.object({}), // Current ILM step the index is in
+      nextStep: z.object({}), // Target ILM step to move the index to
+    }, // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_move_to_step", moveToStepHandler, OperationType.DESTRUCTIVE),
   );
 };

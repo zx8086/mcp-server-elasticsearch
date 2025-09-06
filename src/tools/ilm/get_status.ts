@@ -114,9 +114,7 @@ Status checked at: ${new Date().toISOString()}`,
   server.tool(
     "elasticsearch_ilm_get_status",
     "Get ILM status. Check if Index Lifecycle Management is running and operational. Uses direct JSON Schema and standardized MCP error codes. No parameters required.",
-  {
-
-  }, // Direct JSON Schema
+    {}, // Direct JSON Schema
     getStatusHandler,
   );
 };

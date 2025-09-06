@@ -156,9 +156,9 @@ Operation completed at: ${new Date().toISOString()}`,
   server.tool(
     "elasticsearch_ilm_retry",
     "Retry ILM policy execution. Retry Index Lifecycle Management policy execution for indices in ERROR state. Uses direct JSON Schema and standardized MCP error codes. Examples: {index: 'logs-*'}, {index: 'failed-index-000001'}",
-  {
-    index: z.string(), // Index name or pattern to retry ILM policy execution for (cannot be empty)
-  }, // Direct JSON Schema - no Zod conversion
+    {
+      index: z.string(), // Index name or pattern to retry ILM policy execution for (cannot be empty)
+    }, // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_retry", retryHandler, OperationType.WRITE),
   );
 };

@@ -104,14 +104,14 @@ export const registerFlushIndexTool: ToolRegistrationFunction = (server: McpServ
   server.tool(
     "elasticsearch_flush_index",
     "Flush an Elasticsearch index to ensure all data is written to disk. Best for data persistence, index optimization, ensuring durability. Use when you need to force Elasticsearch to write buffered data to storage for consistency. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    index: z.string(), // Name of the index to flush
-    ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
-    allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
-    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
-    force: z.boolean().optional(), // Force the flush operation even if not required
-    waitIfOngoing: z.boolean().optional(), // Wait if another flush operation is ongoing
-  },
+    {
+      index: z.string(), // Name of the index to flush
+      ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+      allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
+      force: z.boolean().optional(), // Force the flush operation even if not required
+      waitIfOngoing: z.boolean().optional(), // Wait if another flush operation is ongoing
+    },
     withReadOnlyCheck("elasticsearch_flush_index", flushIndexHandler, OperationType.WRITE),
   );
 };

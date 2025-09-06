@@ -93,9 +93,9 @@ export const registerWatcherDeleteWatchTool: ToolRegistrationFunction = (server:
   server.tool(
     "elasticsearch_watcher_delete_watch",
     "Delete a watch from Elasticsearch Watcher. Best for watch cleanup, configuration management, removing unused monitors. Use when you need to permanently remove watch definitions from Elasticsearch alerting system. IMPORTANT: Use only this API, not direct index deletion. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    id: z.string(), // Watch ID to delete
-  },
+    {
+      id: z.string(), // Watch ID to delete
+    },
     withReadOnlyCheck("elasticsearch_watcher_delete_watch", deleteWatchHandler, OperationType.WRITE),
   );
 };

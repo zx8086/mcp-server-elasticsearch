@@ -146,18 +146,18 @@ export const registerPutIndexTemplateTool: ToolRegistrationFunction = (server: M
   server.tool(
     "elasticsearch_put_index_template",
     "Create or update an index template in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes. Best for index standardization, mapping management, settings automation. Use when you need to define templates for automatic index configuration in Elasticsearch. TIP: Define 'indexPatterns' to control which indices use this template, set 'priority' for template precedence.",
-  {
-    name: z.string(), // Template name (cannot be empty)
-    indexPatterns: z.array(z.string().optional()).optional(), // Array of index patterns that this template applies to
-    template: z.object({}).optional(), // Template definition containing settings, mappings, and/or aliases
-    composedOf: z.array(z.string().optional()).optional(), // Array of component template names this template is composed of
-    priority: z.number().optional(), // Template priority (higher number = higher priority)
-    version: z.number().optional(), // Template version number
-    meta: z.object({}).optional(), // Metadata about the template
-    allowAutoCreate: z.boolean().optional(), // Allow automatic index creation
-    create: z.boolean().optional(), // If true, only create if template doesn't exist
-    masterTimeout: z.string().optional(), // Timeout for master node operations
-  },
+    {
+      name: z.string(), // Template name (cannot be empty)
+      indexPatterns: z.array(z.string().optional()).optional(), // Array of index patterns that this template applies to
+      template: z.object({}).optional(), // Template definition containing settings, mappings, and/or aliases
+      composedOf: z.array(z.string().optional()).optional(), // Array of component template names this template is composed of
+      priority: z.number().optional(), // Template priority (higher number = higher priority)
+      version: z.number().optional(), // Template version number
+      meta: z.object({}).optional(), // Metadata about the template
+      allowAutoCreate: z.boolean().optional(), // Allow automatic index creation
+      create: z.boolean().optional(), // If true, only create if template doesn't exist
+      masterTimeout: z.string().optional(), // Timeout for master node operations
+    },
     putIndexTemplateHandler,
   );
 };

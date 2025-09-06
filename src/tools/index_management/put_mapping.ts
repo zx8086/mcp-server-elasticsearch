@@ -131,23 +131,23 @@ export const registerPutMappingTool: ToolRegistrationFunction = (server: McpServ
   server.tool(
     "elasticsearch_put_mapping",
     "Update index mappings in Elasticsearch. Best for schema evolution, field addition, mapping modifications. Use when you need to add new fields or update existing field mappings in Elasticsearch indices. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    index: z.string(), // Name of the index to update mapping for
-    properties: z.object({}).optional(), // Field mappings to add or update
-    runtime: z.object({}).optional(), // Runtime fields configuration
-    meta: z.object({}).optional(), // Metadata for the mapping
-    dynamic: z.enum(["true", "false", "strict", "runtime"]).optional(), // Dynamic mapping behavior
-    dateDetection: z.boolean().optional(), // Enable or disable date detection
-    dynamicDateFormats: z.array(z.string().optional()).optional(), // Dynamic date formats
-    dynamicTemplates: z.array(z.object({}).optional()).optional(), // Dynamic mapping templates
-    numericDetection: z.boolean().optional(), // Enable or disable numeric detection
-    timeout: z.string().optional(), // Operation timeout (e.g., '30s')
-    masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
-    ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
-    allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
-    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
-    writeIndexOnly: z.boolean().optional(), // Update only the write index for aliases
-  },
+    {
+      index: z.string(), // Name of the index to update mapping for
+      properties: z.object({}).optional(), // Field mappings to add or update
+      runtime: z.object({}).optional(), // Runtime fields configuration
+      meta: z.object({}).optional(), // Metadata for the mapping
+      dynamic: z.enum(["true", "false", "strict", "runtime"]).optional(), // Dynamic mapping behavior
+      dateDetection: z.boolean().optional(), // Enable or disable date detection
+      dynamicDateFormats: z.array(z.string().optional()).optional(), // Dynamic date formats
+      dynamicTemplates: z.array(z.object({}).optional()).optional(), // Dynamic mapping templates
+      numericDetection: z.boolean().optional(), // Enable or disable numeric detection
+      timeout: z.string().optional(), // Operation timeout (e.g., '30s')
+      masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
+      ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+      allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
+      writeIndexOnly: z.boolean().optional(), // Update only the write index for aliases
+    },
     withReadOnlyCheck("elasticsearch_put_mapping", putMappingHandler, OperationType.WRITE),
   );
 };

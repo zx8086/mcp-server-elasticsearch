@@ -231,8 +231,7 @@ function loadConfigFromEnv(): Partial<Config> {
       (parseEnvVar(Bun.env[envVarMapping.server.defaultPageSize], "number") as number) ||
       defaultConfig.server.defaultPageSize,
     maxPageSize:
-      (parseEnvVar(Bun.env[envVarMapping.server.maxPageSize], "number") as number) ||
-      defaultConfig.server.maxPageSize,
+      (parseEnvVar(Bun.env[envVarMapping.server.maxPageSize], "number") as number) || defaultConfig.server.maxPageSize,
     enableResponseCompression:
       (parseEnvVar(Bun.env[envVarMapping.server.enableResponseCompression], "boolean") as boolean) ??
       defaultConfig.server.enableResponseCompression,

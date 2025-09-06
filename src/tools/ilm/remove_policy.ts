@@ -160,9 +160,9 @@ Operation completed at: ${new Date().toISOString()}`,
   server.tool(
     "elasticsearch_ilm_remove_policy",
     "Remove ILM policy from indices. Remove Index Lifecycle Management policy assignment from indices, stopping automated lifecycle management. Uses direct JSON Schema and standardized MCP error codes. Examples: {index: 'logs-*'}, {index: 'my-index-000001'}",
-  {
-    index: z.string(), // Index name or pattern to remove ILM policy from (cannot be empty)
-  }, // Direct JSON Schema - no Zod conversion
+    {
+      index: z.string(), // Index name or pattern to remove ILM policy from (cannot be empty)
+    }, // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_remove_policy", removePolicyHandler, OperationType.WRITE),
   );
 };

@@ -111,11 +111,11 @@ export const registerExplainDataLifecycleTool: ToolRegistrationFunction = (serve
   server.tool(
     "elasticsearch_explain_data_lifecycle",
     "Get data stream lifecycle status and execution details in Elasticsearch. Best for lifecycle monitoring, troubleshooting, policy analysis. Use when you need to understand data stream lifecycle execution status and configuration in Elasticsearch.",
-  {
-    index: z.any(), // Data stream or index name(s) to explain lifecycle for. Examples: 'logs-*', ['stream1', 'stream2']
-    includeDefaults: z.boolean().optional(), // Whether to return default values in the response
-    masterTimeout: z.string().optional(), // Timeout for connection to master node
-  },
+    {
+      index: z.any(), // Data stream or index name(s) to explain lifecycle for. Examples: 'logs-*', ['stream1', 'stream2']
+      includeDefaults: z.boolean().optional(), // Whether to return default values in the response
+      masterTimeout: z.string().optional(), // Timeout for connection to master node
+    },
     explainDataLifecycleHandler,
   );
 };

@@ -124,17 +124,17 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (server
   server.tool(
     "elasticsearch_update_index_settings",
     "Update index settings in Elasticsearch. Best for performance tuning, configuration changes, index optimization. Use when you need to modify index settings for better performance or functionality in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    index: z.string(), // Name of the index to update settings for
-    settings: z.object({}), // Index settings to update
-    preserveExisting: z.boolean().optional(), // Preserve existing settings that are not specified
-    timeout: z.string().optional(), // Operation timeout (e.g., '30s')
-    masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
-    ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
-    allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
-    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
-    flatSettings: z.boolean().optional(), // Accept settings in flat format
-  },
+    {
+      index: z.string(), // Name of the index to update settings for
+      settings: z.object({}), // Index settings to update
+      preserveExisting: z.boolean().optional(), // Preserve existing settings that are not specified
+      timeout: z.string().optional(), // Operation timeout (e.g., '30s')
+      masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
+      ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+      allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
+      flatSettings: z.boolean().optional(), // Accept settings in flat format
+    },
     withReadOnlyCheck("elasticsearch_update_index_settings", updateIndexSettingsHandler, OperationType.WRITE),
   );
 };

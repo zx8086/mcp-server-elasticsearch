@@ -288,32 +288,104 @@ The project uses a comprehensive documentation system:
 3. Export from category index file
 4. Add to main tools array in `src/server.ts`
 
-### Testing Changes
-**Important**: There are two test runners available:
+### Testing Strategy
 
-1. **Recommended**: `bun run scripts/run-working-tests.ts`
-   - 98.4% success rate with 6 confirmed working test suites
-   - Focuses on enhanced features validation
-   - Reliable execution without process issues
+The project uses an organized test structure with different categories for different purposes:
 
-2. **Full suite**: `bun run scripts/run-all-tests.ts`  
-   - Comprehensive testing with 33+ test files
-   - Known process initialization issue
-   - Use only for development debugging
-
-For regular testing, use the working tests runner:
-```bash
-bun run scripts/run-working-tests.ts        # Recommended
-bun run scripts/run-all-tests.ts --verbose  # Full suite (has issues)
+```
+tests/
+├── unit/                     # Fast, isolated unit tests
+│   ├── config/              # Configuration validation
+│   ├── tools/               # Individual tool tests
+│   ├── utils/               # Utility function tests
+│   └── schemas/             # Schema validation
+│
+├── integration/             # Tests requiring Elasticsearch
+│   ├── tools/              # Tool integration tests
+│   ├── generated/          # Auto-generated tests
+│   └── e2e/                # End-to-end workflows
+│
+├── validation/              # MCP parameter validation
+│   ├── natural-params/     # Natural parameter tests
+│   ├── mcp-protocol/       # MCP protocol tests
+│   └── search/             # Search validation
+│
+├── infrastructure/          # System infrastructure tests
+│   ├── monitoring/         # Prometheus, Grafana
+│   ├── caching/           # Cache system
+│   ├── performance/       # Performance benchmarks
+│   ├── health/            # Health checks
+│   └── security/          # Audit trail, security
+│
+├── dev/                    # Development & debugging
+│   ├── manual/            # Manual test scripts
+│   ├── debug/             # Debug utilities
+│   └── fixtures/          # Test data
+│
+└── docs/                   # Test documentation
+    ├── coverage/          # Coverage reports
+    └── strategies/        # Test strategies
 ```
 
-Standard testing workflow:
-1. Update `.env` with test cluster details
-2. Run `bun run validate-config:full` to verify connection
-3. Use `bun run inspector` to test tool interactively
-4. Run `bun run scripts/run-working-tests.ts` for validation
-5. **Debug parameter issues**: Check `guides/PARAMETER_DEBUGGING_GUIDE.md`
-6. **Development testing**: Files available in `dev-testing/` directory
+### Testing Commands
+
+#### Primary Testing (Recommended for Daily Development)
+```bash
+bun run test                   # Run unit + validation tests (fast, reliable)
+bun run test:all               # Run all tests (comprehensive)
+bun run test:watch             # Live testing during development
+```
+
+#### Category-Specific Testing
+```bash
+bun run test:unit              # Unit tests only (fastest)
+bun run test:integration       # Integration tests (requires ES)
+bun run test:validation        # Parameter validation tests
+bun run test:infrastructure    # Infrastructure tests
+```
+
+#### Subcategory Testing
+```bash
+bun run test:config            # Configuration tests
+bun run test:tools             # Tool integration tests
+bun run test:e2e               # End-to-end workflows
+bun run test:monitoring        # Monitoring & metrics tests
+bun run test:performance       # Performance benchmarks
+bun run test:security          # Security & audit tests
+```
+
+#### Special Test Modes
+```bash
+bun run test:coverage          # Test coverage analysis
+bun run test:ci                # CI/CD optimized tests
+bun run test:pre-deploy        # Pre-deployment validation
+bun run test:working           # Working test suite (legacy)
+bun run test:dev               # Development manual tests
+```
+
+#### Testing Workflow (Recommended)
+```bash
+# Regular Development:
+bun run test                   # Unit + validation tests (< 30 seconds)
+bun run test:config            # After config changes
+
+# Before Commits:
+bun run validate-config        # Environment validation
+bun run test:ci                # CI optimized tests
+bun run test-connection        # Elasticsearch connectivity
+
+# Pre-Deployment:
+bun run test:pre-deploy        # Comprehensive pre-deployment suite
+bun run test:performance       # Performance validation
+bun run test:coverage          # Coverage analysis
+```
+
+#### Development Testing
+```bash
+bun run inspector              # MCP protocol testing
+bun run test:dev               # Manual development tests
+# Development files available in tests/dev/manual/
+```
 
 ### Building for Production
 1. Run `bun run build`

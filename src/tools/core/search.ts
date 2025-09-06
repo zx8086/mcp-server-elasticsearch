@@ -130,7 +130,7 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
       }
 
       // Ensure we have a valid query - handle empty objects correctly
-      const isEmptyQuery = !query || (typeof query === 'object' && Object.keys(query).length === 0);
+      const isEmptyQuery = !query || (typeof query === "object" && Object.keys(query).length === 0);
       const finalQuery = isEmptyQuery ? { match_all: {} } : query;
 
       // Build search request from natural parameters

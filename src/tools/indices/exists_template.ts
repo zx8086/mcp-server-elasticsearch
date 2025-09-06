@@ -105,12 +105,12 @@ export const registerExistsTemplateTool: ToolRegistrationFunction = (server: Mcp
   server.tool(
     "elasticsearch_exists_template",
     "Check existence of legacy index templates in Elasticsearch. Best for legacy template validation, migration planning, compatibility checks. Use when you need to verify legacy index template presence in Elasticsearch (deprecated, use composable templates instead).",
-  {
-    name: z.any(), // Legacy template name(s) to check existence for. Examples: 'template1', ['template1', 'template2']
-    flatSettings: z.boolean().optional(), // Return settings in flat format
-    local: z.boolean().optional(), // Return local information, do not retrieve the state from master node
-    masterTimeout: z.string().optional(), // Timeout for connection to master node
-  },
+    {
+      name: z.any(), // Legacy template name(s) to check existence for. Examples: 'template1', ['template1', 'template2']
+      flatSettings: z.boolean().optional(), // Return settings in flat format
+      local: z.boolean().optional(), // Return local information, do not retrieve the state from master node
+      masterTimeout: z.string().optional(), // Timeout for connection to master node
+    },
     existsTemplateHandler,
   );
 };

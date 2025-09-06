@@ -185,19 +185,19 @@ export const registerRolloverTool: ToolRegistrationFunction = (server: McpServer
   server.tool(
     "elasticsearch_rollover",
     "Roll over to a new index in Elasticsearch for data streams or aliases. Best for index lifecycle management, data stream rotation, automated archiving. Use when you need to create new indices based on size, age, or document count thresholds in Elasticsearch.",
-  {
-    alias: z.string(), // Alias name for the data stream or index to roll over
-    newIndex: z.string().optional(), // Name of the new index to create during rollover
-    aliases: z.object({}).optional(), // Aliases to add to the new index
-    conditions: z.object({}).optional(), // Rollover conditions
-    mappings: z.object({}).optional(), // Mapping definition for the new index
-    settings: z.object({}).optional(), // Settings for the new index
-    dryRun: z.boolean().optional(), // Whether to perform a dry run without actually rolling over
-    masterTimeout: z.string().optional(), // Timeout for connection to master node
-    timeout: z.string().optional(), // Timeout for the rollover operation
-    waitForActiveShards: z.any().optional(), // Number of active shards to wait for
-    lazy: z.boolean().optional(), // Whether to perform lazy rollover
-  },
+    {
+      alias: z.string(), // Alias name for the data stream or index to roll over
+      newIndex: z.string().optional(), // Name of the new index to create during rollover
+      aliases: z.object({}).optional(), // Aliases to add to the new index
+      conditions: z.object({}).optional(), // Rollover conditions
+      mappings: z.object({}).optional(), // Mapping definition for the new index
+      settings: z.object({}).optional(), // Settings for the new index
+      dryRun: z.boolean().optional(), // Whether to perform a dry run without actually rolling over
+      masterTimeout: z.string().optional(), // Timeout for connection to master node
+      timeout: z.string().optional(), // Timeout for the rollover operation
+      waitForActiveShards: z.any().optional(), // Number of active shards to wait for
+      lazy: z.boolean().optional(), // Whether to perform lazy rollover
+    },
     withReadOnlyCheck("elasticsearch_rollover", rolloverHandler, OperationType.WRITE),
   );
 };

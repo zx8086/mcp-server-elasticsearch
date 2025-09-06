@@ -243,6 +243,34 @@ export function traceToolExecution(toolName: string, toolArgs: any, extra: any, 
 }
 ```
 
+## 🧪 **Testing and Error Resolution**
+
+### **Testing Best Practices**
+
+When working on MCP servers, follow these testing patterns:
+
+```typescript
+// Use safeCloseElasticsearchClient for clean test teardown
+import { safeCloseElasticsearchClient } from "../utils/elasticsearch-client";
+
+afterAll(async () => {
+  if (client) {
+    await safeCloseElasticsearchClient(client);
+  }
+});
+```
+
+### **TypeError Resolution Patterns**
+
+**Common Issues and Solutions:**
+
+1. **Connection Pool Errors**: Use `safeCloseElasticsearchClient()` to silently handle pool.close errors
+2. **Parameter Flow Issues**: Always use Zod schemas to ensure proper parameter extraction
+3. **Test Data Pollution**: Add proper cleanup in `beforeEach` hooks
+4. **Mock Comparison Errors**: Provide actual string content, not matcher objects
+
+**Testing Reference**: See `TESTING_STRATEGY_ANALYSIS.md` for comprehensive testing approach that achieved 100% TypeError elimination.
+
 ## 🚨 **Common Mistakes to Avoid**
 
 ### **❌ Schema Mistakes**

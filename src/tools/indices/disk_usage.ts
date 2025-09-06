@@ -109,14 +109,14 @@ export const registerDiskUsageTool: ToolRegistrationFunction = (server: McpServe
   server.tool(
     "elasticsearch_disk_usage",
     "Analyze index disk usage per field in Elasticsearch. Best for storage optimization, field analysis, capacity planning. Use when you need to understand disk consumption patterns and optimize storage usage for Elasticsearch indices and data streams.",
-  {
-    index: z.any(), // Index name(s) or pattern(s) to analyze disk usage for. Examples: 'logs-*', ['users', 'products']
-    allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard indices expression resolves into no concrete indices
-    expandWildcards: z.any().optional(), // Type of index that wildcard patterns can match
-    flush: z.boolean().optional(), // Whether to flush the index before getting the disk usage
-    ignoreUnavailable: z.boolean().optional(), // Whether specified concrete indices should be ignored when unavailable
-    runExpensiveTasks: z.boolean().optional(), // Whether to run expensive disk usage tasks
-  },
+    {
+      index: z.any(), // Index name(s) or pattern(s) to analyze disk usage for. Examples: 'logs-*', ['users', 'products']
+      allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard indices expression resolves into no concrete indices
+      expandWildcards: z.any().optional(), // Type of index that wildcard patterns can match
+      flush: z.boolean().optional(), // Whether to flush the index before getting the disk usage
+      ignoreUnavailable: z.boolean().optional(), // Whether specified concrete indices should be ignored when unavailable
+      runExpensiveTasks: z.boolean().optional(), // Whether to run expensive disk usage tasks
+    },
     diskUsageHandler,
   );
 };

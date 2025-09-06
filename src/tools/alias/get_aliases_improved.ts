@@ -290,16 +290,16 @@ export const registerGetAliasesTool: ToolRegistrationFunction = (server: McpServ
   server.tool(
     "elasticsearch_get_aliases",
     "Get index aliases from Elasticsearch with pagination and filtering. Best for alias discovery, configuration review, index mapping analysis. Returns summarized or detailed alias information with configurable limits to handle large responses. TIP: Use {summary: true, limit: 50} for overview, {sortBy: 'index_count'} to find aliases with most indices.",
-  {
-    index: z.string().optional(), // Index pattern to filter by. Use '*' for all indices. Supports wildcards like 'logs-*'
-    name: z.string().optional(), // Alias name pattern to filter by. Supports wildcards
-    ignoreUnavailable: z.boolean().optional(), // Whether to ignore if a specified index name doesn't exist (default: false)
-    allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard pattern matches no indices (default: true)
-    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Whether to expand wildcard expressions to concrete indices
-    limit: z.number().min(1).max(100).optional(), // Maximum number of aliases to return. Range: 1-100
-    summary: z.boolean().optional(), // Return summarized alias information instead of full details
-    sortBy: z.enum(["name", "index_count", "alias_name"]).optional(), // Sort aliases by specified field
-  },
+    {
+      index: z.string().optional(), // Index pattern to filter by. Use '*' for all indices. Supports wildcards like 'logs-*'
+      name: z.string().optional(), // Alias name pattern to filter by. Supports wildcards
+      ignoreUnavailable: z.boolean().optional(), // Whether to ignore if a specified index name doesn't exist (default: false)
+      allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard pattern matches no indices (default: true)
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Whether to expand wildcard expressions to concrete indices
+      limit: z.number().min(1).max(100).optional(), // Maximum number of aliases to return. Range: 1-100
+      summary: z.boolean().optional(), // Return summarized alias information instead of full details
+      sortBy: z.enum(["name", "index_count", "alias_name"]).optional(), // Sort aliases by specified field
+    },
     withReadOnlyCheck("elasticsearch_get_aliases", getAliasesHandler, OperationType.READ),
   );
 };

@@ -100,12 +100,12 @@ export const registerRefreshIndexTool: ToolRegistrationFunction = (server: McpSe
   server.tool(
     "elasticsearch_refresh_index",
     "Refresh an index in Elasticsearch. Best for data visibility, search consistency, real-time operations. Use when you need to make recently indexed documents immediately searchable in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    index: z.string(), // Name of the index to refresh
-    ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
-    allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
-    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
-  },
+    {
+      index: z.string(), // Name of the index to refresh
+      ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+      allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
+    },
     withReadOnlyCheck("elasticsearch_refresh_index", refreshIndexHandler, OperationType.WRITE),
   );
 };

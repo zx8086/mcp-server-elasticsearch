@@ -74,9 +74,9 @@ export const registerClearScrollTool: ToolRegistrationFunction = (server: McpSer
   server.tool(
     "elasticsearch_clear_scroll",
     "Clear a scroll context in Elasticsearch to free resources. Best for cleanup operations, memory management, scroll lifecycle management. Use when you need to explicitly release scroll contexts after completing large result set iterations in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    scrollId: z.string(), // Scroll ID to clear from memory
-  },
+    {
+      scrollId: z.string(), // Scroll ID to clear from memory
+    },
     clearScrollHandler,
   );
 };

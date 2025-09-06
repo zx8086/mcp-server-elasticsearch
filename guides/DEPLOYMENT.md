@@ -240,6 +240,20 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 | `LOG_LEVEL` | `info` | Logging level: `debug`, `info`, `warn`, `error` |
 | `LANGSMITH_TRACING` | `false` | Enable LangSmith tracing |
 
+### Configuration Validation
+
+Before deployment, validate your configuration:
+
+```bash
+# Validate configuration and test connectivity
+bun run validate-config:full
+
+# For CI/CD environments, use the test runner
+bun run scripts/run-working-tests.ts
+```
+
+**Testing Excellence**: The server includes a comprehensive testing strategy with 100% TypeError elimination. See `guides/TESTING_STRATEGY_ANALYSIS.md` for the complete validation approach.
+
 ### Configuration Best Practices
 
 1. **Security**:

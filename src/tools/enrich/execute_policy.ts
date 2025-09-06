@@ -124,11 +124,11 @@ export const registerEnrichExecutePolicyTool: ToolRegistrationFunction = (server
   server.tool(
     "elasticsearch_enrich_execute_policy",
     "Execute Elasticsearch enrich policy to create the enrich index. Best for policy activation, data preparation, enrichment setup. Use when you need to build the enrich index from source data for document enrichment in Elasticsearch.",
-  {
-    name: z.string(), // Name of the enrich policy to execute
-    masterTimeout: z.string().optional(), // Timeout for master node operations. Examples: '30s', '1m'
-    waitForCompletion: z.boolean().optional(), // Whether to wait for the policy execution to complete before returning
-  },
+    {
+      name: z.string(), // Name of the enrich policy to execute
+      masterTimeout: z.string().optional(), // Timeout for master node operations. Examples: '30s', '1m'
+      waitForCompletion: z.boolean().optional(), // Whether to wait for the policy execution to complete before returning
+    },
     withReadOnlyCheck("elasticsearch_enrich_execute_policy", executePolicyImpl, OperationType.WRITE),
   );
 };

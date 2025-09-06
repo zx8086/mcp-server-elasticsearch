@@ -138,6 +138,24 @@ export class BunPerformanceTimer {
     };
   }
 
+  static measureSync<T>(
+    _name: string,
+    fn: () => T,
+  ): { result: T; duration: number; runtime: string } {
+    const runtime = BunRuntimeDetection.getRuntime();
+    const start = BunRuntimeDetection.isBun() ? Bun.nanoseconds() : performance.now() * 1_000_000;
+
+    const result = fn();
+
+    const end = BunRuntimeDetection.isBun() ? Bun.nanoseconds() : performance.now() * 1_000_000;
+
+    return {
+      result,
+      duration: (end - start) / 1_000_000,
+      runtime,
+    };
+  }
+
   recordMeasurement(operation: string, duration: number): void {
     if (!this.measurements.has(operation)) {
       this.measurements.set(operation, []);

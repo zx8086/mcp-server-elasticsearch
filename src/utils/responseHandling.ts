@@ -36,7 +36,7 @@ export function paginateResults<T>(
   options: PaginationOptions = {},
 ): { results: T[]; metadata: ResponseMetadata } {
   const { limit, maxLimit = 100, offset = 0, defaultLimit = 20 } = options;
-  
+
   // Use provided limit, fall back to defaultLimit if not provided
   const effectiveLimit = Math.min(limit || defaultLimit, maxLimit);
   const startIndex = Math.max(0, offset);

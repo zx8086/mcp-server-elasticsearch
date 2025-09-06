@@ -107,23 +107,23 @@ export const registerCountDocumentsTool: ToolRegistrationFunction = (server: Mcp
   server.tool(
     "elasticsearch_count_documents",
     "Count documents in Elasticsearch. PARAMETERS: 'index' (string, default '*'), 'query' (object, default match_all). Best for data analysis, result set sizing. Example: {index: 'logs-*', query: {match: {status: 'error'}}}. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    index: z.string().optional(), // Index pattern to count documents in. Use '*' for all indices
-    query: z.object({}).optional(), // Query DSL to filter documents. Default matches all
-    analyzer: z.string().optional(),
-    analyzeWildcard: z.boolean().optional(),
-    defaultOperator: z.enum(["AND", "OR"]).optional(),
-    df: z.string().optional(),
-    expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
-    ignoreThrottled: z.boolean().optional(),
-    ignoreUnavailable: z.boolean().optional(),
-    allowNoIndices: z.boolean().optional(),
-    minScore: z.number().optional(),
-    preference: z.string().optional(),
-    routing: z.string().optional(),
-    q: z.string().optional(),
-    terminateAfter: z.number().optional(),
-  },
+    {
+      index: z.string().optional(), // Index pattern to count documents in. Use '*' for all indices
+      query: z.object({}).optional(), // Query DSL to filter documents. Default matches all
+      analyzer: z.string().optional(),
+      analyzeWildcard: z.boolean().optional(),
+      defaultOperator: z.enum(["AND", "OR"]).optional(),
+      df: z.string().optional(),
+      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
+      ignoreThrottled: z.boolean().optional(),
+      ignoreUnavailable: z.boolean().optional(),
+      allowNoIndices: z.boolean().optional(),
+      minScore: z.number().optional(),
+      preference: z.string().optional(),
+      routing: z.string().optional(),
+      q: z.string().optional(),
+      terminateAfter: z.number().optional(),
+    },
     countDocumentsHandler,
   );
 };

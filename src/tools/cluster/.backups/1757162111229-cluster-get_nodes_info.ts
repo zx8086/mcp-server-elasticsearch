@@ -55,48 +55,48 @@ type NodesInfoParams = z.infer<typeof nodesInfoValidator>;
 // Helper function to format node info summary
 function formatNodeInfoSummary(result: any): string {
   if (!result.nodes) return "No node information available";
-  
+
   const summary: string[] = ["## Node Information Summary\n"];
-  
+
   for (const [nodeId, node] of Object.entries(result.nodes)) {
     const nodeInfo = node as any;
     summary.push(`### Node: ${nodeInfo.name || nodeId}`);
     summary.push(`- **ID**: ${nodeId}`);
-    
+
     if (nodeInfo.ip) {
       summary.push(`- **IP**: ${nodeInfo.ip}`);
     }
-    
+
     if (nodeInfo.roles) {
-      summary.push(`- **Roles**: ${nodeInfo.roles.join(', ')}`);
+      summary.push(`- **Roles**: ${nodeInfo.roles.join(", ")}`);
     }
-    
+
     if (nodeInfo.version) {
       summary.push(`- **Version**: ${nodeInfo.version}`);
     }
-    
+
     if (nodeInfo.os) {
-      summary.push(`- **OS**: ${nodeInfo.os.pretty_name || nodeInfo.os.name || 'Unknown'}`);
+      summary.push(`- **OS**: ${nodeInfo.os.pretty_name || nodeInfo.os.name || "Unknown"}`);
       if (nodeInfo.os.arch) summary.push(`- **Architecture**: ${nodeInfo.os.arch}`);
     }
-    
+
     if (nodeInfo.jvm) {
       summary.push(`- **JVM**: ${nodeInfo.jvm.vm_name} ${nodeInfo.jvm.version}`);
       if (nodeInfo.jvm.mem) {
         summary.push(`- **JVM Heap**: ${Math.round(nodeInfo.jvm.mem.heap_max_in_bytes / 1024 / 1024 / 1024)}GB`);
       }
     }
-    
+
     if (nodeInfo.process) {
-      summary.push(`- **CPU Cores**: ${nodeInfo.process.cpu.total_cores || 'Unknown'}`);
+      summary.push(`- **CPU Cores**: ${nodeInfo.process.cpu.total_cores || "Unknown"}`);
       if (nodeInfo.process.mem) {
         summary.push(`- **System Memory**: ${Math.round(nodeInfo.process.mem.total_in_bytes / 1024 / 1024 / 1024)}GB`);
       }
     }
-    
+
     summary.push(""); // Empty line between nodes
   }
-  
+
   return summary.join("\n");
 }
 
@@ -195,10 +195,8 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (server: McpSe
         }
 
         // Format compact response
-        const responseContent = summary ? 
-          formatNodeInfoSummary(result) : 
-          JSON.stringify(result, null, 2);
-          
+        const responseContent = summary ? formatNodeInfoSummary(result) : JSON.stringify(result, null, 2);
+
         return {
           content: [
             {
@@ -235,9 +233,7 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (server: McpSe
       }
 
       // Format final response
-      const responseContent = summary ? 
-        formatNodeInfoSummary(result) : 
-        JSON.stringify(result, null, 2);
+      const responseContent = summary ? formatNodeInfoSummary(result) : JSON.stringify(result, null, 2);
 
       return {
         content: [{ type: "text", text: responseContent } as TextContent],

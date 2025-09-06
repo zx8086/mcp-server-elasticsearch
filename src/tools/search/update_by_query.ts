@@ -108,23 +108,23 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpS
   server.tool(
     "elasticsearch_update_by_query",
     "Update documents by query in Elasticsearch. Best for bulk document updates, field modifications, script-based transformations. Use when you need to update multiple documents based on query conditions rather than individual document updates. Uses direct JSON Schema and standardized MCP error codes.",
-  {
-    index: z.string(), // Index name or pattern to update
-    query: z.object({}), // Query DSL to select documents to update
-    script: z.object({}).optional(), // Script to apply to matching documents
-    maxDocs: z.number().optional(),
-    conflicts: z.enum(["abort", "proceed"]).optional(),
-    refresh: z.boolean().optional(),
-    timeout: z.string().optional(),
-    waitForActiveShards: z.any().optional(),
-    waitForCompletion: z.boolean().optional(),
-    requestsPerSecond: z.number().optional(),
-    scroll: z.string().optional(),
-    scrollSize: z.number().optional(),
-    searchType: z.enum(["query_then_fetch", "dfs_query_then_fetch"]).optional(),
-    searchTimeout: z.string().optional(),
-    slices: z.number().optional(),
-  },
+    {
+      index: z.string(), // Index name or pattern to update
+      query: z.object({}), // Query DSL to select documents to update
+      script: z.object({}).optional(), // Script to apply to matching documents
+      maxDocs: z.number().optional(),
+      conflicts: z.enum(["abort", "proceed"]).optional(),
+      refresh: z.boolean().optional(),
+      timeout: z.string().optional(),
+      waitForActiveShards: z.any().optional(),
+      waitForCompletion: z.boolean().optional(),
+      requestsPerSecond: z.number().optional(),
+      scroll: z.string().optional(),
+      scrollSize: z.number().optional(),
+      searchType: z.enum(["query_then_fetch", "dfs_query_then_fetch"]).optional(),
+      searchTimeout: z.string().optional(),
+      slices: z.number().optional(),
+    },
     updateByQueryHandler,
   );
 };
