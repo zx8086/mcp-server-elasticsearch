@@ -82,6 +82,11 @@ export class MetricsEndpoint {
         metrics_enabled: this.enabled,
         uptime: process.uptime(),
         version: process.version,
+        memory: {
+          rss: process.memoryUsage().rss,
+          heapUsed: process.memoryUsage().heapUsed,
+          heapTotal: process.memoryUsage().heapTotal,
+        },
       };
 
       res.writeHead(200, {

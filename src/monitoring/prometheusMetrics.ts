@@ -361,6 +361,25 @@ export class PrometheusMetrics {
     this.requestsPerSecond.set(rps);
   }
 
+  // Enhanced Elasticsearch transport metrics
+  public recordElasticsearchMetrics(metrics: {
+    averageResponseTime: number;
+    requestsPerSecond: number;
+    errorRate: number;
+    activeConnections: number;
+  }): void {
+    if (!this.isEnabled()) return;
+
+    this.elasticsearchResponseTime.observe({ operation: 'transport', index: '*' }, metrics.averageResponseTime / 1000);
+    this.setRequestsPerSecond(metrics.requestsPerSecond);
+    this.setActiveConnections(metrics.activeConnections);
+    
+    // Record error rate as a gauge if needed
+    if (this.elasticsearchErrors) {
+      // Note: Error rate is tracked via individual error recordings
+    }
+  }
+
   public getMetrics(): string {
     if (!this.isEnabled()) return "";
     return promClient.register.metrics();

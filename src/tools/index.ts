@@ -137,6 +137,9 @@ import {
   registerWatcherUpdateSettingsTool,
 } from "./watcher/index.js";
 
+// Diagnostics Tools
+import { registerElasticsearchDiagnostics } from "./diagnostics/index.js";
+
 interface ToolInfo {
   name: string;
   description: string;
@@ -162,6 +165,7 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
       "elasticsearch_get_mappings",
       "elasticsearch_get_shards",
       "elasticsearch_indices_summary",
+      "elasticsearch_diagnostics",
     ];
     const shouldValidate = !readOnlyTools.includes(name);
 
@@ -307,6 +311,9 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
   registerWatcherGetSettingsTool(server, esClient);
   registerWatcherUpdateSettingsTool(server, esClient);
   registerWatcherStatsTool(server, esClient);
+
+  // Register Diagnostics Tools
+  registerElasticsearchDiagnostics(server, esClient);
 
   logger.info("✅ All tools registered with automatic tracing and security validation", {
     toolCount: registeredTools.length,

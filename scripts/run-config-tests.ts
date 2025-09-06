@@ -25,7 +25,7 @@ interface TestSummary {
 
 export class ConfigurationTestRunner {
   private verbose = false;
-  
+
   constructor(verbose = false) {
     this.verbose = verbose;
   }
@@ -33,12 +33,12 @@ export class ConfigurationTestRunner {
   async runConfigTests(): Promise<{ summary: TestSummary; results: TestResult[] }> {
     console.log("🔧 Configuration Test Suite");
     console.log("════════════════════════════════════════════════════════");
-    
+
     const configTestSuites = [
       { name: "Environment Config", path: "tests/config/environment-config.test.ts" },
       { name: "Single Source Truth", path: "tests/config/single-source-truth.test.ts" },
       { name: "Breaking Change Detection", path: "tests/config/breaking-change-detection.test.ts" },
-      { name: "New Configuration Sections", path: "tests/config/new-configuration-sections.test.ts" }
+      { name: "New Configuration Sections", path: "tests/config/new-configuration-sections.test.ts" },
     ];
 
     console.log(`📋 Running ${configTestSuites.length} configuration test suites...\n`);
@@ -61,9 +61,11 @@ export class ConfigurationTestRunner {
       if (result.success) {
         console.log(`   ${status} ${suite.name}: ${result.passed} passed (${result.duration}ms)`);
       } else {
-        console.log(`   ${status} ${suite.name}: ${result.passed} passed, ${result.failed} failed (${result.duration}ms)`);
+        console.log(
+          `   ${status} ${suite.name}: ${result.passed} passed, ${result.failed} failed (${result.duration}ms)`,
+        );
         if (this.verbose && result.errors.length > 0) {
-          result.errors.forEach(error => {
+          result.errors.forEach((error) => {
             console.log(`       🔍 ${error}`);
           });
         }
@@ -80,20 +82,20 @@ export class ConfigurationTestRunner {
   async validateConfigRefactoring(): Promise<boolean> {
     console.log("🔍 Configuration Refactoring Validation");
     console.log("════════════════════════════════════════════════════════");
-    
+
     const criticalTests = [
       "should have no .default() calls in Zod schemas",
       "should use defaultConfig as single source",
       "should merge environment variables correctly",
       "should maintain backward compatibility",
-      "should validate new environment variable mappings"
+      "should validate new environment variable mappings",
     ];
 
     console.log("📋 Running critical refactoring validation tests...\n");
 
     // Run specific tests that validate our refactoring
     const { results } = await this.runConfigTests();
-    
+
     let allCriticalTestsPassed = true;
     let criticalTestsPassed = 0;
 
@@ -134,7 +136,7 @@ export class ConfigurationTestRunner {
         passed: 0,
         failed: 0,
         duration: 0,
-        errors: []
+        errors: [],
       };
 
       const childProcess = spawn("bun", ["test", testPath], {
@@ -155,25 +157,23 @@ export class ConfigurationTestRunner {
 
       childProcess.on("close", (code: number | null) => {
         result.duration = Date.now() - startTime;
-        
+
         // Parse test output to extract results
         const output = stdout + stderr;
-        
+
         // Extract passed/failed counts from Bun test output
         const passedMatch = output.match(/(\d+) passed/);
         const failedMatch = output.match(/(\d+) failed/);
-        
-        result.passed = passedMatch ? parseInt(passedMatch[1]) : 0;
-        result.failed = failedMatch ? parseInt(failedMatch[1]) : 0;
+
+        result.passed = passedMatch ? Number.parseInt(passedMatch[1]) : 0;
+        result.failed = failedMatch ? Number.parseInt(failedMatch[1]) : 0;
         result.success = code === 0 && result.failed === 0;
 
         // Extract error messages
         if (!result.success) {
-          const errorLines = output.split('\n').filter(line => 
-            line.includes('Error:') || 
-            line.includes('AssertionError') ||
-            line.includes('expect(')
-          );
+          const errorLines = output
+            .split("\n")
+            .filter((line) => line.includes("Error:") || line.includes("AssertionError") || line.includes("expect("));
           result.errors = errorLines.slice(0, 5); // Limit to first 5 errors
         }
 
@@ -189,7 +189,7 @@ export class ConfigurationTestRunner {
   }
 
   private generateSummary(results: TestResult[], totalDuration: number): TestSummary {
-    const successfulSuites = results.filter(r => r.success).length;
+    const successfulSuites = results.filter((r) => r.success).length;
     const totalTests = results.reduce((sum, r) => sum + r.passed + r.failed, 0);
     const passedTests = results.reduce((sum, r) => sum + r.passed, 0);
     const failedTests = results.reduce((sum, r) => sum + r.failed, 0);
@@ -201,14 +201,14 @@ export class ConfigurationTestRunner {
       passed_tests: passedTests,
       failed_tests: failedTests,
       success_rate: totalTests > 0 ? Math.round((passedTests / totalTests) * 100 * 10) / 10 : 0,
-      duration: totalDuration
+      duration: totalDuration,
     };
   }
 
   private displayResults(summary: TestSummary, results: TestResult[]): void {
     console.log("\n📊 Configuration Test Results Summary");
     console.log("────────────────────────────────────────");
-    
+
     // Group results by category
     const categories: { [key: string]: TestResult[] } = {};
     for (const result of results) {
@@ -219,15 +219,18 @@ export class ConfigurationTestRunner {
 
     for (const [category, categoryResults] of Object.entries(categories)) {
       console.log(`\n🏷️  ${category}:`);
-      
+
       for (const result of categoryResults) {
         const status = result.success ? "✅" : "❌";
-        const percentage = result.passed + result.failed > 0 
-          ? ((result.passed / (result.passed + result.failed)) * 100).toFixed(1)
-          : "0.0";
-        
-        console.log(`   ${status} ${result.suite}: ${result.passed}/${result.passed + result.failed} tests (${percentage}%) - ${result.duration}ms`);
-        
+        const percentage =
+          result.passed + result.failed > 0
+            ? ((result.passed / (result.passed + result.failed)) * 100).toFixed(1)
+            : "0.0";
+
+        console.log(
+          `   ${status} ${result.suite}: ${result.passed}/${result.passed + result.failed} tests (${percentage}%) - ${result.duration}ms`,
+        );
+
         if (!result.success && result.errors.length > 0 && this.verbose) {
           console.log(`      💡 ${result.errors[0]}`);
         }
@@ -251,13 +254,13 @@ export class ConfigurationTestRunner {
 // CLI usage
 if (import.meta.main) {
   const args = process.argv.slice(2);
-  const verbose = args.includes('--verbose') || args.includes('-v');
-  const validateRefactoring = args.includes('--validate-refactoring');
+  const verbose = args.includes("--verbose") || args.includes("-v");
+  const validateRefactoring = args.includes("--validate-refactoring");
 
   const runner = new ConfigurationTestRunner(verbose);
 
   if (validateRefactoring) {
-    runner.validateConfigRefactoring().then(success => {
+    runner.validateConfigRefactoring().then((success) => {
       process.exit(success ? 0 : 1);
     });
   } else {

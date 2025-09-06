@@ -5,6 +5,7 @@
 import { readFileSync } from "node:fs";
 import { Client, type ClientOptions, Transport, TransportRequestParams, type estypes } from "@elastic/elasticsearch";
 import { HttpConnection } from "@elastic/transport";
+import { ObservableTransport, enhanceElasticsearchClient, ElasticsearchDiagnostics } from "./utils/elasticsearchObservability.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { Config } from "./config.js";
 import { MetricsEndpoint } from "./monitoring/metricsEndpoint.js";
@@ -111,7 +112,11 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
     });
 
     const esClient = new Client(clientOptions);
-    logger.info("✅ Elasticsearch client created successfully");
+    
+    // Enhance client with additional observability features
+    enhanceElasticsearchClient(esClient);
+    
+    logger.info("✅ Elasticsearch client created successfully with enhanced observability");
 
     // Initialize connection pool with the primary client
     const connectionPool = getGlobalConnectionPool({
@@ -302,6 +307,13 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
       });
     }
 
+    // Initialize basic Elasticsearch diagnostics (without custom transport)
+    logger.info("🔍 Basic Elasticsearch observability initialized", {
+      clientEnhanced: true,
+      metricsEnabled: metricsEndpoint.isRunning(),
+      tracingEnabled: config.langsmith.tracing,
+    });
+
     logger.info("🏥 Production systems active", {
       rateLimiting: "Tool and connection limits enabled",
       resourceMonitoring: `Memory threshold: ${memoryThresholdMB}MB`,
@@ -309,6 +321,8 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
       caching: "Multi-tier response caching enabled",
       connectionWarming: "Pre-warming and keep-alive active",
       healthChecks: "30-second intervals",
+      elasticsearchObservability: "Enhanced client logging and connection monitoring",
+      diagnostics: "Basic ES health monitoring active",
     });
 
     return server;

@@ -138,10 +138,7 @@ export class BunPerformanceTimer {
     };
   }
 
-  static measureSync<T>(
-    _name: string,
-    fn: () => T,
-  ): { result: T; duration: number; runtime: string } {
+  static measureSync<T>(_name: string, fn: () => T): { result: T; duration: number; runtime: string } {
     const runtime = BunRuntimeDetection.getRuntime();
     const start = BunRuntimeDetection.isBun() ? Bun.nanoseconds() : performance.now() * 1_000_000;
 
