@@ -6,10 +6,13 @@ import { getCurrentRunTree, withRunTree } from "langsmith/singletons/traceable";
 import { traceable } from "langsmith/traceable";
 import { config } from "../config.js";
 import { logger } from "./logger.js";
-// Simple context interface for tracing
+// Enhanced context interface for conversation-level tracing
 interface TraceContext {
   sessionId: string;
   connectionId: string;
+  conversationId?: string;
+  conversationMessageCount?: number;
+  isNewConversation?: boolean;
   clientInfo?: {
     name?: string;
     version?: string;
@@ -83,7 +86,7 @@ export function initializeTracing(): void {
     });
 
     isTracingEnabled = true;
-    logger.info("✅ LangSmith tracing initialized", {
+    logger.info("LangSmith tracing initialized", {
       endpoint: endpoint,
       project: project,
       source: "MCP Server",
@@ -102,6 +105,9 @@ export function initializeTracing(): void {
 export interface TraceMetadata {
   connectionId?: string;
   sessionId?: string;
+  conversationId?: string;
+  conversationMessageCount?: number;
+  isNewConversation?: boolean;
   transportMode?: string;
   toolName?: string;
   index?: string;
@@ -191,9 +197,10 @@ export function traceToolExecution(
   // Get configured project for consistent routing
   const project = process.env.LANGSMITH_PROJECT || config.langsmith.project;
 
-  // Use simple tool name for tracing
+  // Use simple tool name for tracing with conversation context
   const shortConnectionId = context.connectionId.split("-").pop()?.substring(0, 6) || "conn";
-  const traceName = toolName;
+  const shortConversationId = context.conversationId?.split("_").pop()?.substring(0, 6) || "chat";
+  const traceName = context.conversationId ? `${toolName} [${shortConversationId}]` : toolName;
 
   // Create a traceable function with session-aware naming
   const toolTracer = traceable(
@@ -201,10 +208,14 @@ export function traceToolExecution(
       const startTime = Date.now();
       const currentRun = getCurrentRunTree();
 
-      logger.debug("Executing tool with context tracing", {
+      logger.debug("Executing tool with conversation tracing", {
         toolName,
         connectionId: shortConnectionId,
+        conversationId: shortConversationId,
+        conversationMessageCount: context.conversationMessageCount,
+        isNewConversation: context.isNewConversation,
         fullConnectionId: context.connectionId,
+        fullConversationId: context.conversationId,
         clientName: context.clientInfo?.name,
         project,
         hasParentTrace: !!currentRun,
@@ -231,6 +242,9 @@ export function traceToolExecution(
             executionTime,
             project,
             connectionId: context.connectionId,
+            conversationId: context.conversationId,
+            conversationMessageCount: context.conversationMessageCount,
+            isNewConversation: context.isNewConversation,
           },
         };
       } catch (error) {
@@ -251,6 +265,9 @@ export function traceToolExecution(
       metadata: {
         // Context metadata for LangSmith correlation
         connection_id: context.connectionId,
+        conversation_id: context.conversationId || "no-conversation",
+        conversation_message_count: context.conversationMessageCount || 1,
+        is_new_conversation: context.isNewConversation || false,
         client_name: context.clientInfo?.name || "unknown",
         client_platform: context.clientInfo?.platform || "unknown",
         
@@ -260,8 +277,10 @@ export function traceToolExecution(
       tags: [
         "mcp-tool",
         `connection:${shortConnectionId}`,
+        `conversation:${shortConversationId}`,
         `client:${context.clientInfo?.name?.toLowerCase().replace(/\s+/g, "-") || "unknown"}`,
         `tool:${toolName}`,
+        context.isNewConversation ? "new-conversation" : "continuing-conversation",
       ],
     },
   );
@@ -276,6 +295,9 @@ export function traceToolExecution(
     // Context for trace correlation
     context: {
       connection_id: context.connectionId,
+      conversation_id: context.conversationId,
+      conversation_message_count: context.conversationMessageCount,
+      is_new_conversation: context.isNewConversation,
       client_info: context.clientInfo,
     },
   });
@@ -386,10 +408,16 @@ export function createConnectionMetadata(
   connectionId: string,
   transportMode: string,
   sessionId?: string,
+  conversationId?: string,
+  conversationMessageCount?: number,
+  isNewConversation?: boolean,
 ): TraceMetadata {
   return {
     connectionId,
     sessionId,
+    conversationId,
+    conversationMessageCount,
+    isNewConversation,
     transportMode,
     timestamp: new Date().toISOString(),
   };

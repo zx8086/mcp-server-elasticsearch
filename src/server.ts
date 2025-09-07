@@ -44,7 +44,7 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
     initializeReadOnlyManager(config.server.readOnlyMode, config.server.readOnlyStrictMode);
 
     if (config.server.readOnlyMode) {
-      logger.info("🔒 READ-ONLY MODE ACTIVE", {
+      logger.info("READ-ONLY MODE ACTIVE", {
         strictMode: config.server.readOnlyStrictMode,
         behavior: config.server.readOnlyStrictMode
           ? "Destructive operations will be BLOCKED"
@@ -118,7 +118,7 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
     // Enhance client with additional observability features
     enhanceElasticsearchClient(esClient);
 
-    logger.info("✅ Elasticsearch client created successfully with enhanced observability");
+    logger.info("Elasticsearch client created successfully with enhanced observability");
 
     // Initialize connection pool with the primary client
     const connectionPool = getGlobalConnectionPool({
@@ -128,7 +128,7 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
     });
     connectionPool.addConnection(config.elasticsearch.url, esClient);
 
-    logger.info("📡 Connection pool initialized", {
+    logger.info("Connection pool initialized", {
       primaryUrl: config.elasticsearch.url,
       strategy: "fastest-response",
     });
@@ -140,7 +140,7 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
       // Use the client's info method for initial connection test
       const info = await esClient.info();
 
-      logger.info("🌐 Successfully connected to Elasticsearch", {
+      logger.info("Successfully connected to Elasticsearch", {
         version: info.version?.number,
         clusterName: info.cluster_name,
         clusterUuid: info.cluster_uuid,
@@ -152,14 +152,14 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
       const majorVersion = serverVersion ? Number.parseInt(serverVersion.split(".")[0]) : 0;
 
       if (majorVersion >= 9) {
-        logger.info(`🆕 Connected to Elasticsearch ${serverVersion} - using modern client features`);
+        logger.info(`Connected to Elasticsearch ${serverVersion} - using modern client features`);
       } else if (majorVersion >= 8) {
-        logger.info(`⚡ Connected to Elasticsearch ${serverVersion} - full feature support`);
+        logger.info(`Connected to Elasticsearch ${serverVersion} - full feature support`);
       } else {
-        logger.warn(`⚠️ Connected to older Elasticsearch ${serverVersion} - some features may be limited`);
+        logger.warn(`Connected to older Elasticsearch ${serverVersion} - some features may be limited`);
       }
     } catch (error: unknown) {
-      logger.error("❌ Failed to connect to Elasticsearch:", {
+      logger.error("Failed to connect to Elasticsearch:", {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });
@@ -196,7 +196,7 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
           warnings: operationsCheck.warnings || [],
         });
       } else {
-        logger.info("✅ All basic operations successful");
+        logger.info("All basic operations successful");
       }
     } catch (error) {
       logger.warn("Basic operations test failed, but continuing:", {
@@ -209,7 +209,7 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
       const modernFeaturesCheck = await testModernFeatures(esClient);
       const warnings = modernFeaturesCheck.warnings || [];
       if (warnings.length > 0) {
-        logger.info("🔧 Modern features availability:", { features: warnings });
+        logger.info("Modern features availability:", { features: warnings });
       }
     } catch (error) {
       logger.warn("Modern features test failed, but continuing:", {
@@ -217,7 +217,7 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
       });
     }
 
-    logger.info("🏗️ Creating MCP Server instance");
+    logger.info("Creating MCP Server instance");
     const server = new McpServer(
       {
         name: config.server.name,
@@ -239,15 +239,15 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
     );
 
     // Notification manager will be initialized per-request with context
-    logger.info("📢 Notification manager ready for per-request context");
+    logger.info("Notification manager ready for per-request context");
 
     // Context tracking for tracing correlation is handled per-request
-    logger.info("📋 Context tracking ready for request correlation");
+    logger.info("Context tracking ready for request correlation");
 
     // Register all tools with the validated client
     const registeredTools = registerAllTools(server, esClient);
 
-    logger.info("🛠️ All tools registered successfully", {
+    logger.info("All tools registered successfully", {
       serverName: config.server.name,
       version: config.server.version,
       readOnlyMode: config.server.readOnlyMode,
@@ -256,7 +256,7 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
     });
 
     // Initialize resource management
-    logger.info("🛡️ Initializing resource management");
+    logger.info("Initializing resource management");
 
     // Initialize rate limiters with configuration-based limits
     initializeRateLimiters({
@@ -278,7 +278,7 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
     initializeDefaultCircuitBreakers();
 
     // Initialize performance optimizations
-    logger.info("⚡ Initializing performance optimizations");
+    logger.info("Initializing performance optimizations");
 
     // Initialize caches for query results, mappings, and cluster info
     initializeCaches();
@@ -294,9 +294,9 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
     // Pre-warm endpoints during startup
     try {
       await preWarmEndpoints(esClient);
-      logger.info("✅ Connection pre-warming completed");
+      logger.info("Connection pre-warming completed");
     } catch (error) {
-      logger.warn("⚠️ Connection pre-warming failed, continuing anyway", {
+      logger.warn("Connection pre-warming failed, continuing anyway", {
         error: error instanceof Error ? error.message : String(error),
       });
     }
@@ -305,17 +305,17 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
     connectionWarmer.start();
 
     // Initialize health monitoring
-    logger.info("💚 Initializing health monitoring");
+    logger.info("Initializing health monitoring");
     const healthMonitor = initializeHealthMonitor(esClient);
     healthMonitor.start();
 
     // Initialize Prometheus metrics endpoint (optional - auto-detects prom-client)
-    logger.info("📊 Initializing monitoring systems");
-    const metricsEndpoint = new MetricsEndpoint();
+    logger.info("Initializing monitoring systems");
+    const metricsEndpoint = new MetricsEndpoint(config.server.monitoringPort);
     try {
       await metricsEndpoint.start();
       if (metricsEndpoint.isRunning()) {
-        logger.info("✅ Prometheus metrics endpoint started", {
+        logger.info("Prometheus metrics endpoint started", {
           port: metricsEndpoint.getPort(),
           endpoints: [
             `http://localhost:${metricsEndpoint.getPort()}/metrics`,
@@ -331,13 +331,13 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
     }
 
     // Initialize basic Elasticsearch diagnostics (without custom transport)
-    logger.info("🔍 Basic Elasticsearch observability initialized", {
+    logger.info("Basic Elasticsearch observability initialized", {
       clientEnhanced: true,
       metricsEnabled: metricsEndpoint.isRunning(),
       tracingEnabled: config.langsmith.tracing,
     });
 
-    logger.info("🏥 Production systems active", {
+    logger.info("Production systems active", {
       rateLimiting: "Tool and connection limits enabled",
       resourceMonitoring: `Memory threshold: ${memoryThresholdMB}MB`,
       circuitBreakers: "Fault tolerance for ES operations",
@@ -350,7 +350,7 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
 
     return server;
   } catch (error: unknown) {
-    logger.error("💥 Error creating server:", {
+    logger.error("Error creating server:", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });

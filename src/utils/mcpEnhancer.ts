@@ -149,7 +149,7 @@ export class EnhancedMcpServer {
 
     // Note: MCP protocol only supports specific handlers (initialize, tools/list, tools/call, etc.)
     // Health checks and metrics are handled internally via logging and monitoring
-    logger.info("🔧 Enhanced MCP server initialized with rate limiting and circuit breaker");
+    logger.info("Enhanced MCP server initialized with rate limiting and circuit breaker");
   }
 
   private wrapHandler(toolName: string, originalHandler: Function) {

@@ -89,8 +89,8 @@ async function main() {
         shutdown();
       });
 
-      const modeInfo = `🌐 SSE on port ${config.server.port}`;
-      logger.info(`🚀 Elasticsearch MCP Server started successfully with ${modeInfo}`, {
+      const modeInfo = `SSE on port ${config.server.port}`;
+      logger.info(`Elasticsearch MCP Server started successfully with ${modeInfo}`, {
         mode: config.server.readOnlyMode ? "READ-ONLY" : "FULL-ACCESS",
         strictMode: config.server.readOnlyStrictMode,
         transport: config.server.transportMode,
@@ -161,15 +161,15 @@ async function main() {
         shutdown();
       });
 
-      const modeInfo = "📝 STDIO";
-      logger.info(`🚀 Elasticsearch MCP Server started successfully with ${modeInfo}`, {
+      const modeInfo = "STDIO";
+      logger.info(`Elasticsearch MCP Server started successfully with ${modeInfo}`, {
         mode: config.server.readOnlyMode ? "READ-ONLY" : "FULL-ACCESS",
         strictMode: config.server.readOnlyStrictMode,
         transport: config.server.transportMode,
       });
     }
   } catch (error) {
-    logger.error("💥 Fatal error during startup:", {
+    logger.error("Fatal error during startup:", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });
@@ -179,7 +179,7 @@ async function main() {
 
 // Start the server
 main().catch((error) => {
-  logger.error("❌ Failed to start server:", {
+  logger.error("Failed to start server:", {
     error: error instanceof Error ? error.message : String(error),
     stack: error instanceof Error ? error.stack : undefined,
   });

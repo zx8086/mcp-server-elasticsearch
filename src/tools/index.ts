@@ -4,7 +4,7 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { logger } from "../utils/logger.js";
 import { withSecurityValidation } from "../utils/securityEnhancer.js";
-import { traceToolExecution } from "../utils/tracing.js";
+import { traceToolExecutionWithConversation } from "../utils/tracingEnhanced.js";
 import { getCurrentSession } from "../utils/sessionContext.js";
 
 import { registerGetMappingsTool } from "./core/get_mappings.js";
@@ -176,21 +176,21 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
     // Create enhanced handler with both tracing and security validation
     let enhancedHandler = handler;
 
-    // Add tracing wrapper to ALL tools
+    // Add conversation-aware tracing wrapper to ALL tools
     enhancedHandler = async (toolArgs: any, extra: any) => {
-      // Extract connection and client info from context for tracing
+      // Extract connection and client info from context for tracing (same as before)
       const currentSession = getCurrentSession();
       const connectionId = currentSession?.connectionId || `conn-${Date.now()}`;
       const clientInfo = currentSession?.clientInfo || { name: "Claude Desktop", platform: "desktop" };
       
-      logger.debug("🛠️ Tool execution with context", {
+      logger.debug("Tool execution with conversation-aware tracing", {
         toolName: name,
         connectionId: connectionId.substring(0, 8) + "...",
       });
       
-      // Pass context information to tracing  
+      // Pass context information to conversation-aware tracing (maintains exact same signature)
       const contextSession = { sessionId: connectionId, connectionId, clientInfo };
-      return traceToolExecution(name, toolArgs, extra, contextSession, async (toolArgs: any, extra: any) => {
+      return traceToolExecutionWithConversation(name, toolArgs, extra, contextSession, async (toolArgs: any, extra: any) => {
         return handler(toolArgs, extra);
       });
     };
@@ -203,8 +203,8 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
     return originalTool(name, description, inputSchema, enhancedHandler);
   };
 
-  logger.info("🚀 Registering all tools with automatic tracing and security validation", {
-    tracingEnabled: true, // All tools will be traced
+  logger.info("Registering all tools with conversation-aware tracing and security validation", {
+    conversationTracingEnabled: true, // All tools will be traced with conversation context
     securityEnabled: true,
   });
 
@@ -336,9 +336,9 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
     registerTool(server, esClient);
   }
 
-  logger.info("✅ All tools registered with automatic tracing and security validation", {
+  logger.info("All tools registered with conversation-aware tracing and security validation", {
     toolCount: registeredTools.length,
-    tracingActive: true, // All tools are traced
+    conversationTracingActive: true, // All tools are traced with conversation context
     enhancementsEnabled: true,
     notificationTools: notificationTools.length,
   });

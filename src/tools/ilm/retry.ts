@@ -56,10 +56,11 @@ function createIlmRetryMcpError(
 export const registerRetryTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const retryHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
+    let params: RetryParams | undefined;
 
     try {
       // Simple validation - no complex parameter extraction
-      const params = retryValidator.parse(args);
+      params = retryValidator.parse(args);
 
       logger.debug("Retrying ILM policy execution", {
         index: params.index,
@@ -163,7 +164,7 @@ Operation completed at: ${new Date().toISOString()}`,
         }
 
         if (error.message.includes("index_not_found") || error.message.includes("no such index")) {
-          throw createIlmRetryMcpError(`Index not found: ${params?.index || "unknown"}`, {
+          throw createIlmRetryMcpError(`Index not found: ${params?.index || args?.index || "unknown"}`, {
             type: "index_not_found",
             details: { suggestion: "Verify the index name or pattern exists" },
           });
@@ -173,7 +174,8 @@ Operation completed at: ${new Date().toISOString()}`,
         if (error.message.includes("illegal_argument_exception") && 
             error.message.includes("cannot retry an action for an index")) {
           
-          let enhancedMessage = `Cannot retry ILM for index '${params?.index}': ${error.message}`;
+          const indexName = params?.index || args?.index || "unknown";
+          let enhancedMessage = `Cannot retry ILM for index '${indexName}': ${error.message}`;
           
           if (error.message.includes("has not encountered an error")) {
             enhancedMessage += "\n\nThis means the index is not currently in an ERROR state in its ILM lifecycle.";
@@ -188,7 +190,7 @@ Operation completed at: ${new Date().toISOString()}`,
           throw createIlmRetryMcpError(enhancedMessage, {
             type: "no_failed_step",
             details: { 
-              index: params?.index,
+              index: indexName,
               originalError: error.message,
               suggestion: "Use elasticsearch_ilm_explain_lifecycle to verify ILM status and identify indices in ERROR state" 
             },
@@ -196,7 +198,7 @@ Operation completed at: ${new Date().toISOString()}`,
         }
 
         if (error.message.includes("no_failed_step") || error.message.includes("not in error state")) {
-          throw createIlmRetryMcpError(`No failed ILM steps to retry for: ${params?.index || "unknown"}`, {
+          throw createIlmRetryMcpError(`No failed ILM steps to retry for: ${params?.index || args?.index || "unknown"}`, {
             type: "no_failed_step",
             details: { suggestion: "Use explain_lifecycle to check if indices are in ERROR state" },
           });

@@ -33,9 +33,6 @@ Thumbs.db
 *.swp
 *.swo
 
-# Documentation
-docs/
-
 # Test scripts with sensitive data
 scripts/test-*.ts
 scripts/test-*.js

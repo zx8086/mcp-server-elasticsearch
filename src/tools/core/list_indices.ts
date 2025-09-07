@@ -7,6 +7,7 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import { createPaginationHeader, paginateResults, responsePresets } from "../../utils/responseHandling.js";
+import { createTextContent, createIndexMetadata } from "../../utils/mcpAnnotations.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
@@ -178,14 +179,36 @@ export const registerListIndicesTool: ToolRegistrationFunction = (server: McpSer
         logger.warn("Slow operation: elasticsearch_list_indices", { duration });
       }
 
-      // MCP-compliant response format
+      // Create enhanced content with metadata  
       const headerMessage = createPaginationHeader(metadata, "Indices");
+      
+      const indexMetadata = createIndexMetadata({
+        executionTimeMs: Math.round(duration),
+        index: params.indexPattern || "*",
+        operation: "list_indices",
+      });
 
       return {
         content: [
-          { type: "text", text: headerMessage },
-          { type: "text", text: JSON.stringify(summary, null, 2) },
-          { type: "text", text: JSON.stringify(indicesInfo, null, 2) },
+          createTextContent(headerMessage, indexMetadata),
+          createTextContent(
+            JSON.stringify(summary, null, 2),
+            {
+              operation: "indices_summary",
+              totalResults: (indicesInfo as any[]).length,
+              timestamp: new Date().toISOString(),
+            }
+          ),
+          createTextContent(
+            JSON.stringify(indicesInfo, null, 2),
+            {
+              operation: "indices_details",
+              totalResults: (indicesInfo as any[]).length,
+              returnedResults: metadata.returned,
+              timestamp: new Date().toISOString(),
+              audience: ["user"],
+            }
+          ),
         ],
       };
     } catch (error) {

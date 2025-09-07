@@ -47,7 +47,7 @@ describe("NotificationManager fixes", () => {
     });
   });
 
-  test("should send message notifications using logging method", async () => {
+  test("should log message notifications locally instead of sending", async () => {
     await notificationManager.sendMessage({
       level: "info",
       data: {
@@ -56,18 +56,10 @@ describe("NotificationManager fixes", () => {
       },
     });
 
-    expect(sentNotifications).toHaveLength(1);
-    expect(sentNotifications[0]).toMatchObject({
-      method: "notifications/message",
-      params: {
-        level: "info",
-        logger: "elasticsearch-mcp-server",
-        data: {
-          message: "Test message",
-          type: "test",
-        },
-      },
-    });
+    // Should NOT send notifications to client (logs locally instead)
+    expect(sentNotifications).toHaveLength(0);
+    
+    // Message should be logged locally to avoid "Server does not support logging" errors
   });
 
   test("should handle missing context gracefully", async () => {
@@ -131,29 +123,16 @@ describe("NotificationManager fixes", () => {
       "Test operation"
     );
 
-    // Should have sent initial progress notification and start message (2 notifications total)
-    expect(sentNotifications).toHaveLength(2);
+    // Should have sent only progress notification (1 total, message notifications are logged locally)
+    expect(sentNotifications).toHaveLength(1);
 
-    // First notification should be progress
+    // Should be progress notification only (start message is now logged locally)
     expect(sentNotifications[0]).toEqual({
       method: "notifications/progress",
       params: {
         progressToken,
         progress: 0,
         total: 100,
-      },
-    });
-
-    // Second notification should be start message
-    expect(sentNotifications[1]).toMatchObject({
-      method: "notifications/message",
-      params: {
-        level: "info",
-        data: {
-          type: "operation_started",
-          operation_id: operationId,
-          message: "Test operation",
-        },
       },
     });
 

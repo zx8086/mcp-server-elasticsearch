@@ -100,25 +100,29 @@ export const registerPutLifecycleTool: ToolRegistrationFunction = (server: McpSe
       });
 
       // Extract the correct policy body format for Elasticsearch API
+      // The Elasticsearch client expects the body to contain the ENTIRE policy structure
       let policyBody: any;
       
-      // Check if body has 'policy' wrapper (wrapped format)
+      // Check if body already has 'policy' wrapper (wrapped format) - use as-is
       if ('policy' in params.body && params.body.policy) {
-        policyBody = params.body.policy;
+        // Body format: { policy: { phases: {...} } }
+        policyBody = params.body;
       } 
-      // Check if body has 'phases' directly (direct format) 
+      // Check if body has 'phases' directly (direct format) - wrap it
       else if ('phases' in params.body) {
-        policyBody = { phases: params.body.phases };
+        // Body format: { phases: {...} } -> wrap as { policy: { phases: {...} } }
+        policyBody = { policy: params.body };
       } 
-      // Otherwise use the body as-is
+      // Otherwise assume it's already properly formatted
       else {
         policyBody = params.body;
       }
 
       logger.debug("Elasticsearch ILM API call", {
         policy: params.policy,
-        bodyKeys: Object.keys(policyBody),
-        hasPhases: 'phases' in policyBody
+        bodyStructure: Object.keys(policyBody),
+        hasPolicyWrapper: 'policy' in policyBody,
+        hasPhases: policyBody.policy ? 'phases' in policyBody.policy : 'phases' in policyBody
       });
 
       const result = await esClient.ilm.putLifecycle({

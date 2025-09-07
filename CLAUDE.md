@@ -46,9 +46,9 @@ bun run connectivity-test      # Test connectivity
 
 ### Monitoring System (Optional)
 The server includes comprehensive Prometheus metrics collection:
-- **Auto-detected**: No environment variables required
-- **Graceful degradation**: Works without `prom-client` installed  
-- **Default port**: 9090 for metrics endpoint
+- **Auto-detected**: No dependencies required - gracefully degrades if `prom-client` not installed
+- **Fully integrated**: Monitoring is initialized during server startup (src/server.ts)
+- **Configurable port**: Default port 9090, configurable via `MONITORING_PORT` environment variable
 - **Endpoints**: `/metrics` (Prometheus) and `/health` (health check)
 - **Metrics**: 50+ metrics covering performance, errors, and system health
 
@@ -57,7 +57,9 @@ The server includes comprehensive Prometheus metrics collection:
 bun add prom-client
 
 # Server automatically detects and enables monitoring
-# No configuration required - metrics available at:
+# Optional port configuration:
+# export MONITORING_PORT=9090  # Default port
+# Metrics available at:
 # http://localhost:9090/metrics (Prometheus scraping)
 # http://localhost:9090/health  (Health check)
 
@@ -602,7 +604,7 @@ This comprehensive documentation update was performed using coordinated multi-ag
 meta-orchestrator → Analyzed documentation gaps and infrastructure issues
 
 # 2. Specialized Analysis  
-mcp-developer → Found monitoring integration missing in server startup
+mcp-developer → Verified monitoring integration in server startup (working correctly)
 config-manager → Validated environment variable documentation
 observability-engineer → Reviewed metrics and monitoring architecture
 

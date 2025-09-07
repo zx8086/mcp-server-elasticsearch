@@ -79,7 +79,7 @@ export class BunOptimizedSSETransport {
       },
     });
 
-    logger.info(`🚀 Bun-optimized SSE server listening on port ${PORT}`, {
+    logger.info(`Bun-optimized SSE server listening on port ${PORT}`, {
       runtime: "bun",
       sseEndpoint: "/sse",
       mcpEndpoint: `${sseEndpoint}?sessionId=<SESSION_ID>`,

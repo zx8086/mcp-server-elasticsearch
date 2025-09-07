@@ -71,7 +71,11 @@ export class NotificationManager {
    */
   async sendProgress(notification: ProgressNotification): Promise<void> {
     if (!this.requestContext?.sendNotification) {
-      logger.debug("No request context available for progress notification", notification);
+      logger.debug("No request context available for progress notification", {
+        token: notification.progressToken,
+        progress: notification.progress,
+        total: notification.total,
+      });
       return;
     }
 
@@ -96,16 +100,19 @@ export class NotificationManager {
           },
         });
 
-        logger.debug("Progress notification sent", {
+        logger.debug("Progress notification sent successfully", {
           token: notification.progressToken,
           progress: notification.progress,
           total: notification.total,
           hasTraceContext: !!currentTrace,
         });
       } catch (error) {
-        logger.error("Failed to send progress notification", {
+        // Log but don't throw - progress notifications are optional
+        logger.warn("Progress notification failed (non-critical)", {
           error: error instanceof Error ? error.message : String(error),
-          notification,
+          token: notification.progressToken,
+          progress: notification.progress,
+          total: notification.total,
           hasTraceContext: !!currentTrace,
         });
       }
@@ -121,58 +128,44 @@ export class NotificationManager {
 
   /**
    * Send a general notification with trace context preservation
+   * NOTE: Most MCP clients (like Claude Desktop) don't support notifications/message
+   * This gracefully falls back to local logging only
    */
   async sendMessage(notification: GeneralNotification): Promise<void> {
-    if (!this.requestContext?.sendNotification) {
-      logger.debug("No request context available for message notification", notification);
-      return;
-    }
-
-    // CRITICAL: Safely get trace context without throwing errors
-    let currentTrace;
-    try {
-      currentTrace = getCurrentRunTree(true); // Allow absent run tree
-    } catch (error) {
-      // No tracing context available - this is fine
-      currentTrace = null;
-    }
-    
-    const sendNotificationSafely = async () => {
-      try {
-        // Use the sendNotification function for logging messages
-        await this.requestContext!.sendNotification({
-          method: "notifications/message",
-          params: {
-            level: notification.level,
-            logger: notification.logger || "elasticsearch-mcp-server",
-            data: {
-              ...notification.data,
-              timestamp: notification.data.timestamp || new Date().toISOString(),
-            },
-          },
-        });
-
-        logger.debug("Message notification sent", {
-          level: notification.level,
-          message: notification.data.message,
-          type: notification.data.type,
-          hasTraceContext: !!currentTrace,
-        });
-      } catch (error) {
-        logger.error("Failed to send message notification", {
-          error: error instanceof Error ? error.message : String(error),
-          notification,
-          hasTraceContext: !!currentTrace,
-        });
-      }
+    // CRITICAL: Most MCP clients don't support notifications/message
+    // Always log locally and skip sending notification to avoid errors
+    const logMessage = `[${notification.level.toUpperCase()}] ${notification.data.message}`;
+    const logMetadata = {
+      level: notification.level,
+      type: notification.data.type,
+      operation_id: notification.data.operation_id,
+      data: notification.data,
     };
 
-    // Execute with preserved trace context if available
-    if (currentTrace) {
-      await withRunTree(currentTrace, sendNotificationSafely);
-    } else {
-      await sendNotificationSafely();
+    // Log locally using appropriate level
+    switch (notification.level) {
+      case "error":
+        logger.error(logMessage, logMetadata);
+        break;
+      case "warning":
+        logger.warn(logMessage, logMetadata);
+        break;
+      case "debug":
+        logger.debug(logMessage, logMetadata);
+        break;
+      case "info":
+      default:
+        logger.info(logMessage, logMetadata);
+        break;
     }
+
+    // Skip sending notification to client - most don't support it
+    // Only progress notifications are widely supported
+    logger.debug("Message logged locally (client notification skipped)", {
+      reason: "Most MCP clients don't support notifications/message",
+      level: notification.level,
+      message: notification.data.message,
+    });
   }
 
   /**

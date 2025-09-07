@@ -21,6 +21,8 @@ const ServerConfigSchema = z.object({
   maxPageSize: z.number().min(10).max(10000),
   enableResponseCompression: z.boolean(),
   autoSummarizeLargeResponses: z.boolean(),
+  // Monitoring configuration
+  monitoringPort: z.number().min(1024).max(65535),
 });
 
 const ElasticsearchConfigSchema = z
@@ -121,6 +123,8 @@ const defaultConfig: Config = {
     maxPageSize: 100,
     enableResponseCompression: true,
     autoSummarizeLargeResponses: true,
+    // Monitoring configuration
+    monitoringPort: 9090,
   },
   elasticsearch: {
     url: "http://localhost:9200",
@@ -174,6 +178,7 @@ const envVarMapping = {
     maxPageSize: "MCP_MAX_PAGE_SIZE",
     enableResponseCompression: "MCP_ENABLE_RESPONSE_COMPRESSION",
     autoSummarizeLargeResponses: "MCP_AUTO_SUMMARIZE_LARGE_RESPONSES",
+    monitoringPort: "MONITORING_PORT",
   },
   elasticsearch: {
     url: "ES_URL",
@@ -261,6 +266,9 @@ function loadConfigFromEnv(): Partial<Config> {
     autoSummarizeLargeResponses:
       (parseEnvVar(Bun.env[envVarMapping.server.autoSummarizeLargeResponses], "boolean") as boolean) ??
       defaultConfig.server.autoSummarizeLargeResponses,
+    monitoringPort:
+      (parseEnvVar(Bun.env[envVarMapping.server.monitoringPort], "number") as number) ||
+      defaultConfig.server.monitoringPort,
   };
 
   // Load elasticsearch config

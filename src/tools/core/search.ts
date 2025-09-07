@@ -6,6 +6,7 @@ import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { notificationManager, createProgressTracker, withNotificationContext } from "../../utils/notifications.js";
+import { createTextContent, createSearchMetadata } from "../../utils/mcpAnnotations.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 interface MappingResponse {
@@ -212,7 +213,7 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
       }
 
       // DEBUG: Log the exact request being sent to Elasticsearch
-      logger.debug("🔍 EXACT Elasticsearch request:", JSON.stringify(searchRequest, null, 2));
+      logger.debug("EXACT Elasticsearch request:", JSON.stringify(searchRequest, null, 2));
 
       await progressTracker.updateProgress(55, "Search request prepared, configuring highlighting");
 
@@ -268,21 +269,30 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
 
       // Handle aggregation-only queries (size=0) - only return aggregations if explicitly no documents wanted
       if (sizeLimit === 0) {
-        const metadata = {
-          totalHits: typeof result.hits.total === "number" ? result.hits.total : result.hits.total?.value || 0,
-          tookMs: result.took,
-          currentTime: new Date().toISOString(),
-        };
+        const totalHits = typeof result.hits.total === "number" ? result.hits.total : result.hits.total?.value || 0;
+        const duration = performance.now() - perfStart;
+        
+        const searchMetadata = createSearchMetadata({
+          totalResults: totalHits,
+          returnedResults: 0,
+          executionTimeMs: Math.round(duration),
+          elasticsearchTimeMs: result.took,
+          queryType: isEmptyQuery ? "match_all" : "custom",
+          index: index || "*",
+          hasAggregations: true,
+          fromOffset: from ?? 0,
+        });
+
         return {
           content: [
-            {
-              type: "text",
-              text: `Search results with aggregations (${metadata.totalHits} total hits, ${metadata.tookMs}ms, current time: ${metadata.currentTime}):`,
-            } as TextContent,
-            {
-              type: "text",
-              text: JSON.stringify(result.aggregations || {}, null, 2),
-            } as TextContent,
+            createTextContent(
+              `Search results with aggregations (${totalHits} total hits, ${result.took}ms):`,
+              searchMetadata
+            ),
+            createTextContent(
+              JSON.stringify(result.aggregations || {}, null, 2),
+              { operation: "aggregations", timestamp: new Date().toISOString() }
+            ),
           ],
         };
       }
@@ -317,15 +327,23 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
       });
 
       const totalHits = typeof result.hits.total === "number" ? result.hits.total : result.hits.total?.value || 0;
-      const metadataFragment: TextContent = {
-        type: "text",
-        text: `Total results: ${totalHits}, showing ${result.hits.hits.length} from position ${fromOffset}`,
-      };
-
+      
       await progressTracker.updateProgress(95, "Formatting search results for display");
 
       const duration = performance.now() - perfStart;
       
+      // Create comprehensive search metadata
+      const searchMetadata = createSearchMetadata({
+        totalResults: totalHits,
+        returnedResults: result.hits.hits.length,
+        executionTimeMs: Math.round(duration),
+        elasticsearchTimeMs: result.took,
+        queryType: isEmptyQuery ? "match_all" : "custom",
+        index: index || "*",
+        hasAggregations: !!result.aggregations,
+        fromOffset,
+      });
+
       // Performance and result notifications
       const resultMetrics = {
         totalHits,
@@ -344,14 +362,34 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
         });
       }
 
-      // If we have aggregations AND documents, show both
-      const responseContent: TextContent[] = [metadataFragment, ...contentFragments];
+      // Create enhanced content with metadata
+      const metadataFragment = createTextContent(
+        `Total results: ${totalHits}, showing ${result.hits.hits.length} from position ${fromOffset}`,
+        searchMetadata
+      );
+
+      // Enhanced content fragments for documents
+      const enhancedContentFragments = contentFragments.map(fragment => 
+        createTextContent(fragment.text, {
+          operation: "document_result",
+          timestamp: new Date().toISOString(),
+          audience: ["user"],
+        })
+      );
+
+      // Build response content with enhanced items
+      const responseContent = [metadataFragment, ...enhancedContentFragments];
 
       if (hasAggregations && result.aggregations) {
-        const aggregationsFragment: TextContent = {
-          type: "text",
-          text: `\n=== AGGREGATIONS ===\n${JSON.stringify(result.aggregations, null, 2)}`,
-        };
+        const aggregationsFragment = createTextContent(
+          `\n=== AGGREGATIONS ===\n${JSON.stringify(result.aggregations, null, 2)}`,
+          {
+            operation: "aggregations",
+            hasAggregations: true,
+            timestamp: new Date().toISOString(),
+            audience: ["user"],
+          }
+        );
         responseContent.push(aggregationsFragment);
         await progressTracker.updateProgress(98, "Added aggregation results to response");
       }

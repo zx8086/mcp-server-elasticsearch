@@ -47,7 +47,7 @@ export class SSETransportManager {
       });
     });
 
-    logger.info(`🌐 SSE HTTP server listening on port ${PORT}`, {
+    logger.info(`SSE HTTP server listening on port ${PORT}`, {
       sseEndpoint: "/sse",
       mcpEndpoint: `${sseEndpoint}?sessionId=<SESSION_ID>`,
     });

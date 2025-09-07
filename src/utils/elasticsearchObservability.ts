@@ -282,7 +282,7 @@ export class ObservableTransport extends Transport {
     }
 
     // Check for Elasticsearch warnings
-    if (response.headers && response.headers.warning) {
+    if (response && response.headers && response.headers.warning) {
       metrics.warning = response.headers.warning;
       logger.warn("Elasticsearch API warning", {
         requestId,
@@ -450,7 +450,7 @@ export function enhanceElasticsearchClient(client: Client): Client {
         });
       });
 
-      logger.info("✅ Elasticsearch connection pool events registered");
+      logger.info("Elasticsearch connection pool events registered");
     } else {
       logger.debug("Connection pool events not available - continuing without connection events");
     }

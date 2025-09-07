@@ -55,9 +55,11 @@ describe("Notification System Fix", () => {
     });
   });
 
-  it("should send message notifications using sendNotification from context", async () => {
+  it("should log message notifications locally instead of sending to client", async () => {
     notificationManager.setRequestContext(mockExtra);
     
+    // Message notifications should not be sent to client anymore
+    // They are logged locally to avoid "Server does not support logging" errors
     await notificationManager.sendMessage({
       level: "info",
       data: {
@@ -66,18 +68,11 @@ describe("Notification System Fix", () => {
       }
     });
     
-    expect(mockSendNotification).toHaveBeenCalledWith({
-      method: "notifications/message",
-      params: {
-        level: "info",
-        logger: "elasticsearch-mcp-server",
-        data: {
-          message: "Test message",
-          type: "info",
-          timestamp: expect.any(String)
-        }
-      }
-    });
+    // Should NOT call sendNotification (client doesn't support it)
+    expect(mockSendNotification).not.toHaveBeenCalled();
+    
+    // The message should be logged locally (we can't easily test console.log here,
+    // but the behavior is verified in integration tests)
   });
 
   it("should handle missing context gracefully", async () => {
@@ -118,65 +113,31 @@ describe("Notification System Fix", () => {
     expect(notificationManager['requestContext']).toBeNull();
   });
 
-  it("should send info notifications", async () => {
+  it("should log info notifications locally", async () => {
     notificationManager.setRequestContext(mockExtra);
     
     await notificationManager.sendInfo("Test info message", { extra: "data" });
     
-    expect(mockSendNotification).toHaveBeenCalledWith({
-      method: "notifications/message",
-      params: {
-        level: "info",
-        logger: "elasticsearch-mcp-server",
-        data: {
-          message: "Test info message",
-          type: "info",
-          extra: "data",
-          timestamp: expect.any(String)
-        }
-      }
-    });
+    // Should NOT call sendNotification (logs locally instead)
+    expect(mockSendNotification).not.toHaveBeenCalled();
   });
 
-  it("should send error notifications", async () => {
+  it("should log error notifications locally", async () => {
     notificationManager.setRequestContext(mockExtra);
     
     const testError = new Error("Test error");
     await notificationManager.sendError("Operation failed", testError, { operation: "test" });
     
-    expect(mockSendNotification).toHaveBeenCalledWith({
-      method: "notifications/message",
-      params: {
-        level: "error",
-        logger: "elasticsearch-mcp-server",
-        data: {
-          message: "Operation failed",
-          type: "error",
-          error: "Test error",
-          operation: "test",
-          timestamp: expect.any(String)
-        }
-      }
-    });
+    // Should NOT call sendNotification (logs locally instead)
+    expect(mockSendNotification).not.toHaveBeenCalled();
   });
 
-  it("should send warning notifications", async () => {
+  it("should log warning notifications locally", async () => {
     notificationManager.setRequestContext(mockExtra);
     
     await notificationManager.sendWarning("Test warning", { severity: "medium" });
     
-    expect(mockSendNotification).toHaveBeenCalledWith({
-      method: "notifications/message",
-      params: {
-        level: "warning",
-        logger: "elasticsearch-mcp-server",
-        data: {
-          message: "Test warning",
-          type: "warning",
-          severity: "medium",
-          timestamp: expect.any(String)
-        }
-      }
-    });
+    // Should NOT call sendNotification (logs locally instead)
+    expect(mockSendNotification).not.toHaveBeenCalled();
   });
 });
