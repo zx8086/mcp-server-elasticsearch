@@ -4,17 +4,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an Elasticsearch MCP (Model Context Protocol) Server that enables AI assistants to interact with Elasticsearch clusters. It's built with TypeScript on the Bun runtime and provides 104+ tools for comprehensive Elasticsearch operations.
+This is an Elasticsearch MCP (Model Context Protocol) Server that enables AI assistants to interact with Elasticsearch clusters. It's built with TypeScript on the Bun runtime and provides 162+ tools for comprehensive Elasticsearch operations.
 
 ## Essential Commands
 
 ### Development
 ```bash
 bun run dev                    # Start development server with hot reload
+bun run dev:hot                # Start with hot module replacement
 bun run build                  # Build production bundle
+bun run build:dev              # Development build with inline sourcemaps
+bun run build:production       # Optimized production build
+bun run build:analyze          # Build with bundle analysis
 bun run test                   # Run tests
-bun run lint                   # Run ESLint
-bun run lint:fix               # Format with Biome
+bun run lint                   # Run Biome linting
+bun run lint:fix               # Fix linting issues
+bun run format                 # Format code with Biome
 ```
 
 ### Configuration & Validation
@@ -27,7 +32,11 @@ bun run test-connection        # Test Elasticsearch connectivity
 ### Debugging
 ```bash
 bun run inspector              # MCP protocol inspector (stdio mode)
+bun run build:inspector        # Build and run inspector
 LOG_LEVEL=debug bun run dev    # Enable debug logging
+bun run dev-tools              # Development tools suite
+bun run dev-tools:full         # Full dev tools with tests and profiling
+bun run dev-tools:minimal      # Minimal dev tools (no lint/typecheck)
 ```
 
 ### Connectivity Testing
@@ -54,6 +63,13 @@ bun add prom-client
 
 # Check if monitoring is active
 curl http://localhost:9090/health
+
+# Or use the built-in scripts
+bun run monitor:health         # Check monitoring health status
+bun run monitor:metrics        # View Prometheus metrics
+bun run monitor:status         # Check monitoring status
+bun run health-check           # Comprehensive health check
+bun run audit-report           # Generate audit report
 ```
 
 **Note**: Monitoring is completely optional and does not affect core functionality. The system gracefully operates without monitoring dependencies.
@@ -104,6 +120,7 @@ config = ConfigSchema.parse(mergedConfig);
 Key configuration files:
 - `src/config.ts`: Central configuration with Zod schemas and single default source
 - `src/validation.ts`: Environment and connection validation
+- `src/utils/sessionContext.ts`: AsyncLocalStorage-based request context for tracing
 - `.env.example`: Configuration template
 
 ### Transport Modes
@@ -113,18 +130,34 @@ The server supports two transport modes (set via `MCP_TRANSPORT`):
 
 Transport handling is in `src/index.ts`.
 
+### Context Management
+The server includes context tracking for tracing and debugging:
+- **AsyncLocalStorage Context**: Maintains request context across async operations for tracing
+- **Client Detection**: Automatic client identification (Claude Desktop, n8n, etc.) for logging
+- **Transport Awareness**: Tracks context across stdio and SSE transport modes
+- **LangSmith Integration**: Context metadata included in trace correlation (when enabled)
+
 ### Tool Organization
-Tools are organized by functionality in `src/tools/`:
+Tools are organized by functionality in `src/tools/` with 19 specialized categories:
 - `core/`: Essential operations (search, list, mappings)
 - `document/`: CRUD operations
 - `search/`: Advanced search features
 - `index_management/`: Index operations
+- `indices/`: Index-specific operations
+- `mapping/`: Mapping management operations
+- `alias/`: Index alias management
 - `cluster/`: Cluster monitoring
 - `bulk/`: Bulk operations
 - `analytics/`: Analytics and aggregations
+- `advanced/`: Advanced Elasticsearch features
+- `diagnostics/`: System diagnostics and health monitoring
 - `ilm/`: Index Lifecycle Management
 - `watcher/`: Watcher integration
 - `template/`: Template management
+- `tasks/`: Task management operations
+- `enrich/`: Enrich processor management
+- `autoscaling/`: Autoscaling configuration
+- `notifications/`: Notification system management
 
 Each tool category has an index file that exports all tools.
 
@@ -257,13 +290,22 @@ All infrastructure components are automatically initialized and require no manua
 ### Documentation Structure
 The project uses a comprehensive documentation system:
 - **Root**: `README.md` (main project docs) and `CLAUDE.md` (this file)
-- **guides/**: Complete development knowledge base with 11+ comprehensive guides
-- **dev-testing/**: Development test files and debugging scripts
+- **guides/**: Complete development knowledge base with 14+ comprehensive guides (6,882+ lines)
+- **tests/dev/**: Development test files and debugging scripts
 
 **Essential Reading for MCP Development:**
 - `guides/MCP_DEVELOPMENT_PATTERNS.md` - Complete MCP development patterns
 - `guides/AGENT_DEVELOPMENT_INSTRUCTIONS.md` - AI agent specific instructions
 - `guides/PARAMETER_DEBUGGING_GUIDE.md` - Quick troubleshooting guide
+- `guides/LANGSMITH_TRACING_IMPLEMENTATION.md` - Complete LangSmith integration
+- `guides/PAGINATION_AUDIT_REPORT.md` - Comprehensive pagination analysis
+- `guides/MCP_FILTERING_SYSTEM.md` - Advanced filtering patterns
+- `guides/TESTING_STRATEGY_ANALYSIS.md` - Testing excellence documentation
+- `guides/DEPLOYMENT.md` - Infrastructure and deployment guide
+- `guides/CONTEXT_SYNTHESIS.md` - Multi-agent development analysis
+- `guides/JSON_TO_ZOD_CONVERSION_REPORT.md` - Schema conversion documentation
+- `guides/NOTIFICATION_FIX_SUMMARY.md` - Notification system fixes
+- `guides/TRACE_DUPLICATION_FIX_SUMMARY.md` - Tracing system fixes
 
 ### Important: Always Check Existing Code First
 **Before creating any new files or modifying existing ones:**
@@ -321,6 +363,9 @@ tests/
 │   ├── manual/            # Manual test scripts
 │   ├── debug/             # Debug utilities
 │   └── fixtures/          # Test data
+│
+├── utils/                   # Test utilities and helpers
+├── regression/             # Regression test suite
 │
 └── docs/                   # Test documentation
     ├── coverage/          # Coverage reports
@@ -437,7 +482,7 @@ server.tool("name", "description", {
 - Parameters are completely lost or incorrect
 - Handler receives MCP protocol context instead of user arguments
 
-**Solution**: Always use Zod schema objects directly in tool registration. All 78+ tools have been converted to use this pattern.
+**Solution**: Always use Zod schema objects directly in tool registration. All 162+ tools have been converted to use this pattern.
 
 ## Critical Dependencies
 

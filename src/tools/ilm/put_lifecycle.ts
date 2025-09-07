@@ -99,9 +99,31 @@ export const registerPutLifecycleTool: ToolRegistrationFunction = (server: McpSe
         timeout: params.timeout,
       });
 
+      // Extract the correct policy body format for Elasticsearch API
+      let policyBody: any;
+      
+      // Check if body has 'policy' wrapper (wrapped format)
+      if ('policy' in params.body && params.body.policy) {
+        policyBody = params.body.policy;
+      } 
+      // Check if body has 'phases' directly (direct format) 
+      else if ('phases' in params.body) {
+        policyBody = { phases: params.body.phases };
+      } 
+      // Otherwise use the body as-is
+      else {
+        policyBody = params.body;
+      }
+
+      logger.debug("Elasticsearch ILM API call", {
+        policy: params.policy,
+        bodyKeys: Object.keys(policyBody),
+        hasPhases: 'phases' in policyBody
+      });
+
       const result = await esClient.ilm.putLifecycle({
         name: params.policy,
-        body: params.body,
+        body: policyBody,
         master_timeout: params.masterTimeout,
         timeout: params.timeout,
       });

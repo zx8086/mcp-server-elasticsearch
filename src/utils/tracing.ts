@@ -6,7 +6,16 @@ import { getCurrentRunTree, withRunTree } from "langsmith/singletons/traceable";
 import { traceable } from "langsmith/traceable";
 import { config } from "../config.js";
 import { logger } from "./logger.js";
-import type { Session } from "./sessionManager.js";
+// Simple context interface for tracing
+interface TraceContext {
+  sessionId: string;
+  connectionId: string;
+  clientInfo?: {
+    name?: string;
+    version?: string;
+    platform?: string;
+  };
+}
 
 // =============================================================================
 // LANGSMITH CLIENT INITIALIZATION
@@ -176,15 +185,15 @@ export function traceToolExecution(
   toolName: string,
   toolArgs: any,
   extra: any,
-  session: Session,
+  context: TraceContext,
   handler: (toolArgs: any, extra: any) => Promise<any>,
 ) {
   // Get configured project for consistent routing
   const project = process.env.LANGSMITH_PROJECT || config.langsmith.project;
 
-  // Create session-aware trace name
-  const shortSessionId = session.sessionId.split("-").pop()?.substring(0, 6) || "unknown";
-  const sessionAwareToolName = `${toolName} [${shortSessionId}]`;
+  // Use simple tool name for tracing
+  const shortConnectionId = context.connectionId.split("-").pop()?.substring(0, 6) || "conn";
+  const traceName = toolName;
 
   // Create a traceable function with session-aware naming
   const toolTracer = traceable(
@@ -192,14 +201,11 @@ export function traceToolExecution(
       const startTime = Date.now();
       const currentRun = getCurrentRunTree();
 
-      logger.debug("Executing tool with session-aware tracing", {
+      logger.debug("Executing tool with context tracing", {
         toolName,
-        sessionAwareToolName,
-        sessionId: shortSessionId,
-        fullSessionId: session.sessionId,
-        messageCount: session.messageCount,
-        sessionDuration: Date.now() - session.startTime,
-        clientName: session.clientInfo?.name,
+        connectionId: shortConnectionId,
+        fullConnectionId: context.connectionId,
+        clientName: context.clientInfo?.name,
         project,
         hasParentTrace: !!currentRun,
         parentTraceId: currentRun?.id,
@@ -224,8 +230,7 @@ export function traceToolExecution(
             runId: currentRun?.id,
             executionTime,
             project,
-            sessionId: session.sessionId,
-            messageCount: session.messageCount,
+            connectionId: context.connectionId,
           },
         };
       } catch (error) {
@@ -240,27 +245,22 @@ export function traceToolExecution(
       }
     },
     {
-      name: sessionAwareToolName, // Use session-aware tool name for grouping
+      name: traceName, // Use clean tool name
       run_type: "tool",
       project_name: project, // CRITICAL: Ensure traces go to correct project
       metadata: {
-        // Session metadata for LangSmith grouping
-        session_id: session.sessionId,
-        connection_id: session.connectionId,
-        client_name: session.clientInfo?.name || "unknown",
-        client_platform: session.clientInfo?.platform || "unknown",
-        session_start_time: new Date(session.startTime).toISOString(),
-        message_count: session.messageCount,
-        session_duration_ms: Date.now() - session.startTime,
+        // Context metadata for LangSmith correlation
+        connection_id: context.connectionId,
+        client_name: context.clientInfo?.name || "unknown",
+        client_platform: context.clientInfo?.platform || "unknown",
         
         // Tool-specific metadata
         tool_name: toolName,
-        original_tool_name: toolName,
       },
       tags: [
         "mcp-tool",
-        `session:${shortSessionId}`,
-        `client:${session.clientInfo?.name?.toLowerCase().replace(/\s+/g, "-") || "unknown"}`,
+        `connection:${shortConnectionId}`,
+        `client:${context.clientInfo?.name?.toLowerCase().replace(/\s+/g, "-") || "unknown"}`,
         `tool:${toolName}`,
       ],
     },
@@ -273,14 +273,10 @@ export function traceToolExecution(
     extra_context: extra,
     timestamp: new Date().toISOString(),
     
-    // Session context for trace grouping
-    session: {
-      session_id: session.sessionId,
-      connection_id: session.connectionId,
-      message_count: session.messageCount,
-      client_info: session.clientInfo,
-      session_start: new Date(session.startTime).toISOString(),
-      session_duration_ms: Date.now() - session.startTime,
+    // Context for trace correlation
+    context: {
+      connection_id: context.connectionId,
+      client_info: context.clientInfo,
     },
   });
 }

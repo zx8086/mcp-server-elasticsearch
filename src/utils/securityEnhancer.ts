@@ -220,19 +220,32 @@ export class SecurityEnhancer {
   private validateString(value: string, field: string): SecurityViolation[] {
     const violations: SecurityViolation[] = [];
 
-    // Elasticsearch-specific exemptions
+    // Elasticsearch-specific exemptions - expanded to cover more field types
     const isElasticsearchField =
       field.toLowerCase().includes("index") ||
       field.toLowerCase().includes("pattern") ||
-      field.toLowerCase().includes("query");
+      field.toLowerCase().includes("query") ||
+      field.toLowerCase().includes("alias") ||
+      field.toLowerCase().includes("repository") ||
+      field.toLowerCase().includes("snapshot") ||
+      field.toLowerCase().includes("policy") ||
+      field.toLowerCase().includes("template") ||
+      field.toLowerCase().includes("name") ||
+      field.toLowerCase().includes("id");
 
-    // If this is an Elasticsearch index pattern, skip command injection checks for commas
-    const isIndexPattern = /^[a-zA-Z0-9\-_*,.\s]+$/.test(value) && value.includes("*");
+    // Expanded patterns for legitimate Elasticsearch values
+    const isElasticsearchValue = 
+      // Index patterns with wildcards, commas, hyphens, dots
+      /^[a-zA-Z0-9\-_*,.\s]+$/.test(value) ||
+      // Repository/snapshot names with hyphens
+      /^[a-zA-Z0-9\-_]+$/.test(value) ||
+      // Policy/template names
+      /^[a-zA-Z0-9\-_.]+$/.test(value);
 
     // Check each pattern category
     for (const [category, patterns] of this.suspiciousPatterns.entries()) {
-      // Skip command injection checks for legitimate Elasticsearch index patterns
-      if (category === "command_injection" && isElasticsearchField && isIndexPattern) {
+      // Skip command injection checks for legitimate Elasticsearch patterns
+      if (category === "command_injection" && isElasticsearchField && isElasticsearchValue) {
         continue;
       }
 

@@ -5,7 +5,6 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { logger } from "../utils/logger.js";
 import { withSecurityValidation } from "../utils/securityEnhancer.js";
 import { traceToolExecution } from "../utils/tracing.js";
-import { getGlobalSessionManager } from "../utils/sessionManager.js";
 import { getCurrentSession } from "../utils/sessionContext.js";
 
 import { registerGetMappingsTool } from "./core/get_mappings.js";
@@ -177,30 +176,21 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
     // Create enhanced handler with both tracing and security validation
     let enhancedHandler = handler;
 
-    // Add session management and tracing wrapper to ALL tools
+    // Add tracing wrapper to ALL tools
     enhancedHandler = async (toolArgs: any, extra: any) => {
-      const sessionManager = getGlobalSessionManager();
-      
-      // MCP context analysis shows no conversation markers are provided
-      // Time-based conversation detection is the appropriate solution
-      
-      // Extract connection and client info from context
+      // Extract connection and client info from context for tracing
       const currentSession = getCurrentSession();
       const connectionId = currentSession?.connectionId || `conn-${Date.now()}`;
       const clientInfo = currentSession?.clientInfo || { name: "Claude Desktop", platform: "desktop" };
       
-      // Get or create session based on activity patterns (with conversation detection)
-      const session = sessionManager.getCurrentSession(connectionId, clientInfo);
-      
-      logger.debug("🛠️ Tool execution with session tracking", {
+      logger.debug("🛠️ Tool execution with context", {
         toolName: name,
-        sessionId: session.sessionId.substring(0, 8) + "...",
-        messageCount: session.messageCount,
         connectionId: connectionId.substring(0, 8) + "...",
       });
       
-      // Pass session information to tracing
-      return traceToolExecution(name, toolArgs, extra, session, async (toolArgs: any, extra: any) => {
+      // Pass context information to tracing  
+      const contextSession = { sessionId: connectionId, connectionId, clientInfo };
+      return traceToolExecution(name, toolArgs, extra, contextSession, async (toolArgs: any, extra: any) => {
         return handler(toolArgs, extra);
       });
     };

@@ -25,7 +25,6 @@ import { initializeRateLimiters, initializeResourceMonitor } from "./utils/rateL
 import { initializeReadOnlyManager } from "./utils/readOnlyMode.js";
 import { createConnectionMetadata, initializeTracing, traceMcpConnection } from "./utils/tracing.js";
 import { notificationManager } from "./utils/notifications.js";
-import { initializeSessionManager } from "./utils/sessionManager.js";
 import { checkElasticsearchConnection, testBasicOperations, testModernFeatures } from "./validation.js";
 
 export async function createElasticsearchMcpServer(config: Config): Promise<McpServer> {
@@ -242,23 +241,8 @@ export async function createElasticsearchMcpServer(config: Config): Promise<McpS
     // Notification manager will be initialized per-request with context
     logger.info("📢 Notification manager ready for per-request context");
 
-    // Initialize session management for trace separation
-    logger.info("📋 Initializing session management");
-    const sessionManager = initializeSessionManager({
-      sessionTimeoutMs: config.sessionTracking.sessionTimeoutMinutes * 60 * 1000, // Convert minutes to milliseconds
-      enableSessionTracking: config.sessionTracking.enabled,
-      includeSessionInTraceName: config.sessionTracking.includeSessionInTraceName,
-      maxSessions: config.sessionTracking.maxConcurrentSessions,
-      conversationDetectionThresholdMs: config.sessionTracking.conversationDetectionThresholdSeconds * 1000, // Convert seconds to milliseconds
-    });
-
-    logger.info("✅ Session management initialized", {
-      timeoutMinutes: config.sessionTracking.sessionTimeoutMinutes,
-      enabled: config.sessionTracking.enabled,
-      includeSessionInTraceName: config.sessionTracking.includeSessionInTraceName,
-      maxConcurrentSessions: config.sessionTracking.maxConcurrentSessions,
-      conversationDetectionThresholdSeconds: config.sessionTracking.conversationDetectionThresholdSeconds,
-    });
+    // Context tracking for tracing correlation is handled per-request
+    logger.info("📋 Context tracking ready for request correlation");
 
     // Register all tools with the validated client
     const registeredTools = registerAllTools(server, esClient);
