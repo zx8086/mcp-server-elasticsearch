@@ -241,10 +241,6 @@ export class ObservableTransport extends Transport {
     }
   }
 
-  /**
-   * CRITICAL: Detect if we're within a tool execution to avoid trace conflicts
-   * This prevents nested trace creation during MCP tool executions
-   */
   private isWithinToolExecution(): boolean {
     // Simple heuristic: check if we have an active trace that looks like a tool trace
     try {

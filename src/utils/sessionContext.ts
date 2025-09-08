@@ -23,16 +23,10 @@ export interface SessionContext {
 // Create AsyncLocalStorage to maintain session context across async calls
 const sessionStorage = new AsyncLocalStorage<SessionContext>();
 
-/**
- * Run a function with session context
- */
 export function runWithSession<T>(context: SessionContext, fn: () => T | Promise<T>): T | Promise<T> {
   return sessionStorage.run(context, fn);
 }
 
-/**
- * Get the current session context
- */
 export function getCurrentSession(): SessionContext | undefined {
   const session = sessionStorage.getStore();
   if (!session) {
@@ -41,23 +35,14 @@ export function getCurrentSession(): SessionContext | undefined {
   return session;
 }
 
-/**
- * Get session ID from current context
- */
 export function getCurrentSessionId(): string | undefined {
   return getCurrentSession()?.sessionId;
 }
 
-/**
- * Get client info from current context
- */
 export function getCurrentClientInfo(): SessionContext["clientInfo"] | undefined {
   return getCurrentSession()?.clientInfo;
 }
 
-/**
- * Create a session context object
- */
 export function createSessionContext(
   connectionId: string,
   transportMode: "stdio" | "sse",
@@ -75,9 +60,6 @@ export function createSessionContext(
   };
 }
 
-/**
- * Log session info for debugging
- */
 export function logSessionInfo(prefix = "Session Info") {
   const session = getCurrentSession();
   if (session) {

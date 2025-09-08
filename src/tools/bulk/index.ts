@@ -1,3 +1,4 @@
+/* src/tools/bulk/index.ts */
 import type { Client } from "@elastic/elasticsearch";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";

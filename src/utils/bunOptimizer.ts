@@ -1,15 +1,8 @@
 /* src/utils/bunOptimizer.ts */
 
-/**
- * Bun runtime optimization utilities for Elasticsearch MCP server
- * Provides high-performance alternatives using native Bun APIs
- */
 
 import { logger } from "./logger.js";
 
-/**
- * Runtime detection with Bun-first optimization
- */
 export class BunRuntimeDetection {
   static isBun(): boolean {
     return typeof Bun !== "undefined";
@@ -32,13 +25,7 @@ export class BunRuntimeDetection {
   }
 }
 
-/**
- * High-performance file operations with Bun native APIs
- */
 export class BunFileManager {
-  /**
-   * Optimized configuration file loading
-   */
   static async loadConfig<T>(path: string): Promise<T> {
     if (BunRuntimeDetection.isBun()) {
       const configFile = Bun.file(path);
@@ -56,9 +43,6 @@ export class BunFileManager {
     throw new Error(`Configuration file not found: ${path}`);
   }
 
-  /**
-   * High-performance log file writing
-   */
   static async writeLog(path: string, content: string): Promise<void> {
     if (BunRuntimeDetection.isBun()) {
       await Bun.write(path, content);
@@ -68,9 +52,6 @@ export class BunFileManager {
     }
   }
 
-  /**
-   * Stream processing for large responses
-   */
   static async processLargeResponse(data: any, processor: (chunk: Uint8Array) => Promise<void>): Promise<void> {
     if (BunRuntimeDetection.isBun()) {
       const blob = new Blob([JSON.stringify(data)]);
@@ -99,9 +80,6 @@ export class BunFileManager {
   }
 }
 
-/**
- * High-precision performance monitoring with Bun.nanoseconds()
- */
 export class BunPerformanceTimer {
   private startTime = 0;
   private measurements = new Map<string, number[]>();
@@ -177,9 +155,6 @@ export class BunPerformanceTimer {
   }
 }
 
-/**
- * Memory usage optimization with Bun.gc()
- */
 export class BunMemoryManager {
   static getMemoryUsage() {
     // Force garbage collection if using Bun
@@ -220,13 +195,7 @@ export class BunMemoryManager {
   }
 }
 
-/**
- * Enhanced process management utilities
- */
 export class BunProcessManager {
-  /**
-   * Optimized subprocess execution
-   */
   static async executeCommand(
     command: string[],
     options: { cwd?: string; env?: Record<string, string> } = {},
@@ -280,9 +249,6 @@ export class BunProcessManager {
   }
 }
 
-/**
- * System information utilities
- */
 export class BunSystemInfo {
   static getSystemInfo() {
     const bunInfo = BunRuntimeDetection.getBunInfo();

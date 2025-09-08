@@ -4,16 +4,6 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { logger } from "./logger.js";
 
-/**
- * Enhanced MCP Server with production-ready features
- * Adds:
- * - Request rate limiting
- * - Circuit breaker pattern
- * - Request timeout handling
- * - Performance monitoring
- * - Request validation
- * - Health checks
- */
 
 interface RateLimitConfig {
   windowMs: number;
@@ -302,9 +292,6 @@ export class EnhancedMcpServer {
   }
 }
 
-/**
- * Factory function to create an enhanced MCP server
- */
 export function createEnhancedMcpServer(
   baseServer: McpServer,
   options: {

@@ -24,9 +24,6 @@ export class SSETransportManager {
     private config: Config,
   ) {}
 
-  /**
-   * Start SSE server
-   */
   async start(): Promise<void> {
     const PORT = this.config.server.port;
     const sseEndpoint = "/mcp";
@@ -53,9 +50,6 @@ export class SSETransportManager {
     });
   }
 
-  /**
-   * Handle incoming HTTP requests
-   */
   private async handleRequest(req: http.IncomingMessage, res: http.ServerResponse, sseEndpoint: string): Promise<void> {
     // Set CORS headers
     this.setCorsHeaders(res);
@@ -71,9 +65,6 @@ export class SSETransportManager {
     }
   }
 
-  /**
-   * Handle SSE connection establishment
-   */
   private async handleSSEConnection(
     req: http.IncomingMessage,
     res: http.ServerResponse,
@@ -149,9 +140,6 @@ export class SSETransportManager {
     }
   }
 
-  /**
-   * Handle MCP POST requests
-   */
   private async handleMCPRequest(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
     if (req.method !== "POST") {
       if (req.method === "OPTIONS") {
@@ -202,34 +190,22 @@ export class SSETransportManager {
     }
   }
 
-  /**
-   * Set CORS headers
-   */
   private setCorsHeaders(res: http.ServerResponse): void {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   }
 
-  /**
-   * Handle OPTIONS requests
-   */
   private handleOptionsRequest(res: http.ServerResponse): void {
     res.writeHead(204);
     res.end();
   }
 
-  /**
-   * Handle 404 Not Found
-   */
   private handleNotFound(res: http.ServerResponse): void {
     res.writeHead(404);
     res.end("Not found");
   }
 
-  /**
-   * Get server statistics
-   */
   getStats(): { activeConnections: number; port: number } {
     return {
       activeConnections: this.activeConnections.size,
@@ -237,9 +213,6 @@ export class SSETransportManager {
     };
   }
 
-  /**
-   * Graceful shutdown
-   */
   async shutdown(): Promise<void> {
     logger.info("Shutting down SSE server gracefully", {
       activeConnections: this.activeConnections.size,
@@ -280,9 +253,6 @@ export class SSETransportManager {
     }
   }
 
-  /**
-   * Force shutdown with timeout
-   */
   async forceShutdown(timeoutMs = 5000): Promise<void> {
     const shutdownPromise = this.shutdown();
     const timeoutPromise = new Promise<void>((resolve) => {

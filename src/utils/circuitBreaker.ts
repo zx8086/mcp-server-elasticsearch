@@ -55,9 +55,6 @@ export class CircuitBreaker {
     });
   }
 
-  /**
-   * Execute a function with circuit breaker protection
-   */
   async execute<T>(operation: () => Promise<T>): Promise<T> {
     // Check if circuit should reject the call
     if (this.shouldRejectCall()) {
@@ -81,9 +78,6 @@ export class CircuitBreaker {
     }
   }
 
-  /**
-   * Check if the call should be rejected
-   */
   private shouldRejectCall(): boolean {
     const now = Date.now();
 
@@ -111,9 +105,6 @@ export class CircuitBreaker {
     }
   }
 
-  /**
-   * Handle successful operation
-   */
   private onSuccess(): void {
     this.lastSuccessTime = Date.now();
 
@@ -138,9 +129,6 @@ export class CircuitBreaker {
     }
   }
 
-  /**
-   * Handle failed operation
-   */
   private onFailure(): void {
     this.failureCount++;
     this.lastFailureTime = Date.now();
@@ -162,9 +150,6 @@ export class CircuitBreaker {
     }
   }
 
-  /**
-   * Check if circuit should be opened
-   */
   private shouldOpenCircuit(): boolean {
     const now = Date.now();
     const periodStart = now - this.config.monitoringPeriod;
@@ -176,9 +161,6 @@ export class CircuitBreaker {
     return recentFailures >= this.config.failureThreshold && withinMonitoringPeriod;
   }
 
-  /**
-   * Open the circuit
-   */
   private openCircuit(): void {
     this.state = CircuitState.OPEN;
     this.nextRetryTime = Date.now() + this.config.recoveryTimeout;
@@ -190,9 +172,6 @@ export class CircuitBreaker {
     });
   }
 
-  /**
-   * Reset circuit breaker to closed state
-   */
   private reset(): void {
     this.state = CircuitState.CLOSED;
     this.failureCount = 0;
@@ -200,9 +179,6 @@ export class CircuitBreaker {
     this.nextRetryTime = undefined;
   }
 
-  /**
-   * Get current stats
-   */
   getStats(): CircuitBreakerStats {
     return {
       state: this.state,
@@ -215,25 +191,16 @@ export class CircuitBreaker {
     };
   }
 
-  /**
-   * Manually open the circuit
-   */
   open(): void {
     this.openCircuit();
     logger.info("Circuit breaker manually opened", { name: this.name });
   }
 
-  /**
-   * Manually close the circuit
-   */
   close(): void {
     this.reset();
     logger.info("Circuit breaker manually closed", { name: this.name });
   }
 
-  /**
-   * Get health status
-   */
   isHealthy(): boolean {
     return this.state === CircuitState.CLOSED;
   }
@@ -242,9 +209,6 @@ export class CircuitBreaker {
 // Global circuit breakers registry
 const circuitBreakers = new Map<string, CircuitBreaker>();
 
-/**
- * Create or get a circuit breaker
- */
 export function getOrCreateCircuitBreaker(name: string, config: CircuitBreakerConfig): CircuitBreaker {
   let breaker = circuitBreakers.get(name);
 
@@ -257,16 +221,10 @@ export function getOrCreateCircuitBreaker(name: string, config: CircuitBreakerCo
   return breaker;
 }
 
-/**
- * Get existing circuit breaker
- */
 export function getCircuitBreaker(name: string): CircuitBreaker | undefined {
   return circuitBreakers.get(name);
 }
 
-/**
- * Get all circuit breaker stats
- */
 export function getAllCircuitBreakerStats(): Record<string, CircuitBreakerStats> {
   const stats: Record<string, CircuitBreakerStats> = {};
 
@@ -277,9 +235,6 @@ export function getAllCircuitBreakerStats(): Record<string, CircuitBreakerStats>
   return stats;
 }
 
-/**
- * Wrapper function to add circuit breaker protection
- */
 export function withCircuitBreaker<T extends (...args: any[]) => Promise<any>>(
   name: string,
   operation: T,
@@ -300,9 +255,6 @@ export function withCircuitBreaker<T extends (...args: any[]) => Promise<any>>(
   }) as T;
 }
 
-/**
- * Circuit breaker for Elasticsearch operations
- */
 export function withElasticsearchCircuitBreaker<T extends (...args: any[]) => Promise<any>>(
   operationName: string,
   operation: T,
@@ -315,9 +267,6 @@ export function withElasticsearchCircuitBreaker<T extends (...args: any[]) => Pr
   });
 }
 
-/**
- * Initialize default circuit breakers for common operations
- */
 export function initializeDefaultCircuitBreakers(): void {
   const commonOperations = ["search", "index", "update", "delete", "bulk", "cluster_health", "indices_list"];
 

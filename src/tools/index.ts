@@ -7,10 +7,10 @@ import { withSecurityValidation } from "../utils/securityEnhancer.js";
 import { traceToolExecutionWithConversation } from "../utils/tracingEnhanced.js";
 import { getCurrentSession } from "../utils/sessionContext.js";
 
+// Core Tools (List Indices, Get Mappings, Search, Get Shards)
 import { registerGetMappingsTool } from "./core/get_mappings.js";
 import { registerGetShardsTool } from "./core/get_shards.js";
 import { registerIndicesSummaryTool } from "./core/indices_summary.js";
-// Core Tools (List Indices, Get Mappings, Search, Get Shards)
 import { registerListIndicesTool } from "./core/list_indices.js";
 import { registerSearchTool } from "./core/search.js";
 // import { registerEnhancedSearchTool } from "./core/search_enhanced.js";
@@ -157,51 +157,8 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
   // Track registered tools for MCP tools/list handler
   const registeredTools: ToolInfo[] = [];
 
-  // Override the tool method to capture tool information and add both tracing and security validation
-  const originalTool = server.tool.bind(server);
-  server.tool = (name: string, description: string, inputSchema: any, handler: any) => {
-    registeredTools.push({ name, description, inputSchema });
-
-    // Skip security validation for read-only search operations
-    const readOnlyTools = [
-      "elasticsearch_search",
-      "elasticsearch_list_indices",
-      "elasticsearch_get_mappings",
-      "elasticsearch_get_shards",
-      "elasticsearch_indices_summary",
-      "elasticsearch_diagnostics",
-    ];
-    const shouldValidate = !readOnlyTools.includes(name);
-
-    // Create enhanced handler with both tracing and security validation
-    let enhancedHandler = handler;
-
-    // Add conversation-aware tracing wrapper to ALL tools
-    enhancedHandler = async (toolArgs: any, extra: any) => {
-      // Extract connection and client info from context for tracing (same as before)
-      const currentSession = getCurrentSession();
-      const connectionId = currentSession?.connectionId || `conn-${Date.now()}`;
-      const clientInfo = currentSession?.clientInfo || { name: "Claude Desktop", platform: "desktop" };
-
-      logger.debug("Tool execution with conversation-aware tracing", {
-        toolName: name,
-        connectionId: connectionId.substring(0, 8) + "...",
-      });
-
-      // Pass context information to conversation-aware tracing (maintains exact same signature)
-      const contextSession = { sessionId: connectionId, connectionId, clientInfo };
-      return traceToolExecutionWithConversation(name, toolArgs, extra, contextSession, async (toolArgs: any, extra: any) => {
-        return handler(toolArgs, extra);
-      });
-    };
-
-    // Add security validation wrapper for write operations
-    if (shouldValidate) {
-      enhancedHandler = withSecurityValidation(name, enhancedHandler);
-    }
-
-    return originalTool(name, description, inputSchema, enhancedHandler);
-  };
+  // NOTE: server.tool() wrapper removed due to MCP SDK v1.17.5 signature incompatibility
+  // All tools now use server.registerTool() which has compatible wrapper below
 
   // Override the registerTool method to capture tool information and add both tracing and security validation
   const originalRegisterTool = server.registerTool.bind(server);

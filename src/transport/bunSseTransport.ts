@@ -1,9 +1,5 @@
 /* src/transport/bunSseTransport.ts */
 
-/**
- * Bun-optimized SSE transport for maximum performance
- * Uses native Bun.serve() for superior HTTP handling
- */
 
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
@@ -30,9 +26,6 @@ export class BunOptimizedSSETransport {
     private config: Config,
   ) {}
 
-  /**
-   * Start optimized SSE server using Bun.serve()
-   */
   async start(): Promise<void> {
     if (!BunRuntimeDetection.isBun()) {
       throw new Error("BunOptimizedSSETransport requires Bun runtime");
@@ -87,9 +80,6 @@ export class BunOptimizedSSETransport {
     });
   }
 
-  /**
-   * Handle incoming requests with Bun-specific optimizations
-   */
   private async handleBunRequest(req: Request, sseEndpoint: string): Promise<Response> {
     const url = new URL(req.url);
 
@@ -134,9 +124,6 @@ export class BunOptimizedSSETransport {
     });
   }
 
-  /**
-   * Handle SSE connection with Bun optimizations
-   */
   private async handleBunSSEConnection(
     req: Request,
     sseEndpoint: string,
@@ -231,9 +218,6 @@ export class BunOptimizedSSETransport {
     });
   }
 
-  /**
-   * Handle MCP POST requests with Bun optimizations
-   */
   private async handleBunMCPRequest(req: Request, corsHeaders: Record<string, string>): Promise<Response> {
     if (req.method !== "POST") {
       return new Response("Method Not Allowed", {
@@ -293,9 +277,6 @@ export class BunOptimizedSSETransport {
     }
   }
 
-  /**
-   * Health check endpoint
-   */
   private handleHealthCheck(): Response {
     const stats = this.getConnectionStats();
     const performanceStats = this.performanceTimer.getStats("request_handling");
@@ -318,9 +299,6 @@ export class BunOptimizedSSETransport {
     );
   }
 
-  /**
-   * Metrics endpoint
-   */
   private handleMetrics(): Response {
     const stats = this.getDetailedStats();
 
@@ -333,9 +311,6 @@ export class BunOptimizedSSETransport {
     });
   }
 
-  /**
-   * Get connection statistics
-   */
   getConnectionStats() {
     const activeCount = this.activeConnections.size;
     const connections = Array.from(this.activeConnections.values()).map((conn) => ({
@@ -352,9 +327,6 @@ export class BunOptimizedSSETransport {
     };
   }
 
-  /**
-   * Get detailed performance statistics
-   */
   getDetailedStats() {
     const connectionStats = this.getConnectionStats();
     const performanceStats = this.performanceTimer.getStats("request_handling");
@@ -372,9 +344,6 @@ export class BunOptimizedSSETransport {
     };
   }
 
-  /**
-   * Graceful shutdown
-   */
   async shutdown(): Promise<void> {
     logger.info("Shutting down Bun SSE server", {
       activeConnections: this.activeConnections.size,
@@ -410,9 +379,6 @@ export class BunOptimizedSSETransport {
     }
   }
 
-  /**
-   * Force shutdown with timeout
-   */
   async forceShutdown(timeoutMs = 5000): Promise<void> {
     const shutdownPromise = this.shutdown();
     const timeoutPromise = new Promise<void>((resolve) => {

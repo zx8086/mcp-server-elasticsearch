@@ -1,22 +1,9 @@
-/**
- * Shared Zod helpers for parameter coercion
- *
- * MCP clients often send parameters as strings even when the schema expects
- * booleans or numbers. These helpers provide consistent coercion across all tools.
- */
+/* src/utils/zodHelpers.ts */
 
 import { z } from "zod";
 
-/**
- * Coerce string booleans to actual booleans
- * Accepts: true, false, "true", "false", "1", "0"
- */
 export const coerceBoolean = z.union([z.boolean(), z.string().transform((val) => val === "true" || val === "1")]);
 
-/**
- * Coerce string numbers to actual numbers
- * Accepts: number or string representation of a number
- */
 export const coerceNumber = z.union([
   z.number(),
   z.string().transform((val) => {
@@ -28,10 +15,6 @@ export const coerceNumber = z.union([
   }),
 ]);
 
-/**
- * Coerce string integers to actual integers
- * Accepts: number or string representation of an integer
- */
 export const coerceInteger = z.union([
   z.number(),
   z.string().transform((val) => {
@@ -43,17 +26,11 @@ export const coerceInteger = z.union([
   }),
 ]);
 
-/**
- * Create a coerced boolean field with default value
- */
 export const booleanField = (defaultValue = false, description?: string) => {
   const field = coerceBoolean.default(defaultValue);
   return description ? field.describe(description) : field;
 };
 
-/**
- * Create a coerced number field with constraints
- */
 export const numberField = (options: {
   min?: number;
   max?: number;
@@ -83,9 +60,6 @@ export const numberField = (options: {
   return field;
 };
 
-/**
- * Create a coerced integer field with constraints
- */
 export const integerField = (options: {
   min?: number;
   max?: number;
@@ -115,10 +89,6 @@ export const integerField = (options: {
   return field;
 };
 
-/**
- * Coerce JSON string to object or array
- * Accepts: object/array or JSON string representation
- */
 export const coerceJson = z.preprocess(
   (val) => {
     // If it's already an object or array, return as-is
@@ -169,10 +139,6 @@ export const coerceJson = z.preprocess(
   z.union([z.object({}).passthrough(), z.array(z.any())]),
 );
 
-/**
- * Create a JSON field that accepts either an object or JSON string
- * Useful for queryBody and similar parameters that may come as strings
- */
 export const jsonField = (defaultValue?: any, description?: string) => {
   let field = coerceJson;
 

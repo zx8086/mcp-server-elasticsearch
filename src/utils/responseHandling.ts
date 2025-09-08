@@ -1,9 +1,5 @@
 /* src/utils/responseHandling.ts */
 
-/**
- * Utilities for handling large responses and implementing pagination
- * across MCP Elasticsearch tools
- */
 
 import { logger } from "./logger.js";
 
@@ -28,9 +24,6 @@ export interface ResponseMetadata {
   summary?: string;
 }
 
-/**
- * Applies pagination to an array of results
- */
 export function paginateResults<T>(
   items: T[],
   options: PaginationOptions = {},
@@ -56,17 +49,11 @@ export function paginateResults<T>(
   return { results, metadata };
 }
 
-/**
- * Estimates token count for a string (rough approximation)
- */
 export function estimateTokenCount(text: string): number {
   // Rough approximation: ~4 characters per token for JSON content
   return Math.ceil(text.length / 4);
 }
 
-/**
- * Truncates response if it exceeds token limits
- */
 export function truncateResponse(
   content: string,
   options: ResponseSizeOptions = {},
@@ -105,9 +92,6 @@ export function truncateResponse(
   };
 }
 
-/**
- * Removes or truncates specified fields from objects to reduce size
- */
 export function reduceObjectSize(obj: any, options: ResponseSizeOptions = {}): any {
   const { truncateFields = [], excludeFields = [] } = options;
 
@@ -142,9 +126,6 @@ export function reduceObjectSize(obj: any, options: ResponseSizeOptions = {}): a
   return result;
 }
 
-/**
- * Creates a summary header for paginated responses
- */
 export function createPaginationHeader(metadata: ResponseMetadata, entityName = "items"): string {
   const lines = [
     `## ${entityName.charAt(0).toUpperCase() + entityName.slice(1)} (${metadata.returned}${metadata.truncated ? ` of ${metadata.total}` : ""})`,
@@ -157,9 +138,6 @@ export function createPaginationHeader(metadata: ResponseMetadata, entityName = 
   return `${lines.join("\n")}\n`;
 }
 
-/**
- * Formats an object as markdown-friendly text
- */
 export function formatAsMarkdown(obj: any, title?: string): string {
   const lines: string[] = [];
 
@@ -194,9 +172,6 @@ export function formatAsMarkdown(obj: any, title?: string): string {
   return lines.join("\n");
 }
 
-/**
- * Common sorting functions for different data types
- */
 export const sortFunctions = {
   byName: (a: any, b: any) => (a.name || "").localeCompare(b.name || ""),
   byDate: (a: any, b: any) =>
@@ -205,9 +180,6 @@ export const sortFunctions = {
   byCount: (a: any, b: any) => (b.count || 0) - (a.count || 0),
 };
 
-/**
- * Configuration presets for different types of tools
- */
 export const responsePresets = {
   list: {
     defaultLimit: 20,

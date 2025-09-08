@@ -3,15 +3,6 @@
 import type { Client } from "@elastic/elasticsearch";
 import { logger } from "./logger.js";
 
-/**
- * Production-ready Elasticsearch connection pool manager
- * Provides:
- * - Connection health monitoring
- * - Automatic failover
- * - Load balancing
- * - Connection metrics
- * - Graceful degradation
- */
 
 interface ConnectionInfo {
   client: Client;
@@ -260,9 +251,6 @@ export class ElasticsearchConnectionPool {
     };
   }
 
-  /**
-   * Get simplified stats for health monitoring
-   */
   getStats() {
     const totalConnections = this.connections.size;
     const activeConnections = Array.from(this.connections.values()).filter((c) => c.isHealthy).length;

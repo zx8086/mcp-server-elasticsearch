@@ -45,9 +45,6 @@ export class ConnectionWarmer {
     private config: WarmingConfig,
   ) {}
 
-  /**
-   * Start connection warming
-   */
   start(): void {
     if (!this.config.enabled) {
       logger.debug("Connection warming disabled");
@@ -76,9 +73,6 @@ export class ConnectionWarmer {
     });
   }
 
-  /**
-   * Stop connection warming
-   */
   stop(): void {
     if (this.warmupTimer) {
       clearInterval(this.warmupTimer);
@@ -93,9 +87,6 @@ export class ConnectionWarmer {
     logger.info("Connection warming stopped");
   }
 
-  /**
-   * Perform connection warmup
-   */
   private async performWarmup(): Promise<void> {
     const startTime = Date.now();
     this.stats.warmupOperations++;
@@ -136,9 +127,6 @@ export class ConnectionWarmer {
     }
   }
 
-  /**
-   * Perform keep-alive ping
-   */
   private async performKeepAlive(): Promise<void> {
     const startTime = Date.now();
     this.stats.keepAliveOperations++;
@@ -177,9 +165,6 @@ export class ConnectionWarmer {
     }
   }
 
-  /**
-   * Warm cluster info endpoint
-   */
   private async warmupClusterInfo(): Promise<void> {
     try {
       await Promise.race([
@@ -197,9 +182,6 @@ export class ConnectionWarmer {
     }
   }
 
-  /**
-   * Warm cluster health endpoint
-   */
   private async warmupClusterHealth(): Promise<void> {
     try {
       await Promise.race([
@@ -217,9 +199,6 @@ export class ConnectionWarmer {
     }
   }
 
-  /**
-   * Warm node info endpoint
-   */
   private async warmupNodeInfo(): Promise<void> {
     try {
       await Promise.race([
@@ -237,9 +216,6 @@ export class ConnectionWarmer {
     }
   }
 
-  /**
-   * Warm index list endpoint
-   */
   private async warmupIndexList(): Promise<void> {
     try {
       await Promise.race([
@@ -262,9 +238,6 @@ export class ConnectionWarmer {
     }
   }
 
-  /**
-   * Update average timing statistics
-   */
   private updateAverageTime(type: "warmup" | "keepAlive", duration: number): void {
     if (type === "warmup") {
       const totalOps = this.stats.warmupOperations;
@@ -275,25 +248,16 @@ export class ConnectionWarmer {
     }
   }
 
-  /**
-   * Get warmup success rate
-   */
   private getWarmupSuccessRate(): number {
     if (this.stats.warmupOperations === 0) return 0;
     return Math.round((this.stats.successfulWarmups / this.stats.warmupOperations) * 100) / 100;
   }
 
-  /**
-   * Get keep-alive success rate
-   */
   private getKeepAliveSuccessRate(): number {
     if (this.stats.keepAliveOperations === 0) return 0;
     return Math.round((this.stats.successfulKeepAlives / this.stats.keepAliveOperations) * 100) / 100;
   }
 
-  /**
-   * Get warming statistics
-   */
   getStats(): WarmingStats {
     return {
       ...this.stats,
@@ -302,17 +266,11 @@ export class ConnectionWarmer {
     };
   }
 
-  /**
-   * Perform manual warmup (for testing or initialization)
-   */
   async performManualWarmup(): Promise<void> {
     logger.info("Performing manual connection warmup");
     await this.performWarmup();
   }
 
-  /**
-   * Check if warming is active
-   */
   isActive(): boolean {
     return this.config.enabled && (!!this.warmupTimer || !!this.keepAliveTimer);
   }
@@ -321,9 +279,6 @@ export class ConnectionWarmer {
 // Global connection warmer instance
 let globalConnectionWarmer: ConnectionWarmer;
 
-/**
- * Initialize global connection warmer
- */
 export function initializeConnectionWarming(client: Client, config?: Partial<WarmingConfig>): ConnectionWarmer {
   const defaultConfig: WarmingConfig = {
     enabled: true,
@@ -353,16 +308,10 @@ export function initializeConnectionWarming(client: Client, config?: Partial<War
   return globalConnectionWarmer;
 }
 
-/**
- * Get global connection warmer
- */
 export function getConnectionWarmer(): ConnectionWarmer | undefined {
   return globalConnectionWarmer;
 }
 
-/**
- * Start connection warming
- */
 export function startConnectionWarming(): void {
   if (globalConnectionWarmer) {
     globalConnectionWarmer.start();
@@ -371,25 +320,16 @@ export function startConnectionWarming(): void {
   }
 }
 
-/**
- * Stop connection warming
- */
 export function stopConnectionWarming(): void {
   if (globalConnectionWarmer) {
     globalConnectionWarmer.stop();
   }
 }
 
-/**
- * Get connection warming statistics
- */
 export function getConnectionWarmingStats(): WarmingStats | undefined {
   return globalConnectionWarmer?.getStats();
 }
 
-/**
- * Warm all connections in the pool
- */
 export async function warmAllConnections(): Promise<void> {
   try {
     const pool = getGlobalConnectionPool();
@@ -437,9 +377,6 @@ export async function warmAllConnections(): Promise<void> {
   }
 }
 
-/**
- * Pre-warm specific Elasticsearch endpoints
- */
 export async function preWarmEndpoints(client: Client): Promise<void> {
   const endpoints = [
     { name: "cluster.info", operation: () => client.info() },

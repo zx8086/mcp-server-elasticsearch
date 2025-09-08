@@ -31,9 +31,6 @@ export class RateLimiter {
     }, 60000);
   }
 
-  /**
-   * Check if request should be rate limited
-   */
   checkLimit(key: string): RateLimitResult {
     const now = Date.now();
     const windowStart = now - (now % this.config.windowMs);
@@ -69,9 +66,6 @@ export class RateLimiter {
     return result;
   }
 
-  /**
-   * Clean up expired entries
-   */
   private cleanup(): void {
     const now = Date.now();
     let cleanedCount = 0;
@@ -88,9 +82,6 @@ export class RateLimiter {
     }
   }
 
-  /**
-   * Get current stats
-   */
   getStats(): { activeKeys: number; totalSize: number } {
     return {
       activeKeys: this.store.size,
@@ -98,9 +89,6 @@ export class RateLimiter {
     };
   }
 
-  /**
-   * Destroy rate limiter and cleanup
-   */
   destroy(): void {
     clearInterval(this.cleanupInterval);
     this.store.clear();
@@ -111,9 +99,6 @@ export class RateLimiter {
 let globalToolRateLimiter: RateLimiter;
 let globalConnectionRateLimiter: RateLimiter;
 
-/**
- * Initialize global rate limiters
- */
 export function initializeRateLimiters(config: {
   toolLimits: RateLimitConfig;
   connectionLimits: RateLimitConfig;
@@ -136,9 +121,6 @@ export function initializeRateLimiters(config: {
   });
 }
 
-/**
- * Get tool rate limiter
- */
 export function getToolRateLimiter(): RateLimiter {
   if (!globalToolRateLimiter) {
     // Create default limiter if not initialized
@@ -151,9 +133,6 @@ export function getToolRateLimiter(): RateLimiter {
   return globalToolRateLimiter;
 }
 
-/**
- * Get connection rate limiter
- */
 export function getConnectionRateLimiter(): RateLimiter {
   if (!globalConnectionRateLimiter) {
     // Create default limiter if not initialized
@@ -166,9 +145,6 @@ export function getConnectionRateLimiter(): RateLimiter {
   return globalConnectionRateLimiter;
 }
 
-/**
- * Rate limit wrapper for tool handlers
- */
 export function withRateLimit<T extends (...args: any[]) => Promise<any>>(
   toolName: string,
   handler: T,
@@ -201,9 +177,6 @@ export function withRateLimit<T extends (...args: any[]) => Promise<any>>(
   }) as T;
 }
 
-/**
- * Memory usage monitor and limiter
- */
 export class ResourceMonitor {
   private memoryThreshold: number;
   private checkInterval: NodeJS.Timeout;
@@ -223,9 +196,6 @@ export class ResourceMonitor {
     });
   }
 
-  /**
-   * Check current memory usage
-   */
   private checkMemoryUsage(): void {
     const usage = process.memoryUsage();
     const now = Date.now();
@@ -250,9 +220,6 @@ export class ResourceMonitor {
     }
   }
 
-  /**
-   * Check if system resources are available
-   */
   checkResourceAvailability(): { available: boolean; reason?: string } {
     const usage = process.memoryUsage();
 
@@ -266,9 +233,6 @@ export class ResourceMonitor {
     return { available: true };
   }
 
-  /**
-   * Get resource stats
-   */
   getStats(): {
     memory: NodeJS.MemoryUsage;
     memoryThresholdMB: number;
@@ -281,9 +245,6 @@ export class ResourceMonitor {
     };
   }
 
-  /**
-   * Destroy resource monitor
-   */
   destroy(): void {
     clearInterval(this.checkInterval);
   }
@@ -292,9 +253,6 @@ export class ResourceMonitor {
 // Global resource monitor
 let globalResourceMonitor: ResourceMonitor;
 
-/**
- * Initialize global resource monitor
- */
 export function initializeResourceMonitor(memoryThresholdMB = 1000): ResourceMonitor {
   if (globalResourceMonitor) {
     globalResourceMonitor.destroy();
@@ -304,9 +262,6 @@ export function initializeResourceMonitor(memoryThresholdMB = 1000): ResourceMon
   return globalResourceMonitor;
 }
 
-/**
- * Get global resource monitor
- */
 export function getResourceMonitor(): ResourceMonitor {
   if (!globalResourceMonitor) {
     globalResourceMonitor = new ResourceMonitor();

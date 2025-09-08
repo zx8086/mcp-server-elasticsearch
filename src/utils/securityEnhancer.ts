@@ -3,17 +3,6 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { logger } from "./logger.js";
 
-/**
- * Production-ready security enhancements for MCP server
- * Provides:
- * - Input sanitization and validation
- * - SQL/NoSQL injection detection
- * - XSS protection
- * - Command injection prevention
- * - Data size limits
- * - Sensitive data redaction
- * - IP-based access control (for SSE mode)
- */
 
 interface SecurityConfig {
   maxInputSize: number;
@@ -93,9 +82,6 @@ export class SecurityEnhancer {
     ]);
   }
 
-  /**
-   * Comprehensive input validation and sanitization
-   */
   validateAndSanitizeInput(
     toolName: string,
     input: any,
@@ -337,9 +323,6 @@ export class SecurityEnhancer {
     return value.length > 100 ? `${value.substring(0, 100)}...` : value;
   }
 
-  /**
-   * Redact sensitive data from logs
-   */
   redactSensitiveData(obj: any): any {
     if (obj === null || obj === undefined) return obj;
 
@@ -363,9 +346,6 @@ export class SecurityEnhancer {
     return redacted;
   }
 
-  /**
-   * IP-based access control (for SSE mode)
-   */
   validateIpAccess(clientIp: string): boolean {
     if (!this.config.allowedIpRanges || this.config.allowedIpRanges.length === 0) {
       return true; // No restrictions
@@ -382,9 +362,6 @@ export class SecurityEnhancer {
     return false;
   }
 
-  /**
-   * Generate security headers for HTTP responses
-   */
   getSecurityHeaders(): Record<string, string> {
     return {
       "X-Content-Type-Options": "nosniff",

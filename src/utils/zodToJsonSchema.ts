@@ -1,9 +1,8 @@
+/* src/utils/zodToJsonSchema.ts */
 import { z } from "zod";
 import { zodToJsonSchema as zodToJsonSchemaV3 } from "zod-to-json-schema";
 
-/**
- * Simplify a field schema to its base type for JSON Schema
- */
+// Simplify a field schema to its base type for JSON Schema
 function simplifyFieldSchema(field: z.ZodTypeAny): any {
   const def = (field as any)._def;
 
@@ -159,9 +158,7 @@ function simplifyFieldSchema(field: z.ZodTypeAny): any {
   return { type: "string" };
 }
 
-/**
- * Extract default value from a schema
- */
+// Extract default value from a schema
 function extractDefaultValue(schema: z.ZodTypeAny): any {
   const def = (schema as any)._def;
 
@@ -177,9 +174,7 @@ function extractDefaultValue(schema: z.ZodTypeAny): any {
   return undefined;
 }
 
-/**
- * Detect the target type for coercion schemas
- */
+// Detect the target type for coercion schemas
 function detectCoercionTargetType(schema: z.ZodTypeAny): string {
   const def = (schema as any)._def;
 
@@ -216,10 +211,8 @@ function detectCoercionTargetType(schema: z.ZodTypeAny): string {
   return "unknown";
 }
 
-/**
- * Compatibility wrapper for Zod to JSON Schema conversion
- * Works with both Zod 3.x (via zod-to-json-schema) and Zod 4.x (via native toJSONSchema)
- */
+// Compatibility wrapper for Zod to JSON Schema conversion
+// Works with both Zod 3.x (via zod-to-json-schema) and Zod 4.x (via native toJSONSchema)
 export function zodToJsonSchemaCompat(schema: z.ZodTypeAny, options: any = {}): any {
   // Handle special cases that Zod 4's native toJSONSchema doesn't support
   const def = (schema as any)._def;
@@ -508,9 +501,7 @@ export function zodToJsonSchemaCompat(schema: z.ZodTypeAny, options: any = {}): 
   }
 }
 
-/**
- * Export the compatibility function as default and named export
- * This matches the API of zod-to-json-schema
- */
+// Export the compatibility function as default and named export
+// This matches the API of zod-to-json-schema
 export default zodToJsonSchemaCompat;
 export { zodToJsonSchemaCompat as zodToJsonSchema };

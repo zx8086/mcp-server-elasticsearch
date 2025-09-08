@@ -52,9 +52,6 @@ export class LRUCache<T> {
     });
   }
 
-  /**
-   * Get value from cache
-   */
   get(key: string): T | undefined {
     const entry = this.cache.get(key);
     const now = Date.now();
@@ -87,9 +84,6 @@ export class LRUCache<T> {
     return entry.value;
   }
 
-  /**
-   * Set value in cache
-   */
   set(key: string, value: T, customTtlMs?: number): void {
     const now = Date.now();
     const ttl = customTtlMs ?? this.config.ttlMs;
@@ -119,9 +113,6 @@ export class LRUCache<T> {
     });
   }
 
-  /**
-   * Get or set value with factory function
-   */
   async getOrSet<R extends T>(key: string, factory: () => Promise<R>, customTtlMs?: number): Promise<R> {
     let value = this.get(key) as R;
 
@@ -147,9 +138,6 @@ export class LRUCache<T> {
     }
   }
 
-  /**
-   * Check if key exists and is not expired
-   */
   has(key: string): boolean {
     const entry = this.cache.get(key);
     if (!entry) return false;
@@ -164,18 +152,12 @@ export class LRUCache<T> {
     return true;
   }
 
-  /**
-   * Delete key from cache
-   */
   delete(key: string): boolean {
     const deleted = this.cache.delete(key);
     this.accessOrder.delete(key);
     return deleted;
   }
 
-  /**
-   * Clear all entries
-   */
   clear(): void {
     const size = this.cache.size;
     this.cache.clear();
@@ -185,9 +167,6 @@ export class LRUCache<T> {
     logger.debug("Cache cleared", { previousSize: size });
   }
 
-  /**
-   * Get cache statistics
-   */
   getStats(): CacheStats {
     const totalRequests = this.stats.hits + this.stats.misses;
     const hitRate = totalRequests > 0 ? this.stats.hits / totalRequests : 0;
@@ -203,16 +182,10 @@ export class LRUCache<T> {
     };
   }
 
-  /**
-   * Get cache keys (for debugging)
-   */
   keys(): string[] {
     return Array.from(this.cache.keys());
   }
 
-  /**
-   * Evict least recently used entry
-   */
   private evictLRU(): void {
     if (this.cache.size === 0) return;
 
@@ -240,9 +213,6 @@ export class LRUCache<T> {
     }
   }
 
-  /**
-   * Clean up expired entries
-   */
   private cleanup(): void {
     const now = Date.now();
     let expiredCount = 0;
@@ -263,17 +233,11 @@ export class LRUCache<T> {
     }
   }
 
-  /**
-   * Sanitize cache key for logging (remove sensitive data)
-   */
   private sanitizeKey(key: string): string {
     // Remove potential sensitive data from keys for logging
     return key.length > 100 ? `${key.substring(0, 97)}...` : key;
   }
 
-  /**
-   * Destroy cache and cleanup
-   */
   destroy(): void {
     clearInterval(this.cleanupTimer);
     this.clear();
@@ -291,9 +255,6 @@ export class QueryCache extends LRUCache<any> {
     });
   }
 
-  /**
-   * Generate cache key for search queries
-   */
   static generateQueryKey(index: string, query: any, params: any = {}): string {
     const queryStr = JSON.stringify(query);
     const paramsStr = JSON.stringify(params);
@@ -310,9 +271,6 @@ export class MappingCache extends LRUCache<any> {
     });
   }
 
-  /**
-   * Generate cache key for mappings
-   */
   static generateMappingKey(index: string): string {
     return `mapping:${index}`;
   }
@@ -327,9 +285,6 @@ export class SettingsCache extends LRUCache<any> {
     });
   }
 
-  /**
-   * Generate cache key for settings
-   */
   static generateSettingsKey(index: string): string {
     return `settings:${index}`;
   }
@@ -344,9 +299,6 @@ export class ClusterInfoCache extends LRUCache<any> {
     });
   }
 
-  /**
-   * Generate cache key for cluster information
-   */
   static generateClusterKey(endpoint: string): string {
     return `cluster:${endpoint}`;
   }
@@ -358,9 +310,6 @@ let globalMappingCache: MappingCache;
 let globalSettingsCache: SettingsCache;
 let globalClusterInfoCache: ClusterInfoCache;
 
-/**
- * Initialize global cache instances
- */
 export function initializeCaches(): void {
   // Destroy existing caches if they exist
   if (globalQueryCache) globalQueryCache.destroy();
@@ -382,9 +331,6 @@ export function initializeCaches(): void {
   });
 }
 
-/**
- * Get global cache instances
- */
 export function getQueryCache(): QueryCache {
   if (!globalQueryCache) {
     initializeCaches();
@@ -413,9 +359,6 @@ export function getClusterInfoCache(): ClusterInfoCache {
   return globalClusterInfoCache;
 }
 
-/**
- * Get all cache statistics
- */
 export function getAllCacheStats(): Record<string, CacheStats> {
   return {
     query: getQueryCache().getStats(),
@@ -425,9 +368,6 @@ export function getAllCacheStats(): Record<string, CacheStats> {
   };
 }
 
-/**
- * Clear all caches
- */
 export function clearAllCaches(): void {
   getQueryCache().clear();
   getMappingCache().clear();
@@ -437,9 +377,6 @@ export function clearAllCaches(): void {
   logger.info("All caches cleared");
 }
 
-/**
- * Destroy all caches
- */
 export function destroyAllCaches(): void {
   if (globalQueryCache) globalQueryCache.destroy();
   if (globalMappingCache) globalMappingCache.destroy();

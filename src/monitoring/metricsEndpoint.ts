@@ -1,3 +1,4 @@
+/* src/monitoring/metricsEndpoint.ts */
 import http from "node:http";
 import { logger } from "../utils/logger.js";
 import { metrics } from "./prometheusMetrics.js";

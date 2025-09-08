@@ -50,7 +50,7 @@ export class MCPCompatibleLogger {
     return levels.indexOf(level) >= levels.indexOf(configLevel);
   }
 
-  // CRITICAL: Write to stderr but ensure MCP compatibility
+  // Write to stderr but ensure MCP compatibility
   private writeToStderr(message: string): void {
     // Always write to stderr, but ensure it's properly formatted JSON
     // This matches the behavior of other MCP servers

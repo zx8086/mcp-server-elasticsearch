@@ -23,9 +23,6 @@ export interface ConnectionContext {
   userId?: string;
 }
 
-/**
- * Creates a properly named MCP connection trace based on client context
- */
 export function createNamedConnectionTrace(context: ConnectionContext) {
   // Build a descriptive name based on available information
   let traceName = "";
@@ -64,9 +61,6 @@ export function createNamedConnectionTrace(context: ConnectionContext) {
   return traceName;
 }
 
-/**
- * Enhanced MCP connection tracing with better naming
- */
 export const traceNamedMcpConnection = (context: ConnectionContext) => {
   const traceName = createNamedConnectionTrace(context);
 
@@ -138,9 +132,6 @@ export interface ToolContext {
   };
 }
 
-/**
- * Creates a properly named tool execution trace with conversation context
- */
 export function createNamedToolTrace(context: ToolContext) {
   let traceName = `${context.toolName}`;
 
@@ -182,9 +173,6 @@ export function createNamedToolTrace(context: ToolContext) {
   return traceName;
 }
 
-/**
- * Enhanced tool execution tracing with better naming
- */
 export const traceNamedToolExecution = (context: ToolContext) => {
   const traceName = createNamedToolTrace(context);
 
@@ -257,9 +245,6 @@ export const traceNamedToolExecution = (context: ToolContext) => {
 // CLIENT DETECTION UTILITIES
 // =============================================================================
 
-/**
- * Detects the client type from connection context
- */
 export function detectClient(
   transportMode: string,
   _headers?: Record<string, string>,
@@ -294,9 +279,6 @@ export function detectClient(
   return { name: "Unknown Client", platform: "unknown" };
 }
 
-/**
- * Generates a session ID based on connection context
- */
 export function generateSessionId(_connectionId: string, clientInfo?: { name?: string }): string {
   const timestamp = Date.now();
   const clientPrefix = clientInfo?.name?.toLowerCase().replace(/\s+/g, "-") || "unknown";
@@ -309,10 +291,6 @@ export function generateSessionId(_connectionId: string, clientInfo?: { name?: s
 // CONVERSATION-AWARE TRACING FOR LANGSMITH
 // =============================================================================
 
-/**
- * Enhanced tool tracing that automatically includes conversation context
- * This is the main function to use for LangSmith trace separation
- */
 export function traceToolWithConversation(
   toolName: string,
   toolArgs: any,
@@ -362,9 +340,6 @@ export function traceToolWithConversation(
   return tracer(toolArgs, handler);
 }
 
-/**
- * Get current conversation info for metadata injection
- */
 export function getCurrentConversationInfo() {
   const session = getCurrentSession();
   if (!session) return null;
@@ -382,13 +357,6 @@ export function getCurrentConversationInfo() {
 // BACKWARD-COMPATIBLE CONVERSATION-AWARE TRACING
 // =============================================================================
 
-/**
- * Enhanced version of traceToolExecution that maintains the exact same signature
- * but adds conversation tracking for LangSmith trace separation
- * 
- * Signature: traceToolExecution(toolName, toolArgs, extra, context, handler)
- * This maintains 100% backward compatibility with existing tool handlers
- */
 export function traceToolExecutionWithConversation(
   toolName: string,
   toolArgs: any,

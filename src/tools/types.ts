@@ -1,4 +1,4 @@
-// src/tools/types.ts
+/* src/tools/types.ts */
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";

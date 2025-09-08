@@ -1,13 +1,5 @@
 /* src/utils/mcpAnnotations.ts */
 
-/**
- * MCP Content Annotations Utility
- * 
- * Provides optional metadata annotations for MCP content items to enhance
- * client-side logging and eliminate "metadata: undefined" in client logs.
- * 
- * Based on MCP specification support for _meta fields on content items.
- */
 
 export interface MCPContentMetadata {
   // Timing information
@@ -66,9 +58,6 @@ export interface EnhancedResourceContent {
 
 export type EnhancedContentItem = EnhancedTextContent | EnhancedImageContent | EnhancedResourceContent;
 
-/**
- * Create enhanced text content with optional metadata
- */
 export function createTextContent(text: string, metadata?: MCPContentMetadata): EnhancedTextContent {
   const content: EnhancedTextContent = {
     type: "text",
@@ -85,9 +74,6 @@ export function createTextContent(text: string, metadata?: MCPContentMetadata): 
   return content;
 }
 
-/**
- * Create enhanced image content with optional metadata
- */
 export function createImageContent(
   data: string, 
   mimeType: string, 
@@ -109,9 +95,6 @@ export function createImageContent(
   return content;
 }
 
-/**
- * Create enhanced resource content with optional metadata
- */
 export function createResourceContent(
   resource: { text?: string; uri: string; mimeType?: string; blob?: string },
   metadata?: MCPContentMetadata
@@ -131,9 +114,6 @@ export function createResourceContent(
   return content;
 }
 
-/**
- * Create metadata for search operations
- */
 export function createSearchMetadata({
   totalResults,
   returnedResults,
@@ -177,9 +157,6 @@ export function createSearchMetadata({
   };
 }
 
-/**
- * Create metadata for index operations
- */
 export function createIndexMetadata({
   operationId,
   executionTimeMs,
@@ -210,9 +187,6 @@ export function createIndexMetadata({
   };
 }
 
-/**
- * Create metadata for cluster operations
- */
 export function createClusterMetadata({
   executionTimeMs,
   operation,
@@ -230,9 +204,6 @@ export function createClusterMetadata({
   };
 }
 
-/**
- * Helper to add metadata to existing content items
- */
 export function enhanceContent<T extends { type: string; [key: string]: any }>(
   content: T,
   metadata: MCPContentMetadata

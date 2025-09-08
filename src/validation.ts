@@ -178,7 +178,6 @@ export async function checkElasticsearchConnection(client: Client): Promise<Vali
   }
 }
 
-// Enhanced operation testing with modern client methods
 export async function testBasicOperations(client: Client): Promise<ValidationResult> {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -276,7 +275,6 @@ export async function testBasicOperations(client: Client): Promise<ValidationRes
   };
 }
 
-// Utility function to test specific modern features
 export async function testModernFeatures(client: Client): Promise<ValidationResult> {
   const errors: string[] = [];
   const warnings: string[] = [];

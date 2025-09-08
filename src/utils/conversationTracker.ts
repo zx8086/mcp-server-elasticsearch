@@ -29,21 +29,12 @@ const conversationState: ConversationState = {
   maxConversationsPerSession: 20, // Reduced for memory efficiency
 };
 
-/**
- * Generate a conversation ID based on timing and session patterns
- */
 function generateConversationId(sessionId: string): string {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 8);
   return `conv_${sessionId.substring(0, 8)}_${timestamp}_${random}`;
 }
 
-/**
- * Detect if this is likely a new conversation based on:
- * 1. Time gap since last activity
- * 2. First tool call in session
- * 3. Pattern changes in request types
- */
 function detectNewConversation(
   sessionId: string,
   toolName?: string,
@@ -89,9 +80,6 @@ function detectNewConversation(
   return false;
 }
 
-/**
- * Tools that commonly start new conversations in Claude Desktop
- */
 function isConversationStarterTool(toolName: string): boolean {
   const starterTools = [
     'elasticsearch_search',
@@ -103,9 +91,6 @@ function isConversationStarterTool(toolName: string): boolean {
   return starterTools.includes(toolName);
 }
 
-/**
- * Get or create conversation context for current request
- */
 export function getOrCreateConversation(
   sessionId: string,
   toolName?: string,
@@ -175,18 +160,12 @@ export function getOrCreateConversation(
   }
 }
 
-/**
- * Get current conversation for session
- */
 export function getCurrentConversation(sessionId: string): ConversationContext | undefined {
   const sessionConversations = conversationState.sessionConversations.get(sessionId) || [];
   const latestConvId = sessionConversations[sessionConversations.length - 1];
   return latestConvId ? conversationState.conversations.get(latestConvId) : undefined;
 }
 
-/**
- * Get conversation statistics for session
- */
 export function getSessionConversationStats(sessionId: string) {
   const sessionConversations = conversationState.sessionConversations.get(sessionId) || [];
   const conversations = sessionConversations.map(id => conversationState.conversations.get(id)).filter(Boolean);
@@ -200,9 +179,6 @@ export function getSessionConversationStats(sessionId: string) {
   };
 }
 
-/**
- * Clean up old conversations to prevent memory leaks
- */
 export function cleanupOldConversations(): void {
   const cutoff = Date.now() - (24 * 60 * 60 * 1000); // 24 hours
   let cleaned = 0;
@@ -231,9 +207,6 @@ export function cleanupOldConversations(): void {
   }
 }
 
-/**
- * Force start a new conversation (for explicit new chat detection)
- */
 export function forceNewConversation(sessionId: string, reason = "manual"): ConversationContext {
   logger.info("Forcing new conversation", { sessionId: sessionId.substring(0, 10) + "...", reason });
   return getOrCreateConversation(sessionId, undefined, true);

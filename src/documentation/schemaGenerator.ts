@@ -1,3 +1,4 @@
+/* src/documentation/schemaGenerator.ts */
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { z } from "zod";

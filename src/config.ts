@@ -2,10 +2,6 @@
 
 import { z } from "zod";
 
-// =============================================================================
-// CONFIGURATION SCHEMAS
-// =============================================================================
-
 const ServerConfigSchema = z.object({
   name: z.string().min(1),
   version: z.string().min(1),
@@ -104,10 +100,6 @@ const ConfigSchema = z.object({
 
 export type Config = z.infer<typeof ConfigSchema>;
 
-// =============================================================================
-// DEFAULT CONFIGURATION
-// =============================================================================
-
 const defaultConfig: Config = {
   server: {
     name: "elasticsearch-mcp-server",
@@ -158,10 +150,6 @@ const defaultConfig: Config = {
     conversationDetectionThresholdSeconds: 30, // Detect new conversation after 30s gap
   },
 };
-
-// =============================================================================
-// ENVIRONMENT VARIABLE MAPPING
-// =============================================================================
 
 const envVarMapping = {
   server: {
@@ -217,10 +205,6 @@ const envVarMapping = {
     conversationDetectionThresholdSeconds: "CONVERSATION_DETECTION_THRESHOLD_SECONDS",
   },
 } as const;
-
-// =============================================================================
-// ENVIRONMENT VARIABLE LOADING
-// =============================================================================
 
 function parseEnvVar(value: string | undefined, type: "string" | "number" | "boolean"): unknown {
   if (value === undefined) return undefined;
@@ -355,10 +339,6 @@ function loadConfigFromEnv(): Partial<Config> {
   return config;
 }
 
-// =============================================================================
-// VALIDATION FUNCTIONS
-// =============================================================================
-
 export function validateEnvironment(): { valid: boolean; errors: string[]; warnings?: string[] } {
   const requiredVars = ["ES_URL"];
   const errors: string[] = [];
@@ -421,10 +401,6 @@ export function validateEnvironment(): { valid: boolean; errors: string[]; warni
   };
 }
 
-// =============================================================================
-// CONFIGURATION INITIALIZATION
-// =============================================================================
-
 let config: Config;
 
 try {
@@ -474,10 +450,6 @@ try {
   );
   throw new Error(`Invalid configuration: ${error instanceof Error ? error.message : String(error)}`);
 }
-
-// =============================================================================
-// EXPORTS
-// =============================================================================
 
 export { config, envVarMapping, defaultConfig };
 

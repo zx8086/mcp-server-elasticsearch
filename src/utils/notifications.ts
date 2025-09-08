@@ -4,23 +4,14 @@ import type { RequestHandlerExtra, ServerRequest, ServerNotification } from "@mo
 import { getCurrentRunTree, withRunTree } from "langsmith/singletons/traceable";
 import { logger } from "./logger.js";
 
-/**
- * Progress notification interface
- */
 export interface ProgressNotification {
   progressToken: string | number;
   progress: number;
   total?: number;
 }
 
-/**
- * General notification levels
- */
 export type NotificationLevel = "info" | "warning" | "error" | "debug";
 
-/**
- * General notification interface
- */
 export interface GeneralNotification {
   level: NotificationLevel;
   logger?: string;
@@ -33,10 +24,6 @@ export interface GeneralNotification {
   };
 }
 
-/**
- * Enhanced notification manager for MCP server
- * Uses RequestHandlerExtra context for proper MCP notifications
- */
 export class NotificationManager {
   private requestContext: RequestHandlerExtra<ServerRequest, ServerNotification> | null = null;
   private activeOperations: Map<string, { 
@@ -49,26 +36,16 @@ export class NotificationManager {
     // No server needed - we use the request context
   }
 
-  /**
-   * Set the request context from a tool handler
-   * This provides access to sendNotification function
-   */
   setRequestContext(context: RequestHandlerExtra<ServerRequest, ServerNotification>): void {
     this.requestContext = context;
     logger.debug("Notification manager request context set");
   }
 
-  /**
-   * Clear the request context after tool execution
-   */
   clearRequestContext(): void {
     this.requestContext = null;
     logger.debug("Notification manager request context cleared");
   }
 
-  /**
-   * Send a progress notification with trace context preservation
-   */
   async sendProgress(notification: ProgressNotification): Promise<void> {
     if (!this.requestContext?.sendNotification) {
       logger.debug("No request context available for progress notification", {
@@ -126,11 +103,6 @@ export class NotificationManager {
     }
   }
 
-  /**
-   * Send a general notification with trace context preservation
-   * NOTE: Most MCP clients (like Claude Desktop) don't support notifications/message
-   * This gracefully falls back to local logging only
-   */
   async sendMessage(notification: GeneralNotification): Promise<void> {
     // CRITICAL: Most MCP clients don't support notifications/message
     // Always log locally and skip sending notification to avoid errors
@@ -168,9 +140,6 @@ export class NotificationManager {
     });
   }
 
-  /**
-   * Start tracking a long-running operation with progress
-   */
   async startOperation(
     operationId: string,
     progressToken: string | number,
@@ -208,9 +177,6 @@ export class NotificationManager {
     });
   }
 
-  /**
-   * Update progress for an active operation
-   */
   async updateProgress(
     operationId: string,
     progress: number,
@@ -252,9 +218,6 @@ export class NotificationManager {
     });
   }
 
-  /**
-   * Complete a long-running operation
-   */
   async completeOperation(
     operationId: string,
     result?: any,
@@ -294,9 +257,6 @@ export class NotificationManager {
     });
   }
 
-  /**
-   * Fail a long-running operation
-   */
   async failOperation(
     operationId: string,
     error: Error | string,
@@ -329,9 +289,6 @@ export class NotificationManager {
     });
   }
 
-  /**
-   * Send a warning notification
-   */
   async sendWarning(message: string, data?: Record<string, any>): Promise<void> {
     await this.sendMessage({
       level: "warning",
@@ -343,9 +300,6 @@ export class NotificationManager {
     });
   }
 
-  /**
-   * Send an error notification
-   */
   async sendError(message: string, error?: Error | string, data?: Record<string, any>): Promise<void> {
     await this.sendMessage({
       level: "error",
@@ -358,9 +312,6 @@ export class NotificationManager {
     });
   }
 
-  /**
-   * Send an info notification
-   */
   async sendInfo(message: string, data?: Record<string, any>): Promise<void> {
     await this.sendMessage({
       level: "info",
@@ -372,30 +323,18 @@ export class NotificationManager {
     });
   }
 
-  /**
-   * Get active operation count
-   */
   getActiveOperationsCount(): number {
     return this.activeOperations.size;
   }
 
-  /**
-   * Get active operation IDs
-   */
   getActiveOperationIds(): string[] {
     return Array.from(this.activeOperations.keys());
   }
 
-  /**
-   * Generate a unique operation ID
-   */
   static generateOperationId(prefix: string = "op"): string {
     return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
   }
 
-  /**
-   * Generate a progress token from operation ID
-   */
   static generateProgressToken(operationId: string): string {
     return `progress-${operationId}`;
   }
@@ -404,9 +343,6 @@ export class NotificationManager {
 // Global notification manager instance
 export const notificationManager = new NotificationManager();
 
-/**
- * Helper to wrap tool handlers with notification context
- */
 export function withNotificationContext<TArgs, TResult>(
   handler: (args: TArgs, extra: RequestHandlerExtra<ServerRequest, ServerNotification>) => Promise<TResult>
 ): (args: TArgs, extra: RequestHandlerExtra<ServerRequest, ServerNotification>) => Promise<TResult> {
@@ -424,9 +360,6 @@ export function withNotificationContext<TArgs, TResult>(
   };
 }
 
-/**
- * Helper function to wrap a tool handler with notification support
- */
 export function withNotifications<T extends any[], R>(
   toolName: string,
   handler: (...args: T) => Promise<R>
@@ -453,9 +386,6 @@ export function withNotifications<T extends any[], R>(
   };
 }
 
-/**
- * Helper for operations that need progress tracking
- */
 export interface ProgressTracker {
   operationId: string;
   progressToken: string;
@@ -464,9 +394,6 @@ export interface ProgressTracker {
   fail: (error: Error | string, message?: string) => Promise<void>;
 }
 
-/**
- * Create a progress tracker for long-running operations
- */
 export async function createProgressTracker(
   toolName: string,
   total?: number,

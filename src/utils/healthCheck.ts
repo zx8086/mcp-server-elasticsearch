@@ -58,9 +58,6 @@ export class HealthMonitor {
     private intervalMs = 30000,
   ) {}
 
-  /**
-   * Start periodic health checks
-   */
   start(): void {
     if (this.healthCheckInterval) {
       return; // Already started
@@ -85,9 +82,6 @@ export class HealthMonitor {
     logger.info("Health monitoring started", { intervalMs: this.intervalMs });
   }
 
-  /**
-   * Stop periodic health checks
-   */
   stop(): void {
     if (this.healthCheckInterval) {
       clearInterval(this.healthCheckInterval);
@@ -96,9 +90,6 @@ export class HealthMonitor {
     }
   }
 
-  /**
-   * Get current health status
-   */
   async getHealthStatus(): Promise<HealthStatus> {
     if (!this.lastHealthCheck || Date.now() - new Date(this.lastHealthCheck.timestamp).getTime() > 60000) {
       // Refresh if older than 1 minute
@@ -107,16 +98,10 @@ export class HealthMonitor {
     return this.lastHealthCheck!;
   }
 
-  /**
-   * Get last cached health status
-   */
   getLastHealthStatus(): HealthStatus | undefined {
     return this.lastHealthCheck;
   }
 
-  /**
-   * Perform comprehensive health check
-   */
   private async performHealthCheck(): Promise<HealthStatus> {
     const timestamp = new Date().toISOString();
 
@@ -170,9 +155,6 @@ export class HealthMonitor {
     return healthStatus;
   }
 
-  /**
-   * Check Elasticsearch cluster health
-   */
   private async checkElasticsearchHealth(): Promise<HealthStatus["elasticsearch"]> {
     try {
       const startTime = Date.now();
@@ -205,9 +187,6 @@ export class HealthMonitor {
     }
   }
 
-  /**
-   * Check connection pool health
-   */
   private checkConnectionPoolHealth(): HealthStatus["connectionPool"] {
     const pool = getGlobalConnectionPool();
     const stats = pool.getStats();
@@ -232,9 +211,6 @@ export class HealthMonitor {
     };
   }
 
-  /**
-   * Check server health
-   */
   private checkServerHealth(): HealthStatus["server"] {
     const uptime = Date.now() - this.startTime;
     const memoryUsage = process.memoryUsage();
@@ -247,9 +223,6 @@ export class HealthMonitor {
     };
   }
 
-  /**
-   * Check caching system health
-   */
   private checkCachingHealth(): HealthStatus["caching"] {
     try {
       const stats = getAllCacheStats();
@@ -271,9 +244,6 @@ export class HealthMonitor {
     }
   }
 
-  /**
-   * Check connection warming health
-   */
   private checkConnectionWarmingHealth(): HealthStatus["connectionWarming"] {
     try {
       const stats = getConnectionWarmingStats();
@@ -300,9 +270,6 @@ export class HealthMonitor {
     }
   }
 
-  /**
-   * Check circuit breakers health
-   */
   private checkCircuitBreakersHealth(): HealthStatus["circuitBreakers"] {
     try {
       const stats = getAllCircuitBreakerStats();
@@ -335,9 +302,6 @@ export class HealthMonitor {
     }
   }
 
-  /**
-   * Check resource monitoring health
-   */
   private checkResourceMonitoringHealth(): HealthStatus["resourceMonitoring"] {
     try {
       const resourceMonitor = getResourceMonitor();
@@ -364,9 +328,6 @@ export class HealthMonitor {
     }
   }
 
-  /**
-   * Determine overall system status
-   */
   private determineOverallStatus(
     esHealth: HealthStatus["elasticsearch"],
     poolHealth: HealthStatus["connectionPool"],
@@ -408,9 +369,6 @@ export class HealthMonitor {
 // Global health monitor instance
 let globalHealthMonitor: HealthMonitor;
 
-/**
- * Initialize global health monitor
- */
 export function initializeHealthMonitor(client: Client, intervalMs = 30000): HealthMonitor {
   if (globalHealthMonitor) {
     globalHealthMonitor.stop();
@@ -420,9 +378,6 @@ export function initializeHealthMonitor(client: Client, intervalMs = 30000): Hea
   return globalHealthMonitor;
 }
 
-/**
- * Get global health monitor instance
- */
 export function getHealthMonitor(): HealthMonitor {
   if (!globalHealthMonitor) {
     throw new Error("Health monitor not initialized. Call initializeHealthMonitor() first.");
@@ -430,9 +385,6 @@ export function getHealthMonitor(): HealthMonitor {
   return globalHealthMonitor;
 }
 
-/**
- * Quick health check function for endpoint use
- */
 export async function getQuickHealthStatus(): Promise<{ status: string; timestamp: string }> {
   try {
     const monitor = getHealthMonitor();

@@ -1,3 +1,4 @@
+/* src/health/healthCheckSystem.ts */
 import { EventEmitter } from "node:events";
 import type { Client } from "@elastic/elasticsearch";
 import { metrics } from "../monitoring/prometheusMetrics.js";
