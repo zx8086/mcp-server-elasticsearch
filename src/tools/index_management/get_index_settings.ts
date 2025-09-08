@@ -107,10 +107,19 @@ export const registerGetIndexSettingsTool: ToolRegistrationFunction = (server: M
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_get_index_settings",
-    "Get index settings from Elasticsearch. Best for configuration review, performance analysis, troubleshooting. Use when you need to inspect index-level settings and configurations in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+
     {
+
+      title: "Get Index Settings",
+
+      description: "Get index settings from Elasticsearch. Best for configuration review, performance analysis, troubleshooting. Use when you need to inspect index-level settings and configurations in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: {
       index: z.string(), // Name of the index to get settings for
       name: z.string().optional(), // Specific setting name to retrieve
       ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
@@ -121,6 +130,10 @@ export const registerGetIndexSettingsTool: ToolRegistrationFunction = (server: M
       local: z.boolean().optional(), // Return local information only
       masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
     },
+
+    },
+
     withReadOnlyCheck("elasticsearch_get_index_settings", getIndexSettingsHandler, OperationType.READ),
-  );
+
+  );;
 };

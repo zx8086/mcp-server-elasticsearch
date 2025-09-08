@@ -144,10 +144,23 @@ export const registerGetIndexTool: ToolRegistrationFunction = (server: McpServer
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_get_index",
-    "Get comprehensive index information from Elasticsearch including settings, mappings, and aliases. Best for index inspection, configuration analysis, troubleshooting. Empty {} parameters will default to getting information for all indices. Use when you need detailed metadata about Elasticsearch indices structure and configuration. Parameters have smart defaults: index='*', ignoreUnavailable=true, allowNoIndices=true. Uses direct JSON Schema and standardized MCP error codes.",
-    getIndexSchema,
+
+    {
+
+      title: "Get Index",
+
+      description: "Get comprehensive index information from Elasticsearch including settings, mappings, and aliases. Best for index inspection, configuration analysis, troubleshooting. Empty {} parameters will default to getting information for all indices. Use when you need detailed metadata about Elasticsearch indices structure and configuration. Parameters have smart defaults: index=*, ignoreUnavailable=true, allowNoIndices=true. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: getIndexSchema,
+
+    },
+
     withReadOnlyCheck("elasticsearch_get_index", getIndexHandler, OperationType.READ),
-  );
+
+  );;
 };

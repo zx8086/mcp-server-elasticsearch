@@ -162,14 +162,36 @@ export const registerGetShardsTool: ToolRegistrationFunction = (server: McpServe
     }
   };
 
-  server.tool(
+  // Tool registration using modern registerTool method
+
+
+  server.registerTool(
+
+
     "elasticsearch_get_shards",
-    "Get shard information. WARNING: Clusters often have 1000+ shards. Check cluster stats first to see shard count. If >500 shards, MUST use 'limit' or will fail. Patterns: {limit: 100, sortBy: 'state'} for health check, {limit: 50, sortBy: 'size'} for storage analysis. Empty {} only works for small clusters (<500 shards). FIXED: Uses Zod Schema for proper MCP parameter handling.",
+
+
     {
+
+
+      title: "Get Shards",
+
+
+      description: "Get shard information. WARNING: Clusters often have 1000+ shards. Check cluster stats first to see shard count. If >500 shards, MUST use 'limit' or will fail. Patterns: {limit: 100, sortBy: 'state'} for health check, {limit: 50, sortBy: 'size'} for storage analysis. Empty {} only works for small clusters (<500 shards). FIXED: Uses Zod Schema for proper MCP parameter handling.",
+
+
+      inputSchema: {
       index: z.string().optional(),
       limit: z.number().min(1).max(1000).optional(),
       sortBy: z.enum(["state", "index", "size", "docs"]).optional(),
     },
+
+
+    },
+
+
     getShardsHandler,
+
+
   );
 };

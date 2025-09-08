@@ -214,10 +214,24 @@ Operation completed at: ${new Date().toISOString()}`,
   );
 
   // Direct tool registration with JSON Schema + read-only + security protection
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_ilm_put_lifecycle",
-    "Create or update ILM policy. Define Index Lifecycle Management policy with automated transitions through hot, warm, cold, and delete phases. Uses direct JSON Schema and standardized MCP error codes. Examples: {policy: 'my-policy', body: {policy: {phases: {hot: {actions: {}}}}}}",
-    putLifecycleSchema, // Direct JSON Schema - no Zod conversion
+
+    {
+
+      title: "Ilm Put Lifecycle",
+
+      description: "Create or update ILM policy. Define Index Lifecycle Management policy with automated transitions through hot, warm, cold, and delete phases. Uses direct JSON Schema and standardized MCP error codes. Examples: {policy: my-policy, body: {policy: {phases: {hot: {actions: {}}}}}}",
+
+      inputSchema: putLifecycleSchema,
+
+    },
+
+    // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_put_lifecycle", secureHandler, OperationType.WRITE),
-  );
+
+  );;
 };

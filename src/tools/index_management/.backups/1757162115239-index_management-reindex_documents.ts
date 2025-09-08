@@ -238,10 +238,23 @@ export const registerReindexDocumentsTool: ToolRegistrationFunction = (server: M
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_reindex_documents",
-    "Reindex documents from source to destination index in Elasticsearch. Best for data migration, index restructuring, mapping changes. Use when you need to copy documents between Elasticsearch indices with optional transformations. Uses direct JSON Schema and standardized MCP error codes.",
-    reindexDocumentsSchema,
+
+    {
+
+      title: "Reindex Documents",
+
+      description: "Reindex documents from source to destination index in Elasticsearch. Best for data migration, index restructuring, mapping changes. Use when you need to copy documents between Elasticsearch indices with optional transformations. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: reindexDocumentsSchema,
+
+    },
+
     withReadOnlyCheck("elasticsearch_reindex_documents", reindexDocumentsHandler, OperationType.WRITE),
-  );
+
+  );;
 };

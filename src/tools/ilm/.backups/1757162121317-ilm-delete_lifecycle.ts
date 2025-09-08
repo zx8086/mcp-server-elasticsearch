@@ -193,12 +193,26 @@ export const registerDeleteLifecycleTool: ToolRegistrationFunction = (server: Mc
   };
 
   // Direct tool registration with JSON Schema + read-only protection
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_ilm_delete_lifecycle",
-    "Delete an ILM policy. ⚠️ DESTRUCTIVE OPERATION: Cannot be undone. Policy must not be in use by any indices or templates. Examples: {policy: 'old-logs-policy'}. Uses direct JSON Schema and standardized MCP error codes.",
-    deleteLifecycleSchema, // Direct JSON Schema - no Zod conversion
+
+    {
+
+      title: "Ilm Delete Lifecycle",
+
+      description: "Delete an ILM policy. ⚠️ DESTRUCTIVE OPERATION: Cannot be undone. Policy must not be in use by any indices or templates. Examples: {policy: old-logs-policy}. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: deleteLifecycleSchema,
+
+    },
+
+    // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_delete_lifecycle", deleteLifecycleHandler, OperationType.DELETE),
-  );
+
+  );;
 };
 
 // =============================================================================

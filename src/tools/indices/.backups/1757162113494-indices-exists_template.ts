@@ -123,10 +123,23 @@ export const registerExistsTemplateTool: ToolRegistrationFunction = (server: Mcp
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_exists_template",
-    "Check existence of legacy index templates in Elasticsearch. Best for legacy template validation, migration planning, compatibility checks. Use when you need to verify legacy index template presence in Elasticsearch (deprecated, use composable templates instead).",
-    existsTemplateSchema,
+
+    {
+
+      title: "Exists Template",
+
+      description: "Check existence of legacy index templates in Elasticsearch. Best for legacy template validation, migration planning, compatibility checks. Use when you need to verify legacy index template presence in Elasticsearch (deprecated, use composable templates instead).",
+
+      inputSchema: existsTemplateSchema,
+
+    },
+
     existsTemplateHandler,
+
   );
 };

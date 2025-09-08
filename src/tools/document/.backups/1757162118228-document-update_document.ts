@@ -200,10 +200,23 @@ export const registerUpdateDocumentTool: ToolRegistrationFunction = (server: Mcp
   };
 
   // Tool registration with read-only check for write operation
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_update_document",
-    "Update a JSON document in Elasticsearch by index and id. Best for partial document updates, scripted updates, upsert operations. Use when you need to modify existing documents in Elasticsearch indices with optimistic concurrency control. Uses direct JSON Schema and standardized MCP error codes.",
-    updateDocumentSchema,
+
+    {
+
+      title: "Update Document",
+
+      description: "Update a JSON document in Elasticsearch by index and id. Best for partial document updates, scripted updates, upsert operations. Use when you need to modify existing documents in Elasticsearch indices with optimistic concurrency control. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: updateDocumentSchema,
+
+    },
+
     withReadOnlyCheck("elasticsearch_update_document", updateDocumentHandler, OperationType.WRITE),
-  );
+
+  );;
 };

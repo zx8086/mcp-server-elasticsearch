@@ -173,10 +173,23 @@ export const registerGetIndexSettingsAdvancedTool: ToolRegistrationFunction = (s
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_get_index_settings_advanced",
-    "Get comprehensive index settings from Elasticsearch with advanced options. Best for configuration analysis, performance tuning, troubleshooting. Use when you need detailed index settings including data stream backing indices in Elasticsearch.",
-    getIndexSettingsAdvancedSchema,
+
+    {
+
+      title: "Get Index Settings Advanced",
+
+      description: "Get comprehensive index settings from Elasticsearch with advanced options. Best for configuration analysis, performance tuning, troubleshooting. Use when you need detailed index settings including data stream backing indices in Elasticsearch.",
+
+      inputSchema: getIndexSettingsAdvancedSchema,
+
+    },
+
     getIndexSettingsAdvancedHandler,
+
   );
 };

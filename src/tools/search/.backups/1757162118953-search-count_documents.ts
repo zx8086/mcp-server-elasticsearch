@@ -158,10 +158,23 @@ export const registerCountDocumentsTool: ToolRegistrationFunction = (server: Mcp
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_count_documents",
-    "Count documents in Elasticsearch. PARAMETERS: 'index' (string, default '*'), 'query' (object, default match_all). Best for data analysis, result set sizing. Example: {index: 'logs-*', query: {match: {status: 'error'}}}. Uses direct JSON Schema and standardized MCP error codes.",
-    countDocumentsSchema,
+
+    {
+
+      title: "Count Documents",
+
+      description: "Count documents in Elasticsearch. PARAMETERS: 'index' (string, default '*'), 'query' (object, default match_all). Best for data analysis, result set sizing. Example: {index: 'logs-*', query: {match: {status: 'error'}}}. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: countDocumentsSchema,
+
+    },
+
     countDocumentsHandler,
+
   );
 };

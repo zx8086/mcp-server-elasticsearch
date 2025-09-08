@@ -95,10 +95,23 @@ export const registerExecuteSqlQueryTool: ToolRegistrationFunction = (server: Mc
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_execute_sql_query",
-    "Execute a SQL query using Elasticsearch SQL API. PARAMETER: 'query' (SQL string). Best for familiar SQL syntax, structured queries, data analysis. Example: {query: 'SELECT * FROM logs-* WHERE status = 500 LIMIT 100'}. Uses direct JSON Schema and standardized MCP error codes.",
-    executeSqlQuerySchema,
+
+    {
+
+      title: "Execute Sql Query",
+
+      description: "Execute a SQL query using Elasticsearch SQL API. PARAMETER: 'query' (SQL string). Best for familiar SQL syntax, structured queries, data analysis. Example: {query: 'SELECT * FROM logs-* WHERE status = 500 LIMIT 100'}. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: executeSqlQuerySchema,
+
+    },
+
     executeSqlQueryHandler,
+
   );
 };

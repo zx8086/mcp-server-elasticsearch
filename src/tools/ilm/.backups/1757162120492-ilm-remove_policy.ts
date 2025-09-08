@@ -166,10 +166,24 @@ Operation completed at: ${new Date().toISOString()}`,
   };
 
   // Direct tool registration with JSON Schema + read-only protection
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_ilm_remove_policy",
-    "Remove ILM policy from indices. Remove Index Lifecycle Management policy assignment from indices, stopping automated lifecycle management. Uses direct JSON Schema and standardized MCP error codes. Examples: {index: 'logs-*'}, {index: 'my-index-000001'}",
-    removePolicySchema, // Direct JSON Schema - no Zod conversion
+
+    {
+
+      title: "Ilm Remove Policy",
+
+      description: "Remove ILM policy from indices. Remove Index Lifecycle Management policy assignment from indices, stopping automated lifecycle management. Uses direct JSON Schema and standardized MCP error codes. Examples: {index: logs-*}, {index: my-index-000001}",
+
+      inputSchema: removePolicySchema,
+
+    },
+
+    // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_remove_policy", removePolicyHandler, OperationType.WRITE),
-  );
+
+  );;
 };

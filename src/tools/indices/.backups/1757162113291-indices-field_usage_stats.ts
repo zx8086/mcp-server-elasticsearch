@@ -133,10 +133,23 @@ export const registerFieldUsageStatsTool: ToolRegistrationFunction = (server: Mc
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_field_usage_stats",
-    "Get field usage statistics per shard and field in Elasticsearch. Best for query optimization, field analysis, performance tuning. Use when you need to understand which fields are accessed during queries for Elasticsearch index optimization.",
-    fieldUsageStatsSchema,
+
+    {
+
+      title: "Field Usage Stats",
+
+      description: "Get field usage statistics per shard and field in Elasticsearch. Best for query optimization, field analysis, performance tuning. Use when you need to understand which fields are accessed during queries for Elasticsearch index optimization.",
+
+      inputSchema: fieldUsageStatsSchema,
+
+    },
+
     fieldUsageStatsHandler,
+
   );
 };

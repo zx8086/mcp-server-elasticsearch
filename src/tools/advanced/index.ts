@@ -127,7 +127,7 @@ export const deleteByQuery = {
   name: "elasticsearch_delete_by_query",
   description:
     "Delete documents by query in Elasticsearch. Best for bulk document deletion, data cleanup, removing documents matching specific criteria. Use when you need to delete multiple documents based on query conditions rather than individual document IDs in Elasticsearch.",
-  inputSchema: deleteByQuerySchema,
+  inputSchema: deleteByQuerySchema.shape,
   operationType: OperationType.DELETE as const,
   handler: withReadOnlyCheck("elasticsearch_delete_by_query", deleteByQueryImpl, OperationType.DELETE),
 };
@@ -146,7 +146,7 @@ export const translateSqlQuery = {
   name: "elasticsearch_translate_sql_query",
   description:
     "Translate a SQL query to Elasticsearch Query DSL using the SQL Translate API. Best for SQL-to-DSL conversion, query optimization, learning Elasticsearch Query DSL. Use when you need to convert familiar SQL syntax to native Elasticsearch queries.",
-  inputSchema: translateSqlQuerySchema,
+  inputSchema: translateSqlQuerySchema.shape,
   operationType: OperationType.WRITE as const,
   handler: async (client: Client, args: z.infer<typeof translateSqlQuerySchema>) => {
     try {

@@ -201,10 +201,23 @@ export const registerPutMappingTool: ToolRegistrationFunction = (server: McpServ
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_put_mapping",
-    "Update index mappings in Elasticsearch. Best for schema evolution, field addition, mapping modifications. Use when you need to add new fields or update existing field mappings in Elasticsearch indices. Uses direct JSON Schema and standardized MCP error codes.",
-    putMappingSchema,
+
+    {
+
+      title: "Put Mapping",
+
+      description: "Update index mappings in Elasticsearch. Best for schema evolution, field addition, mapping modifications. Use when you need to add new fields or update existing field mappings in Elasticsearch indices. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: putMappingSchema,
+
+    },
+
     withReadOnlyCheck("elasticsearch_put_mapping", putMappingHandler, OperationType.WRITE),
-  );
+
+  );;
 };

@@ -115,10 +115,19 @@ export const registerIndexDocumentTool: ToolRegistrationFunction = (server: McpS
   };
 
   // Tool registration with read-only check for write operation
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_index_document",
-    "Index a JSON document into Elasticsearch. Best for adding new documents, bulk data ingestion, real-time indexing. Use when you need to store structured JSON documents in Elasticsearch indices with optional routing and pipeline processing. Uses direct JSON Schema and standardized MCP error codes.",
+
     {
+
+      title: "Index Document",
+
+      description: "Index a JSON document into Elasticsearch. Best for adding new documents, bulk data ingestion, real-time indexing. Use when you need to store structured JSON documents in Elasticsearch indices with optional routing and pipeline processing. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: {
       index: z.string(), // REQUIRED: Name of the Elasticsearch index to store the document. Example: 'users', 'logs-2024.01'
       id: z.string().optional(), // Optional: Unique identifier for the document. If not provided, Elasticsearch will generate one
       document: z.object({}), // REQUIRED: The JSON document to index
@@ -126,6 +135,10 @@ export const registerIndexDocumentTool: ToolRegistrationFunction = (server: McpS
       routing: z.string().optional(), // Custom routing value for document placement
       pipeline: z.string().optional(), // Ingest pipeline to use for document processing
     },
+
+    },
+
     withReadOnlyCheck("elasticsearch_index_document", indexDocumentHandler, OperationType.WRITE),
-  );
+
+  );;
 };

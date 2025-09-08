@@ -193,10 +193,23 @@ export const registerPutIndexTemplateTool: ToolRegistrationFunction = (server: M
   };
 
   // Tool registration - WRITE operation
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_put_index_template",
-    "Create or update an index template in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes. Best for index standardization, mapping management, settings automation. Use when you need to define templates for automatic index configuration in Elasticsearch. TIP: Define 'indexPatterns' to control which indices use this template, set 'priority' for template precedence.",
-    putIndexTemplateSchema,
+
+    {
+
+      title: "Put Index Template",
+
+      description: "Create or update an index template in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes. Best for index standardization, mapping management, settings automation. Use when you need to define templates for automatic index configuration in Elasticsearch. TIP: Define 'indexPatterns' to control which indices use this template, set 'priority' for template precedence.",
+
+      inputSchema: putIndexTemplateSchema,
+
+    },
+
     putIndexTemplateHandler,
+
   );
 };

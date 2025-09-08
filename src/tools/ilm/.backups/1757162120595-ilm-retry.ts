@@ -162,10 +162,24 @@ Operation completed at: ${new Date().toISOString()}`,
   };
 
   // Direct tool registration with JSON Schema + read-only protection
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_ilm_retry",
-    "Retry ILM policy execution. Retry Index Lifecycle Management policy execution for indices in ERROR state. Uses direct JSON Schema and standardized MCP error codes. Examples: {index: 'logs-*'}, {index: 'failed-index-000001'}",
-    retrySchema, // Direct JSON Schema - no Zod conversion
+
+    {
+
+      title: "Ilm Retry",
+
+      description: "Retry ILM policy execution. Retry Index Lifecycle Management policy execution for indices in ERROR state. Uses direct JSON Schema and standardized MCP error codes. Examples: {index: logs-*}, {index: failed-index-000001}",
+
+      inputSchema: retrySchema,
+
+    },
+
+    // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_retry", retryHandler, OperationType.WRITE),
-  );
+
+  );;
 };

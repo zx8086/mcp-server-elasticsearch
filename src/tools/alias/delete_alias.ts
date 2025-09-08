@@ -151,15 +151,28 @@ export const registerDeleteAliasTool: ToolRegistrationFunction = (server: McpSer
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_delete_alias",
-    "Delete an alias from an index in Elasticsearch. Best for alias cleanup, configuration management, removing unused references. Use when you need to remove named references to Elasticsearch indices during maintenance or restructuring. DESTRUCTIVE: Permanently removes alias configuration and may break applications relying on the alias.",
+
     {
+
+      title: "Delete Alias",
+
+      description: "Delete an alias from an index in Elasticsearch. Best for alias cleanup, configuration management, removing unused references. Use when you need to remove named references to Elasticsearch indices during maintenance or restructuring. DESTRUCTIVE: Permanently removes alias configuration and may break applications relying on the alias.",
+
+      inputSchema: {
       index: z.string(), // Index name to remove the alias from. Cannot be empty. Supports patterns with wildcards
       name: z.string(), // Alias name to delete. Cannot be empty. Must exist on the specified index
       timeout: z.string().optional(), // Timeout for the request (e.g., '30s', '1m'). Optional
       masterTimeout: z.string().optional(), // Timeout for waiting for master node response (e.g., '30s', '1m'). Optional
     },
+
+    },
+
     withReadOnlyCheck("elasticsearch_delete_alias", deleteAliasHandler, OperationType.DESTRUCTIVE),
-  );
+
+  );;
 };

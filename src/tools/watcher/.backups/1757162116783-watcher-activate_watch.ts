@@ -100,10 +100,23 @@ export const registerWatcherActivateWatchTool: ToolRegistrationFunction = (serve
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_watcher_activate_watch",
-    "Activate a watch in Elasticsearch Watcher. Best for monitoring automation, alerting management, watch lifecycle control. Use when you need to enable watch execution for Elasticsearch alerting and monitoring workflows. Uses direct JSON Schema and standardized MCP error codes.",
-    activateWatchSchema,
+
+    {
+
+      title: "Watcher Activate Watch",
+
+      description: "Activate a watch in Elasticsearch Watcher. Best for monitoring automation, alerting management, watch lifecycle control. Use when you need to enable watch execution for Elasticsearch alerting and monitoring workflows. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: activateWatchSchema,
+
+    },
+
     withReadOnlyCheck("elasticsearch_watcher_activate_watch", activateWatchHandler, OperationType.WRITE),
-  );
+
+  );;
 };

@@ -223,10 +223,25 @@ export const registerBulkIndexWithProgress = (server: McpServer, esClient: Clien
     }
   };
 
-  server.tool(
+  // Tool registration using modern registerTool method
+
+
+  server.registerTool(
+
+
     "elasticsearch_bulk_index_with_progress",
-    "Bulk index multiple documents into Elasticsearch with real-time progress notifications. Processes documents in batches and reports progress for long-running operations. Use for indexing large datasets with progress tracking.",
+
+
     {
+
+
+      title: "Bulk Index With Progress",
+
+
+      description: "Bulk index multiple documents into Elasticsearch with real-time progress notifications. Processes documents in batches and reports progress for long-running operations. Use for indexing large datasets with progress tracking.",
+
+
+      inputSchema: {
       index: z.string().min(1).describe("Target index for bulk indexing"),
       documents: z.array(z.record(z.any())).min(1).max(1000).describe("Array of documents to index (max 1000)"),
       refresh: z.enum(["true", "false", "wait_for"]).optional().describe("Whether to refresh the index after operations"),
@@ -234,6 +249,13 @@ export const registerBulkIndexWithProgress = (server: McpServer, esClient: Clien
       routing: z.string().optional().describe("Custom routing value"),
       batchSize: z.number().min(1).max(100).default(50).describe("Number of documents to process per batch"),
     },
-    handler
+
+
+    },
+
+
+    handler,
+
+
   );
 };

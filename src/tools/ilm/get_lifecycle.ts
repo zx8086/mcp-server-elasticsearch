@@ -320,16 +320,30 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
   };
 
   // Test with Zod schema instead of JSON schema
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_ilm_get_lifecycle",
-    "Get ILM policies. PARAMETERS: 'policy' (string, optional - supports comma-separated list for multiple policies), 'limit' (number 1-100), 'summary' (boolean), 'sortBy' (enum). Examples: {limit: 50, summary: true} or {policy: 'policy1,policy2,policy3'}. Uses Zod Schema for proper MCP parameter handling.",
+
     {
+
+      title: "Ilm Get Lifecycle",
+
+      description: "Get ILM policies. PARAMETERS: 'policy' (string, optional - supports comma-separated list for multiple policies), 'limit' (number 1-100), 'summary' (boolean), 'sortBy' (enum). Examples: {limit: 50, summary: true} or {policy: 'policy1,policy2,policy3'}. Uses Zod Schema for proper MCP parameter handling.",
+
+      inputSchema: {
       policy: z.string().optional(),
       limit: z.number().min(1).max(100).optional(),
       summary: z.boolean().optional(),
       sortBy: z.enum(["name", "modified_date", "version", "indices_count"]).optional(),
-    }, // Use Zod schema instead
+    },
+
+    },
+
+    // Use Zod schema instead
     getLifecycleHandler,
+
   );
 };
 

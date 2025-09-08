@@ -223,10 +223,23 @@ export const registerSearchTemplateTool: ToolRegistrationFunction = (server: Mcp
   };
 
   // Tool registration - READ operation
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_search_template",
-    "Execute a search template in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes. Best for parameterized queries, reusable search patterns, query standardization. Use when you need to run templated searches with dynamic parameters in Elasticsearch. TIP: Use either 'id' for stored templates or 'source' for inline templates, provide 'params' for variable substitution.",
-    searchTemplateSchema,
+
+    {
+
+      title: "Search Template",
+
+      description: "Execute a search template in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes. Best for parameterized queries, reusable search patterns, query standardization. Use when you need to run templated searches with dynamic parameters in Elasticsearch. TIP: Use either 'id' for stored templates or 'source' for inline templates, provide 'params' for variable substitution.",
+
+      inputSchema: searchTemplateSchema,
+
+    },
+
     searchTemplateHandler,
+
   );
 };

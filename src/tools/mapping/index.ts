@@ -43,7 +43,7 @@ export const clearSqlCursor = {
   name: "elasticsearch_clear_sql_cursor",
   description:
     "Clear a SQL cursor in Elasticsearch to free resources. Best for resource management, cursor cleanup, memory optimization. Use when you need to explicitly release SQL cursor resources after completing paginated SQL queries in Elasticsearch.",
-  inputSchema: clearSqlCursorSchema,
+  inputSchema: clearSqlCursorSchema.shape,
   operationType: OperationType.READ as const,
   handler: async (client: Client, args: z.infer<typeof clearSqlCursorSchema>) => {
     try {
@@ -103,7 +103,7 @@ export const getFieldMapping = {
   name: "elasticsearch_get_field_mapping",
   description:
     "Get field mapping for a specific field in an Elasticsearch index. Best for schema inspection, field analysis, mapping troubleshooting. Use when you need to examine how specific fields are mapped and analyzed in Elasticsearch indices for search optimization.",
-  inputSchema: getFieldMappingSchema,
+  inputSchema: getFieldMappingSchema.shape,
   operationType: OperationType.READ as const,
   handler: async (client: Client, args: z.infer<typeof getFieldMappingSchema>) => {
     try {

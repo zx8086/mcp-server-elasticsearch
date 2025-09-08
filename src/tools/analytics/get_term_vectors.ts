@@ -29,10 +29,22 @@ const GetTermVectorsParams = z.object({
 
 type GetTermVectorsParamsType = z.infer<typeof GetTermVectorsParams>;
 export const registerGetTermVectorsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_get_term_vectors",
-    "Get term vectors for a document in Elasticsearch. Best for text analysis, relevance tuning, similarity calculations. Use when you need to analyze term frequency, positions, and offsets for document text analysis in Elasticsearch.",
-    GetTermVectorsParams.shape,
+
+    {
+
+      title: "Get Term Vectors",
+
+      description: "Get term vectors for a document in Elasticsearch. Best for text analysis, relevance tuning, similarity calculations. Use when you need to analyze term frequency, positions, and offsets for document text analysis in Elasticsearch.",
+
+      inputSchema: GetTermVectorsParams.shape,
+
+    },
+
     async (params: GetTermVectorsParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.termvectors(
@@ -75,5 +87,6 @@ export const registerGetTermVectorsTool: ToolRegistrationFunction = (server: Mcp
         };
       }
     },
-  );
+
+  );;
 };

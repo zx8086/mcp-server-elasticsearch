@@ -92,13 +92,26 @@ export const registerWatcherAckWatchTool: ToolRegistrationFunction = (server: Mc
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_watcher_ack_watch",
-    "Acknowledge a watch in Elasticsearch Watcher to throttle actions. Best for alert management, action throttling, notification control. Use when you need to manually acknowledge watch actions to prevent repeated executions in Elasticsearch alerting. Uses direct JSON Schema and standardized MCP error codes.",
+
     {
+
+      title: "Watcher Ack Watch",
+
+      description: "Acknowledge a watch in Elasticsearch Watcher to throttle actions. Best for alert management, action throttling, notification control. Use when you need to manually acknowledge watch actions to prevent repeated executions in Elasticsearch alerting. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: {
       watch_id: z.string(), // Watch ID to acknowledge
       action_id: z.any().optional(), // Action ID(s) to acknowledge
     },
+
+    },
+
     withReadOnlyCheck("elasticsearch_watcher_ack_watch", ackWatchHandler, OperationType.WRITE),
-  );
+
+  );;
 };

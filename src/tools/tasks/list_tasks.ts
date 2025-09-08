@@ -21,10 +21,19 @@ const ListTasksParams = z.object({
 type ListTasksParamsType = z.infer<typeof ListTasksParams>;
 
 export const registerListTasksTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_list_tasks",
-    "Get information about tasks currently running on Elasticsearch cluster nodes. Best for cluster monitoring, performance troubleshooting, operation tracking. Use when you need to monitor long-running operations like reindexing, searches, or bulk operations in Elasticsearch.",
+
     {
+
+      title: "List Tasks",
+
+      description: "Get information about tasks currently running on Elasticsearch cluster nodes. Best for cluster monitoring, performance troubleshooting, operation tracking. Use when you need to monitor long-running operations like reindexing, searches, or bulk operations in Elasticsearch.",
+
+      inputSchema: {
       actions: z.union([z.string(), z.array(z.string())]).optional(),
       detailed: booleanField().optional(),
       groupBy: z.enum(["nodes", "parents", "none"]).optional(),
@@ -33,6 +42,9 @@ export const registerListTasksTool: ToolRegistrationFunction = (server: McpServe
       timeout: z.union([z.string(), z.number(), z.literal(-1), z.literal(0)]).optional(),
       waitForCompletion: booleanField().optional(),
     },
+
+    },
+
     async (params: ListTasksParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.tasks.list({
@@ -61,5 +73,6 @@ export const registerListTasksTool: ToolRegistrationFunction = (server: McpServe
         };
       }
     },
-  );
+
+  );;
 };

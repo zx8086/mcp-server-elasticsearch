@@ -172,10 +172,23 @@ export const registerDeleteAliasTool: ToolRegistrationFunction = (server: McpSer
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_delete_alias",
-    "Delete an alias from an index in Elasticsearch. Best for alias cleanup, configuration management, removing unused references. Use when you need to remove named references to Elasticsearch indices during maintenance or restructuring. DESTRUCTIVE: Permanently removes alias configuration and may break applications relying on the alias.",
-    deleteAliasSchema,
+
+    {
+
+      title: "Delete Alias",
+
+      description: "Delete an alias from an index in Elasticsearch. Best for alias cleanup, configuration management, removing unused references. Use when you need to remove named references to Elasticsearch indices during maintenance or restructuring. DESTRUCTIVE: Permanently removes alias configuration and may break applications relying on the alias.",
+
+      inputSchema: deleteAliasSchema,
+
+    },
+
     withReadOnlyCheck("elasticsearch_delete_alias", deleteAliasHandler, OperationType.DESTRUCTIVE),
-  );
+
+  );;
 };

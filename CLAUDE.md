@@ -31,13 +31,29 @@ bun run test-connection        # Test Elasticsearch connectivity
 
 ### Debugging
 ```bash
-bun run inspector              # MCP protocol inspector (stdio mode)
-bun run build:inspector        # Build and run inspector
+bun run inspector              # MCP protocol inspector (stdio mode) - BROWSER REQUIRED
+bun run build:inspector        # Build and run inspector - BROWSER REQUIRED  
 LOG_LEVEL=debug bun run dev    # Enable debug logging
 bun run dev-tools              # Development tools suite
 bun run dev-tools:full         # Full dev tools with tests and profiling
 bun run dev-tools:minimal      # Minimal dev tools (no lint/typecheck)
 ```
+
+### CRITICAL: Tool Validation Best Practice
+**ALWAYS validate changes by starting the server and calling tools directly:**
+
+```bash
+# 1. Build and start server
+bun run build
+bun run dev
+
+# 2. In another terminal, test actual tool calls via stdio:
+echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "elasticsearch_list_indices", "arguments": {"limit": 5}}}' | bun run dist/index.js
+
+# 3. Check for proper responses and no w._parse errors
+```
+
+**DO NOT use `bun run inspector` - it requires browser access which is not available in CLI environments.**
 
 ### Connectivity Testing
 ```bash
@@ -459,32 +475,45 @@ bun run test:dev               # Manual development tests
 - Comprehensive type definitions for all tools
 - Input/output validation for each operation
 
-### Critical MCP Parameter Handling
-**ESSENTIAL**: The MCP SDK requires Zod schema objects in `server.tool()` calls for proper parameter extraction.
+### Dual MCP Tool Registration Support
+**ESSENTIAL**: The codebase supports BOTH `server.tool()` and `server.registerTool()` methods with full backward compatibility and identical functionality.
 
-#### The JSON Schema vs Zod Schema Issue:
+#### Dual Wrapper System:
 ```typescript
-// ❌ BROKEN: JSON Schema (parameters lost)
-const schema = {
-  type: "object",
-  properties: {
-    limit: { type: "number", minimum: 1, maximum: 100 }
-  }
-};
-server.tool("name", "description", schema, handler);
+// ✅ BOTH METHODS FULLY SUPPORTED with identical tracing and security
 
-// ✅ FIXED: Zod Schema (parameters flow correctly)
-server.tool("name", "description", {
-  limit: z.number().min(1).max(100).optional()
-}, handler);
+// Method 1: Legacy server.tool() - 169 tools use this
+server.tool(
+  "tool_name", 
+  "Tool description", 
+  zodSchema, 
+  handler
+);
+
+// Method 2: Modern server.registerTool() - 5 tools use this  
+server.registerTool(
+  "tool_name",
+  {
+    title: "Tool Title",
+    description: "Tool description with examples", 
+    inputSchema: zodSchema,
+  },
+  handler
+);
 ```
 
-**Symptoms of JSON Schema Issue:**
-- User sends `{limit: 50}` but handler receives `{limit: 20}` (defaults applied)
-- Parameters are completely lost or incorrect
-- Handler receives MCP protocol context instead of user arguments
+**Dual Wrapper Benefits:**
+- **Zero Breaking Changes**: All existing tools work immediately
+- **Identical Functionality**: Both methods get same tracing, security, notifications
+- **Handler Compatibility**: Exact same handler signatures `(args, extra) => result`
+- **LangSmith Integration**: Preserved exactly with same parameter flow
+- **Gradual Migration**: Can migrate tools over time without pressure
 
-**Solution**: Always use Zod schema objects directly in tool registration. All 162+ tools have been converted to use this pattern.
+**Current Status**: 
+- **174 total tools** supported with dual wrapper system
+- **169 tools** using `server.tool()` method
+- **5 tools** using `server.registerTool()` method  
+- **All tools** get conversation-aware tracing and security validation
 
 ## Critical Dependencies
 
@@ -541,15 +570,18 @@ export const registerToolName: ToolRegistrationFunction = (server: McpServer, es
     }
   };
 
-  // Register with Zod schema (NOT JSON schema)
-  server.tool(
+  // Register with modern registerTool method
+  server.registerTool(
     "tool_name",
-    "Tool description with examples",
     {
-      limit: z.number().min(1).max(100).optional(),
-      summary: z.boolean().optional(),
-      index: z.string().optional(),
-    }, // ← Zod schema object directly
+      title: "Tool Name",
+      description: "Tool description with examples",
+      inputSchema: {
+        limit: z.number().min(1).max(100).optional(),
+        summary: z.boolean().optional(),
+        index: z.string().optional(),
+      },
+    },
     handler
   );
 };

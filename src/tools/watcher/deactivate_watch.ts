@@ -90,12 +90,25 @@ export const registerWatcherDeactivateWatchTool: ToolRegistrationFunction = (ser
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_watcher_deactivate_watch",
-    "Deactivate a watch in Elasticsearch Watcher. Best for monitoring control, alerting management, watch lifecycle control. Use when you need to disable watch execution while preserving the watch definition in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+
     {
+
+      title: "Watcher Deactivate Watch",
+
+      description: "Deactivate a watch in Elasticsearch Watcher. Best for monitoring control, alerting management, watch lifecycle control. Use when you need to disable watch execution while preserving the watch definition in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: {
       watch_id: z.string(), // Watch ID to deactivate
     },
+
+    },
+
     withReadOnlyCheck("elasticsearch_watcher_deactivate_watch", deactivateWatchHandler, OperationType.WRITE),
-  );
+
+  );;
 };

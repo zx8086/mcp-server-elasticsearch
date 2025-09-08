@@ -328,10 +328,23 @@ export const registerRolloverTool: ToolRegistrationFunction = (server: McpServer
   };
 
   // Tool registration with read-only check
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_rollover",
-    "Roll over to a new index in Elasticsearch for data streams or aliases. Best for index lifecycle management, data stream rotation, automated archiving. Use when you need to create new indices based on size, age, or document count thresholds in Elasticsearch.",
-    rolloverSchema,
+
+    {
+
+      title: "Rollover",
+
+      description: "Roll over to a new index in Elasticsearch for data streams or aliases. Best for index lifecycle management, data stream rotation, automated archiving. Use when you need to create new indices based on size, age, or document count thresholds in Elasticsearch.",
+
+      inputSchema: rolloverSchema,
+
+    },
+
     withReadOnlyCheck("elasticsearch_rollover", rolloverHandler, OperationType.WRITE),
-  );
+
+  );;
 };

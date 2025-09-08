@@ -279,10 +279,19 @@ export const registerScrollSearchTool: ToolRegistrationFunction = (server: McpSe
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_scroll_search",
-    "Perform scroll search in Elasticsearch for large result sets. Best for pagination, large dataset retrieval, memory-efficient iteration. Use when you need to retrieve all documents from large result sets without overwhelming memory in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+
     {
+
+      title: "Scroll Search",
+
+      description: "Perform scroll search in Elasticsearch for large result sets. Best for pagination, large dataset retrieval, memory-efficient iteration. Use when you need to retrieve all documents from large result sets without overwhelming memory in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: {
       index: z.string(), // Index name or pattern to search
       query: z.object({}), // Query DSL to filter documents
       scroll: z.string().optional(),
@@ -290,6 +299,10 @@ export const registerScrollSearchTool: ToolRegistrationFunction = (server: McpSe
       maxDocuments: z.number().optional(),
       restTotalHitsAsInt: z.boolean().optional(),
     },
+
+    },
+
     scrollSearchHandler,
-  );
+
+  );;
 };

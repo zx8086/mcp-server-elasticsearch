@@ -129,10 +129,23 @@ export const registerIndexExistsTool: ToolRegistrationFunction = (server: McpSer
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_index_exists",
-    "Check if an index exists in Elasticsearch. Best for index validation, conditional operations, deployment checks. Use when you need to verify index presence in Elasticsearch clusters before performing operations or creating indices. Uses direct JSON Schema and standardized MCP error codes.",
-    indexExistsSchema,
+
+    {
+
+      title: "Index Exists",
+
+      description: "Check if an index exists in Elasticsearch. Best for index validation, conditional operations, deployment checks. Use when you need to verify index presence in Elasticsearch clusters before performing operations or creating indices. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: indexExistsSchema,
+
+    },
+
     withReadOnlyCheck("elasticsearch_index_exists", indexExistsHandler, OperationType.READ),
-  );
+
+  );;
 };

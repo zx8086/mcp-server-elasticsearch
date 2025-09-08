@@ -223,10 +223,23 @@ export const registerGetClusterHealthTool: ToolRegistrationFunction = (server: M
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_get_cluster_health",
-    "Get the health status of the Elasticsearch cluster. Best for cluster monitoring, health checks, system diagnostics. Use when you need to assess cluster status, node availability, and overall Elasticsearch system health. READ operation - safe for production use.",
-    clusterHealthSchema,
+
+    {
+
+      title: "Get Cluster Health",
+
+      description: "Get the health status of the Elasticsearch cluster. Best for cluster monitoring, health checks, system diagnostics. Use when you need to assess cluster status, node availability, and overall Elasticsearch system health. READ operation - safe for production use.",
+
+      inputSchema: clusterHealthSchema,
+
+    },
+
     clusterHealthHandler,
+
   );
 };

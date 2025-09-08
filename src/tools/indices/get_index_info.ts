@@ -118,10 +118,19 @@ export const registerGetIndexInfoTool: ToolRegistrationFunction = (server: McpSe
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_get_index_info",
-    "Get comprehensive index information from Elasticsearch including aliases, mappings, and settings. Best for index inspection, configuration analysis, data stream monitoring. Empty {} parameters will default to getting info for all indices ('*'). Use when you need detailed metadata about Elasticsearch indices with feature filtering capabilities for selective information retrieval.",
+
     {
+
+      title: "Get Index Info",
+
+      description: "Get comprehensive index information from Elasticsearch including aliases, mappings, and settings. Best for index inspection, configuration analysis, data stream monitoring. Empty {} parameters will default to getting info for all indices ('*'). Use when you need detailed metadata about Elasticsearch indices with feature filtering capabilities for selective information retrieval.",
+
+      inputSchema: {
       index: z.any(), // Index name(s) or pattern(s) to get info for. Use '*' for all indices. Examples: 'logs-*', ['users', 'products'], '*'
       allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard indices expression resolves into no concrete indices
       expandWildcards: z.any().optional(), // Type of index that wildcard patterns can match
@@ -132,6 +141,10 @@ export const registerGetIndexInfoTool: ToolRegistrationFunction = (server: McpSe
       masterTimeout: z.string().optional(), // Timeout for connection to master node
       features: z.any().optional(), // Feature(s) to retrieve from indices. Allows filtering response content
     },
+
+    },
+
     getIndexInfoHandler,
+
   );
 };

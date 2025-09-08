@@ -14,12 +14,24 @@ const GetAutoscalingCapacityParams = z.object({
 type GetAutoscalingCapacityParamsType = z.infer<typeof GetAutoscalingCapacityParams>;
 
 export const registerAutoscalingGetCapacityTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_autoscaling_get_capacity",
-    "Get the current autoscaling capacity from Elasticsearch. Best for capacity planning, resource monitoring, cluster scaling analysis. Use when you need to monitor Elasticsearch cluster autoscaling decisions and capacity recommendations. NOTE: Designed for Elasticsearch Service, ECE, and ECK.",
+
     {
+
+      title: "Autoscaling Get Capacity",
+
+      description: "Get the current autoscaling capacity from Elasticsearch. Best for capacity planning, resource monitoring, cluster scaling analysis. Use when you need to monitor Elasticsearch cluster autoscaling decisions and capacity recommendations. NOTE: Designed for Elasticsearch Service, ECE, and ECK.",
+
+      inputSchema: {
       masterTimeout: z.string().optional(),
     },
+
+    },
+
     async (params: GetAutoscalingCapacityParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.autoscaling.getAutoscalingCapacity({
@@ -42,5 +54,6 @@ export const registerAutoscalingGetCapacityTool: ToolRegistrationFunction = (ser
         };
       }
     },
-  );
+
+  );;
 };

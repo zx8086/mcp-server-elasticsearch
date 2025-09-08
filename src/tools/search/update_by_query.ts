@@ -252,10 +252,19 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpS
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_update_by_query",
-    "Update documents by query in Elasticsearch. Best for bulk document updates, field modifications, script-based transformations. Use when you need to update multiple documents based on query conditions rather than individual document updates. Uses direct JSON Schema and standardized MCP error codes.",
+
     {
+
+      title: "Update By Query",
+
+      description: "Update documents by query in Elasticsearch. Best for bulk document updates, field modifications, script-based transformations. Use when you need to update multiple documents based on query conditions rather than individual document updates. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: {
       index: z.string(), // Index name or pattern to update
       query: z.object({}), // Query DSL to select documents to update
       script: z.object({}).optional(), // Script to apply to matching documents
@@ -272,6 +281,10 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpS
       searchTimeout: z.string().optional(),
       slices: z.number().optional(),
     },
+
+    },
+
     updateByQueryHandler,
-  );
+
+  );;
 };

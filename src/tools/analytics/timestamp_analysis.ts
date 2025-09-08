@@ -205,10 +205,25 @@ export const registerTimestampAnalysisTool: ToolRegistrationFunction = (server, 
     }
   };
 
-  server.tool(
+  // Tool registration using modern registerTool method
+
+
+  server.registerTool(
+
+
     "elasticsearch_analyze_timestamps",
-    "Analyze timestamp distribution in Elasticsearch indices to identify data quality issues. Helps diagnose why time range queries may return unexpected results. Provides statistics and sample analysis.",
+
+
     {
+
+
+      title: "Analyze Timestamps",
+
+
+      description: "Analyze timestamp distribution in Elasticsearch indices to identify data quality issues. Helps diagnose why time range queries may return unexpected results. Provides statistics and sample analysis.",
+
+
+      inputSchema: {
       type: "object",
       properties: {
         index: {
@@ -231,6 +246,13 @@ export const registerTimestampAnalysisTool: ToolRegistrationFunction = (server, 
       required: ["index"],
       additionalProperties: false,
     },
+
+
+    },
+
+
     handler,
-  );
+
+
+  );;
 };

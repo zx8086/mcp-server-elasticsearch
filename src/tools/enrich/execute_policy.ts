@@ -235,14 +235,27 @@ export const registerEnrichExecutePolicyTool: ToolRegistrationFunction = (server
   };
 
   // Tool registration - WRITE operation with read-only mode protection
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_enrich_execute_policy",
-    "Execute Elasticsearch enrich policy to create the enrich index. Best for policy activation, data preparation, enrichment setup. Use when you need to build the enrich index from source data for document enrichment in Elasticsearch.",
+
     {
+
+      title: "Enrich Execute Policy",
+
+      description: "Execute Elasticsearch enrich policy to create the enrich index. Best for policy activation, data preparation, enrichment setup. Use when you need to build the enrich index from source data for document enrichment in Elasticsearch.",
+
+      inputSchema: {
       name: z.string(), // Name of the enrich policy to execute
       masterTimeout: z.string().optional(), // Timeout for master node operations. Examples: '30s', '1m'
       waitForCompletion: z.boolean().optional(), // Whether to wait for the policy execution to complete before returning
     },
+
+    },
+
     withReadOnlyCheck("elasticsearch_enrich_execute_policy", executePolicyImpl, OperationType.WRITE),
-  );
+
+  );;
 };

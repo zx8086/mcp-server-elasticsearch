@@ -17,14 +17,26 @@ const GetTaskParams = z.object({
 type GetTaskParamsType = z.infer<typeof GetTaskParams>;
 
 export const registerGetTaskTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_tasks_get_task",
-    "Get information about a specific Elasticsearch task. Best for task monitoring, operation tracking, performance analysis. Use when you need to inspect the status and details of running or completed tasks in Elasticsearch.",
+
     {
+
+      title: "Tasks Get Task",
+
+      description: "Get information about a specific Elasticsearch task. Best for task monitoring, operation tracking, performance analysis. Use when you need to inspect the status and details of running or completed tasks in Elasticsearch.",
+
+      inputSchema: {
       taskId: z.string().min(1, "Task ID cannot be empty"),
       timeout: z.union([z.string(), z.number(), z.literal(-1), z.literal(0)]).optional(),
       waitForCompletion: booleanField().optional(),
     },
+
+    },
+
     async (params: GetTaskParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.tasks.get({
@@ -50,5 +62,6 @@ export const registerGetTaskTool: ToolRegistrationFunction = (server: McpServer,
         };
       }
     },
-  );
+
+  );;
 };

@@ -124,10 +124,23 @@ export const registerExistsIndexTemplateTool: ToolRegistrationFunction = (server
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_exists_index_template",
-    "Check if index templates exist in Elasticsearch. Best for template validation, deployment verification, configuration checks. Use when you need to verify index template presence before operations in Elasticsearch.",
-    existsIndexTemplateSchema,
+
+    {
+
+      title: "Exists Index Template",
+
+      description: "Check if index templates exist in Elasticsearch. Best for template validation, deployment verification, configuration checks. Use when you need to verify index template presence before operations in Elasticsearch.",
+
+      inputSchema: existsIndexTemplateSchema,
+
+    },
+
     existsIndexTemplateHandler,
+
   );
 };

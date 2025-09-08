@@ -469,11 +469,14 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
     }
   };
 
-  // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+  server.registerTool(
     "elasticsearch_search",
-    "Search Elasticsearch with natural Query DSL parameters. Supports both document search and analytics. Parameters: query (filter), size (document count), from (pagination), sort, aggs (analytics), _source (fields), highlight. Use size=0 for pure analytics, size=10+ for documents. Both documents and aggregations can be returned together. Example: {index: 'logs-*', query: {range: {'@timestamp': {gte: 'now-24h'}}}, size: 50, aggs: {hourly: {date_histogram: {field: '@timestamp', fixed_interval: '1h'}}}}",
-    SearchParams.shape,
+    {
+      title: "Search Elasticsearch",
+      description: "Search Elasticsearch with natural Query DSL parameters. Supports both document search and analytics. Parameters: query (filter), size (document count), from (pagination), sort, aggs (analytics), _source (fields), highlight. Use size=0 for pure analytics, size=10+ for documents. Both documents and aggregations can be returned together. Example: {index: 'logs-*', query: {range: {'@timestamp': {gte: 'now-24h'}}}, size: 50, aggs: {hourly: {date_histogram: {field: '@timestamp', fixed_interval: '1h'}}}}",
+      inputSchema: SearchParams.shape,
+    },
     withNotificationContext(searchHandler),
   );
 };

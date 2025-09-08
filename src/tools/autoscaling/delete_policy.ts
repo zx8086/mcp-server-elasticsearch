@@ -14,10 +14,22 @@ const DeleteAutoscalingPolicyParams = z.object({
 });
 
 export const registerAutoscalingDeletePolicyTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_autoscaling_delete_policy",
-    "Delete an autoscaling policy in Elasticsearch. Best for policy cleanup, configuration management, resource optimization. Use when you need to remove autoscaling policies in Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
-    DeleteAutoscalingPolicyParams.shape,
+
+    {
+
+      title: "Autoscaling Delete Policy",
+
+      description: "Delete an autoscaling policy in Elasticsearch. Best for policy cleanup, configuration management, resource optimization. Use when you need to remove autoscaling policies in Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
+
+      inputSchema: DeleteAutoscalingPolicyParams.shape,
+
+    },
+
     async (
       params: z.infer<typeof DeleteAutoscalingPolicyParams>,
       _extra: Record<string, unknown>,
@@ -50,5 +62,6 @@ export const registerAutoscalingDeletePolicyTool: ToolRegistrationFunction = (se
         };
       }
     },
-  );
+
+  );;
 };

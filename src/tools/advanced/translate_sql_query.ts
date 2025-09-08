@@ -22,10 +22,30 @@ export const registerTranslateSqlQueryTool: ToolRegistrationFunction = (server: 
     target: "jsonSchema7",
   });
 
-  server.tool(
+  // Tool registration using modern registerTool method
+
+
+  server.registerTool(
+
+
     "elasticsearch_translate_sql_query",
-    "Translate a SQL query to Elasticsearch Query DSL using the SQL Translate API. Best for SQL-to-DSL conversion, query optimization, learning Elasticsearch Query DSL. Use when you need to convert familiar SQL syntax to native Elasticsearch queries.",
-    jsonSchema,
+
+
+    {
+
+
+      title: "Translate Sql Query",
+
+
+      description: "Translate a SQL query to Elasticsearch Query DSL using the SQL Translate API. Best for SQL-to-DSL conversion, query optimization, learning Elasticsearch Query DSL. Use when you need to convert familiar SQL syntax to native Elasticsearch queries.",
+
+
+      inputSchema: jsonSchema.shape,
+
+
+    },
+
+
     async (params: any): Promise<SearchResult> => {
       // Validate params with Zod schema
       const validatedParams = TranslateSqlQueryParams.parse(params) as TranslateSqlQueryParamsType;
@@ -52,5 +72,7 @@ export const registerTranslateSqlQueryTool: ToolRegistrationFunction = (server: 
         };
       }
     },
-  );
+
+
+  );;
 };

@@ -34,10 +34,22 @@ const MultiGetParams = z.object({
 
 type MultiGetParamsType = z.infer<typeof MultiGetParams>;
 export const registerMultiGetTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_multi_get",
-    "Get multiple documents from Elasticsearch in a single request. Best for batch document retrieval, efficient bulk operations, reducing network overhead. Use when you need to fetch multiple JSON documents by their IDs from Elasticsearch indices in one operation.",
-    MultiGetParams.shape,
+
+    {
+
+      title: "Multi Get",
+
+      description: "Get multiple documents from Elasticsearch in a single request. Best for batch document retrieval, efficient bulk operations, reducing network overhead. Use when you need to fetch multiple JSON documents by their IDs from Elasticsearch indices in one operation.",
+
+      inputSchema: MultiGetParams.shape,
+
+    },
+
     async (params: MultiGetParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.mget({
@@ -68,5 +80,6 @@ export const registerMultiGetTool: ToolRegistrationFunction = (server: McpServer
         };
       }
     },
-  );
+
+  );;
 };

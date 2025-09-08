@@ -142,13 +142,26 @@ export const registerGetClusterStatsTool: ToolRegistrationFunction = (server: Mc
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_get_cluster_stats",
-    "Get comprehensive cluster statistics from Elasticsearch. Best for cluster monitoring, capacity planning, performance analysis. Use when you need detailed metrics about cluster-wide operations, storage, and resource utilization in Elasticsearch. READ operation - safe for production use.",
+
     {
+
+      title: "Get Cluster Stats",
+
+      description: "Get comprehensive cluster statistics from Elasticsearch. Best for cluster monitoring, capacity planning, performance analysis. Use when you need detailed metrics about cluster-wide operations, storage, and resource utilization in Elasticsearch. READ operation - safe for production use.",
+
+      inputSchema: {
       nodeId: z.string().optional(), // A comma-separated list of node IDs or names to limit returned information. Leave empty for all nodes.
       timeout: z.string().optional(), // Explicit operation timeout (e.g., '30s', '1m')
     },
+
+    },
+
     clusterStatsHandler,
+
   );
 };

@@ -143,10 +143,23 @@ export const registerDocumentExistsTool: ToolRegistrationFunction = (server: Mcp
   };
 
   // Tool registration (no withReadOnlyCheck for read operation)
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_document_exists",
-    "Check if a document exists in Elasticsearch by index and id. Best for document validation, existence checks, conditional operations. Use when you need to verify document presence in Elasticsearch indices before performing operations. Uses direct JSON Schema and standardized MCP error codes.",
-    documentExistsSchema,
+
+    {
+
+      title: "Document Exists",
+
+      description: "Check if a document exists in Elasticsearch by index and id. Best for document validation, existence checks, conditional operations. Use when you need to verify document presence in Elasticsearch indices before performing operations. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: documentExistsSchema,
+
+    },
+
     documentExistsHandler,
+
   );
 };

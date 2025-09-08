@@ -237,10 +237,25 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpS
     }
   };
 
-  server.tool(
+  // Tool registration using modern registerTool method
+
+
+  server.registerTool(
+
+
     "elasticsearch_delete_by_query",
-    "Delete documents by query in Elasticsearch. Best for bulk document deletion, data cleanup, removing documents matching specific criteria. Use when you need to delete multiple documents based on query conditions rather than individual document IDs in Elasticsearch.",
+
+
     {
+
+
+      title: "Delete By Query",
+
+
+      description: "Delete documents by query in Elasticsearch. Best for bulk document deletion, data cleanup, removing documents matching specific criteria. Use when you need to delete multiple documents based on query conditions rather than individual document IDs in Elasticsearch.",
+
+
+      inputSchema: {
       index: z.string().min(1, "Index cannot be empty"),
       query: z.object({}).passthrough(),
       maxDocs: z.number().optional(),
@@ -256,6 +271,13 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpS
       searchTimeout: z.string().optional(),
       slices: z.number().optional(),
     },
+
+
+    },
+
+
     withReadOnlyCheck("elasticsearch_delete_by_query", deleteByQueryImpl, OperationType.DELETE),
-  );
+
+
+  );;
 };

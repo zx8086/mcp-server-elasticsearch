@@ -164,10 +164,23 @@ export const registerGetDocumentTool: ToolRegistrationFunction = (server: McpSer
   };
 
   // Tool registration (no withReadOnlyCheck for read operation)
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_get_document",
-    "Get a document from Elasticsearch by index and id. Best for retrieving specific JSON documents, document validation, real-time data access. This tool REQUIRES both 'index' and 'id' parameters - it cannot work with empty {}. Use when you need to fetch individual documents by their unique identifier from Elasticsearch indices. Uses direct JSON Schema and standardized MCP error codes.",
-    getDocumentSchema,
+
+    {
+
+      title: "Get Document",
+
+      description: "Get a document from Elasticsearch by index and id. Best for retrieving specific JSON documents, document validation, real-time data access. This tool REQUIRES both 'index' and 'id' parameters - it cannot work with empty {}. Use when you need to fetch individual documents by their unique identifier from Elasticsearch indices. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: getDocumentSchema,
+
+    },
+
     getDocumentHandler,
+
   );
 };

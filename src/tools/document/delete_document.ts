@@ -118,10 +118,19 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (server: Mcp
   };
 
   // Tool registration with read-only check for destructive operation
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_delete_document",
-    "Delete a document from Elasticsearch by index and id. Best for removing specific documents, data cleanup, document lifecycle management. Use when you need to permanently remove individual JSON documents from Elasticsearch indices with optimistic concurrency control. Uses direct JSON Schema and standardized MCP error codes.",
+
     {
+
+      title: "Delete Document",
+
+      description: "Delete a document from Elasticsearch by index and id. Best for removing specific documents, data cleanup, document lifecycle management. Use when you need to permanently remove individual JSON documents from Elasticsearch indices with optimistic concurrency control. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: {
       index: z.string(), // REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'
       id: z.string(), // REQUIRED: Unique identifier of the document to delete
       routing: z.string().optional(), // Custom routing value for document placement
@@ -133,6 +142,10 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (server: Mcp
       timeout: z.string().optional(), // Operation timeout (e.g., '5s', '1m')
       waitForActiveShards: z.any().optional(), // Number of active shards to wait for
     },
+
+    },
+
     withReadOnlyCheck("elasticsearch_delete_document", deleteDocumentHandler, OperationType.DESTRUCTIVE),
-  );
+
+  );;
 };

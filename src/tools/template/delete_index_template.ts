@@ -108,13 +108,26 @@ export const registerDeleteIndexTemplateTool: ToolRegistrationFunction = (server
   };
 
   // Tool registration - DESTRUCTIVE operation
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_delete_index_template",
-    "Delete an index template in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes. Best for template management, configuration cleanup, removing unused templates. Use when you need to remove Elasticsearch index templates that define settings and mappings for new indices. WARNING: This is a destructive operation that cannot be undone.",
+
     {
+
+      title: "Delete Index Template",
+
+      description: "Delete an index template in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes. Best for template management, configuration cleanup, removing unused templates. Use when you need to remove Elasticsearch index templates that define settings and mappings for new indices. WARNING: This is a destructive operation that cannot be undone.",
+
+      inputSchema: {
       name: z.string(), // Template name (cannot be empty)
       masterTimeout: z.string().optional(), // Timeout for master node operations
     },
+
+    },
+
     deleteIndexTemplateHandler,
+
   );
 };

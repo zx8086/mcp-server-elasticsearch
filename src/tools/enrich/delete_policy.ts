@@ -121,13 +121,26 @@ export const registerEnrichDeletePolicyTool: ToolRegistrationFunction = (server:
   };
 
   // Tool registration - DESTRUCTIVE operation with read-only mode protection
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_enrich_delete_policy",
-    "Delete an enrich policy and its index in Elasticsearch. Best for policy cleanup, configuration management, removing unused enrichment. Use when you need to remove enrich policies and their associated indices from Elasticsearch.",
+
     {
+
+      title: "Enrich Delete Policy",
+
+      description: "Delete an enrich policy and its index in Elasticsearch. Best for policy cleanup, configuration management, removing unused enrichment. Use when you need to remove enrich policies and their associated indices from Elasticsearch.",
+
+      inputSchema: {
       name: z.string(), // Name of the enrich policy to delete
       masterTimeout: z.string().optional(), // Timeout for master node operations. Examples: '30s', '1m'
     },
+
+    },
+
     withReadOnlyCheck("elasticsearch_enrich_delete_policy", deletePolicyImpl, OperationType.DELETE),
-  );
+
+  );;
 };

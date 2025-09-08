@@ -90,10 +90,23 @@ export const registerGetDataLifecycleStatsTool: ToolRegistrationFunction = (serv
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_get_data_lifecycle_stats",
-    "Get data stream lifecycle statistics from Elasticsearch. Best for data stream monitoring, lifecycle analysis, storage planning. Use when you need to track data stream lifecycle management and retention policies in Elasticsearch.",
-    getDataLifecycleStatsSchema,
+
+    {
+
+      title: "Get Data Lifecycle Stats",
+
+      description: "Get data stream lifecycle statistics from Elasticsearch. Best for data stream monitoring, lifecycle analysis, storage planning. Use when you need to track data stream lifecycle management and retention policies in Elasticsearch.",
+
+      inputSchema: getDataLifecycleStatsSchema,
+
+    },
+
     getDataLifecycleStatsHandler,
+
   );
 };

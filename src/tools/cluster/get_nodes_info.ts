@@ -260,10 +260,19 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (server: McpSe
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_get_nodes_info",
-    "Get node information (static configuration). WARNING: Full info exceeds 1MB per node. SAFE OPTIONS: {metric: 'name'} for node list, {metric: 'os,jvm'} for basic info, {metric: 'process,transport'} for network info. The 'compact' parameter auto-selects essential metrics. NEVER use empty {} - it will fail. READ operation - safe for production use.",
+
     {
+
+      title: "Get Nodes Info",
+
+      description: "Get node information (static configuration). WARNING: Full info exceeds 1MB per node. SAFE OPTIONS: {metric: 'name'} for node list, {metric: 'os,jvm'} for basic info, {metric: 'process,transport'} for network info. The 'compact' parameter auto-selects essential metrics. NEVER use empty {} - it will fail. READ operation - safe for production use.",
+
+      inputSchema: {
       nodeId: z.string().optional(), // Specific node ID, or '_local' for current node, or leave empty for all
       metric: z.string().optional(), // Specific metrics: 'name', 'os', 'jvm', 'process', 'thread_pool', 'transport', 'http', 'plugins', 'ingest'. Combine: 'os,jvm'
       flatSettings: z.boolean().optional(), // Return settings in flat format
@@ -271,6 +280,10 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (server: McpSe
       compact: z.boolean().optional(), // Auto-select essential metrics (os,jvm,process,transport). Overrides 'metric' parameter
       summary: z.boolean().optional(), // Return summarized node information instead of full details
     },
+
+    },
+
     nodesInfoHandler,
+
   );
 };

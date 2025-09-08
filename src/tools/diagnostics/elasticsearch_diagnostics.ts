@@ -160,10 +160,25 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (serve
     }
   };
 
-  server.tool(
+  // Tool registration using modern registerTool method
+
+
+  server.registerTool(
+
+
     "elasticsearch_diagnostics",
-    "Generate comprehensive Elasticsearch transport and performance diagnostics report. Provides insights into connection health, request patterns, slow queries, error rates, and performance recommendations.",
+
+
     {
+
+
+      title: "Diagnostics",
+
+
+      description: "Generate comprehensive Elasticsearch transport and performance diagnostics report. Provides insights into connection health, request patterns, slow queries, error rates, and performance recommendations.",
+
+
+      inputSchema: {
       includeMetrics: z.boolean().optional().default(true).describe("Include detailed transport metrics in the report"),
       includeRecentRequests: z
         .boolean()
@@ -183,6 +198,13 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (serve
         .default(5)
         .describe("Time window for analysis in minutes (1-60)"),
     },
+
+
+    },
+
+
     handler,
+
+
   );
 };

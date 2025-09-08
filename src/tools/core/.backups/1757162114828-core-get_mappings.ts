@@ -101,10 +101,23 @@ export const registerGetMappingsTool: ToolRegistrationFunction = (server: McpSer
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_get_mappings",
-    "Get field mappings for Elasticsearch indices. Uses direct JSON Schema and standardized MCP error codes. PARAMETER: 'index' (string, default '*'). Best for understanding document structure, field types, and analyzers. Example: {index: 'logs-*'}",
-    getMappingsSchema,
+
+    {
+
+      title: "Get Mappings",
+
+      description: "Get field mappings for Elasticsearch indices. Uses direct JSON Schema and standardized MCP error codes. PARAMETER: 'index' (string, default '*'). Best for understanding document structure, field types, and analyzers. Example: {index: 'logs-*'}",
+
+      inputSchema: getMappingsSchema,
+
+    },
+
     getMappingsHandler,
+
   );
 };

@@ -104,16 +104,29 @@ export const registerFieldUsageStatsTool: ToolRegistrationFunction = (server: Mc
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_field_usage_stats",
-    "Get field usage statistics per shard and field in Elasticsearch. Best for query optimization, field analysis, performance tuning. Use when you need to understand which fields are accessed during queries for Elasticsearch index optimization.",
+
     {
+
+      title: "Field Usage Stats",
+
+      description: "Get field usage statistics per shard and field in Elasticsearch. Best for query optimization, field analysis, performance tuning. Use when you need to understand which fields are accessed during queries for Elasticsearch index optimization.",
+
+      inputSchema: {
       index: z.any(), // Index name(s) or pattern(s) to get field usage stats for. Examples: 'logs-*', ['users', 'products']
       allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard indices expression resolves into no concrete indices
       expandWildcards: z.any().optional(), // Type of index that wildcard patterns can match
       ignoreUnavailable: z.boolean().optional(), // Whether specified concrete indices should be ignored when unavailable
       fields: z.any().optional(), // Field name(s) to get usage stats for. If not specified, stats for all fields are returned
     },
+
+    },
+
     fieldUsageStatsHandler,
+
   );
 };

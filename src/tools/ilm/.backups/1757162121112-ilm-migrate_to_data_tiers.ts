@@ -190,10 +190,24 @@ Operation completed at: ${new Date().toISOString()}`,
   };
 
   // Direct tool registration with JSON Schema + read-only protection
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_ilm_migrate_to_data_tiers",
-    "Migrate to data tiers. Migrate from custom node attributes to data tiers routing in Elasticsearch ILM. Uses direct JSON Schema and standardized MCP error codes. Requires ILM to be stopped first. Examples: {dryRun: true}, {nodeAttribute: 'box_type', legacyTemplateToDelete: 'old-template'}",
-    migrateToDataTiersSchema, // Direct JSON Schema - no Zod conversion
+
+    {
+
+      title: "Ilm Migrate To Data Tiers",
+
+      description: "Migrate to data tiers. Migrate from custom node attributes to data tiers routing in Elasticsearch ILM. Uses direct JSON Schema and standardized MCP error codes. Requires ILM to be stopped first. Examples: {dryRun: true}, {nodeAttribute: box_type, legacyTemplateToDelete: old-template}",
+
+      inputSchema: migrateToDataTiersSchema,
+
+    },
+
+    // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_migrate_to_data_tiers", migrateToDataTiersHandler, OperationType.DESTRUCTIVE),
-  );
+
+  );;
 };

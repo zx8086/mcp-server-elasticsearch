@@ -89,13 +89,26 @@ export const registerWatcherStatsTool: ToolRegistrationFunction = (server: McpSe
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_watcher_stats",
-    "Get Elasticsearch Watcher statistics and metrics. Best for performance monitoring, service analysis, execution tracking. Use when you need to monitor Watcher service performance and execution statistics in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+
     {
+
+      title: "Watcher Stats",
+
+      description: "Get Elasticsearch Watcher statistics and metrics. Best for performance monitoring, service analysis, execution tracking. Use when you need to monitor Watcher service performance and execution statistics in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: {
       metric: z.any().optional(), // Limit the information returned to specific metrics
       emit_stacktraces: z.boolean().optional(), // Whether to emit stack traces of currently running watches
     },
+
+    },
+
     withReadOnlyCheck("elasticsearch_watcher_stats", watcherStatsHandler, OperationType.READ),
-  );
+
+  );;
 };

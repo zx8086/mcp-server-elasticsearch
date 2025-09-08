@@ -318,16 +318,29 @@ export const registerEnrichGetPolicyTool: ToolRegistrationFunction = (server: Mc
   };
 
   // Tool registration - READ operation
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_enrich_get_policy",
-    "Get enrich policies from Elasticsearch with pagination and filtering. Best for data enrichment configuration, policy inspection, document enhancement workflows. Returns summarized or detailed policy information with configurable limits.",
+
     {
+
+      title: "Enrich Get Policy",
+
+      description: "Get enrich policies from Elasticsearch with pagination and filtering. Best for data enrichment configuration, policy inspection, document enhancement workflows. Returns summarized or detailed policy information with configurable limits.",
+
+      inputSchema: {
       name: z.any().optional(), // Policy name(s) to retrieve. Can be a single policy name or array of names
       masterTimeout: z.string().optional(), // Timeout for master node operations. Examples: '30s', '1m'
       limit: z.number().min(1).max(50).optional(), // Maximum number of policies to return. Range: 1-50
       summary: z.boolean().optional(), // Return summarized policy information instead of full details
       sortBy: z.enum(["name", "type", "indices_count"]).optional(), // Sort policies by specified field
     },
+
+    },
+
     getPolicyHandler,
+
   );
 };

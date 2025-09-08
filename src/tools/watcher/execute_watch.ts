@@ -130,10 +130,19 @@ export const registerWatcherExecuteWatchTool: ToolRegistrationFunction = (server
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_watcher_execute_watch",
-    "Execute a watch in Elasticsearch Watcher for testing or debugging. Best for watch testing, debugging workflows, manual execution. Use when you need to force watch execution outside normal triggers in Elasticsearch alerting systems. Uses direct JSON Schema and standardized MCP error codes.",
+
     {
+
+      title: "Watcher Execute Watch",
+
+      description: "Execute a watch in Elasticsearch Watcher for testing or debugging. Best for watch testing, debugging workflows, manual execution. Use when you need to force watch execution outside normal triggers in Elasticsearch alerting systems. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: {
       id: z.string().optional(), // Watch ID to execute
       action_modes: z.object({}).optional(), // Override action execution modes
       alternative_input: z.object({}).optional(), // Alternative input to use instead of the watch input
@@ -144,6 +153,10 @@ export const registerWatcherExecuteWatchTool: ToolRegistrationFunction = (server
       watch: z.object({}).optional(), // Watch definition to execute inline
       debug: z.boolean().optional(), // Enable debug mode for execution
     },
+
+    },
+
     withReadOnlyCheck("elasticsearch_watcher_execute_watch", executeWatchHandler, OperationType.WRITE),
-  );
+
+  );;
 };

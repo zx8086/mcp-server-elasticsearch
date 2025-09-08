@@ -240,17 +240,20 @@ export const registerListIndicesTool: ToolRegistrationFunction = (server: McpSer
     }
   };
 
-  // Tool registration - FIXED: Use Zod schema for proper MCP parameter handling
-  server.tool(
+  // Tool registration using modern registerTool method
+  server.registerTool(
     "elasticsearch_list_indices",
-    "List indices with filtering. Uses Zod Schema for proper MCP parameter handling. TIP: Use this FIRST to check cluster size before other tools. Common patterns: {limit: 50, excludeSystemIndices: true} for overview, {indexPattern: 'logs-*', limit: 100} for specific indices.",
     {
-      indexPattern: z.string().optional(),
-      limit: z.number().min(1).max(1000).optional(),
-      excludeSystemIndices: z.boolean().optional(),
-      excludeDataStreams: z.boolean().optional(),
-      sortBy: z.enum(["name", "size", "docs", "creation"]).optional(),
-      includeSize: z.boolean().optional(),
+      title: "List Elasticsearch Indices",
+      description: "List indices with filtering. Uses Zod Schema for proper MCP parameter handling. TIP: Use this FIRST to check cluster size before other tools. Common patterns: {limit: 50, excludeSystemIndices: true} for overview, {indexPattern: 'logs-*', limit: 100} for specific indices.",
+      inputSchema: {
+        indexPattern: z.string().optional(),
+        limit: z.number().min(1).max(1000).optional(),
+        excludeSystemIndices: z.boolean().optional(),
+        excludeDataStreams: z.boolean().optional(),
+        sortBy: z.enum(["name", "size", "docs", "creation"]).optional(),
+        includeSize: z.boolean().optional(),
+      },
     },
     withReadOnlyCheck("elasticsearch_list_indices", listIndicesHandler, OperationType.READ),
   );

@@ -263,10 +263,23 @@ export const registerUpdateAliasesTool: ToolRegistrationFunction = (server: McpS
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_update_aliases",
-    "Update index aliases in Elasticsearch using the aliases API. Best for alias management, index switching, zero-downtime deployments. Use when you need to atomically add, remove, or modify multiple index aliases in Elasticsearch. DESTRUCTIVE: Actions are performed atomically but modify alias configurations permanently. TIP: Use [{add: {index: 'new-index', alias: 'my-alias'}}, {remove: {index: 'old-index', alias: 'my-alias'}}] for zero-downtime index switching.",
-    updateAliasesSchema,
+
+    {
+
+      title: "Update Aliases",
+
+      description: "Update index aliases in Elasticsearch using the aliases API. Best for alias management, index switching, zero-downtime deployments. Use when you need to atomically add, remove, or modify multiple index aliases in Elasticsearch. DESTRUCTIVE: Actions are performed atomically but modify alias configurations permanently. TIP: Use [{add: {index: new-index, alias: my-alias}}, {remove: {index: old-index, alias: my-alias}}] for zero-downtime index switching.",
+
+      inputSchema: updateAliasesSchema,
+
+    },
+
     withReadOnlyCheck("elasticsearch_update_aliases", updateAliasesHandler, OperationType.DESTRUCTIVE),
-  );
+
+  );;
 };

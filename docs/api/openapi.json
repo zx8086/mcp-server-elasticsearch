@@ -1,0 +1,304 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Elasticsearch MCP Server API",
+    "description": "Comprehensive Elasticsearch MCP Server with 104+ tools for enterprise-grade operations",
+    "version": "1.0.0",
+    "contact": {
+      "name": "MCP Elasticsearch Team"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Development server (SSE transport)"
+    },
+    {
+      "url": "stdio://",
+      "description": "Studio transport (Claude Desktop)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Search",
+      "description": "Advanced search capabilities including SQL queries, scrolling, and multi-search",
+      "externalDocs": {
+        "description": "1 tools available"
+      }
+    },
+    {
+      "name": "Core",
+      "description": "Essential Elasticsearch operations including search, mappings, and indices management",
+      "externalDocs": {
+        "description": "1 tools available"
+      }
+    },
+    {
+      "name": "Cluster",
+      "description": "Cluster monitoring and health management tools",
+      "externalDocs": {
+        "description": "1 tools available"
+      }
+    }
+  ],
+  "paths": {
+    "/tools/search": {
+      "post": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "Search documents across Elasticsearch indices with advanced query capabilities",
+        "description": "Search documents across Elasticsearch indices with advanced query capabilities",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/searchInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "text"
+                          },
+                          "text": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/tools/list_indices": {
+      "post": {
+        "tags": [
+          "Core"
+        ],
+        "summary": "List all available Elasticsearch indices with health and document count information",
+        "description": "List all available Elasticsearch indices with health and document count information",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/list_indicesInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "text"
+                          },
+                          "text": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/tools/cluster_health": {
+      "post": {
+        "tags": [
+          "Cluster"
+        ],
+        "summary": "Get comprehensive cluster health information including node and shard status",
+        "description": "Get comprehensive cluster health information including node and shard status",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/cluster_healthInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "example": "text"
+                          },
+                          "text": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "searchInput": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "string",
+            "description": "Index name or pattern"
+          },
+          "query": {
+            "type": "object",
+            "description": "Elasticsearch query DSL"
+          },
+          "size": {
+            "type": "number",
+            "description": "Number of results to return",
+            "default": 10
+          },
+          "from": {
+            "type": "number",
+            "description": "Offset for pagination",
+            "default": 0
+          }
+        }
+      },
+      "list_indicesInput": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "description": "Output format",
+            "enum": [
+              "json",
+              "table"
+            ]
+          },
+          "health": {
+            "type": "string",
+            "description": "Filter by health status",
+            "enum": [
+              "green",
+              "yellow",
+              "red"
+            ]
+          }
+        }
+      },
+      "cluster_healthInput": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "string",
+            "description": "Detail level",
+            "enum": [
+              "cluster",
+              "indices",
+              "shards"
+            ]
+          },
+          "wait_for_status": {
+            "type": "string",
+            "description": "Wait for status",
+            "enum": [
+              "green",
+              "yellow",
+              "red"
+            ]
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization",
+        "description": "Elasticsearch API Key authentication"
+      },
+      "BasicAuth": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "Elasticsearch username/password authentication"
+      }
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    },
+    {
+      "BasicAuth": []
+    }
+  ]
+}

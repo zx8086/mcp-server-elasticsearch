@@ -120,10 +120,23 @@ export const registerRefreshIndexTool: ToolRegistrationFunction = (server: McpSe
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_refresh_index",
-    "Refresh an index in Elasticsearch. Best for data visibility, search consistency, real-time operations. Use when you need to make recently indexed documents immediately searchable in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
-    refreshIndexSchema,
+
+    {
+
+      title: "Refresh Index",
+
+      description: "Refresh an index in Elasticsearch. Best for data visibility, search consistency, real-time operations. Use when you need to make recently indexed documents immediately searchable in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: refreshIndexSchema,
+
+    },
+
     withReadOnlyCheck("elasticsearch_refresh_index", refreshIndexHandler, OperationType.WRITE),
-  );
+
+  );;
 };

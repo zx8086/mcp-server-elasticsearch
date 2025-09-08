@@ -101,10 +101,19 @@ export const registerDeleteIndexTool: ToolRegistrationFunction = (server: McpSer
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_delete_index",
-    "Delete an entire index in Elasticsearch. Best for index cleanup, data lifecycle management, removing obsolete indices. Use when you need to permanently remove complete Elasticsearch indices and all their documents. DESTRUCTIVE OPERATION. Uses direct JSON Schema and standardized MCP error codes.",
+
     {
+
+      title: "Delete Index",
+
+      description: "Delete an entire index in Elasticsearch. Best for index cleanup, data lifecycle management, removing obsolete indices. Use when you need to permanently remove complete Elasticsearch indices and all their documents. DESTRUCTIVE OPERATION. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: {
       index: z.string(), // Name of the index to delete
       timeout: z.string().optional(), // Operation timeout (e.g., '30s')
       masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
@@ -112,6 +121,10 @@ export const registerDeleteIndexTool: ToolRegistrationFunction = (server: McpSer
       allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
       expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
     },
+
+    },
+
     withReadOnlyCheck("elasticsearch_delete_index", deleteIndexHandler, OperationType.DESTRUCTIVE),
-  );
+
+  );;
 };

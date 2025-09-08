@@ -171,10 +171,23 @@ export const registerDeleteDocumentTool: ToolRegistrationFunction = (server: Mcp
   };
 
   // Tool registration with read-only check for destructive operation
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_delete_document",
-    "Delete a document from Elasticsearch by index and id. Best for removing specific documents, data cleanup, document lifecycle management. Use when you need to permanently remove individual JSON documents from Elasticsearch indices with optimistic concurrency control. Uses direct JSON Schema and standardized MCP error codes.",
-    deleteDocumentSchema,
+
+    {
+
+      title: "Delete Document",
+
+      description: "Delete a document from Elasticsearch by index and id. Best for removing specific documents, data cleanup, document lifecycle management. Use when you need to permanently remove individual JSON documents from Elasticsearch indices with optimistic concurrency control. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: deleteDocumentSchema,
+
+    },
+
     withReadOnlyCheck("elasticsearch_delete_document", deleteDocumentHandler, OperationType.DESTRUCTIVE),
-  );
+
+  );;
 };

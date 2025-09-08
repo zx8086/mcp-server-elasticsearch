@@ -270,11 +270,25 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
   };
 
   // Direct tool registration with JSON Schema
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_ilm_explain_lifecycle",
-    "Explain ILM status for indices. WARNING: Large clusters have 1000+ indices! ALWAYS specify filters to avoid truncation. Examples: {onlyManaged: true, limit: 50}, {index: 'logs-*', limit: 100}, {onlyErrors: true}. Uses direct JSON Schema and standardized MCP error codes.",
-    explainLifecycleSchema, // Direct JSON Schema - no Zod conversion
+
+    {
+
+      title: "Ilm Explain Lifecycle",
+
+      description: "Explain ILM status for indices. WARNING: Large clusters have 1000+ indices! ALWAYS specify filters to avoid truncation. Examples: {onlyManaged: true, limit: 50}, {index: 'logs-*', limit: 100}, {onlyErrors: true}. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: explainLifecycleSchema,
+
+    },
+
+    // Direct JSON Schema - no Zod conversion
     explainLifecycleHandler,
+
   );
 };
 

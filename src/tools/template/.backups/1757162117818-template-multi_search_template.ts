@@ -157,10 +157,23 @@ export const registerMultiSearchTemplateTool: ToolRegistrationFunction = (server
   };
 
   // Tool registration - READ operation
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_multi_search_template",
-    "Execute multiple search templates in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes. Best for batch search operations, templated queries, performance optimization. Use when you need to run multiple parameterized searches efficiently using Elasticsearch search templates. TIP: Each search in 'searches' array can specify its own template and parameters.",
-    multiSearchTemplateSchema,
+
+    {
+
+      title: "Multi Search Template",
+
+      description: "Execute multiple search templates in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes. Best for batch search operations, templated queries, performance optimization. Use when you need to run multiple parameterized searches efficiently using Elasticsearch search templates. TIP: Each search in 'searches' array can specify its own template and parameters.",
+
+      inputSchema: multiSearchTemplateSchema,
+
+    },
+
     multiSearchTemplateHandler,
+
   );
 };

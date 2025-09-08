@@ -33,10 +33,22 @@ const GetMultiTermVectorsParams = z.object({
 
 type GetMultiTermVectorsParamsType = z.infer<typeof GetMultiTermVectorsParams>;
 export const registerGetMultiTermVectorsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_get_multi_term_vectors",
-    "Get term vectors for multiple documents in Elasticsearch. Best for text analysis, similarity calculations, relevance tuning. Use when you need to analyze term frequency and position data for multiple documents in Elasticsearch indices.",
-    GetMultiTermVectorsParams.shape,
+
+    {
+
+      title: "Get Multi Term Vectors",
+
+      description: "Get term vectors for multiple documents in Elasticsearch. Best for text analysis, similarity calculations, relevance tuning. Use when you need to analyze term frequency and position data for multiple documents in Elasticsearch indices.",
+
+      inputSchema: GetMultiTermVectorsParams.shape,
+
+    },
+
     async (params: GetMultiTermVectorsParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.mtermvectors(
@@ -79,5 +91,6 @@ export const registerGetMultiTermVectorsTool: ToolRegistrationFunction = (server
         };
       }
     },
-  );
+
+  );;
 };

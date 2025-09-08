@@ -57,7 +57,7 @@ export const getTermVectors = {
   name: "elasticsearch_get_term_vectors",
   description:
     "Get term vectors for a document in Elasticsearch. Best for text analysis, relevance tuning, similarity calculations. Use when you need to analyze term frequency, positions, and offsets for document text analysis in Elasticsearch.",
-  inputSchema: getTermVectorsSchema,
+  inputSchema: getTermVectorsSchema.shape,
   operationType: OperationType.READ as const,
   handler: async (client: Client, args: z.infer<typeof getTermVectorsSchema>) => {
     try {
@@ -168,7 +168,7 @@ export const getMultiTermVectors = {
   name: "elasticsearch_get_multi_term_vectors",
   description:
     "Get term vectors for multiple documents in Elasticsearch. Best for text analysis, similarity calculations, relevance tuning. Use when you need to analyze term frequency and position data for multiple documents in Elasticsearch indices.",
-  inputSchema: getMultiTermVectorsSchema,
+  inputSchema: getMultiTermVectorsSchema.shape,
   operationType: OperationType.READ as const,
   handler: async (client: Client, args: z.infer<typeof getMultiTermVectorsSchema>) => {
     try {

@@ -141,13 +141,27 @@ Operation completed at: ${new Date().toISOString()}`,
   };
 
   // Direct tool registration with JSON Schema + read-only protection
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_ilm_stop",
-    "Stop ILM. Stop the Index Lifecycle Management plugin to halt automated operations. Uses direct JSON Schema and standardized MCP error codes. Examples: {} (no params needed), {masterTimeout: '30s'}.",
+
     {
+
+      title: "Ilm Stop",
+
+      description: "Stop ILM. Stop the Index Lifecycle Management plugin to halt automated operations. Uses direct JSON Schema and standardized MCP error codes. Examples: {} (no params needed), {masterTimeout: 30s}.",
+
+      inputSchema: {
       masterTimeout: z.string().optional(), // Master node timeout
       timeout: z.string().optional(), // Request timeout
-    }, // Direct JSON Schema - no Zod conversion
+    },
+
+    },
+
+    // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_stop", stopHandler, OperationType.WRITE),
-  );
+
+  );;
 };

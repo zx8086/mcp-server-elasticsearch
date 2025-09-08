@@ -89,10 +89,23 @@ export const registerWatcherStartTool: ToolRegistrationFunction = (server: McpSe
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_watcher_start",
-    "Start the Elasticsearch Watcher service. Best for service management, monitoring activation, system initialization. Use when you need to enable the Watcher service for Elasticsearch alerting and monitoring capabilities. Uses direct JSON Schema and standardized MCP error codes.",
-    startWatcherSchema,
+
+    {
+
+      title: "Watcher Start",
+
+      description: "Start the Elasticsearch Watcher service. Best for service management, monitoring activation, system initialization. Use when you need to enable the Watcher service for Elasticsearch alerting and monitoring capabilities. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: startWatcherSchema,
+
+    },
+
     withReadOnlyCheck("elasticsearch_watcher_start", startWatcherHandler, OperationType.WRITE),
-  );
+
+  );;
 };

@@ -13,12 +13,24 @@ const ClearSqlCursorParams = z.object({
 
 type ClearSqlCursorParamsType = z.infer<typeof ClearSqlCursorParams>;
 export const registerClearSqlCursorTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_clear_sql_cursor",
-    "Clear a SQL cursor in Elasticsearch to free resources. Best for resource management, cursor cleanup, memory optimization. Use when you need to explicitly release SQL cursor resources after completing paginated SQL queries in Elasticsearch.",
+
     {
+
+      title: "Clear Sql Cursor",
+
+      description: "Clear a SQL cursor in Elasticsearch to free resources. Best for resource management, cursor cleanup, memory optimization. Use when you need to explicitly release SQL cursor resources after completing paginated SQL queries in Elasticsearch.",
+
+      inputSchema: {
       cursor: z.string().min(1, "Cursor cannot be empty"),
     },
+
+    },
+
     async (params: ClearSqlCursorParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.sql.clearCursor({
@@ -41,5 +53,6 @@ export const registerClearSqlCursorTool: ToolRegistrationFunction = (server: Mcp
         };
       }
     },
-  );
+
+  );;
 };

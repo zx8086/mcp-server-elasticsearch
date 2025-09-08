@@ -108,10 +108,19 @@ export const registerCreateIndexTool: ToolRegistrationFunction = (server: McpSer
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_create_index",
-    "Create an index in Elasticsearch with custom settings and mappings. Best for index initialization, schema definition, data structure setup. Use when you need to create new Elasticsearch indices with specific configurations for document storage. Uses direct JSON Schema and standardized MCP error codes.",
+
     {
+
+      title: "Create Index",
+
+      description: "Create an index in Elasticsearch with custom settings and mappings. Best for index initialization, schema definition, data structure setup. Use when you need to create new Elasticsearch indices with specific configurations for document storage. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: {
       index: z.string(), // Name of the index to create
       aliases: z.object({}).optional(), // Index aliases to set during creation
       mappings: z.object({}).optional(), // Field mappings for the index
@@ -120,6 +129,10 @@ export const registerCreateIndexTool: ToolRegistrationFunction = (server: McpSer
       masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
       waitForActiveShards: z.any().optional(), // Number of active shards to wait for
     },
+
+    },
+
     withReadOnlyCheck("elasticsearch_create_index", createIndexHandler, OperationType.WRITE),
-  );
+
+  );;
 };

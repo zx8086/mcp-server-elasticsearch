@@ -227,10 +227,19 @@ Operation completed at: ${new Date().toISOString()}`,
   );
 
   // Direct tool registration with flexible Zod schema matching validator
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_ilm_put_lifecycle",
-    "Create or update ILM policy. Define Index Lifecycle Management policy with automated transitions through hot, warm, cold, and delete phases. FIXED: Uses flexible Zod Schema supporting both wrapped ({policy: {phases: {...}}}) and direct ({phases: {...}}) formats for proper MCP parameter handling.",
+
     {
+
+      title: "Ilm Put Lifecycle",
+
+      description: "Create or update ILM policy. Define Index Lifecycle Management policy with automated transitions through hot, warm, cold, and delete phases. FIXED: Uses flexible Zod Schema supporting both wrapped ({policy: {phases: {...}}}) and direct ({phases: {...}}) formats for proper MCP parameter handling.",
+
+      inputSchema: {
       policy: z.string().min(1),
       body: z.union([
         // Format 1: {policy: {phases: {...}}} - wrapped format
@@ -273,6 +282,10 @@ Operation completed at: ${new Date().toISOString()}`,
       masterTimeout: z.string().optional(),
       timeout: z.string().optional(),
     },
+
+    },
+
     withReadOnlyCheck("elasticsearch_ilm_put_lifecycle", secureHandler, OperationType.WRITE),
-  );
+
+  );;
 };

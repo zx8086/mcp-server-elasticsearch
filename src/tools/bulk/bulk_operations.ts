@@ -26,10 +26,19 @@ const BulkOperationsParams = z.object({
 
 type BulkOperationsParamsType = z.infer<typeof BulkOperationsParams>;
 export const registerBulkOperationsTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_bulk_operations",
-    "Perform bulk operations in Elasticsearch for high-throughput data ingestion. Best for batch indexing, bulk updates, mass data import, performance optimization. Use when you need to efficiently index, update, or delete large volumes of documents in Elasticsearch.",
+
     {
+
+      title: "Bulk Operations",
+
+      description: "Perform bulk operations in Elasticsearch for high-throughput data ingestion. Best for batch indexing, bulk updates, mass data import, performance optimization. Use when you need to efficiently index, update, or delete large volumes of documents in Elasticsearch.",
+
+      inputSchema: {
       operations: z.array(z.object({}).passthrough()),
       index: z.string().optional(),
       routing: z.string().optional(),
@@ -42,6 +51,9 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (server: Mcp
       concurrency: z.number().optional(),
       retries: z.number().optional(),
     },
+
+    },
+
     async (params: BulkOperationsParamsType): Promise<SearchResult> => {
       // Check read-only mode first
       const readOnlyCheck = readOnlyManager.checkOperation("elasticsearch_bulk_operations");
@@ -234,5 +246,6 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (server: Mcp
         return { content };
       }
     },
-  );
+
+  );;
 };

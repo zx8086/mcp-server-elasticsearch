@@ -130,10 +130,19 @@ export const registerGetIndexSettingsAdvancedTool: ToolRegistrationFunction = (s
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_get_index_settings_advanced",
-    "Get comprehensive index settings from Elasticsearch with advanced options. Best for configuration analysis, performance tuning, troubleshooting. Use when you need detailed index settings including data stream backing indices in Elasticsearch.",
+
     {
+
+      title: "Get Index Settings Advanced",
+
+      description: "Get comprehensive index settings from Elasticsearch with advanced options. Best for configuration analysis, performance tuning, troubleshooting. Use when you need detailed index settings including data stream backing indices in Elasticsearch.",
+
+      inputSchema: {
       index: z.any().optional(), // Index name(s) or pattern(s) to get settings for. Examples: 'logs-*', ['users', 'products']
       name: z.any().optional(), // Setting name(s) to retrieve. If not specified, all settings are returned
       allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard indices expression resolves into no concrete indices
@@ -144,6 +153,10 @@ export const registerGetIndexSettingsAdvancedTool: ToolRegistrationFunction = (s
       local: z.boolean().optional(), // Return local information, do not retrieve the state from master node
       masterTimeout: z.string().optional(), // Timeout for connection to master node
     },
+
+    },
+
     getIndexSettingsAdvancedHandler,
+
   );
 };

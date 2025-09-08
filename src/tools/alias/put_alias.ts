@@ -160,16 +160,29 @@ export const registerPutAliasTool: ToolRegistrationFunction = (server: McpServer
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_put_alias",
-    "Add an alias to an index in Elasticsearch. Best for alias creation, index abstraction, application decoupling. Use when you need to create named references to Elasticsearch indices for easier management and zero-downtime operations. DESTRUCTIVE: Creates permanent alias configuration that affects index access patterns.",
+
     {
+
+      title: "Put Alias",
+
+      description: "Add an alias to an index in Elasticsearch. Best for alias creation, index abstraction, application decoupling. Use when you need to create named references to Elasticsearch indices for easier management and zero-downtime operations. DESTRUCTIVE: Creates permanent alias configuration that affects index access patterns.",
+
+      inputSchema: {
       index: z.string(), // Index name to add the alias to. Cannot be empty. Supports patterns with wildcards
       name: z.string(), // Alias name to create. Cannot be empty. Will overwrite existing alias with same name
       filter: z.object({}).optional(), // Optional query filter to apply when accessing data through this alias
       routing: z.string().optional(), // Optional routing value for operations performed through this alias
       isWriteIndex: z.boolean().optional(), // Set to true to designate this as the write index for the alias (default: false)
     },
+
+    },
+
     withReadOnlyCheck("elasticsearch_put_alias", putAliasHandler, OperationType.WRITE),
-  );
+
+  );;
 };

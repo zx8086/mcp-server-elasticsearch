@@ -100,10 +100,23 @@ export const registerWatcherGetWatchTool: ToolRegistrationFunction = (server: Mc
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_watcher_get_watch",
-    "Get a watch configuration from Elasticsearch Watcher. Best for monitoring automation, alerting configuration, watch inspection. Use when you need to retrieve watch definitions for Elasticsearch alerting and monitoring workflows. Uses direct JSON Schema and standardized MCP error codes.",
-    getWatchSchema,
+
+    {
+
+      title: "Watcher Get Watch",
+
+      description: "Get a watch configuration from Elasticsearch Watcher. Best for monitoring automation, alerting configuration, watch inspection. Use when you need to retrieve watch definitions for Elasticsearch alerting and monitoring workflows. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: getWatchSchema,
+
+    },
+
     withReadOnlyCheck("elasticsearch_watcher_get_watch", getWatchHandler, OperationType.READ),
-  );
+
+  );;
 };

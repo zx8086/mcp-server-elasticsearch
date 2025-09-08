@@ -164,10 +164,19 @@ export const registerGetClusterHealthTool: ToolRegistrationFunction = (server: M
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_get_cluster_health",
-    "Get the health status of the Elasticsearch cluster. Best for cluster monitoring, health checks, system diagnostics. Use when you need to assess cluster status, node availability, and overall Elasticsearch system health. READ operation - safe for production use.",
+
     {
+
+      title: "Get Cluster Health",
+
+      description: "Get the health status of the Elasticsearch cluster. Best for cluster monitoring, health checks, system diagnostics. Use when you need to assess cluster status, node availability, and overall Elasticsearch system health. READ operation - safe for production use.",
+
+      inputSchema: {
       index: z.string().optional(), // Comma-separated list of indices to check health for. Leave empty for cluster-wide health.
       expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Controls which types of indices to include when using wildcards
       level: z.enum(["cluster", "indices", "shards"]).optional(), // Level of detail to return: cluster (default), indices, or shards
@@ -181,6 +190,10 @@ export const registerGetClusterHealthTool: ToolRegistrationFunction = (server: M
       waitForNodes: z.string().optional(), // Wait until the specified number of nodes are available (e.g., '>=2')
       waitForStatus: z.enum(["green", "yellow", "red"]).optional(), // Wait until cluster status reaches the specified level
     },
+
+    },
+
     clusterHealthHandler,
+
   );
 };

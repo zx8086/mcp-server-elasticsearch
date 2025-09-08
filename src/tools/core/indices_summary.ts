@@ -193,13 +193,35 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: Mcp
     }
   };
 
-  server.tool(
+  // Tool registration using modern registerTool method
+
+
+  server.registerTool(
+
+
     "elasticsearch_indices_summary",
-    "Get a high-level summary of indices without overwhelming detail in Elasticsearch. Best for cluster overview, index organization analysis, storage planning. Use when you need to understand index patterns, health distribution, and storage usage across your Elasticsearch cluster. Uses direct JSON Schema and standardized MCP error codes.",
+
+
     {
+
+
+      title: "Indices Summary",
+
+
+      description: "Get a high-level summary of indices without overwhelming detail in Elasticsearch. Best for cluster overview, index organization analysis, storage planning. Use when you need to understand index patterns, health distribution, and storage usage across your Elasticsearch cluster. Uses direct JSON Schema and standardized MCP error codes.",
+
+
+      inputSchema: {
       indexPattern: z.string().optional(), // Elasticsearch index pattern to summarize (supports wildcards like logs-*, app-*)
       groupBy: z.enum(["prefix", "date", "type"]).optional(), // How to group Elasticsearch indices for summary analysis
     },
+
+
+    },
+
+
     indicesSummaryHandler,
+
+
   );
 };

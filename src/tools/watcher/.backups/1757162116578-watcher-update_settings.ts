@@ -113,10 +113,23 @@ export const registerWatcherUpdateSettingsTool: ToolRegistrationFunction = (serv
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_watcher_update_settings",
-    "Update Elasticsearch Watcher index settings for .watches index. Best for configuration management, performance tuning, allocation control. Use when you need to modify Watcher internal index settings like replicas and allocation in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
-    updateWatcherSettingsSchema,
+
+    {
+
+      title: "Watcher Update Settings",
+
+      description: "Update Elasticsearch Watcher index settings for .watches index. Best for configuration management, performance tuning, allocation control. Use when you need to modify Watcher internal index settings like replicas and allocation in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: updateWatcherSettingsSchema,
+
+    },
+
     withReadOnlyCheck("elasticsearch_watcher_update_settings", updateWatcherSettingsHandler, OperationType.WRITE),
-  );
+
+  );;
 };

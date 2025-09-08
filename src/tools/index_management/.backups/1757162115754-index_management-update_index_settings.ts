@@ -165,10 +165,23 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (server
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_update_index_settings",
-    "Update index settings in Elasticsearch. Best for performance tuning, configuration changes, index optimization. Use when you need to modify index settings for better performance or functionality in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
-    updateIndexSettingsSchema,
+
+    {
+
+      title: "Update Index Settings",
+
+      description: "Update index settings in Elasticsearch. Best for performance tuning, configuration changes, index optimization. Use when you need to modify index settings for better performance or functionality in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: updateIndexSettingsSchema,
+
+    },
+
     withReadOnlyCheck("elasticsearch_update_index_settings", updateIndexSettingsHandler, OperationType.WRITE),
-  );
+
+  );;
 };

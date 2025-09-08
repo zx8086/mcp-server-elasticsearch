@@ -333,10 +333,19 @@ export const registerGetIndexTemplateTool: ToolRegistrationFunction = (server: M
   };
 
   // Tool registration - READ operation
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_get_index_template",
-    "Get index templates from Elasticsearch with pagination and filtering. Uses direct JSON Schema and standardized MCP error codes. Best for template management, configuration review, index pattern analysis. Returns summarized or detailed template information with configurable limits to handle large responses. TIP: Use 'summary: true' for overview, 'name' with wildcards for filtering.",
+
     {
+
+      title: "Get Index Template",
+
+      description: "Get index templates from Elasticsearch with pagination and filtering. Uses direct JSON Schema and standardized MCP error codes. Best for template management, configuration review, index pattern analysis. Returns summarized or detailed template information with configurable limits to handle large responses. TIP: Use 'summary: true' for overview, 'name' with wildcards for filtering.",
+
+      inputSchema: {
       name: z.string().optional(), // Template name pattern to filter by (supports wildcards)
       flatSettings: z.boolean().optional(), // Return settings in flat format
       masterTimeout: z.string().optional(), // Timeout for master node operations
@@ -346,6 +355,10 @@ export const registerGetIndexTemplateTool: ToolRegistrationFunction = (server: M
       includeComposed: z.boolean().optional(), // Include composed_of templates in the response
       sortBy: z.enum(["name", "priority", "index_patterns", "version"]).optional(), // Sort templates by specified field
     },
+
+    },
+
     getIndexTemplateHandler,
+
   );
 };

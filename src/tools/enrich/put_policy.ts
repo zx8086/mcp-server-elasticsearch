@@ -164,16 +164,29 @@ export const registerEnrichPutPolicyTool: ToolRegistrationFunction = (server: Mc
   };
 
   // Tool registration - WRITE operation with read-only mode protection
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_enrich_put_policy",
-    "Create an enrich policy in Elasticsearch. Best for data enrichment setup, reference data integration, document enhancement workflows. Use when you need to define policies for adding reference data to documents during ingestion in Elasticsearch.",
+
     {
+
+      title: "Enrich Put Policy",
+
+      description: "Create an enrich policy in Elasticsearch. Best for data enrichment setup, reference data integration, document enhancement workflows. Use when you need to define policies for adding reference data to documents during ingestion in Elasticsearch.",
+
+      inputSchema: {
       name: z.string(), // Name of the enrich policy to create
       geoMatch: z.object({}).optional(), // Configuration for geo_match enrich policy type
       match: z.object({}).optional(), // Configuration for match enrich policy type
       range: z.object({}).optional(), // Configuration for range enrich policy type
       masterTimeout: z.string().optional(), // Timeout for master node operations. Examples: '30s', '1m'
     },
+
+    },
+
     withReadOnlyCheck("elasticsearch_enrich_put_policy", putPolicyImpl, OperationType.WRITE),
-  );
+
+  );;
 };

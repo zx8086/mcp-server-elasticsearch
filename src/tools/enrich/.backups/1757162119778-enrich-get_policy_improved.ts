@@ -351,10 +351,23 @@ export const registerEnrichGetPolicyTool: ToolRegistrationFunction = (server: Mc
   };
 
   // Tool registration - READ operation
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_enrich_get_policy",
-    "Get enrich policies from Elasticsearch with pagination and filtering. Best for data enrichment configuration, policy inspection, document enhancement workflows. Returns summarized or detailed policy information with configurable limits.",
-    getPolicySchema,
+
+    {
+
+      title: "Enrich Get Policy",
+
+      description: "Get enrich policies from Elasticsearch with pagination and filtering. Best for data enrichment configuration, policy inspection, document enhancement workflows. Returns summarized or detailed policy information with configurable limits.",
+
+      inputSchema: getPolicySchema,
+
+    },
+
     getPolicyHandler,
+
   );
 };

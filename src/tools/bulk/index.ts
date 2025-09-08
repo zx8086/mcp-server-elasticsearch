@@ -156,7 +156,7 @@ export const bulkOperations = {
   name: "elasticsearch_bulk_operations",
   description:
     "Perform bulk operations in Elasticsearch for high-throughput data ingestion. Best for batch indexing, bulk updates, mass data import, performance optimization. Use when you need to efficiently index, update, or delete large volumes of documents in Elasticsearch.",
-  inputSchema: bulkOperationsSchema,
+  inputSchema: bulkOperationsSchema.shape,
   operationType: OperationType.WRITE as const,
   handler: async (client: Client, args: z.infer<typeof bulkOperationsSchema>) => {
     // Check read-only mode first
@@ -207,7 +207,7 @@ export const multiGet = {
   name: "elasticsearch_multi_get",
   description:
     "Get multiple documents from Elasticsearch in a single request. Best for batch document retrieval, efficient bulk operations, reducing network overhead. Use when you need to fetch multiple JSON documents by their IDs from Elasticsearch indices in one operation.",
-  inputSchema: multiGetSchema,
+  inputSchema: multiGetSchema.shape,
   operationType: OperationType.READ as const,
   handler: async (client: Client, args: z.infer<typeof multiGetSchema>) => {
     try {

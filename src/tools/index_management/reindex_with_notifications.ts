@@ -311,10 +311,25 @@ export const registerReindexWithNotifications = (server: McpServer, esClient: Cl
     }
   };
 
-  server.tool(
+  // Tool registration using modern registerTool method
+
+
+  server.registerTool(
+
+
     "elasticsearch_reindex_with_notifications",
-    "Reindex documents from source to destination with comprehensive progress notifications and status updates. Supports both synchronous and asynchronous modes with real-time progress tracking and error reporting.",
+
+
     {
+
+
+      title: "Reindex With Notifications",
+
+
+      description: "Reindex documents from source to destination with comprehensive progress notifications and status updates. Supports both synchronous and asynchronous modes with real-time progress tracking and error reporting.",
+
+
+      inputSchema: {
       source: z.object({
         index: z.string().min(1).describe("Source index pattern or name"),
         query: z.record(z.any()).optional().describe("Optional query to filter source documents"),
@@ -328,6 +343,13 @@ export const registerReindexWithNotifications = (server: McpServer, esClient: Cl
       wait_for_completion: z.boolean().default(false).describe("Whether to wait for completion or return task ID"),
       requests_per_second: z.number().min(1).default(1000).describe("Throttling for the reindex operation"),
     },
-    withNotificationContext(handler)
-  );
+
+
+    },
+
+
+    withNotificationContext(handler),
+
+
+  );;
 };

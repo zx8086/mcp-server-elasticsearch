@@ -305,10 +305,19 @@ export const registerGetNodesStatsTool: ToolRegistrationFunction = (server: McpS
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_get_nodes_stats",
-    "Get node statistics. WARNING: Returns massive data without metric filter. BEST PRACTICES: {metric: 'jvm', level: 'node'} for JVM summary, {metric: 'os'} for system stats, {metric: 'fs'} for disk only, {metric: 'indices', indexMetric: 'docs,store'} for index metrics. NEVER use empty {} or {metric: 'indices'} without indexMetric. READ operation - safe for production use.",
+
     {
+
+      title: "Get Nodes Stats",
+
+      description: "Get node statistics. WARNING: Returns massive data without metric filter. BEST PRACTICES: {metric: 'jvm', level: 'node'} for JVM summary, {metric: 'os'} for system stats, {metric: 'fs'} for disk only, {metric: 'indices', indexMetric: 'docs,store'} for index metrics. NEVER use empty {} or {metric: 'indices'} without indexMetric. READ operation - safe for production use.",
+
+      inputSchema: {
       nodeId: z.string().optional(), // Specific node ID, or leave empty for all nodes
       metric: z.string().optional(), // CRITICAL: Specify exact metrics needed. Options: 'os', 'jvm', 'fs', 'process', 'http', 'transport', 'indices'. Combine: 'os,jvm'
       indexMetric: z.string().optional(), // When using 'indices' metric, MUST specify: 'docs', 'store', 'indexing', 'search', 'segments', etc.
@@ -316,6 +325,10 @@ export const registerGetNodesStatsTool: ToolRegistrationFunction = (server: McpS
       timeout: z.string().optional(), // Timeout for the request (e.g., '30s', '1m')
       summary: z.boolean().optional(), // Return summarized node statistics instead of full details
     },
+
+    },
+
     nodesStatsHandler,
+
   );
 };

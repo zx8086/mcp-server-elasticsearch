@@ -150,16 +150,29 @@ export const registerWatcherQueryWatchesTool: ToolRegistrationFunction = (server
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_watcher_query_watches",
-    "Query and filter watches in Elasticsearch Watcher. Best for watch discovery, configuration management, monitoring overview. Use when you need to search and paginate through watch definitions in Elasticsearch alerting system. Uses direct JSON Schema and standardized MCP error codes.",
+
     {
+
+      title: "Watcher Query Watches",
+
+      description: "Query and filter watches in Elasticsearch Watcher. Best for watch discovery, configuration management, monitoring overview. Use when you need to search and paginate through watch definitions in Elasticsearch alerting system. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: {
       from: z.number().min(0).optional(), // Starting offset for pagination
       size: z.number().min(1).max(50).optional(), // Number of watches to return
       query: z.object({}).optional(), // Query to filter watches
       sort: z.any().optional(), // Sort criteria for results
       search_after: z.array(z.any().optional()).optional(), // Values to search after for pagination
     },
+
+    },
+
     withReadOnlyCheck("elasticsearch_watcher_query_watches", queryWatchesHandler, OperationType.READ),
-  );
+
+  );;
 };

@@ -48,7 +48,7 @@ export const listTasks = {
   name: "elasticsearch_list_tasks",
   description:
     "Get information about tasks currently running on Elasticsearch cluster nodes. Best for cluster monitoring, performance troubleshooting, operation tracking. Use when you need to monitor long-running operations like reindexing, searches, or bulk operations in Elasticsearch.",
-  inputSchema: listTasksSchema,
+  inputSchema: listTasksSchema.shape,
   operationType: OperationType.READ as const,
   handler: async (client: Client, args: z.infer<typeof listTasksSchema>) => {
     try {
@@ -109,7 +109,7 @@ export const getTask = {
   name: "elasticsearch_get_task",
   description:
     "Get information about a specific Elasticsearch task. Best for task monitoring, operation tracking, performance analysis. Use when you need to inspect the status and details of running or completed tasks in Elasticsearch.",
-  inputSchema: getTaskSchema,
+  inputSchema: getTaskSchema.shape,
   operationType: OperationType.READ as const,
   handler: async (client: Client, args: z.infer<typeof getTaskSchema>) => {
     try {
@@ -217,7 +217,7 @@ export const cancelTask = {
   name: "elasticsearch_cancel_task",
   description:
     "Cancel a running Elasticsearch task. Best for operation control, resource management, stopping long-running operations. Use when you need to terminate tasks that are taking too long or consuming too many resources in Elasticsearch. WARNING: Task management API is beta.",
-  inputSchema: cancelTaskSchema,
+  inputSchema: cancelTaskSchema.shape,
   operationType: OperationType.WRITE as const,
   handler: withReadOnlyCheck("elasticsearch_cancel_task", cancelTaskImpl, OperationType.WRITE),
 };

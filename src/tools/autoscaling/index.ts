@@ -48,7 +48,7 @@ export const getCapacity = {
   name: "elasticsearch_autoscaling_get_capacity",
   description:
     "Get the current autoscaling capacity from Elasticsearch. Best for capacity planning, resource monitoring, cluster scaling analysis. Use when you need to monitor Elasticsearch cluster autoscaling decisions and capacity recommendations. NOTE: Designed for Elasticsearch Service, ECE, and ECK.",
-  inputSchema: getCapacitySchema,
+  inputSchema: getCapacitySchema.shape,
   operationType: OperationType.READ as const,
   handler: async (client: Client, args: z.infer<typeof getCapacitySchema>) => {
     try {
@@ -99,7 +99,7 @@ export const getPolicy = {
   name: "elasticsearch_autoscaling_get_policy",
   description:
     "Get an autoscaling policy from Elasticsearch. Best for policy inspection, capacity planning, configuration review. Use when you need to retrieve autoscaling policies in Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
-  inputSchema: getPolicySchema,
+  inputSchema: getPolicySchema.shape,
   operationType: OperationType.READ as const,
   handler: async (client: Client, args: z.infer<typeof getPolicySchema>) => {
     try {
@@ -207,7 +207,7 @@ export const putPolicy = {
   name: "elasticsearch_autoscaling_put_policy",
   description:
     "Create or update an autoscaling policy in Elasticsearch. Best for capacity management, resource automation, cluster scaling. Use when you need to define autoscaling policies for Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
-  inputSchema: putPolicySchema,
+  inputSchema: putPolicySchema.shape,
   operationType: OperationType.WRITE as const,
   handler: withReadOnlyCheck("elasticsearch_autoscaling_put_policy", putPolicyImpl, OperationType.WRITE),
 };
@@ -274,7 +274,7 @@ export const deletePolicy = {
   name: "elasticsearch_autoscaling_delete_policy",
   description:
     "Delete an autoscaling policy in Elasticsearch. Best for policy cleanup, configuration management, resource optimization. Use when you need to remove autoscaling policies in Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
-  inputSchema: deletePolicySchema,
+  inputSchema: deletePolicySchema.shape,
   operationType: OperationType.DESTRUCTIVE as const,
   handler: withReadOnlyCheck("elasticsearch_autoscaling_delete_policy", deletePolicyImpl, OperationType.DESTRUCTIVE),
 };

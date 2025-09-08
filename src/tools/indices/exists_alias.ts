@@ -106,10 +106,19 @@ export const registerExistsAliasTool: ToolRegistrationFunction = (server: McpSer
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_exists_alias",
-    "Check if index or data stream aliases exist in Elasticsearch. Best for alias validation, deployment verification, configuration checks. Use when you need to verify alias presence before operations in Elasticsearch.",
+
     {
+
+      title: "Exists Alias",
+
+      description: "Check if index or data stream aliases exist in Elasticsearch. Best for alias validation, deployment verification, configuration checks. Use when you need to verify alias presence before operations in Elasticsearch.",
+
+      inputSchema: {
       name: z.any(), // Alias name(s) to check existence for. Examples: 'logs', ['alias1', 'alias2']
       index: z.any().optional(), // Index name(s) or pattern(s) to check for aliases
       allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard indices expression resolves into no concrete indices
@@ -117,6 +126,10 @@ export const registerExistsAliasTool: ToolRegistrationFunction = (server: McpSer
       ignoreUnavailable: z.boolean().optional(), // Whether specified concrete indices should be ignored when unavailable
       masterTimeout: z.string().optional(), // Timeout for connection to master node
     },
+
+    },
+
     existsAliasHandler,
+
   );
 };

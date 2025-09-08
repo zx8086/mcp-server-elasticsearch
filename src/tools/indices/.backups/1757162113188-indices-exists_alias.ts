@@ -138,10 +138,23 @@ export const registerExistsAliasTool: ToolRegistrationFunction = (server: McpSer
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_exists_alias",
-    "Check if index or data stream aliases exist in Elasticsearch. Best for alias validation, deployment verification, configuration checks. Use when you need to verify alias presence before operations in Elasticsearch.",
-    existsAliasSchema,
+
+    {
+
+      title: "Exists Alias",
+
+      description: "Check if index or data stream aliases exist in Elasticsearch. Best for alias validation, deployment verification, configuration checks. Use when you need to verify alias presence before operations in Elasticsearch.",
+
+      inputSchema: existsAliasSchema,
+
+    },
+
     existsAliasHandler,
+
   );
 };

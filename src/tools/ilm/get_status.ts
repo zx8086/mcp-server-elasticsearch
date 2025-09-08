@@ -111,10 +111,24 @@ Status checked at: ${new Date().toISOString()}`,
   };
 
   // Direct tool registration with JSON Schema
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_ilm_get_status",
-    "Get ILM status. Check if Index Lifecycle Management is running and operational. Uses direct JSON Schema and standardized MCP error codes. No parameters required.",
-    {}, // Direct JSON Schema
+
+    {
+
+      title: "Ilm Get Status",
+
+      description: "Get ILM status. Check if Index Lifecycle Management is running and operational. Uses direct JSON Schema and standardized MCP error codes. No parameters required.",
+
+      inputSchema: {},
+
+    },
+
+    // Direct JSON Schema
     getStatusHandler,
+
   );
 };

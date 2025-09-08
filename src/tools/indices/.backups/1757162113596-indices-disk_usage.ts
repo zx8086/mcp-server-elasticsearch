@@ -138,10 +138,23 @@ export const registerDiskUsageTool: ToolRegistrationFunction = (server: McpServe
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_disk_usage",
-    "Analyze index disk usage per field in Elasticsearch. Best for storage optimization, field analysis, capacity planning. Use when you need to understand disk consumption patterns and optimize storage usage for Elasticsearch indices and data streams.",
-    diskUsageSchema,
+
+    {
+
+      title: "Disk Usage",
+
+      description: "Analyze index disk usage per field in Elasticsearch. Best for storage optimization, field analysis, capacity planning. Use when you need to understand disk consumption patterns and optimize storage usage for Elasticsearch indices and data streams.",
+
+      inputSchema: diskUsageSchema,
+
+    },
+
     diskUsageHandler,
+
   );
 };

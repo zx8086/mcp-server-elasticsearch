@@ -234,10 +234,24 @@ Operation completed at: ${new Date().toISOString()}`,
   };
 
   // Direct tool registration with JSON Schema + read-only protection
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_ilm_move_to_step",
-    "Move index to ILM step. Manually move an index to a specific ILM policy step. Uses direct JSON Schema and standardized MCP error codes. Expert-level operation for troubleshooting. Examples: {index: 'my-index', currentStep: {phase: 'hot', action: 'rollover', name: 'check-rollover-ready'}, nextStep: {phase: 'warm'}}",
-    moveToStepSchema, // Direct JSON Schema - no Zod conversion
+
+    {
+
+      title: "Ilm Move To Step",
+
+      description: "Move index to ILM step. Manually move an index to a specific ILM policy step. Uses direct JSON Schema and standardized MCP error codes. Expert-level operation for troubleshooting. Examples: {index: my-index, currentStep: {phase: hot, action: rollover, name: check-rollover-ready}, nextStep: {phase: warm}}",
+
+      inputSchema: moveToStepSchema,
+
+    },
+
+    // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_move_to_step", moveToStepHandler, OperationType.DESTRUCTIVE),
-  );
+
+  );;
 };

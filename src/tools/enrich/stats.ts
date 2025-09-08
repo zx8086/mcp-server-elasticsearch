@@ -98,12 +98,25 @@ export const registerEnrichStatsTool: ToolRegistrationFunction = (server: McpSer
   };
 
   // Tool registration - READ operation
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_enrich_stats",
-    "Get Elasticsearch enrich coordinator statistics and execution status. Best for performance monitoring, policy tracking, enrichment analysis. Use when you need to monitor enrich policy execution and coordinator performance in Elasticsearch.",
+
     {
+
+      title: "Enrich Stats",
+
+      description: "Get Elasticsearch enrich coordinator statistics and execution status. Best for performance monitoring, policy tracking, enrichment analysis. Use when you need to monitor enrich policy execution and coordinator performance in Elasticsearch.",
+
+      inputSchema: {
       masterTimeout: z.string().optional(), // Timeout for master node operations. Examples: '30s', '1m'
     },
+
+    },
+
     statsHandler,
+
   );
 };

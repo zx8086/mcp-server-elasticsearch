@@ -220,10 +220,19 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (server
   };
 
   // Tool registration
-  server.tool(
+  // Tool registration using modern registerTool method
+
+  server.registerTool(
+
     "elasticsearch_update_index_settings",
-    "Update index settings in Elasticsearch. Best for performance tuning, configuration changes, index optimization. Use when you need to modify index settings for better performance or functionality in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+
     {
+
+      title: "Update Index Settings",
+
+      description: "Update index settings in Elasticsearch. Best for performance tuning, configuration changes, index optimization. Use when you need to modify index settings for better performance or functionality in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+
+      inputSchema: {
       index: z.string(), // Name of the index to update settings for
       settings: z.object({}), // Index settings to update
       preserveExisting: z.boolean().optional(), // Preserve existing settings that are not specified
@@ -234,6 +243,10 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (server
       expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
       flatSettings: z.boolean().optional(), // Accept settings in flat format
     },
+
+    },
+
     withReadOnlyCheck("elasticsearch_update_index_settings", updateIndexSettingsHandler, OperationType.WRITE),
-  );
+
+  );;
 };
