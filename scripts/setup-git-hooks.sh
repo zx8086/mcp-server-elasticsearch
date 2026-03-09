@@ -29,7 +29,7 @@ if [ $SCHEMA_RESULT -ne 0 ]; then
     echo ""
     echo "[FAIL] Schema validation failed!"
     echo "Please review the implementation guide:"
-    echo "   guides/ZOD_MCP_IMPLEMENTATION_GUIDE.md"
+    echo "   docs/JSON_TO_ZOD_CONVERSION_REPORT.md"
     echo ""
     echo "Common fixes:"
     echo "  1. Use registerTracedTool for automatic conversion"

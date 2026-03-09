@@ -252,7 +252,7 @@ bun run validate-config:full
 bun run scripts/run-working-tests.ts
 ```
 
-**Testing Excellence**: The server includes a comprehensive testing strategy with 100% TypeError elimination. See `guides/TESTING_STRATEGY_ANALYSIS.md` for the complete validation approach.
+**Testing Excellence**: The server includes a comprehensive testing strategy with 100% TypeError elimination. See `docs/TESTING_STRATEGY_ANALYSIS.md` for the complete validation approach.
 
 ### Configuration Best Practices
 

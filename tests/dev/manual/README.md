@@ -32,4 +32,4 @@ These files were created during the development process to:
 
 ## Cleanup
 
-These files can be safely removed once development is complete, as the knowledge has been captured in the main documentation in the `guides/` directory.
+These files can be safely removed once development is complete, as the knowledge has been captured in the main documentation in the `docs/` directory.
