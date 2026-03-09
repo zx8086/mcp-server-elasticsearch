@@ -4,7 +4,7 @@ This document explains the comprehensive filtering system implemented in the Kon
 
 ## Overview
 
-The Kong Konnect MCP server implements a **multi-layer filtering system** that provides sophisticated query capabilities for analytics and data retrieval operations. This system is designed to be **composable**, **type-safe**, and **reusable** across different MCP implementations.
+The Kong Konnect MCP server implements a **multi-layer filtering system**that provides sophisticated query capabilities for analytics and data retrieval operations. This system is designed to be **composable**, **type-safe**, and **reusable**across different MCP implementations.
 
 ## Architecture Layers
 
@@ -16,9 +16,9 @@ Define the core filter interface that serves as the foundation for all filtering
 
 ```typescript
 export interface ApiRequestFilter {
-  field: string;     // The field to filter on
-  operator: string;  // The operator (in, not_in, eq, etc.)
-  value: any;        // The value(s) to filter by
+  field: string; // The field to filter on
+  operator: string; // The operator (in, not_in, eq, etc.)
+  value: any; // The value(s) to filter by
 }
 ```
 
@@ -156,9 +156,9 @@ async queryApiRequests(
   const requestBody = {
     time_range: {
       type: "relative",
-      time_range: timeRange  // "15M", "1H", "24H"
+      time_range: timeRange // "15M", "1H", "24H"
     },
-    filters: filters,  // Array of filter objects
+    filters: filters, // Array of filter objects
     size: maxResults
   };
 
@@ -173,30 +173,30 @@ async queryApiRequests(
 ```yaml
 supported_filter_fields:
   # Request Identification
-  - field: "request_id"         # Unique request identifier
-  - field: "trace_id"          # Distributed tracing ID
+  - field: "request_id" # Unique request identifier
+  - field: "trace_id" # Distributed tracing ID
   
-  # HTTP Attributes  
-  - field: "status_code"        # HTTP status codes (200, 404, 500)
+  # HTTP Attributes 
+  - field: "status_code" # HTTP status codes (200, 404, 500)
   - field: "status_code_grouped" # Status groups (2XX, 4XX, 5XX)
-  - field: "http_method"        # HTTP methods (GET, POST, PUT, DELETE)
-  - field: "request_uri"        # Request URI path
+  - field: "http_method" # HTTP methods (GET, POST, PUT, DELETE)
+  - field: "request_uri" # Request URI path
   
   # Kong Entities
-  - field: "consumer"           # Consumer UUIDs
-  - field: "gateway_service"    # Service UUIDs
-  - field: "route"             # Route UUIDs
-  - field: "api_product"       # API product names
+  - field: "consumer" # Consumer UUIDs
+  - field: "gateway_service" # Service UUIDs
+  - field: "route" # Route UUIDs
+  - field: "api_product" # API product names
   - field: "api_product_version" # API product versions
   
   # Application Context
-  - field: "application"        # Application IDs
-  - field: "auth_type"         # Authentication type
+  - field: "application" # Application IDs
+  - field: "auth_type" # Authentication type
   
   # Network & Infrastructure
-  - field: "client_ip"         # Client IP addresses
-  - field: "data_plane_node"   # Data plane node IDs
-  - field: "control_plane"     # Control plane IDs
+  - field: "client_ip" # Client IP addresses
+  - field: "data_plane_node" # Data plane node IDs
+  - field: "control_plane" # Control plane IDs
   - field: "control_plane_group" # Control plane group IDs
 ```
 
@@ -204,22 +204,22 @@ supported_filter_fields:
 
 ```yaml
 supported_operators:
-  - operator: "in"       # Value exists in array
+  - operator: "in" # Value exists in array
     example: ["GET", "POST"]
     
-  - operator: "not_in"   # Value does not exist in array  
+  - operator: "not_in" # Value does not exist in array 
     example: [400, 500]
     
-  - operator: "eq"       # Equals exact value
+  - operator: "eq" # Equals exact value
     example: "GET"
     
-  - operator: "ne"       # Not equals value
+  - operator: "ne" # Not equals value
     example: "POST"
     
-  - operator: "gt"       # Greater than (numeric)
+  - operator: "gt" # Greater than (numeric)
     example: 200
     
-  - operator: "lt"       # Less than (numeric)
+  - operator: "lt" # Less than (numeric)
     example: 400
     
   - operator: "contains" # String contains substring
@@ -630,14 +630,14 @@ const filters = FilterComposer.and(
 
 ## Key Benefits
 
-✅ **Composable**: Build complex filters by combining multiple criteria
-✅ **Type-Safe**: Full TypeScript support with comprehensive interfaces
-✅ **Extensible**: Easy to add new fields and operators
-✅ **Consistent**: Same pattern across all filtering operations
-✅ **Reusable**: Filter logic separated from API calls and MCP tools
-✅ **Flexible**: Support for multiple operators and data types
-✅ **Maintainable**: Clear separation of concerns across architecture layers
-✅ **Production-Ready**: Includes validation, error handling, and performance considerations
+ **Composable**: Build complex filters by combining multiple criteria
+ **Type-Safe**: Full TypeScript support with comprehensive interfaces
+ **Extensible**: Easy to add new fields and operators
+ **Consistent**: Same pattern across all filtering operations
+ **Reusable**: Filter logic separated from API calls and MCP tools
+ **Flexible**: Support for multiple operators and data types
+ **Maintainable**: Clear separation of concerns across architecture layers
+ **Production-Ready**: Includes validation, error handling, and performance considerations
 
 ## Performance Considerations
 

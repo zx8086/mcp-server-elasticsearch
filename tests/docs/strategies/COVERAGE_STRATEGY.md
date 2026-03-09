@@ -15,33 +15,33 @@
 
 ### Testing Priority
 
-#### 🔴 Priority 1: Core Read Operations (Target: 100%)
+#### Priority 1: Core Read Operations (Target: 100%)
 These are safe to test on any cluster and most frequently used:
-- `elasticsearch_search` ✅
-- `elasticsearch_list_indices` ✅ 
-- `elasticsearch_get_mappings` ✅
-- `elasticsearch_count_documents` ❌
-- `elasticsearch_get_document` ❌
-- `elasticsearch_get_index` ❌
-- `elasticsearch_get_cluster_health` ❌
+- `elasticsearch_search` 
+- `elasticsearch_list_indices` 
+- `elasticsearch_get_mappings` 
+- `elasticsearch_count_documents` 
+- `elasticsearch_get_document` 
+- `elasticsearch_get_index` 
+- `elasticsearch_get_cluster_health` 
 
-#### 🟡 Priority 2: Document Operations (Target: 80%)
+#### Priority 2: Document Operations (Target: 80%)
 Test with dedicated indices:
-- `elasticsearch_index_document` ✅
-- `elasticsearch_delete_document` ✅
-- `elasticsearch_update_document` ❌
-- `elasticsearch_bulk_operations` ❌
-- `elasticsearch_multi_get` ❌
+- `elasticsearch_index_document` 
+- `elasticsearch_delete_document` 
+- `elasticsearch_update_document` 
+- `elasticsearch_bulk_operations` 
+- `elasticsearch_multi_get` 
 
-#### 🟢 Priority 3: Index Management (Target: 60%)
+#### Priority 3: Index Management (Target: 60%)
 Test with temporary indices:
-- `elasticsearch_create_index` ❌
-- `elasticsearch_delete_index` ❌
-- `elasticsearch_index_exists` ❌
-- `elasticsearch_refresh_index` ❌
-- `elasticsearch_update_index_settings` ❌
+- `elasticsearch_create_index` 
+- `elasticsearch_delete_index` 
+- `elasticsearch_index_exists` 
+- `elasticsearch_refresh_index` 
+- `elasticsearch_update_index_settings` 
 
-#### ⚪ Priority 4: Advanced Features (Target: 40%)
+#### Priority 4: Advanced Features (Target: 40%)
 Complex features that need specific setup:
 - ILM operations
 - Watcher operations

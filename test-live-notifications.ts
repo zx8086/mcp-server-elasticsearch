@@ -6,9 +6,9 @@ import { Client } from "@elastic/elasticsearch";
 import { createProgressTracker, notificationManager } from "./src/utils/notifications.js";
 import { logger } from "./src/utils/logger.js";
 
-console.log("🧪 Testing Live Notification System\n");
+console.log("Testing Live Notification System\n");
 
-console.log("📝 Simulating search operation with notifications...");
+console.log("Simulating search operation with notifications...");
 
 try {
   // Simulate a request that would have notifications
@@ -35,13 +35,13 @@ try {
     took: 15,
   }, "Search operation completed successfully");
 
-  console.log("✅ Search operation simulation completed");
+  console.log("Search operation simulation completed");
 
 } catch (error) {
-  console.log(`❌ Search simulation failed: ${error}`);
+  console.log(`Search simulation failed: ${error}`);
 }
 
-console.log("\n📝 Testing error notifications...");
+console.log("\nTesting error notifications...");
 
 try {
   await notificationManager.sendError(
@@ -49,28 +49,28 @@ try {
     new Error("Simulated error for testing"),
     { operation: "test" }
   );
-  console.log("✅ Error notification handled gracefully");
+  console.log("Error notification handled gracefully");
 
   await notificationManager.sendWarning(
     "Test warning notification", 
     { severity: "medium" }
   );
-  console.log("✅ Warning notification handled gracefully");
+  console.log("Warning notification handled gracefully");
 
   await notificationManager.sendInfo(
     "Test info notification",
     { status: "operational" }
   );
-  console.log("✅ Info notification handled gracefully");
+  console.log("Info notification handled gracefully");
 
 } catch (error) {
-  console.log(`❌ Notification testing failed: ${error}`);
+  console.log(`Notification testing failed: ${error}`);
 }
 
-console.log("\n🎯 **Expected Behavior:**");
+console.log("\n**Expected Behavior:**");
 console.log("• All message notifications should be logged locally only");
 console.log("• No 'Server does not support logging' errors should appear");
 console.log("• Progress notifications would work when request context is available");
 console.log("• All operations should complete without throwing errors");
 console.log("");
-console.log("✅ Live notification test completed!");
+console.log("Live notification test completed!");

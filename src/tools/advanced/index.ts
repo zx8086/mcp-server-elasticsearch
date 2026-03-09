@@ -63,7 +63,7 @@ const deleteByQueryImpl = async (client: Client, args: z.infer<typeof deleteByQu
     });
 
     // Log warning for potentially destructive operation
-    logger.warn("🚨 DESTRUCTIVE OPERATION: Delete by query executing", {
+    logger.warn("DESTRUCTIVE OPERATION: Delete by query executing", {
       index: args.index,
       query: JSON.stringify(args.query),
       maxDocs: args.maxDocs,

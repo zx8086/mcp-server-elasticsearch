@@ -8,22 +8,22 @@ A production-ready Model Context Protocol (MCP) server that connects AI assistan
 
 This is a comprehensive enhancement of the Official Elastic MCP Server, expanding from 4 core tools to 170+ specialized operations covering the full Elasticsearch ecosystem.
 
-## 🚀 Key Features
+## Key Features
 
-- **🔧 Comprehensive Tooling**: 170+ Elasticsearch operations including search, indexing, cluster management, analytics, and specialized tools
-- **⚙️ Advanced Configuration**: Type-safe configuration system with environment variable validation
-- **🔒 Security Controls**: Read-only mode with strict/warning options for safe production monitoring
-- **📊 Rich Search**: Advanced search with automatic highlighting, aggregations, and SQL support
-- **🔄 Bulk Operations**: Efficient bulk indexing, updating, and deletion with helper APIs
-- **📈 Cluster Monitoring**: Health checks, node statistics, and performance metrics
-- **🛡️ Error Handling**: Robust error handling with detailed logging and troubleshooting guides
-- **📊 Auto-Detection Monitoring**: Prometheus metrics with Grafana dashboards (auto-detects and gracefully degrades)
-- **🔄 Circuit Breakers**: Production-grade resilience with connection pooling and rate limiting
-- **🎯 Multi-Agent Development**: Sophisticated development coordination with 15+ specialized agents for orchestrated workflows
-- **📈 LangSmith Integration**: Advanced tracing and performance monitoring for AI interactions
-- **⚡ Performance**: Built on Bun runtime for optimal performance and modern JavaScript features
+- **Comprehensive Tooling**: 170+ Elasticsearch operations including search, indexing, cluster management, analytics, and specialized tools
+- **Advanced Configuration**: Type-safe configuration system with environment variable validation
+- **Security Controls**: Read-only mode with strict/warning options for safe production monitoring
+- **Rich Search**: Advanced search with automatic highlighting, aggregations, and SQL support
+- **Bulk Operations**: Efficient bulk indexing, updating, and deletion with helper APIs
+- **Cluster Monitoring**: Health checks, node statistics, and performance metrics
+- **Error Handling**: Robust error handling with detailed logging and troubleshooting guides
+- **Auto-Detection Monitoring**: Prometheus metrics with Grafana dashboards (auto-detects and gracefully degrades)
+- **Circuit Breakers**: Production-grade resilience with connection pooling and rate limiting
+- **Multi-Agent Development**: Sophisticated development coordination with 15+ specialized agents for orchestrated workflows
+- **LangSmith Integration**: Advanced tracing and performance monitoring for AI interactions
+- **Performance**: Built on Bun runtime for optimal performance and modern JavaScript features
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
@@ -36,7 +36,7 @@ This is a comprehensive enhancement of the Official Elastic MCP Server, expandin
 - [Security](#security)
 - [Troubleshooting](#troubleshooting)
 
-## 🔧 Prerequisites
+## Prerequisites
 
 ### Installing Bun
 
@@ -76,7 +76,7 @@ bun --version
 - **MCP Client**: Claude Desktop, or any MCP-compatible client
 - **Node.js**: 18+ (for npm compatibility if needed)
 
-## 📦 Installation
+## Installation
 
 ### Option 1: Use Published NPM Package (Recommended)
 
@@ -104,7 +104,7 @@ npx @elastic/mcp-server-elasticsearch
    bun run build
    ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Configure Your Environment
 
@@ -184,7 +184,7 @@ Open your MCP client and start asking questions about your Elasticsearch data:
 - "Show me the field mappings for the products index"
 - "Find all orders over $500 from last month"
 
-## ⚙️ Configuration
+## Configuration
 
 This server features a comprehensive configuration system with type-safe validation and environment variable support.
 
@@ -288,7 +288,7 @@ The server supports read-only mode for safe operations in production:
 READ_ONLY_MODE=true
 READ_ONLY_STRICT_MODE=true
 ```
-- **Blocks** all destructive operations
+- **Blocks**all destructive operations
 - Returns error responses for write/delete operations
 - Perfect for monitoring and analytics
 
@@ -297,11 +297,11 @@ READ_ONLY_STRICT_MODE=true
 READ_ONLY_MODE=true
 READ_ONLY_STRICT_MODE=false
 ```
-- **Allows** operations with prominent warnings
+- **Allows**operations with prominent warnings
 - Logs warnings for destructive operations
 - Great for testing and controlled environments
 
-## 🛠️ Available Tools
+## Available Tools
 
 ### Core Operations
 - **`list_indices`** - List all available Elasticsearch indices
@@ -413,7 +413,7 @@ READ_ONLY_STRICT_MODE=false
 - **`elasticsearch_diagnostics`** - Comprehensive cluster diagnostics
 - **`analyze_timestamps`** - Analyze timestamp fields for data quality issues
 
-## 💡 Usage Examples
+## Usage Examples
 
 ### Natural Language Queries
 
@@ -442,28 +442,28 @@ READ_ONLY_STRICT_MODE=false
 "Update the refresh interval for the logs index to 30 seconds"
 ```
 
-## 🔨 Development
+## Development
 
 ### Available Scripts
 
 ```bash
 # Development
-bun run dev                    # Start in development mode
-bun run build                  # Build for production
-bun run start                  # Start built server
+bun run dev # Start in development mode
+bun run build # Build for production
+bun run start # Start built server
 
 # Configuration Management
-bun run validate-config        # Validate configuration
-bun run validate-config:full   # Full validation + connection test
-bun run test-connection        # Test Elasticsearch connection
+bun run validate-config # Validate configuration
+bun run validate-config:full # Full validation + connection test
+bun run test-connection # Test Elasticsearch connection
 
 # Quality & Testing
-bun run test                   # Run tests
-bun run lint                   # Lint code
-bun run format                 # Format code
+bun run test # Run tests
+bun run lint # Lint code
+bun run format # Format code
 
 # Debugging
-bun run inspector              # Start MCP inspector for debugging
+bun run inspector # Start MCP inspector for debugging
 ```
 
 ### Development Setup
@@ -505,34 +505,34 @@ bun run validate-config:full --check-connection
 bun run validate-config --show-all
 ```
 
-## 🏗️ Architecture
+## Architecture
 
 ### Project Structure
 
 ```
 src/
-├── config.ts              # Centralized configuration system
-├── index.ts               # Entry point and server startup
-├── server.ts               # MCP server creation and setup
-├── validation.ts           # Environment and connection validation
-├── tools/                  # Tool implementations
-│   ├── index.ts           # Tool registration
-│   ├── core/              # Core operations (search, list, mappings)
-│   ├── document/          # Document operations
-│   ├── search/            # Advanced search operations
-│   ├── index_management/  # Index management tools
-│   ├── cluster/           # Cluster monitoring tools
-│   ├── bulk/              # Bulk operations
-│   ├── analytics/         # Analytics and term vectors
-│   ├── alias/             # Index alias management
-│   ├── template/          # Template management
-│   ├── advanced/          # Advanced operations
-│   ├── mapping/           # Field mapping tools
-│   ├── ilm/               # Index Lifecycle Management
-│   └── enrich/            # Enrich policies
-└── utils/
-    ├── logger.ts          # MCP-compatible logging system
-    └── readOnlyMode.ts    # Read-only mode management
+ config.ts # Centralized configuration system
+ index.ts # Entry point and server startup
+ server.ts # MCP server creation and setup
+ validation.ts # Environment and connection validation
+ tools/ # Tool implementations
+    index.ts # Tool registration
+    core/ # Core operations (search, list, mappings)
+    document/ # Document operations
+    search/ # Advanced search operations
+    index_management/ # Index management tools
+    cluster/ # Cluster monitoring tools
+    bulk/ # Bulk operations
+    analytics/ # Analytics and term vectors
+    alias/ # Index alias management
+    template/ # Template management
+    advanced/ # Advanced operations
+    mapping/ # Field mapping tools
+    ilm/ # Index Lifecycle Management
+    enrich/ # Enrich policies
+ utils/
+     logger.ts # MCP-compatible logging system
+     readOnlyMode.ts # Read-only mode management
 ```
 
 ### Configuration System
@@ -552,7 +552,7 @@ The server uses a sophisticated configuration system:
 - **Granular Control**: Per-operation type checking
 - **Logging Integration**: Comprehensive audit trails
 
-## 🔒 Security
+## Security
 
 ### Best Practices
 
@@ -596,7 +596,7 @@ POST /_security/api_key
 - `search`, `get_document`, `list_indices`
 - `get_mappings`, `count_documents`, `get_cluster_health`
 
-## 🔍 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -606,13 +606,13 @@ POST /_security/api_key
 ```
 Error: ES_URL is not a valid URL format
 ```
-**Solution:** Ensure URL includes protocol: `http://` or `https://`
+**Solution:**Ensure URL includes protocol: `http://` or `https://`
 
 **Missing Authentication:**
 ```
 Error: Either ES_API_KEY or both ES_USERNAME and ES_PASSWORD must be provided
 ```
-**Solution:** Provide complete authentication credentials
+**Solution:**Provide complete authentication credentials
 
 #### Connection Issues
 
@@ -620,27 +620,27 @@ Error: Either ES_API_KEY or both ES_USERNAME and ES_PASSWORD must be provided
 ```
 Error: ECONNREFUSED
 ```
-**Solution:** Verify Elasticsearch is running and URL is correct
+**Solution:**Verify Elasticsearch is running and URL is correct
 
 **SSL/TLS Issues:**
 ```
 Error: certificate verify failed
 ```
-**Solution:** Use `ES_CA_CERT` or verify certificate configuration
+**Solution:**Use `ES_CA_CERT` or verify certificate configuration
 
 **Authentication Failed:**
 ```
 Error: 401 Unauthorized
 ```
-**Solution:** Verify API key or username/password are correct
+**Solution:**Verify API key or username/password are correct
 
 #### Read-Only Mode
 
 **Operations Blocked:**
 ```
-🚫 READ-ONLY MODE: DESTRUCTIVE DELETE operation blocked
+ READ-ONLY MODE: DESTRUCTIVE DELETE operation blocked
 ```
-**Solution:** Set `READ_ONLY_MODE=false` or use read-only operations only
+**Solution:**Set `READ_ONLY_MODE=false` or use read-only operations only
 
 ### Debug Mode
 
@@ -675,9 +675,9 @@ Open http://localhost:6274 to inspect MCP communication.
 
 ### Development Workflow
 
-1. **Fork and clone** the repository
-2. **Create a feature branch** from `main`
-3. **Make your changes** with tests
+1. **Fork and clone**the repository
+2. **Create a feature branch**from `main`
+3. **Make your changes**with tests
 4. **Run quality checks:**
    ```bash
    bun run lint
@@ -685,7 +685,7 @@ Open http://localhost:6274 to inspect MCP communication.
    bun run test
    bun run validate-config
    ```
-5. **Submit a pull request** with clear description
+5. **Submit a pull request**with clear description
 
 ### Code Standards
 
@@ -695,18 +695,18 @@ Open http://localhost:6274 to inspect MCP communication.
 - **Zod**: Schema validation for configuration
 - **Testing**: Comprehensive test coverage required
 
-## 📄 License
+## License
 
 This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
 
-## 🔗 Links
+## Links
 
 - [Model Context Protocol](https://modelcontextprotocol.io/)
 - [Elasticsearch Documentation](https://www.elastic.co/guide/)
 - [Bun Runtime](https://bun.sh)
 - [Claude Desktop](https://claude.ai/download)
 
-## 📈 Performance
+## Performance
 
 Built on Bun runtime for optimal performance:
 - **Fast Startup**: Rapid server initialization
@@ -716,4 +716,4 @@ Built on Bun runtime for optimal performance:
 
 ---
 
-**Need Help?** Check our [troubleshooting guide](#troubleshooting) for common solutions.
+**Need Help?**Check our [troubleshooting guide](#troubleshooting) for common solutions.

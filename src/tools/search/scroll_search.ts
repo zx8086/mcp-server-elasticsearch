@@ -130,7 +130,7 @@ export const registerScrollSearchTool: ToolRegistrationFunction = (server: McpSe
       // Memory usage warnings
       if (params.maxDocuments && params.maxDocuments > 50000) {
         await notificationManager.sendWarning(
-          `⚠️  Large dataset retrieval: ${params.maxDocuments} documents may consume significant memory`,
+          `Large dataset retrieval: ${params.maxDocuments} documents may consume significant memory`,
           {
             operation_type: "scroll_search",
             max_documents: params.maxDocuments,

@@ -31,7 +31,7 @@ class LangSmithTracingTester {
   private results: TestResult[] = [];
 
   async runAllTests(): Promise<void> {
-    console.log(`${colors.bold}${colors.cyan}🧪 LangSmith Tracing Implementation Test Suite${colors.reset}`);
+    console.log(`${colors.bold}${colors.cyan}LangSmith Tracing Implementation Test Suite${colors.reset}`);
     console.log(`${colors.cyan}═══════════════════════════════════════════════════${colors.reset}\n`);
 
     // Run all test categories
@@ -301,11 +301,11 @@ class LangSmithTracingTester {
             process.stdout?.on('data', (data) => {
               output += data.toString();
               
-              if (output.includes('✅ LangSmith tracing initialized')) {
+              if (output.includes('LangSmith tracing initialized')) {
                 foundTracingInit = true;
               }
               
-              if (output.includes('🚀 Registering all tools with automatic tracing')) {
+              if (output.includes('Registering all tools with automatic tracing')) {
                 foundToolRegistration = true;
               }
 
@@ -437,7 +437,7 @@ class LangSmithTracingTester {
       const result = await testFn();
       const duration = Date.now() - startTime;
       
-      console.log(`  ${colors.green}✓${colors.reset} ${name} (${duration}ms)`);
+      console.log(`  ${colors.green}[PASS]${colors.reset} ${name} (${duration}ms)`);
       if (result && typeof result === 'string') {
         console.log(`    ${colors.cyan}→${colors.reset} ${result}`);
       }
@@ -447,7 +447,7 @@ class LangSmithTracingTester {
       const duration = Date.now() - startTime;
       const message = error instanceof Error ? error.message : String(error);
       
-      console.log(`  ${colors.red}✗${colors.reset} ${name} (${duration}ms)`);
+      console.log(`  ${colors.red}[FAIL]${colors.reset} ${name} (${duration}ms)`);
       console.log(`    ${colors.red}→${colors.reset} ${message}`);
       
       this.results.push({ name, passed: false, message, duration });
@@ -456,7 +456,7 @@ class LangSmithTracingTester {
 
   private printSummary(): void {
     console.log('\n' + '═'.repeat(50));
-    console.log(`${colors.bold}${colors.cyan}📊 Test Results Summary${colors.reset}`);
+    console.log(`${colors.bold}${colors.cyan}Test Results Summary${colors.reset}`);
     console.log('═'.repeat(50));
 
     const passed = this.results.filter(r => r.passed).length;
@@ -465,12 +465,12 @@ class LangSmithTracingTester {
     const successRate = ((passed / total) * 100).toFixed(1);
 
     console.log(`\n${colors.bold}Overall Results:${colors.reset}`);
-    console.log(`  ${colors.green}✓ Passed:${colors.reset} ${passed}/${total} tests`);
-    console.log(`  ${colors.red}✗ Failed:${colors.reset} ${failed}/${total} tests`);
-    console.log(`  ${colors.cyan}📈 Success Rate:${colors.reset} ${successRate}%`);
+    console.log(`  ${colors.green}[PASS] Passed:${colors.reset} ${passed}/${total} tests`);
+    console.log(`  ${colors.red}[FAIL] Failed:${colors.reset} ${failed}/${total} tests`);
+    console.log(`  ${colors.cyan}Success Rate:${colors.reset} ${successRate}%`);
 
     if (failed > 0) {
-      console.log(`\n${colors.bold}${colors.red}❌ Failed Tests:${colors.reset}`);
+      console.log(`\n${colors.bold}${colors.red}Failed Tests:${colors.reset}`);
       this.results
         .filter(r => !r.passed)
         .forEach(result => {
@@ -479,22 +479,22 @@ class LangSmithTracingTester {
     }
 
     const totalTime = this.results.reduce((sum, r) => sum + (r.duration || 0), 0);
-    console.log(`\n${colors.bold}⏱️  Total Test Time:${colors.reset} ${totalTime}ms`);
+    console.log(`\n${colors.bold} Total Test Time:${colors.reset} ${totalTime}ms`);
 
     // LangSmith-specific validation
-    console.log(`\n${colors.bold}🎯 LangSmith Tracing Validation:${colors.reset}`);
+    console.log(`\n${colors.bold}LangSmith Tracing Validation:${colors.reset}`);
     
     if (successRate >= 90) {
-      console.log(`  ${colors.green}✅ Implementation is working correctly${colors.reset}`);
+      console.log(`  ${colors.green}Implementation is working correctly${colors.reset}`);
       console.log(`  ${colors.cyan}→${colors.reset} Tools should appear with dynamic names in LangSmith`);
       console.log(`  ${colors.cyan}→${colors.reset} All tools are being traced unconditionally`);
       console.log(`  ${colors.cyan}→${colors.reset} Production features are preserved`);
     } else {
-      console.log(`  ${colors.red}❌ Implementation needs attention${colors.reset}`);
-      console.log(`  ${colors.yellow}⚠️${colors.reset}  Check failed tests above for specific issues`);
+      console.log(`  ${colors.red}Implementation needs attention${colors.reset}`);
+      console.log(`  ${colors.yellow}${colors.reset}  Check failed tests above for specific issues`);
     }
 
-    console.log(`\n${colors.bold}🔗 Next Steps:${colors.reset}`);
+    console.log(`\n${colors.bold}Next Steps:${colors.reset}`);
     console.log(`  1. Check LangSmith dashboard: https://smith.langchain.com`);
     console.log(`  2. Execute tools via MCP client and verify trace names`);
     console.log(`  3. Look for traces like 'elasticsearch_search', not 'Tool Execution'`);

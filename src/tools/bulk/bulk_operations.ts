@@ -81,7 +81,7 @@ export const registerBulkOperationsTool: ToolRegistrationFunction = (server: Mcp
 
       try {
         if (readOnlyCheck.warning) {
-          logger.warn("🚨 CRITICAL: About to perform bulk operations", {
+          logger.warn("CRITICAL: About to perform bulk operations", {
             tool: "elasticsearch_bulk_operations",
             operationCount: params.operations.length,
             warning: "This may create, update, or delete multiple documents",

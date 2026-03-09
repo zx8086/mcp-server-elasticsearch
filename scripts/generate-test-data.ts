@@ -32,7 +32,7 @@ class ElasticsearchTestDataGenerator implements TestDataGenerator {
   }
 
   async generateMockElasticsearchData(): Promise<void> {
-    console.log("📊 Generating Elasticsearch mock data...");
+    console.log("Generating Elasticsearch mock data...");
 
     // Mock cluster health responses
     const clusterHealthResponses = {
@@ -224,11 +224,11 @@ class ElasticsearchTestDataGenerator implements TestDataGenerator {
 
     await writeFile(path.join(this.outputDir, "elasticsearch", "mappings.json"), JSON.stringify(mappings, null, 2));
 
-    console.log("✅ Elasticsearch mock data generated");
+    console.log("[PASS] Elasticsearch mock data generated");
   }
 
   async generatePerformanceTestData(): Promise<void> {
-    console.log("🚀 Generating performance test data...");
+    console.log("Generating performance test data...");
 
     // Performance baselines
     const performanceBaselines = {
@@ -341,11 +341,11 @@ class ElasticsearchTestDataGenerator implements TestDataGenerator {
       JSON.stringify(testDatasets, null, 2),
     );
 
-    console.log("✅ Performance test data generated");
+    console.log("[PASS] Performance test data generated");
   }
 
   async generateSecurityTestData(): Promise<void> {
-    console.log("🔒 Generating security test data...");
+    console.log("Generating security test data...");
 
     // Security test scenarios
     const securityScenarios = {
@@ -456,11 +456,11 @@ class ElasticsearchTestDataGenerator implements TestDataGenerator {
       JSON.stringify(auditEvents, null, 2),
     );
 
-    console.log("✅ Security test data generated");
+    console.log("[PASS] Security test data generated");
   }
 
   async generateCacheTestData(): Promise<void> {
-    console.log("💾 Generating cache test data...");
+    console.log("Generating cache test data...");
 
     // Cache test scenarios
     const cacheScenarios = {
@@ -567,11 +567,11 @@ class ElasticsearchTestDataGenerator implements TestDataGenerator {
 
     await writeFile(path.join(this.outputDir, "cache", "sample-data.json"), JSON.stringify(sampleCacheData, null, 2));
 
-    console.log("✅ Cache test data generated");
+    console.log("[PASS] Cache test data generated");
   }
 
   async generateIntegrationTestData(): Promise<void> {
-    console.log("🔗 Generating integration test data...");
+    console.log("Generating integration test data...");
 
     // MCP protocol test messages
     const mcpProtocolMessages = {
@@ -744,11 +744,11 @@ class ElasticsearchTestDataGenerator implements TestDataGenerator {
       JSON.stringify(testEnvironments, null, 2),
     );
 
-    console.log("✅ Integration test data generated");
+    console.log("[PASS] Integration test data generated");
   }
 
   async generateAll(): Promise<void> {
-    console.log("🎯 Generating comprehensive test data...");
+    console.log("Generating comprehensive test data...");
     console.log("═".repeat(50));
 
     await this.initialize();
@@ -776,11 +776,11 @@ class ElasticsearchTestDataGenerator implements TestDataGenerator {
     await writeFile(path.join(this.outputDir, "README.json"), JSON.stringify(summary, null, 2));
 
     console.log("");
-    console.log("🎉 Test data generation complete!");
-    console.log(`📁 Output directory: ${this.outputDir}`);
-    console.log(`📊 Total files generated: ${summary.total_files}`);
+    console.log("Test data generation complete!");
+    console.log(`Output directory: ${this.outputDir}`);
+    console.log(`Total files generated: ${summary.total_files}`);
     console.log("");
-    console.log("🔧 Usage:");
+    console.log("Usage:");
     console.log("   Import test data in your tests using:");
     console.log(`   const data = await import('./${this.outputDir}/[category]/[file].json');`);
   }
@@ -820,7 +820,7 @@ async function main() {
   const requestedCategories = categories.filter((cat) => args.includes(`--${cat}`));
 
   if (requestedCategories.length > 0) {
-    console.log(`🎯 Generating test data for: ${requestedCategories.join(", ")}`);
+    console.log(`Generating test data for: ${requestedCategories.join(", ")}`);
     await generator.initialize();
 
     for (const category of requestedCategories) {
@@ -843,7 +843,7 @@ async function main() {
       }
     }
 
-    console.log("✅ Selected test data generated successfully!");
+    console.log("[PASS] Selected test data generated successfully!");
   } else {
     // Generate all data
     await generator.generateAll();

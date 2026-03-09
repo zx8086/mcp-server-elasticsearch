@@ -14,7 +14,7 @@ describe('Documentation Accuracy', () => {
       // For now, we'll simulate tool discovery
       actualTools = await discoverTools();
     } catch (error) {
-      console.log('⚠️ Could not load actual tools, using mock data for tests');
+      console.log('Could not load actual tools, using mock data for tests');
       actualTools = createMockTools();
     }
 
@@ -24,13 +24,13 @@ describe('Documentation Accuracy', () => {
       const docsContent = await readFile(docsPath, 'utf-8');
       generatedDocs = JSON.parse(docsContent);
     } catch (error) {
-      console.log('⚠️ Generated documentation not found, will test generation process');
+      console.log('Generated documentation not found, will test generation process');
     }
   });
 
   test('should document all available tools', async () => {
     if (actualTools.length === 0) {
-      console.log('⚠️ No tools discovered, skipping documentation coverage test');
+      console.log('No tools discovered, skipping documentation coverage test');
       return;
     }
 
@@ -59,7 +59,7 @@ describe('Documentation Accuracy', () => {
 
     const coverageRatio = documentedTools.length / actualTools.length;
     
-    console.log(`📊 Documentation covers ${documentedTools.length}/${actualTools.length} tools (${(coverageRatio * 100).toFixed(1)}%)`);
+    console.log(`Documentation covers ${documentedTools.length}/${actualTools.length} tools (${(coverageRatio * 100).toFixed(1)}%)`);
     
     // Expect at least 20% coverage (adjusted for reorganized test structure)
     expect(coverageRatio).toBeGreaterThan(0.2);
@@ -70,13 +70,13 @@ describe('Documentation Accuracy', () => {
       .map(tool => tool.name);
 
     if (missingTools.length > 0) {
-      console.log('📋 Missing from documentation:', missingTools);
+      console.log('Missing from documentation:', missingTools);
     }
   });
 
   test('should have accurate parameter descriptions', () => {
     if (!generatedDocs || !generatedDocs.components || !generatedDocs.components.schemas) {
-      console.log('⚠️ No documentation schemas available, skipping parameter test');
+      console.log('No documentation schemas available, skipping parameter test');
       return;
     }
 
@@ -91,7 +91,7 @@ describe('Documentation Accuracy', () => {
           if (paramDef.description && paramDef.description.trim().length > 0) {
             describedParameters++;
           } else {
-            console.log(`📝 Missing description: ${schemaName}.${paramName}`);
+            console.log(`Missing description: ${schemaName}.${paramName}`);
           }
         }
       }
@@ -99,7 +99,7 @@ describe('Documentation Accuracy', () => {
 
     if (parameterCount > 0) {
       const descriptionRatio = describedParameters / parameterCount;
-      console.log(`📝 Parameter descriptions: ${describedParameters}/${parameterCount} (${(descriptionRatio * 100).toFixed(1)}%)`);
+      console.log(`Parameter descriptions: ${describedParameters}/${parameterCount} (${(descriptionRatio * 100).toFixed(1)}%)`);
       
       // Expect at least 70% of parameters to have descriptions
       expect(descriptionRatio).toBeGreaterThan(0.7);
@@ -140,7 +140,7 @@ describe('Documentation Accuracy', () => {
       }
     }
 
-    console.log('✅ Tool examples have valid structure');
+    console.log('Tool examples have valid structure');
   });
 
   test('should categorize tools correctly', () => {
@@ -167,7 +167,7 @@ describe('Documentation Accuracy', () => {
       expect(actualCategory).toBe(expectedCategory);
     }
 
-    console.log('✅ Tool categorization is correct');
+    console.log('Tool categorization is correct');
   });
 
   test('should generate valid tool tags', () => {
@@ -205,7 +205,7 @@ describe('Documentation Accuracy', () => {
       expect(hasExpectedTags).toBe(true);
     }
 
-    console.log('✅ Tool tags are generated appropriately');
+    console.log('Tool tags are generated appropriately');
   });
 });
 
@@ -246,10 +246,10 @@ describe('Documentation Generation Process', () => {
       expect(result.code).toBe(0);
       expect(result.stdout).toContain('Documentation generated');
       
-      console.log('✅ Generate-docs script executes successfully');
+      console.log('Generate-docs script executes successfully');
 
     } catch (error) {
-      console.log('⚠️ Generate-docs script not available or failed:', error.message);
+      console.log('Generate-docs script not available or failed:', error.message);
       // Don't fail the test if script is not available
     }
   });
@@ -265,27 +265,27 @@ describe('Documentation Generation Process', () => {
       // Check if files exist
       try {
         await stat(indexPath);
-        console.log('✅ HTML documentation file exists');
+        console.log('HTML documentation file exists');
       } catch {
-        console.log('⚠️ HTML documentation file not found');
+        console.log('HTML documentation file not found');
       }
 
       try {
         await stat(openApiPath);
-        console.log('✅ OpenAPI specification file exists');
+        console.log('OpenAPI specification file exists');
       } catch {
-        console.log('⚠️ OpenAPI specification file not found');
+        console.log('OpenAPI specification file not found');
       }
 
       try {
         await stat(markdownPath);
-        console.log('✅ Markdown documentation file exists');
+        console.log('Markdown documentation file exists');
       } catch {
-        console.log('⚠️ Markdown documentation file not found');
+        console.log('Markdown documentation file not found');
       }
 
     } catch (error) {
-      console.log('⚠️ Documentation directory structure check failed:', error.message);
+      console.log('Documentation directory structure check failed:', error.message);
     }
   });
 });
@@ -316,10 +316,10 @@ describe('Documentation Content Validation', () => {
         expect(htmlContent).toContain('</script>');
       }
 
-      console.log('✅ Generated HTML has valid structure');
+      console.log('Generated HTML has valid structure');
 
     } catch (error) {
-      console.log('⚠️ HTML documentation file not available for validation');
+      console.log('HTML documentation file not available for validation');
     }
   });
 
@@ -345,10 +345,10 @@ describe('Documentation Content Validation', () => {
       expect(spec.components).toBeDefined();
       expect(spec.components.schemas).toBeDefined();
 
-      console.log('✅ OpenAPI specification has valid JSON structure');
+      console.log('OpenAPI specification has valid JSON structure');
 
     } catch (error) {
-      console.log('⚠️ OpenAPI specification file not available for validation');
+      console.log('OpenAPI specification file not available for validation');
     }
   });
 
@@ -370,10 +370,10 @@ describe('Documentation Content Validation', () => {
       // Should have reasonable length
       expect(markdownContent.length).toBeGreaterThan(1000);
 
-      console.log('✅ Markdown documentation has valid structure');
+      console.log('Markdown documentation has valid structure');
 
     } catch (error) {
-      console.log('⚠️ Markdown documentation file not available for validation');
+      console.log('Markdown documentation file not available for validation');
     }
   });
 });

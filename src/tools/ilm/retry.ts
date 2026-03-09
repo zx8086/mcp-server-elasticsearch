@@ -117,17 +117,17 @@ export const registerRetryTool: ToolRegistrationFunction = (server: McpServer, e
         content: [
           {
             type: "text",
-            text: `🔄 **ILM Policy Retry Initiated: ${params.index}**
+            text: `**ILM Policy Retry Initiated: ${params.index}**
 
 Retry operation has been triggered for indices in ERROR state.
 
-⚙️ **What happens next:**
+**What happens next:**
 1. Elasticsearch will re-attempt the failed ILM step(s)
 2. If successful, indices will progress to the next phase
 3. If still failing, indices will remain in ERROR state
 
-ℹ️ **Monitor Progress**: Use \`elasticsearch_ilm_explain_lifecycle\` to check if errors are resolved.
-⚠️ **Note**: This only affects indices currently in ERROR state for ILM.
+**Monitor Progress**: Use \`elasticsearch_ilm_explain_lifecycle\` to check if errors are resolved.
+**Note**: This only affects indices currently in ERROR state for ILM.
 
 Operation completed at: ${new Date().toISOString()}`,
           },
@@ -186,7 +186,7 @@ Operation completed at: ${new Date().toISOString()}`,
             enhancedMessage += "\n• The index doesn't have an ILM policy assigned";
             enhancedMessage += "\n• The specified index pattern doesn't match any indices with ILM errors";
             enhancedMessage +=
-              "\n\n💡 Suggestion: Use 'elasticsearch_ilm_explain_lifecycle' to check the current ILM status.";
+              "\n\nSuggestion: Use 'elasticsearch_ilm_explain_lifecycle' to check the current ILM status.";
           }
 
           throw createIlmRetryMcpError(enhancedMessage, {

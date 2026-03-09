@@ -139,7 +139,7 @@ export const registerGetShardsTool: ToolRegistrationFunction = (server: McpServe
       if (sortBy) metadataText += ` (sorted by ${sortBy})`;
 
       if (unhealthyCount > 0) {
-        metadataText += `\n⚠️ ${unhealthyCount} unhealthy shards found`;
+        metadataText += `\n${unhealthyCount} unhealthy shards found`;
       }
 
       return {

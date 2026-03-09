@@ -36,11 +36,11 @@ class DevelopmentWorkflowTools {
 
   public async start(): Promise<void> {
     if (this.isRunning) {
-      console.log("🔄 Development tools already running");
+      console.log("Development tools already running");
       return;
     }
 
-    console.log("🚀 Starting Enhanced Development Workflow Tools");
+    console.log("Starting Enhanced Development Workflow Tools");
     console.log("=".repeat(50));
 
     this.printConfiguration();
@@ -73,9 +73,9 @@ class DevelopmentWorkflowTools {
       this.isRunning = true;
       this.setupShutdownHandlers();
 
-      console.log("\n✅ All development tools started successfully!");
-      console.log("📁 Watching for changes in: src/, tests/, scripts/");
-      console.log("🔧 Available commands:");
+      console.log("\nAll development tools started successfully!");
+      console.log("Watching for changes in: src/, tests/, scripts/");
+      console.log("Available commands:");
       console.log("   - Ctrl+C: Stop all tools");
       console.log("   - rs + Enter: Manual restart");
       console.log("   - q + Enter: Quit");
@@ -83,7 +83,7 @@ class DevelopmentWorkflowTools {
 
       this.startCommandListener();
     } catch (error) {
-      console.error("❌ Failed to start development tools:", error);
+      console.error("[FAIL] Failed to start development tools:", error);
       await this.stop();
     }
   }
@@ -93,7 +93,7 @@ class DevelopmentWorkflowTools {
       return;
     }
 
-    console.log("\n🛑 Stopping development tools...");
+    console.log("\nStopping development tools...");
 
     // Stop all processes
     for (const [name, process] of this.processes) {
@@ -118,23 +118,23 @@ class DevelopmentWorkflowTools {
     }
 
     this.isRunning = false;
-    console.log("✅ All development tools stopped");
+    console.log("All development tools stopped");
   }
 
   private printConfiguration(): void {
-    console.log("⚙️  Configuration:");
-    console.log(`   Hot Reload: ${this.config.hotReload ? "✅" : "❌"}`);
-    console.log(`   Auto Restart: ${this.config.autoRestart ? "✅" : "❌"}`);
-    console.log(`   Linting: ${this.config.linting ? "✅" : "❌"}`);
-    console.log(`   Type Checking: ${this.config.typeChecking ? "✅" : "❌"}`);
-    console.log(`   Testing: ${this.config.testing ? "✅" : "❌"}`);
-    console.log(`   Monitoring: ${this.config.monitoring ? "✅" : "❌"}`);
-    console.log(`   Profiling: ${this.config.profiling ? "✅" : "❌"}`);
+    console.log("Configuration:");
+    console.log(`   Hot Reload: ${this.config.hotReload ? "[ON]" : "[OFF]"}`);
+    console.log(`   Auto Restart: ${this.config.autoRestart ? "[ON]" : "[OFF]"}`);
+    console.log(`   Linting: ${this.config.linting ? "[ON]" : "[OFF]"}`);
+    console.log(`   Type Checking: ${this.config.typeChecking ? "[ON]" : "[OFF]"}`);
+    console.log(`   Testing: ${this.config.testing ? "[ON]" : "[OFF]"}`);
+    console.log(`   Monitoring: ${this.config.monitoring ? "[ON]" : "[OFF]"}`);
+    console.log(`   Profiling: ${this.config.profiling ? "[ON]" : "[OFF]"}`);
     console.log("");
   }
 
   private async startHotReload(): Promise<void> {
-    console.log("🔥 Starting hot reload...");
+    console.log("Starting hot reload...");
 
     const serverProcess = spawn("bun", ["--hot", "run", "src/index.ts"], {
       stdio: ["inherit", "pipe", "pipe"],
@@ -144,21 +144,21 @@ class DevelopmentWorkflowTools {
     serverProcess.stdout?.on("data", (data) => {
       const output = data.toString();
       if (output.includes("error") || output.includes("Error")) {
-        console.log(`🔥 [SERVER] ${output.trim()}`);
+        console.log(`[SERVER] ${output.trim()}`);
       } else {
-        console.log(`🔥 [SERVER] ${output.trim()}`);
+        console.log(`[SERVER] ${output.trim()}`);
       }
     });
 
     serverProcess.stderr?.on("data", (data) => {
-      console.log(`🔥 [SERVER ERROR] ${data.toString().trim()}`);
+      console.log(`[SERVER ERROR] ${data.toString().trim()}`);
     });
 
     serverProcess.on("close", (code) => {
       if (code !== 0) {
-        console.log(`🔥 [SERVER] Process exited with code ${code}`);
+        console.log(`[SERVER] Process exited with code ${code}`);
         if (this.config.autoRestart && this.isRunning) {
-          console.log("🔄 Auto-restarting server...");
+          console.log("Auto-restarting server...");
           setTimeout(() => this.startHotReload(), 2000);
         }
       }
@@ -168,7 +168,7 @@ class DevelopmentWorkflowTools {
   }
 
   private async startLinting(): Promise<void> {
-    console.log("🔍 Starting linter...");
+    console.log("Starting linter...");
 
     // Watch for file changes and run linter
     const lintWatcher = watch("./src", { recursive: true }, async (_eventType, filename) => {
@@ -197,7 +197,7 @@ class DevelopmentWorkflowTools {
 
       lintProcess.stdout?.on("data", (data) => {
         const output = data.toString();
-        if (output.includes("error") || output.includes("✖")) {
+        if (output.includes("error") || output.includes("X")) {
           _hasErrors = true;
           errorOutput += output;
         }
@@ -211,21 +211,21 @@ class DevelopmentWorkflowTools {
       lintProcess.on("close", (code) => {
         const duration = performance.now() - startTime;
         if (code === 0) {
-          console.log(`✅ [LINT] Clean (${duration.toFixed(0)}ms)${specificFile ? ` - ${specificFile}` : ""}`);
+          console.log(`[PASS] [LINT] Clean (${duration.toFixed(0)}ms)${specificFile ? ` - ${specificFile}` : ""}`);
         } else {
-          console.log(`❌ [LINT] Errors found (${duration.toFixed(0)}ms):`);
+          console.log(`[FAIL] [LINT] Errors found (${duration.toFixed(0)}ms):`);
           if (errorOutput) {
             console.log(errorOutput.trim());
           }
         }
       });
     } catch (error) {
-      console.log(`❌ [LINT] Failed to run linter: ${error}`);
+      console.log(`[FAIL] [LINT] Failed to run linter: ${error}`);
     }
   }
 
   private async startTypeChecking(): Promise<void> {
-    console.log("📝 Starting type checker...");
+    console.log("Starting type checker...");
 
     // Watch for TypeScript file changes
     const typeWatcher = watch("./src", { recursive: true }, async (_eventType, filename) => {
@@ -267,21 +267,21 @@ class DevelopmentWorkflowTools {
       tscProcess.on("close", (code) => {
         const duration = performance.now() - startTime;
         if (code === 0) {
-          console.log(`✅ [TYPE] No type errors (${duration.toFixed(0)}ms)`);
+          console.log(`[PASS] [TYPE] No type errors (${duration.toFixed(0)}ms)`);
         } else {
-          console.log(`❌ [TYPE] Type errors found (${duration.toFixed(0)}ms):`);
+          console.log(`[FAIL] [TYPE] Type errors found (${duration.toFixed(0)}ms):`);
           if (errorOutput) {
             console.log(errorOutput.trim());
           }
         }
       });
     } catch (error) {
-      console.log(`❌ [TYPE] Failed to run type checker: ${error}`);
+      console.log(`[FAIL] [TYPE] Failed to run type checker: ${error}`);
     }
   }
 
   private async startTesting(): Promise<void> {
-    console.log("🧪 Starting test watcher...");
+    console.log("Starting test watcher...");
 
     // Watch for test file changes
     const testWatcher = watch("./tests", { recursive: true }, async (_eventType, filename) => {
@@ -325,15 +325,15 @@ class DevelopmentWorkflowTools {
         const summary = lines[lines.length - 1] || "Tests completed";
 
         if (code === 0) {
-          console.log(`✅ [TEST] ${summary} (${duration.toFixed(0)}ms)`);
+          console.log(`[PASS] [TEST] ${summary} (${duration.toFixed(0)}ms)`);
         } else {
-          console.log(`❌ [TEST] ${summary} (${duration.toFixed(0)}ms)`);
+          console.log(`[FAIL] [TEST] ${summary} (${duration.toFixed(0)}ms)`);
           // Show last few lines of output for context
           console.log(lines.slice(-5).join("\n"));
         }
       });
     } catch (error) {
-      console.log(`❌ [TEST] Failed to run tests: ${error}`);
+      console.log(`[FAIL] [TEST] Failed to run tests: ${error}`);
     }
   }
 
@@ -350,7 +350,7 @@ class DevelopmentWorkflowTools {
   }
 
   private async startMonitoring(): Promise<void> {
-    console.log("📊 Starting performance monitoring...");
+    console.log("Starting performance monitoring...");
 
     // Start metrics endpoint if available
     try {
@@ -361,13 +361,13 @@ class DevelopmentWorkflowTools {
       metricsProcess.stdout?.on("data", (data) => {
         const output = data.toString().trim();
         if (output.includes("started")) {
-          console.log(`📊 [METRICS] ${output}`);
+          console.log(`[METRICS] ${output}`);
         }
       });
 
       this.processes.set("metrics", metricsProcess);
     } catch (_error) {
-      console.log("📊 [METRICS] Metrics endpoint not available");
+      console.log("[METRICS] Metrics endpoint not available");
     }
 
     // Monitor file system for changes
@@ -389,7 +389,7 @@ class DevelopmentWorkflowTools {
         if (changeCount % 10 === 0) {
           const elapsed = (Date.now() - startTime) / 1000;
           const rate = changeCount / elapsed;
-          console.log(`📁 [FS] ${changeCount} changes detected (${rate.toFixed(1)}/sec)`);
+          console.log(`[FS] ${changeCount} changes detected (${rate.toFixed(1)}/sec)`);
         }
       }
     });
@@ -412,7 +412,7 @@ class DevelopmentWorkflowTools {
       // Report if memory usage is high
       if (heapUsedMB > 200) {
         const peakMB = peakMemory / 1024 / 1024;
-        console.log(`⚠️  [MEM] High memory usage: ${heapUsedMB.toFixed(1)}MB (peak: ${peakMB.toFixed(1)}MB)`);
+        console.log(`[WARN] [MEM] High memory usage: ${heapUsedMB.toFixed(1)}MB (peak: ${peakMB.toFixed(1)}MB)`);
       }
     }, 30000); // Check every 30 seconds
 
@@ -420,7 +420,7 @@ class DevelopmentWorkflowTools {
   }
 
   private async startProfiling(): Promise<void> {
-    console.log("🔬 Starting performance profiling...");
+    console.log("Starting performance profiling...");
 
     // Start with heap profiling
     const profileProcess = spawn("bun", ["--heap-prof", "run", "src/index.ts"], {
@@ -428,11 +428,11 @@ class DevelopmentWorkflowTools {
     });
 
     profileProcess.stdout?.on("data", (data) => {
-      console.log(`🔬 [PROFILE] ${data.toString().trim()}`);
+      console.log(`[PROFILE] ${data.toString().trim()}`);
     });
 
     profileProcess.on("close", () => {
-      console.log("🔬 [PROFILE] Heap profile saved to isolate-*.heapprofile");
+      console.log("[PROFILE] Heap profile saved to isolate-*.heapprofile");
     });
 
     this.processes.set("profiler", profileProcess);
@@ -459,7 +459,7 @@ class DevelopmentWorkflowTools {
         switch (command) {
           case "rs":
           case "restart":
-            console.log("🔄 Manual restart triggered...");
+            console.log("Manual restart triggered...");
             await this.restart();
             break;
           case "q":
@@ -478,7 +478,7 @@ class DevelopmentWorkflowTools {
             break;
           default:
             if (command) {
-              console.log(`❓ Unknown command: ${command}. Type 'help' for available commands.`);
+              console.log(`Unknown command: ${command}. Type 'help' for available commands.`);
             }
         }
       } else if (char.charCodeAt(0) === 127) {
@@ -507,7 +507,7 @@ class DevelopmentWorkflowTools {
   }
 
   private showHelp(): void {
-    console.log("\n📖 Available Commands:");
+    console.log("\nAvailable Commands:");
     console.log("   rs, restart  - Restart the development server");
     console.log("   s, status    - Show current status");
     console.log("   h, help      - Show this help message");
@@ -516,8 +516,8 @@ class DevelopmentWorkflowTools {
   }
 
   private showStatus(): void {
-    console.log("\n📊 Development Tools Status:");
-    console.log(`   Running: ${this.isRunning ? "✅" : "❌"}`);
+    console.log("\nDevelopment Tools Status:");
+    console.log(`   Running: ${this.isRunning ? "[ON]" : "[OFF]"}`);
     console.log(`   Processes: ${this.processes.size}`);
     console.log(`   Watchers: ${this.watchers.size}`);
 
@@ -528,24 +528,24 @@ class DevelopmentWorkflowTools {
 
   private setupShutdownHandlers(): void {
     process.on("SIGINT", async () => {
-      console.log("\n🛑 Received SIGINT, shutting down gracefully...");
+      console.log("\nReceived SIGINT, shutting down gracefully...");
       await this.stop();
       process.exit(0);
     });
 
     process.on("SIGTERM", async () => {
-      console.log("\n🛑 Received SIGTERM, shutting down gracefully...");
+      console.log("\nReceived SIGTERM, shutting down gracefully...");
       await this.stop();
       process.exit(0);
     });
 
     process.on("uncaughtException", (error) => {
-      console.error("💥 Uncaught exception:", error);
+      console.error("Uncaught exception:", error);
       this.stop().then(() => process.exit(1));
     });
 
     process.on("unhandledRejection", (reason) => {
-      console.error("💥 Unhandled rejection:", reason);
+      console.error("Unhandled rejection:", reason);
     });
   }
 }
@@ -578,7 +578,7 @@ async function main() {
         break;
       case "--help":
         console.log(`
-🔧 Enhanced Development Workflow Tools
+Enhanced Development Workflow Tools
 
 Usage: bun run scripts/dev-tools.ts [options]
 

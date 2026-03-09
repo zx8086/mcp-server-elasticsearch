@@ -178,7 +178,7 @@ export const registerGetNodesStatsTool: ToolRegistrationFunction = (server: McpS
           content: [
             {
               type: "text",
-              text: "⚠️ No metric specified. Returning minimal stats (os,jvm at node level). Specify 'metric' parameter for other stats.",
+              text: "No metric specified. Returning minimal stats (os,jvm at node level). Specify 'metric' parameter for other stats.",
             } as TextContent,
             { type: "text", text: responseContent } as TextContent,
           ],
@@ -215,7 +215,7 @@ export const registerGetNodesStatsTool: ToolRegistrationFunction = (server: McpS
           content: [
             {
               type: "text",
-              text: "⚠️ 'indices' metric without indexMetric defaults to 'docs,store' only. Specify indexMetric for more details.",
+              text: "'indices' metric without indexMetric defaults to 'docs,store' only. Specify indexMetric for more details.",
             } as TextContent,
             { type: "text", text: responseContent } as TextContent,
           ],

@@ -119,7 +119,7 @@ export const registerWatcherQueryWatchesTool: ToolRegistrationFunction = (server
         if (total > returned + from) {
           const remaining = total - returned - from;
           responseContent.push(
-            `\n⚠️ ${remaining} more watches available. Use 'from' and 'size' parameters for pagination.`,
+            `\n${remaining} more watches available. Use 'from' and 'size' parameters for pagination.`,
           );
         }
       }

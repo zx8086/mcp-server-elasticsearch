@@ -151,7 +151,7 @@ export const registerTimestampAnalysisTool: ToolRegistrationFunction = (server, 
       analysis += `- **Future Timestamps:** ${futureCount}/${sampleResult.hits.hits.length} (${Math.round((futureCount / sampleResult.hits.hits.length) * 100)}%)\n\n`;
 
       if (futureCount > 0) {
-        analysis += `## ⚠️ WARNING: Future Timestamps Detected!\n`;
+        analysis += `## WARNING: Future Timestamps Detected!\n`;
         analysis += `Found ${futureCount} documents with future timestamps in the sample.\n`;
         analysis += `This explains why recent time range queries (like "now-24h") may return unexpected results.\n\n`;
       }
@@ -166,7 +166,7 @@ export const registerTimestampAnalysisTool: ToolRegistrationFunction = (server, 
         analysis += `${i + 1}. **${hit._id}** (${service})\n`;
         analysis += `   - Timestamp: ${tsAnalysis.formatted}\n`;
         analysis += `   - Days from now: ${tsAnalysis.daysFromNow}\n`;
-        analysis += `   - Status: ${tsAnalysis.isFuture ? "🔮 FUTURE" : tsAnalysis.isPast ? "📅 PAST" : "⏰ NOW"}\n`;
+        analysis += `   - Status: ${tsAnalysis.isFuture ? "FUTURE" : tsAnalysis.isPast ? "PAST" : "NOW"}\n`;
         analysis += `   - Message: ${message.substring(0, 100)}${message.length > 100 ? "..." : ""}\n\n`;
       });
 

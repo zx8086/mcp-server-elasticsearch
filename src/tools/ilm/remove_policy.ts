@@ -90,12 +90,12 @@ export const registerRemovePolicyTool: ToolRegistrationFunction = (server: McpSe
         content: [
           {
             type: "text",
-            text: `🚫 **ILM Policy Removed from: ${params.index}**
+            text: `**ILM Policy Removed from: ${params.index}**
 
 **Result**: ${successfulCount} have been detached from ILM management.
 
-${hasFailures ? `⚠️ **Failures**: ${failedIndices.length} indices could not be updated:\n${failedIndices.map((f) => `- ${f}`).join("\n")}\n` : ""}ℹ️ **Effect**: Affected indices will no longer follow ILM policies and must be managed manually.
-⚙️ **Next**: Use \`elasticsearch_ilm_explain_lifecycle\` to verify policy removal.
+${hasFailures ? `**Failures**: ${failedIndices.length} indices could not be updated:\n${failedIndices.map((f) => `- ${f}`).join("\n")}\n` : ""}**Effect**: Affected indices will no longer follow ILM policies and must be managed manually.
+**Next**: Use \`elasticsearch_ilm_explain_lifecycle\` to verify policy removal.
 
 Operation completed at: ${new Date().toISOString()}`,
           },

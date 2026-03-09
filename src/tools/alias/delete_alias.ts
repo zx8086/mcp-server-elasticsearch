@@ -100,7 +100,7 @@ export const registerDeleteAliasTool: ToolRegistrationFunction = (server: McpSer
 
       return {
         content: [
-          { type: "text", text: `✅ Successfully deleted alias '${params.name}' from index '${params.index}'` },
+          { type: "text", text: `Successfully deleted alias '${params.name}' from index '${params.index}'` },
           { type: "text", text: JSON.stringify(summary, null, 2) },
           { type: "text", text: JSON.stringify(result, null, 2) },
         ],

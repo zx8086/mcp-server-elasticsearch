@@ -71,7 +71,7 @@ const bulkOperationsImpl = async (client: Client, args: z.infer<typeof bulkOpera
     });
 
     // Log warning for potentially destructive operation
-    logger.warn("🚨 WRITE OPERATION: Bulk operations executing", {
+    logger.warn("WRITE OPERATION: Bulk operations executing", {
       operationCount: args.operations.length,
       globalIndex: args.index,
       warning: "This may create, update, or delete multiple documents",

@@ -10,10 +10,10 @@ A critical parameter parsing issue was identified and resolved in the Elasticsea
 The `elasticsearch_search` tool was consistently returning old data (May/August 2025) instead of current/recent data when using time range queries like `now-24h`. The root cause was discovered to be malformed request formatting where complex parameters were sent as escaped JSON strings rather than proper objects.
 
 ### Impact
-- ❌ Time range queries returned incorrect/old data
-- ❌ Complex aggregation queries failed silently
-- ❌ Wildcard index patterns blocked by security validation
-- ❌ Debug logs showed escaped character sequences making troubleshooting difficult
+- Time range queries returned incorrect/old data
+- Complex aggregation queries failed silently
+- Wildcard index patterns blocked by security validation
+- Debug logs showed escaped character sequences making troubleshooting difficult
 
 ## Root Cause Analysis
 
@@ -28,7 +28,7 @@ Several incorrect assumptions were investigated:
 #### 2. Discovery of Format Issue
 Debug logging revealed the actual problem - MCP client sending malformed requests:
 
-**❌ Problematic Format (What was happening):**
+**Problematic Format (What was happening):**
 ```json
 {
   "aggs": "{\"logs_over_time\": {\"date_histogram\": {\"field\": \"@timestamp\", \"fixed_interval\": \"1h\"}}}",
@@ -37,7 +37,7 @@ Debug logging revealed the actual problem - MCP client sending malformed request
 }
 ```
 
-**✅ Expected Format (What should happen):**
+**Expected Format (What should happen):**
 ```json
 {
   "aggs": {"logs_over_time": {"date_histogram": {"field": "@timestamp", "fixed_interval": "1h"}}},
@@ -53,12 +53,12 @@ The issue was traced to the Zod schema definition in `src/tools/core/search.ts`:
 // PROBLEMATIC SCHEMA (Before fix)
 const SearchParams = z.object({
   query: z.union([
-    z.string().transform((str) => JSON.parse(str)),  // ❌ This told MCP client strings are OK
+    z.string().transform((str) => JSON.parse(str)), // This told MCP client strings are OK
     z.object({}).passthrough()
   ]).optional(),
   aggs: z.union([
-    z.string().transform((str) => JSON.parse(str)),   // ❌ This caused string format
-    z.object({}).passthrough()  
+    z.string().transform((str) => JSON.parse(str)), // This caused string format
+    z.object({}).passthrough() 
   ]).optional(),
   // ... other fields with same pattern
 });
@@ -111,7 +111,7 @@ Removed wildcard `*` from SQL injection patterns in `src/utils/securityEnhancer.
 
 ```typescript
 // Before: /('|"|\||\*|%|;|--|\||&&|\|\|)/g,
-// After:  /('|"|\||%|;|--|\||&&|\|\|)/g,
+// After: /('|"|\||%|;|--|\||&&|\|\|)/g,
 ```
 
 ## Verification Process
@@ -123,7 +123,7 @@ Removed wildcard `*` from SQL injection patterns in `src/utils/securityEnhancer.
 4. **Complex Aggregations**: Tested nested aggregation objects parse correctly
 
 ### Results
-✅ **Fixed Format Example:**
+ **Fixed Format Example:**
 ```json
 {
   "index": "logs-aws_fargate_shared_services.prd*",
@@ -151,15 +151,15 @@ Removed wildcard `*` from SQL injection patterns in `src/utils/securityEnhancer.
 
 ### Tools Affected
 **Analysis of all 104+ tools confirmed:**
-- ✅ **Only `elasticsearch_search` tool had this issue**
-- ✅ **All other tools use either:**
+- **Only `elasticsearch_search` tool had this issue**
+- **All other tools use either:**
   - Raw JSON Schema (safe)
   - Simple Zod schemas without string transforms (safe)
   - Number/string coercion patterns (safe)
 
 ### Files Modified
 1. `/src/tools/core/search.ts` - Schema refactored to object-only
-2. `/src/tools/index.ts` - Security validation disabled for read operations  
+2. `/src/tools/index.ts` - Security validation disabled for read operations 
 3. `/src/utils/securityEnhancer.ts` - Wildcard pattern removed from injection detection
 
 ## Prevention Strategies
@@ -188,7 +188,7 @@ Removed wildcard `*` from SQL injection patterns in `src/utils/securityEnhancer.
 ## Lessons Learned
 
 1. **MCP SDK Behavior**: Union types with string transforms can cause format issues
-2. **Debug First**: Always examine actual parameter format before assuming backend logic errors  
+2. **Debug First**: Always examine actual parameter format before assuming backend logic errors 
 3. **Security Scope**: Read operations should not have injection validation
 4. **Schema Simplicity**: Object-only schemas are cleaner and more reliable than union transforms
 5. **Comprehensive Testing**: Format verification should be part of tool validation
@@ -196,6 +196,6 @@ Removed wildcard `*` from SQL injection patterns in `src/utils/securityEnhancer.
 ## References
 
 - MCP SDK Documentation: Parameter passing behavior
-- Zod Documentation: Schema design best practices  
+- Zod Documentation: Schema design best practices 
 - Elasticsearch Query DSL: Expected object formats
 - Security validation patterns for different operation types

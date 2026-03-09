@@ -24,11 +24,11 @@ describe('Grafana Dashboard Validation', () => {
       expect(Array.isArray(dashboard.dashboard.panels)).toBe(true);
       expect(dashboard.dashboard.panels.length).toBeGreaterThan(10);
       
-      console.log(`✅ Dashboard has ${dashboard.dashboard.panels.length} panels`);
+      console.log(`Dashboard has ${dashboard.dashboard.panels.length} panels`);
       
     } catch (error) {
       if (error.code === 'ENOENT') {
-        console.log('⚠️ Dashboard file not found - skipping validation');
+        console.log('Dashboard file not found - skipping validation');
         return;
       }
       throw error;
@@ -65,11 +65,11 @@ describe('Grafana Dashboard Validation', () => {
         expect(panelTitles).toContain(expectedPanel);
       }
       
-      console.log('✅ All required panels are present');
+      console.log('All required panels are present');
       
     } catch (error) {
       if (error.code === 'ENOENT') {
-        console.log('⚠️ Dashboard file not found - skipping validation');
+        console.log('Dashboard file not found - skipping validation');
         return;
       }
       throw error;
@@ -114,14 +114,14 @@ describe('Grafana Dashboard Validation', () => {
       expect(invalidQueries.length).toBe(0);
       
       if (invalidQueries.length > 0) {
-        console.log('❌ Invalid queries found:', invalidQueries);
+        console.log('Invalid queries found:', invalidQueries);
       } else {
-        console.log(`✅ All ${queryCount} Prometheus queries are valid`);
+        console.log(`All ${queryCount} Prometheus queries are valid`);
       }
       
     } catch (error) {
       if (error.code === 'ENOENT') {
-        console.log('⚠️ Dashboard file not found - skipping validation');
+        console.log('Dashboard file not found - skipping validation');
         return;
       }
       throw error;
@@ -158,11 +158,11 @@ describe('Grafana Dashboard Validation', () => {
       }
       
       expect(thresholdCount).toBeGreaterThan(0);
-      console.log(`✅ ${thresholdCount} panels have valid thresholds configured`);
+      console.log(`${thresholdCount} panels have valid thresholds configured`);
       
     } catch (error) {
       if (error.code === 'ENOENT') {
-        console.log('⚠️ Dashboard file not found - skipping validation');
+        console.log('Dashboard file not found - skipping validation');
         return;
       }
       throw error;
@@ -180,11 +180,11 @@ describe('Grafana Dashboard Validation', () => {
       expect(datasourceContent).toContain('prometheus:9090');
       expect(datasourceContent).toContain('isDefault: true');
       
-      console.log('✅ Datasource configuration is valid');
+      console.log('Datasource configuration is valid');
       
     } catch (error) {
       if (error.code === 'ENOENT') {
-        console.log('⚠️ Datasource config not found - skipping validation');
+        console.log('Datasource config not found - skipping validation');
       } else {
         throw error;
       }
@@ -196,11 +196,11 @@ describe('Grafana Dashboard Validation', () => {
       expect(dashboardProvisionContent).toContain('elasticsearch-mcp');
       expect(dashboardProvisionContent).toContain('dashboards');
       
-      console.log('✅ Dashboard provisioning configuration is valid');
+      console.log('Dashboard provisioning configuration is valid');
       
     } catch (error) {
       if (error.code === 'ENOENT') {
-        console.log('⚠️ Dashboard provisioning config not found - skipping validation');
+        console.log('Dashboard provisioning config not found - skipping validation');
       } else {
         throw error;
       }
@@ -232,11 +232,11 @@ describe('Docker Compose Monitoring Stack', () => {
       expect(composeContent).toContain('prometheus_data');
       expect(composeContent).toContain('grafana_data');
       
-      console.log('✅ Docker Compose monitoring stack configuration is valid');
+      console.log('Docker Compose monitoring stack configuration is valid');
       
     } catch (error) {
       if (error.code === 'ENOENT') {
-        console.log('⚠️ Docker Compose file not found - skipping validation');
+        console.log('Docker Compose file not found - skipping validation');
       } else {
         throw error;
       }
@@ -261,11 +261,11 @@ describe('Docker Compose Monitoring Stack', () => {
       expect(prometheusContent).toContain('alerting:');
       expect(prometheusContent).toContain('alertmanagers:');
       
-      console.log('✅ Prometheus configuration is valid');
+      console.log('Prometheus configuration is valid');
       
     } catch (error) {
       if (error.code === 'ENOENT') {
-        console.log('⚠️ Prometheus config not found - skipping validation');
+        console.log('Prometheus config not found - skipping validation');
       } else {
         throw error;
       }
@@ -296,11 +296,11 @@ describe('Docker Compose Monitoring Stack', () => {
       expect(alertRulesContent).toContain('labels:');
       expect(alertRulesContent).toContain('annotations:');
       
-      console.log('✅ Prometheus alert rules are valid');
+      console.log('Prometheus alert rules are valid');
       
     } catch (error) {
       if (error.code === 'ENOENT') {
-        console.log('⚠️ Alert rules not found - skipping validation');
+        console.log('Alert rules not found - skipping validation');
       } else {
         throw error;
       }
@@ -361,17 +361,17 @@ describe('Metrics Integration Testing', () => {
       const usageRatio = usedMetrics.size / expectedMetrics.length;
       expect(usageRatio).toBeGreaterThan(0.8); // At least 80% of metrics should be used
       
-      console.log(`✅ Dashboard uses ${usedMetrics.size}/${expectedMetrics.length} metrics (${(usageRatio * 100).toFixed(1)}%)`);
+      console.log(`Dashboard uses ${usedMetrics.size}/${expectedMetrics.length} metrics (${(usageRatio * 100).toFixed(1)}%)`);
       
       // Log any unused metrics for review
       const unusedMetrics = expectedMetrics.filter(metric => !usedMetrics.has(metric));
       if (unusedMetrics.length > 0) {
-        console.log('📋 Unused metrics:', unusedMetrics);
+        console.log('Unused metrics:', unusedMetrics);
       }
       
     } catch (error) {
       if (error.code === 'ENOENT') {
-        console.log('⚠️ Dashboard file not found - skipping metric validation');
+        console.log('Dashboard file not found - skipping metric validation');
         return;
       }
       throw error;
@@ -398,11 +398,11 @@ describe('Metrics Integration Testing', () => {
         expect(expr).toMatch(/elasticsearch_mcp_|node_|container_|up\{|rate\(|sum\(/);
       }
       
-      console.log(`✅ ${alertExpressions.length} alert expressions validated`);
+      console.log(`${alertExpressions.length} alert expressions validated`);
       
     } catch (error) {
       if (error.code === 'ENOENT') {
-        console.log('⚠️ Alert rules not found - skipping validation');
+        console.log('Alert rules not found - skipping validation');
         return;
       }
       throw error;

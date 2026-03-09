@@ -58,7 +58,7 @@ interface TestResult {
 }
 
 async function runTest(test: (typeof workingTests)[0]): Promise<TestResult> {
-  console.log(`🧪 Running ${test.name}...`);
+  console.log(`Running ${test.name}...`);
 
   return new Promise((resolve) => {
     const startTime = Date.now();
@@ -100,7 +100,7 @@ async function runTest(test: (typeof workingTests)[0]): Promise<TestResult> {
         output,
       };
 
-      const status = success ? "✅" : "❌";
+      const status = success ? "[PASS]" : "[FAIL]";
       const summary = `${passed} passed${failed > 0 ? `, ${failed} failed` : ""}`;
       console.log(`   ${status} ${test.name}: ${summary} (${duration}ms)`);
 
@@ -122,9 +122,9 @@ async function runTest(test: (typeof workingTests)[0]): Promise<TestResult> {
 }
 
 async function main() {
-  console.log("🎯 Elasticsearch MCP Server - Enhanced Features Test Suite");
+  console.log("Elasticsearch MCP Server - Enhanced Features Test Suite");
   console.log("═".repeat(60));
-  console.log(`📋 Running ${workingTests.length} confirmed working test suites...`);
+  console.log(`Running ${workingTests.length} confirmed working test suites...`);
   console.log("");
 
   const results: TestResult[] = [];
@@ -140,7 +140,7 @@ async function main() {
   }
 
   console.log("");
-  console.log("📊 Test Results Summary");
+  console.log("Test Results Summary");
   console.log("─".repeat(40));
 
   // Group by category
@@ -148,10 +148,10 @@ async function main() {
 
   for (const category of categories) {
     const categoryResults = results.filter((r) => r.category === category);
-    console.log(`\n🏷️  ${category}:`);
+    console.log(`\n${category}:`);
 
     categoryResults.forEach((result) => {
-      const status = result.success ? "✅" : "❌";
+      const status = result.success ? "[PASS]" : "[FAIL]";
       const tests = result.passed + result.failed;
       const rate = tests > 0 ? ((result.passed / tests) * 100).toFixed(1) : "0";
 
@@ -163,7 +163,7 @@ async function main() {
           .split("\n")
           .filter((line) => line.includes("error:") || line.includes("Error:") || line.includes("fail"));
         if (errorLines.length > 0) {
-          console.log(`      💡 ${errorLines[0].trim()}`);
+          console.log(`      ${errorLines[0].trim()}`);
         }
       }
     });
@@ -171,20 +171,20 @@ async function main() {
 
   // Overall summary
   console.log("");
-  console.log("🏁 Overall Results");
+  console.log("Overall Results");
   console.log("─".repeat(40));
 
   const totalTests = totalPassed + totalFailed;
   const successRate = totalTests > 0 ? ((totalPassed / totalTests) * 100).toFixed(1) : "0";
   const successfulSuites = results.filter((r) => r.success).length;
 
-  console.log(`📈 Test Suites: ${successfulSuites}/${results.length} successful`);
-  console.log(`📊 Test Cases: ${totalPassed}/${totalTests} passed (${successRate}%)`);
-  console.log(`⏱️  Total Duration: ${results.reduce((sum, r) => sum + r.duration, 0)}ms`);
+  console.log(`Test Suites: ${successfulSuites}/${results.length} successful`);
+  console.log(`Test Cases: ${totalPassed}/${totalTests} passed (${successRate}%)`);
+  console.log(`Total Duration: ${results.reduce((sum, r) => sum + r.duration, 0)}ms`);
 
   // Feature highlights
   console.log("");
-  console.log("🌟 Enhanced Features Status");
+  console.log("Enhanced Features Status");
   console.log("─".repeat(40));
 
   const featureStatus = [
@@ -198,7 +198,7 @@ async function main() {
   ];
 
   featureStatus.forEach((feature) => {
-    const status = feature.working ? "🟢" : "🔴";
+    const status = feature.working ? "[OK]" : "[!!]";
     const text = feature.working ? "OPERATIONAL" : "NEEDS ATTENTION";
     console.log(`${status} ${feature.name}: ${text}`);
   });
@@ -228,16 +228,16 @@ async function main() {
   try {
     await writeFile(path.join(process.cwd(), "working-tests-report.json"), JSON.stringify(report, null, 2));
     console.log("");
-    console.log("📄 Report saved: working-tests-report.json");
+    console.log("Report saved: working-tests-report.json");
   } catch (error) {
-    console.log(`⚠️  Could not save report: ${error}`);
+    console.log(`[WARN] Could not save report: ${error}`);
   }
 
   console.log("");
   if (successfulSuites === results.length) {
-    console.log("🎉 All enhanced features are working correctly! 🎉");
+    console.log("All enhanced features are working correctly!");
   } else {
-    console.log(`⚠️  ${results.length - successfulSuites} test suite(s) need attention`);
+    console.log(`[WARN] ${results.length - successfulSuites} test suite(s) need attention`);
   }
 
   process.exit(successfulSuites === results.length ? 0 : 1);

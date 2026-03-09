@@ -75,7 +75,7 @@ async function scanTools() {
 }
 
 async function main() {
-  console.log("🔍 Scanning for hardcoded size/limit defaults in tools...\n");
+  console.log("Scanning for hardcoded size/limit defaults in tools...\n");
 
   const issues = await scanTools();
 
@@ -92,11 +92,11 @@ async function main() {
   });
 
   if (problematicIssues.length === 0) {
-    console.log("✅ No problematic size/limit defaults found!");
+    console.log("[PASS] No problematic size/limit defaults found!");
     return;
   }
 
-  console.log(`⚠️  Found ${problematicIssues.length} potential issues:\n`);
+  console.log(`[WARN] Found ${problematicIssues.length} potential issues:\n`);
 
   // Group by file
   const byFile = new Map<string, SizeDefault[]>();
@@ -109,7 +109,7 @@ async function main() {
   }
 
   for (const [file, fileIssues] of byFile) {
-    console.log(`\n📄 ${file}`);
+    console.log(`\n${file}`);
     for (const issue of fileIssues) {
       console.log(`  Line ${issue.line}: ${issue.type} = ${issue.value}`);
       console.log(`    ${issue.code}`);
@@ -117,7 +117,7 @@ async function main() {
   }
 
   console.log(`\n${"=".repeat(60)}`);
-  console.log("📊 Summary:");
+  console.log("Summary:");
   console.log(`  Files with issues: ${byFile.size}`);
   console.log(`  Total issues: ${problematicIssues.length}`);
 

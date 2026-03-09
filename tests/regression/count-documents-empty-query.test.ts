@@ -34,7 +34,7 @@ describe("elasticsearch_count_documents empty query regression", () => {
     expect(isEmptyQuery).toBe(true);
     expect(finalQuery).toBe(undefined);
     
-    console.log("✅ Empty query detected and filtered out - would prevent parsing_exception");
+    console.log("Empty query detected and filtered out - would prevent parsing_exception");
   });
 
   test("should pass valid query objects through unchanged", () => {
@@ -56,7 +56,7 @@ describe("elasticsearch_count_documents empty query regression", () => {
     expect(isEmptyQuery).toBe(false);
     expect(finalQuery).toEqual({ match: { status: "error" } });
     
-    console.log("✅ Valid query passed through unchanged");
+    console.log("Valid query passed through unchanged");
   });
 
   test("should handle missing query parameter", () => {
@@ -74,7 +74,7 @@ describe("elasticsearch_count_documents empty query regression", () => {
     expect(isEmptyQuery).toBe(true);
     expect(finalQuery).toBe(undefined);
     
-    console.log("✅ Missing query parameter handled correctly");
+    console.log("Missing query parameter handled correctly");
   });
 
   test("should simulate the exact failing request", () => {
@@ -104,7 +104,7 @@ describe("elasticsearch_count_documents empty query regression", () => {
     expect(elasticsearchRequest.query).toBe(undefined);
     expect(elasticsearchRequest.index).toBe("logs-apm.app.corrected_delivery_dates_service-*");
     
-    console.log("✅ Exact failing request now handled correctly");
+    console.log("Exact failing request now handled correctly");
     console.log("   Request to Elasticsearch:", JSON.stringify(elasticsearchRequest, null, 2));
   });
 
@@ -129,10 +129,10 @@ describe("elasticsearch_count_documents empty query regression", () => {
       expect(enhancedMessage).toContain("empty query object");
       expect(enhancedMessage).toContain("Omit the query parameter");
       
-      console.log("✅ Enhanced error message provides clear guidance");
+      console.log("Enhanced error message provides clear guidance");
     }
   });
 });
 
-console.log("🔧 elasticsearch_count_documents regression test completed");
+console.log("elasticsearch_count_documents regression test completed");
 console.log("   This test validates the fix for empty query {} parsing_exception");

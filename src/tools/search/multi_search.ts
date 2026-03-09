@@ -79,7 +79,7 @@ export const registerMultiSearchTool: ToolRegistrationFunction = (server: McpSer
       // Warn about large batch operations
       if (searchCount > 20) {
         await notificationManager.sendWarning(
-          `⚠️  Large multi-search batch: ${searchCount} searches may impact cluster performance`,
+          `Large multi-search batch: ${searchCount} searches may impact cluster performance`,
           {
             operation_type: "multi_search",
             search_count: searchCount,
@@ -186,7 +186,7 @@ export const registerMultiSearchTool: ToolRegistrationFunction = (server: McpSer
           .filter(Boolean)
           .slice(0, 5); // Show first 5 failures
 
-        await notificationManager.sendWarning(`⚠️  ${failedSearches} out of ${searchCount} searches failed`, {
+        await notificationManager.sendWarning(`${failedSearches} out of ${searchCount} searches failed`, {
           operation_type: "multi_search",
           failed_searches: failedSearches,
           successful_searches: successfulSearches,

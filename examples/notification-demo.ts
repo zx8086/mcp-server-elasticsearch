@@ -17,7 +17,7 @@ import { NotificationManager, createProgressTracker } from "../src/utils/notific
 // Create a mock server that logs notifications instead of sending them
 class MockMcpServer {
   async sendNotification(notification: any): Promise<void> {
-    console.log("\n📢 NOTIFICATION SENT:");
+    console.log("\nNOTIFICATION SENT:");
     console.log(`   Method: ${notification.method}`);
     
     if (notification.method === "notifications/progress") {
@@ -40,7 +40,7 @@ class MockMcpServer {
 
 async function demoBasicNotifications() {
   console.log("=".repeat(60));
-  console.log("🔔 DEMO: Basic Notification Types");
+  console.log("DEMO: Basic Notification Types");
   console.log("=".repeat(60));
   
   const mockServer = new MockMcpServer() as any;
@@ -71,7 +71,7 @@ async function demoBasicNotifications() {
 
 async function demoProgressTracking() {
   console.log("\n" + "=".repeat(60));
-  console.log("📊 DEMO: Progress Tracking for Long Operations");
+  console.log("DEMO: Progress Tracking for Long Operations");
   console.log("=".repeat(60));
   
   const mockServer = new MockMcpServer() as any;
@@ -120,7 +120,7 @@ async function demoProgressTracking() {
 
 async function demoProgressTracker() {
   console.log("\n" + "=".repeat(60));
-  console.log("🎯 DEMO: Progress Tracker Helper");
+  console.log("DEMO: Progress Tracker Helper");
   console.log("=".repeat(60));
   
   const mockServer = new MockMcpServer() as any;
@@ -167,7 +167,7 @@ async function demoProgressTracker() {
 
 async function demoErrorHandling() {
   console.log("\n" + "=".repeat(60));
-  console.log("❌ DEMO: Error Handling with Notifications");
+  console.log("DEMO: Error Handling with Notifications");
   console.log("=".repeat(60));
   
   const mockServer = new MockMcpServer() as any;
@@ -215,7 +215,7 @@ async function demoErrorHandling() {
 
 async function demoNotificationStats() {
   console.log("\n" + "=".repeat(60));
-  console.log("📈 DEMO: Operation Statistics");
+  console.log("DEMO: Operation Statistics");
   console.log("=".repeat(60));
   
   const mockServer = new MockMcpServer() as any;
@@ -246,7 +246,7 @@ async function demoNotificationStats() {
 }
 
 async function main() {
-  console.log("🚀 MCP Elasticsearch Server - Notification System Demo\n");
+  console.log("MCP Elasticsearch Server - Notification System Demo\n");
   
   try {
     await demoBasicNotifications();
@@ -256,7 +256,7 @@ async function main() {
     await demoNotificationStats();
     
     console.log("\n" + "=".repeat(60));
-    console.log("✅ Demo completed successfully!");
+    console.log("Demo completed successfully!");
     console.log("=".repeat(60));
     console.log("\nKey Features Demonstrated:");
     console.log("• Progress notifications with percentage tracking");
@@ -270,7 +270,7 @@ async function main() {
     console.log("• Client receives real-time updates during operations");
     
   } catch (error) {
-    console.error("❌ Demo failed:", error instanceof Error ? error.message : String(error));
+    console.error("Demo failed:", error instanceof Error ? error.message : String(error));
     process.exit(1);
   }
 }

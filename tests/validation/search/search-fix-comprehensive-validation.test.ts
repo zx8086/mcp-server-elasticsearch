@@ -14,7 +14,7 @@
 import { describe, test, expect, beforeAll } from 'bun:test';
 import { z } from 'zod';
 
-console.log("🧪 COMPREHENSIVE SEARCH FIX VALIDATION");
+console.log("COMPREHENSIVE SEARCH FIX VALIDATION");
 console.log("=====================================");
 
 // Recreate the FIXED search schema (object-only)
@@ -35,17 +35,17 @@ type SearchParamsType = z.infer<typeof SearchParams>;
 class MockSecurityEnhancer {
   validateAndSanitizeInput(toolName: string, input: any) {
     // Should not be called for search tools due to bypass
-    console.log(`🚫 Security validation called for ${toolName} - THIS SHOULD NOT HAPPEN!`);
+    console.log(`Security validation called for ${toolName} - THIS SHOULD NOT HAPPEN!`);
     throw new Error(`Security validation should be bypassed for ${toolName}`);
   }
 }
 
-describe('🎯 Schema Format Validation', () => {
+describe('Schema Format Validation', () => {
 
   test('Should ONLY accept objects, never strings', () => {
-    console.log("\n📋 Testing object-only schema...");
+    console.log("\nTesting object-only schema...");
     
-    // ✅ Valid object input
+    // Valid object input
     const validInput = {
       index: "logs-aws_fargate_shared_services.prd*",
       query: {
@@ -76,13 +76,13 @@ describe('🎯 Schema Format Validation', () => {
     expect(typeof result.aggs).toBe("object");
     expect(result.aggs.hourly_logs).toBeDefined();
     
-    console.log("✅ Object input parsed correctly");
+    console.log("Object input parsed correctly");
   });
 
   test('Should reject string transforms (old problematic format)', () => {
-    console.log("\n🚫 Testing rejection of string format...");
+    console.log("\nTesting rejection of string format...");
     
-    // ❌ Invalid string input (old problematic format)
+    // Invalid string input (old problematic format)
     const invalidStringInput = {
       index: "logs-*",
       query: '{"range": {"@timestamp": {"gte": "now-24h"}}}',  // STRING (should fail)
@@ -93,14 +93,14 @@ describe('🎯 Schema Format Validation', () => {
       SearchParams.parse(invalidStringInput);
     }).toThrow(); // Should fail because strings are not allowed
     
-    console.log("✅ String format correctly rejected");
+    console.log("String format correctly rejected");
   });
 });
 
-describe('🔒 Security Validation Tests', () => {
+describe('Security Validation Tests', () => {
 
   test('Should allow wildcard patterns in index names', () => {
-    console.log("\n🌟 Testing wildcard pattern support...");
+    console.log("\nTesting wildcard pattern support...");
     
     const wildcardCases = [
       "*aws_fargate_shared_services*",
@@ -115,12 +115,12 @@ describe('🔒 Security Validation Tests', () => {
       const input = { index: indexPattern, query: { match_all: {} } };
       const result = SearchParams.parse(input);
       expect(result.index).toBe(indexPattern);
-      console.log(`  ✅ Pattern "${indexPattern}" allowed`);
+      console.log(`  Pattern "${indexPattern}" allowed`);
     });
   });
 
   test('Read-only tools should bypass security validation', () => {
-    console.log("\n🔓 Testing security bypass for read operations...");
+    console.log("\nTesting security bypass for read operations...");
     
     const readOnlyTools = [
       'elasticsearch_search',
@@ -134,15 +134,15 @@ describe('🔒 Security Validation Tests', () => {
     readOnlyTools.forEach(toolName => {
       const shouldValidate = !readOnlyTools.includes(toolName);
       expect(shouldValidate).toBe(false);
-      console.log(`  ✅ ${toolName} bypasses security validation`);
+      console.log(`  ${toolName} bypasses security validation`);
     });
   });
 });
 
-describe('📊 Aggregation Behavior Tests', () => {
+describe('Aggregation Behavior Tests', () => {
 
   test('Pure analytics mode (size=0) should return only aggregations', () => {
-    console.log("\n📈 Testing pure analytics mode...");
+    console.log("\nTesting pure analytics mode...");
     
     const analyticsQuery = {
       index: "logs-*",
@@ -171,11 +171,11 @@ describe('📊 Aggregation Behavior Tests', () => {
     expect(result.aggs.hourly_count).toBeDefined();
     expect(result.aggs.log_levels).toBeDefined();
     
-    console.log("✅ Pure analytics mode validated");
+    console.log("Pure analytics mode validated");
   });
 
   test('Mixed mode (size>0 with aggs) should return both documents and aggregations', () => {
-    console.log("\n📊 Testing mixed documents + analytics mode...");
+    console.log("\nTesting mixed documents + analytics mode...");
     
     const mixedQuery = {
       index: "logs-*", 
@@ -195,14 +195,14 @@ describe('📊 Aggregation Behavior Tests', () => {
     expect(result.aggs).toBeDefined();
     expect(result.sort).toBeDefined();
     
-    console.log("✅ Mixed mode validated");
+    console.log("Mixed mode validated");
   });
 });
 
-describe('🕒 Time Range Query Tests', () => {
+describe('Time Range Query Tests', () => {
 
   test('Should support various time range formats', () => {
-    console.log("\n⏰ Testing time range query formats...");
+    console.log("\nTesting time range query formats...");
     
     const timeRangeFormats = [
       "now-1h",
@@ -229,15 +229,15 @@ describe('🕒 Time Range Query Tests', () => {
 
       const result = SearchParams.parse(query);
       expect(result.query.range["@timestamp"].gte).toBe(timeRange);
-      console.log(`  ✅ Time range "${timeRange}" supported`);
+      console.log(`  Time range "${timeRange}" supported`);
     });
   });
 });
 
-describe('🔧 Request Format Generation Tests', () => {
+describe('Request Format Generation Tests', () => {
 
   test('Should generate clean Elasticsearch request structure', () => {
-    console.log("\n🔍 Testing clean request generation...");
+    console.log("\nTesting clean request generation...");
     
     const input = {
       index: "logs-aws_fargate_shared_services.prd*",
@@ -282,14 +282,14 @@ describe('🔧 Request Format Generation Tests', () => {
     expect(serialized).not.toContain('\\"'); // No escaped quotes
     expect(serialized).not.toContain('\\{'); // No escaped braces
     
-    console.log("✅ Clean request structure validated");
+    console.log("Clean request structure validated");
   });
 });
 
-describe('📋 Real-World Scenario Tests', () => {
+describe('Real-World Scenario Tests', () => {
 
   test('Should handle user\'s exact failing scenario', () => {
-    console.log("\n🎯 Testing user's exact failing scenario...");
+    console.log("\nTesting user's exact failing scenario...");
     
     // This was the exact request format that was failing before
     const userScenario = {
@@ -334,30 +334,30 @@ describe('📋 Real-World Scenario Tests', () => {
     expect(result.aggs.log_levels.terms.size).toBe(10);
     expect(result.aggs.services.terms.size).toBe(20);
     
-    console.log("✅ User's failing scenario now works!");
+    console.log("User's failing scenario now works!");
   });
 });
 
 // Summary output
-describe('📋 Fix Summary', () => {
+describe('Fix Summary', () => {
   test('All fixes validated', () => {
-    console.log("\n🎉 COMPREHENSIVE VALIDATION COMPLETE");
+    console.log("\nCOMPREHENSIVE VALIDATION COMPLETE");
     console.log("===================================");
-    console.log("✅ Object-only schema prevents escaped string issues");
-    console.log("✅ Security validation bypassed for read operations");
-    console.log("✅ Wildcard patterns supported in index names");
-    console.log("✅ Clean request format generation confirmed");
-    console.log("✅ Pure analytics (size=0) mode works correctly");
-    console.log("✅ Mixed documents + analytics mode supported");
-    console.log("✅ Time range queries support all formats");
-    console.log("✅ User's exact failing scenario now validated");
+    console.log("Object-only schema prevents escaped string issues");
+    console.log("Security validation bypassed for read operations");
+    console.log("Wildcard patterns supported in index names");
+    console.log("Clean request format generation confirmed");
+    console.log("Pure analytics (size=0) mode works correctly");
+    console.log("Mixed documents + analytics mode supported");
+    console.log("Time range queries support all formats");
+    console.log("User's exact failing scenario now validated");
     console.log(""); 
-    console.log("🚀 All search tool fixes confirmed working!");
+    console.log("All search tool fixes confirmed working!");
     
     expect(true).toBe(true); // Always pass - this is a summary
   });
 });
 
 if (import.meta.main) {
-  console.log("\n🧪 Running comprehensive search fix validation tests...");
+  console.log("\nRunning comprehensive search fix validation tests...");
 }

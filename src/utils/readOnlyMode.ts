@@ -122,7 +122,7 @@ export class ReadOnlyModeManager {
     const operationTypeStr = this.getOperationTypeString(toolName, isDelete, isWrite, isDestructive);
 
     if (this.strictMode) {
-      const error = `🚫 READ-ONLY MODE: ${operationTypeStr} operation '${toolName}' is blocked. Set READ_ONLY_MODE=false to enable write operations.`;
+      const error = `READ-ONLY MODE: ${operationTypeStr} operation '${toolName}' is blocked. Set READ_ONLY_MODE=false to enable write operations.`;
       logger.warn("Blocked destructive operation in read-only mode", {
         toolName,
         operationType: operationTypeStr,
@@ -133,7 +133,7 @@ export class ReadOnlyModeManager {
         error,
       };
     }
-    const warning = `⚠️ CAUTION: You are about to perform a ${operationTypeStr} operation '${toolName}'. This may modify or delete data in Elasticsearch. Proceed with caution.`;
+    const warning = `CAUTION: You are about to perform a ${operationTypeStr} operation '${toolName}'. This may modify or delete data in Elasticsearch. Proceed with caution.`;
     logger.warn("Warning for destructive operation", {
       toolName,
       operationType: operationTypeStr,

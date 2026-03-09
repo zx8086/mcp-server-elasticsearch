@@ -4,7 +4,7 @@
 
 import { spawn } from "child_process";
 
-console.log("🧪 Testing pagination fix validation...");
+console.log("Testing pagination fix validation...");
 
 // Create JSON-RPC request to test ILM tool with limit=3
 const testRequest = {
@@ -17,7 +17,7 @@ const testRequest = {
   }
 };
 
-console.log("📝 Sending request:", JSON.stringify(testRequest, null, 2));
+console.log("Sending request:", JSON.stringify(testRequest, null, 2));
 
 const child = spawn("bun", ["run", "dist/index.js"], {
   stdio: ["pipe", "pipe", "pipe"],
@@ -27,7 +27,7 @@ const child = spawn("bun", ["run", "dist/index.js"], {
 let responseReceived = false;
 const timeout = setTimeout(() => {
   if (!responseReceived) {
-    console.log("❌ Test timed out after 15 seconds");
+    console.log("Test timed out after 15 seconds");
     child.kill();
     process.exit(1);
   }
@@ -45,22 +45,22 @@ child.stdout.on('data', (data) => {
       
       if (response.result?.content?.[0]?.text) {
         const content = response.result.content[0].text;
-        console.log("📄 Response received, length:", content.length);
+        console.log("Response received, length:", content.length);
         
         // Count policy entries (look for "### " headers)
         const policyCount = (content.match(/### [^#]/g) || []).length;
-        console.log(`📊 Found ${policyCount} policy entries`);
+        console.log(`Found ${policyCount} policy entries`);
         
         if (policyCount === 3) {
-          console.log("✅ PAGINATION FIX SUCCESS! Got exactly 3 policies as requested");
+          console.log("PAGINATION FIX SUCCESS! Got exactly 3 policies as requested");
         } else {
-          console.log(`❌ PAGINATION STILL BROKEN! Expected 3, got ${policyCount}`);
+          console.log(`PAGINATION STILL BROKEN! Expected 3, got ${policyCount}`);
         }
       } else {
-        console.log("❌ Unexpected response format");
+        console.log("Unexpected response format");
       }
     } catch (e) {
-      console.log("❌ Failed to parse response:", e.message);
+      console.log("Failed to parse response:", e.message);
     }
     
     child.kill();
@@ -73,9 +73,9 @@ child.stderr.on('data', (data) => {
   
   // Look for our debug logs to confirm parameter passing
   if (logText.includes('limitParam')) {
-    console.log("🔍 Debug log found - checking parameter passing...");
+    console.log("Debug log found - checking parameter passing...");
     if (logText.includes('"limitParam":3')) {
-      console.log("✅ Parameters are being passed correctly!");
+      console.log("Parameters are being passed correctly!");
     }
   }
 });

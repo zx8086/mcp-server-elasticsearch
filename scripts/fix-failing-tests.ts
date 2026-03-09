@@ -105,7 +105,7 @@ const fixes: TestFix[] = [
 ];
 
 async function applyFixes() {
-  console.log("🔧 Fixing failing tests...\n");
+  console.log("Fixing failing tests...\n");
 
   for (const fix of fixes) {
     try {
@@ -114,12 +114,12 @@ async function applyFixes() {
 
       if (content !== newContent) {
         await writeFile(fix.file, newContent);
-        console.log(`✅ Fixed ${fix.file}`);
+        console.log(`[PASS] Fixed ${fix.file}`);
       } else {
-        console.log(`⏭️  No changes needed for ${fix.file}`);
+        console.log(`No changes needed for ${fix.file}`);
       }
     } catch (error) {
-      console.log(`❌ Error processing ${fix.file}:`, error);
+      console.log(`[FAIL] Error processing ${fix.file}:`, error);
     }
   }
 
@@ -175,11 +175,11 @@ async function applyFixes() {
 
       await writeFile(file, content);
     } catch (error) {
-      console.log(`❌ Error with special fixes for ${file}:`, error);
+      console.log(`[FAIL] Error with special fixes for ${file}:`, error);
     }
   }
 
-  console.log("\n✨ Test fixes complete!");
+  console.log("\nTest fixes complete!");
 }
 
 applyFixes().catch(console.error);

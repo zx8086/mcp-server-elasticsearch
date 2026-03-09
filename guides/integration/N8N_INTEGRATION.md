@@ -35,7 +35,7 @@ For n8n integration, you need to use the SSE transport mode.
 
 4. Verify in the logs that the server started successfully with SSE transport:
    ```
-   🚀 Elasticsearch MCP Server started successfully with 🌐 SSE on port 8081
+    Elasticsearch MCP Server started successfully with SSE on port 8081
    ```
 
 ## Configuring n8n

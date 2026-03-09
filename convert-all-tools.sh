@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🔧 Converting all remaining server.tool() calls to server.registerTool()..."
+echo "Converting all remaining server.tool() calls to server.registerTool()..."
 
 # Find all files that still have server.tool calls
 files=$(grep -l "server\.tool(" src/tools/**/*.ts | grep -v "/search.ts" | grep -v "/list_indices.ts" | grep -v "/get_mappings.ts")
@@ -17,10 +17,10 @@ for file in $files; do
     
     # First, let's see what we're dealing with
     if grep -q "server\.tool(" "$file"; then
-        echo "  Found server.tool() call in $file"
+        echo "Found server.tool() call in $file"
         
         # For now, let's just mark these files for manual review
-        echo "  → Needs manual conversion: $file"
+        echo " → Needs manual conversion: $file"
         ((count++))
         
         # Restore backup
@@ -32,18 +32,18 @@ for file in $files; do
 done
 
 echo
-echo "📊 Summary:"
+echo "Summary:"
 echo "Files needing manual conversion: $count"
 echo
-echo "✅ The key tools (search, list_indices, get_mappings) are already converted."
-echo "✅ The wrapper is updated to handle server.registerTool()."
+echo "The key tools (search, list_indices, get_mappings) are already converted."
+echo "The wrapper is updated to handle server.registerTool()."
 echo
-echo "🔧 Let's test with the converted tools first..."
+echo "Let's test with the converted tools first..."
 
 bun run build
 if [ $? -eq 0 ]; then
-    echo "✅ Build successful with converted core tools!"
+    echo "Build successful with converted core tools!"
 else
-    echo "❌ Build failed"
+    echo "Build failed"
     exit 1
 fi

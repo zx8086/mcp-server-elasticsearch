@@ -57,18 +57,18 @@ class TestRunner {
   async runAllTests(): Promise<TestSummary> {
     this.startTime = Date.now();
 
-    console.log("🧪 Starting comprehensive test execution...");
+    console.log("Starting comprehensive test execution...");
     console.log("═".repeat(60));
 
     // Discover all test files
     const testFiles = await this.discoverTestFiles();
 
     if (testFiles.length === 0) {
-      console.log("⚠️  No test files found!");
+      console.log("[WARN] No test files found!");
       return this.generateSummary();
     }
 
-    console.log(`📋 Found ${testFiles.length} test suites:`);
+    console.log(`Found ${testFiles.length} test suites:`);
     for (const file of testFiles) {
       console.log(`   • ${file.category}/${file.name}`);
     }
@@ -79,7 +79,7 @@ class TestRunner {
 
     for (const category of categories) {
       const categoryFiles = testFiles.filter((f) => f.category === category);
-      console.log(`🏷️  Running ${category} tests (${categoryFiles.length} suites):`);
+      console.log(`Running ${category} tests (${categoryFiles.length} suites):`);
 
       for (const testFile of categoryFiles) {
         await this.runTestSuite(testFile);
@@ -117,7 +117,7 @@ class TestRunner {
     try {
       await stat(testsDir);
     } catch {
-      console.log("⚠️  Tests directory not found");
+      console.log("[WARN] Tests directory not found");
       return testFiles;
     }
 
@@ -153,7 +153,7 @@ class TestRunner {
     const startTime = Date.now();
     const suiteName = testFile.name.replace(".test.ts", "").replace(".test.js", "");
 
-    console.log(`  ▶️  ${suiteName}...`);
+    console.log(`  > ${suiteName}...`);
 
     try {
       const result = await this.executeTest(testFile.path);
@@ -171,16 +171,16 @@ class TestRunner {
       });
 
       // Print immediate result
-      const status = result.failed > 0 ? "❌" : "✅";
+      const status = result.failed > 0 ? "[FAIL]" : "[PASS]";
       const timing = `${duration}ms`;
-      const counts = `${result.passed}✅ ${result.failed}❌ ${result.skipped}⏭️`;
+      const counts = `${result.passed} passed ${result.failed} failed ${result.skipped} skipped`;
 
       console.log(`     ${status} ${timing.padEnd(8)} ${counts}`);
 
       // Show errors if any and verbose mode
       if (result.failed > 0 && this.verbose) {
         result.errors.forEach((error) => {
-          console.log(`       🔍 ${error}`);
+          console.log(`       ${error}`);
         });
       }
     } catch (error) {
@@ -197,9 +197,9 @@ class TestRunner {
         errors: [error instanceof Error ? error.message : String(error)],
       });
 
-      console.log(`     💥 ${duration}ms - Test suite failed to run`);
+      console.log(`     [FAIL] ${duration}ms - Test suite failed to run`);
       if (this.verbose) {
-        console.log(`       🔍 ${error}`);
+        console.log(`       ${error}`);
       }
     }
   }
@@ -269,7 +269,7 @@ class TestRunner {
 
     for (const line of lines) {
       // Parse Bun test output patterns
-      if (line.includes("✅") || line.includes("PASS") || line.match(/\d+ pass/i)) {
+      if (line.includes("PASS") || line.match(/\d+ pass/i)) {
         const match = line.match(/(\d+)/);
         if (match) {
           passed += Number.parseInt(match[1], 10);
@@ -278,7 +278,7 @@ class TestRunner {
         }
       }
 
-      if (line.includes("❌") || line.includes("FAIL") || line.match(/\d+ fail/i)) {
+      if (line.includes("FAIL") || line.match(/\d+ fail/i)) {
         const match = line.match(/(\d+)/);
         if (match) {
           failed += Number.parseInt(match[1], 10);
@@ -287,7 +287,7 @@ class TestRunner {
         }
       }
 
-      if (line.includes("⏭️") || line.includes("SKIP") || line.match(/\d+ skip/i)) {
+      if (line.includes("SKIP") || line.match(/\d+ skip/i)) {
         const match = line.match(/(\d+)/);
         if (match) {
           skipped += Number.parseInt(match[1], 10);
@@ -335,7 +335,7 @@ class TestRunner {
   }
 
   private async runCoverageAnalysis(): Promise<void> {
-    console.log("📊 Running coverage analysis...");
+    console.log("Running coverage analysis...");
 
     try {
       const coverageProcess = spawn("bun", ["test", "--coverage"], {
@@ -351,16 +351,16 @@ class TestRunner {
       await new Promise((resolve, reject) => {
         coverageProcess.on("close", (code) => {
           if (code === 0) {
-            console.log("✅ Coverage analysis completed");
+            console.log("[PASS] Coverage analysis completed");
             resolve(true);
           } else {
-            console.log("⚠️  Coverage analysis failed");
+            console.log("[WARN] Coverage analysis failed");
             resolve(false);
           }
         });
 
         coverageProcess.on("error", (error) => {
-          console.log(`⚠️  Coverage analysis error: ${error.message}`);
+          console.log(`[WARN] Coverage analysis error: ${error.message}`);
           resolve(false);
         });
 
@@ -370,7 +370,7 @@ class TestRunner {
         }, 30000);
       });
     } catch (error) {
-      console.log(`⚠️  Coverage analysis failed: ${error}`);
+      console.log(`[WARN] Coverage analysis failed: ${error}`);
     }
   }
 
@@ -390,15 +390,15 @@ class TestRunner {
 
   private printSummary(summary: TestSummary): void {
     console.log("");
-    console.log("🏁 Test Execution Complete");
+    console.log("Test Execution Complete");
     console.log("═".repeat(60));
 
-    console.log("📊 Summary:");
+    console.log("Summary:");
     console.log(`   Suites:    ${summary.totalSuites}`);
     console.log(`   Tests:     ${summary.totalTests}`);
-    console.log(`   Passed:    ${summary.totalPassed} ✅`);
-    console.log(`   Failed:    ${summary.totalFailed} ❌`);
-    console.log(`   Skipped:   ${summary.totalSkipped} ⏭️`);
+    console.log(`   Passed:    ${summary.totalPassed}`);
+    console.log(`   Failed:    ${summary.totalFailed}`);
+    console.log(`   Skipped:   ${summary.totalSkipped}`);
     console.log(`   Duration:  ${(summary.totalDuration / 1000).toFixed(2)}s`);
 
     const successRate = summary.totalTests > 0 ? ((summary.totalPassed / summary.totalTests) * 100).toFixed(1) : "0";
@@ -406,7 +406,7 @@ class TestRunner {
 
     if (summary.totalFailed > 0) {
       console.log("");
-      console.log("❌ Failed Test Suites:");
+      console.log("[FAIL] Failed Test Suites:");
       summary.results
         .filter((r) => r.failed > 0)
         .forEach((result) => {
@@ -421,7 +421,7 @@ class TestRunner {
 
     // Performance insights
     console.log("");
-    console.log("🚀 Performance Insights:");
+    console.log("Performance Insights:");
     const slowestSuites = [...summary.results].sort((a, b) => b.duration - a.duration).slice(0, 3);
 
     slowestSuites.forEach((suite, index) => {
@@ -430,7 +430,7 @@ class TestRunner {
 
     // Category breakdown
     console.log("");
-    console.log("📂 By Category:");
+    console.log("By Category:");
     const categories = [...new Set(summary.results.map((r) => r.category))];
 
     categories.forEach((category) => {
@@ -448,9 +448,9 @@ class TestRunner {
     console.log("");
 
     if (summary.totalFailed === 0) {
-      console.log("🎉 All tests passed! 🎉");
+      console.log("All tests passed!");
     } else {
-      console.log(`⚠️  ${summary.totalFailed} test(s) failed`);
+      console.log(`[WARN] ${summary.totalFailed} test(s) failed`);
       process.exitCode = 1;
     }
   }
@@ -464,15 +464,15 @@ class TestRunner {
       const reportPath = path.join(reportsDir, `test-report-${timestamp}.json`);
 
       await writeFile(reportPath, JSON.stringify(summary, null, 2));
-      console.log(`📄 Test report saved: ${reportPath}`);
+      console.log(`Test report saved: ${reportPath}`);
 
       // Also generate HTML report
       const htmlReport = this.generateHTMLReport(summary);
       const htmlPath = path.join(reportsDir, `test-report-${timestamp}.html`);
       await writeFile(htmlPath, htmlReport);
-      console.log(`📄 HTML report saved: ${htmlPath}`);
+      console.log(`HTML report saved: ${htmlPath}`);
     } catch (error) {
-      console.log(`⚠️  Failed to save test report: ${error}`);
+      console.log(`[WARN] Failed to save test report: ${error}`);
     }
   }
 
@@ -590,7 +590,7 @@ async function main() {
     process.exit(0);
   }
 
-  console.log("🔧 Elasticsearch MCP Server - Test Suite");
+  console.log("Elasticsearch MCP Server - Test Suite");
   console.log(`Runtime: ${process.version}`);
   console.log(`Platform: ${process.platform}`);
   console.log("");
@@ -607,7 +607,7 @@ async function main() {
       process.exit(0);
     }
   } catch (error) {
-    console.error("💥 Test runner failed:", error);
+    console.error("Test runner failed:", error);
     process.exit(1);
   }
 }

@@ -105,7 +105,7 @@ export const registerDeleteLifecycleTool: ToolRegistrationFunction = (server: Mc
         content: [
           {
             type: "text",
-            text: `✅ Successfully deleted ILM policy: **${params.policy}**\n\nThe policy has been removed and is no longer available for new indices.`,
+            text: `Successfully deleted ILM policy: **${params.policy}**\n\nThe policy has been removed and is no longer available for new indices.`,
           },
           {
             type: "text",
@@ -188,7 +188,7 @@ export const registerDeleteLifecycleTool: ToolRegistrationFunction = (server: Mc
       title: "Ilm Delete Lifecycle",
 
       description:
-        "Delete an ILM policy. ⚠️ DESTRUCTIVE OPERATION: Cannot be undone. Policy must not be in use by any indices or templates. Examples: {policy: old-logs-policy}. Uses direct JSON Schema and standardized MCP error codes.",
+        "Delete an ILM policy. DESTRUCTIVE OPERATION: Cannot be undone. Policy must not be in use by any indices or templates. Examples: {policy: old-logs-policy}. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
         policy: z.string().min(1).describe("Policy name to delete (required)"),
@@ -209,38 +209,38 @@ export const registerDeleteLifecycleTool: ToolRegistrationFunction = (server: Mc
 /*
 IMPROVEMENTS vs delete_lifecycle.ts:
 
-1. ✅ SIMPLIFIED SCHEMA APPROACH
+1. SIMPLIFIED SCHEMA APPROACH
    - Direct JSON Schema instead of mixed Zod object in tool registration
    - Clean separation: JSON Schema for MCP, Zod for validation
    - No duplicate schema definitions
 
-2. ✅ STANDARDIZED MCP ERROR CODES
+2. STANDARDIZED MCP ERROR CODES
    - Using ErrorCode.InvalidParams, ErrorCode.InternalError, ErrorCode.InvalidRequest
    - Specific error categorization: validation, execution, not_found, in_use, permission
    - Better error context and actionable suggestions
 
-3. ✅ IMPROVED FUNCTIONALITY
+3. IMPROVED FUNCTIONALITY
    - Pre-flight check to verify policy exists (better error messages)
    - Specific handling for "policy in use" errors
    - Better success confirmation with clear messaging
 
-4. ✅ BETTER RESPONSE FORMATTING
+4. BETTER RESPONSE FORMATTING
    - Human-friendly success message with visual confirmation
    - Structured metadata for programmatic consumption
    - Clear operation details
 
-5. ✅ ENHANCED SAFETY
+5. ENHANCED SAFETY
    - Better error messages help prevent accidents
    - Clear warnings about destructive nature
    - Suggestions for resolving common issues
 
 BENEFITS:
-- 🚀 Better MCP protocol compliance
-- 🔧 Easier to debug with specific error types
-- 🛡️ Better safety with pre-flight checks
-- 📈 More informative error messages
-- ⚡ No complex schema conversion overhead
-- 🎯 Clearer success/failure feedback
+- Better MCP protocol compliance
+- Easier to debug with specific error types
+- Better safety with pre-flight checks
+- More informative error messages
+- No complex schema conversion overhead
+- Clearer success/failure feedback
 
 LINE REDUCTION:
 - Original: ~60 lines + schema wrapper overhead = ~150+ lines total

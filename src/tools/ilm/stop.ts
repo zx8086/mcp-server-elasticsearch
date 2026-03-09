@@ -83,11 +83,11 @@ export const registerStopTool: ToolRegistrationFunction = (server: McpServer, es
         content: [
           {
             type: "text",
-            text: `⏹️ **ILM Stopped Successfully**
+            text: `**ILM Stopped Successfully**
 
 Index Lifecycle Management has been stopped. All automated policy operations are now halted.
 
-⚠️ **Important**: ILM policies will not execute while stopped. Use \`elasticsearch_ilm_start\` to resume operations.
+**Important**: ILM policies will not execute while stopped. Use \`elasticsearch_ilm_start\` to resume operations.
 
 Operation completed at: ${new Date().toISOString()}`,
           },

@@ -4,7 +4,7 @@
 
 import { spawn } from "child_process";
 
-console.log("🧪 Testing parameter flow with debug logs...");
+console.log("Testing parameter flow with debug logs...");
 
 const testRequest = {
   jsonrpc: "2.0",
@@ -16,7 +16,7 @@ const testRequest = {
   }
 };
 
-console.log("📝 Sending request with limit: 3");
+console.log("Sending request with limit: 3");
 
 const child = spawn("bun", ["run", "dist/index.js"], {
   stdio: ["pipe", "pipe", "pipe"],
@@ -28,21 +28,21 @@ let responseReceived = false;
 
 const timeout = setTimeout(() => {
   if (!responseReceived) {
-    console.log("❌ Test timed out - analyzing captured logs...");
-    console.log("📋 Captured logs analysis:");
+    console.log("Test timed out - analyzing captured logs...");
+    console.log("Captured logs analysis:");
     
     if (logCapture.includes("limitParam")) {
       const limitMatches = logCapture.match(/"limitParam":(\d+)/g);
-      console.log("🔍 Found limitParam values:", limitMatches);
+      console.log("Found limitParam values:", limitMatches);
     } else {
-      console.log("❌ No limitParam found in logs");
+      console.log("No limitParam found in logs");
     }
     
     if (logCapture.includes("Getting ILM lifecycle policies")) {
       const ilmLogs = logCapture.match(/Getting ILM lifecycle policies.*?\n/g);
-      console.log("🔍 ILM tool logs:", ilmLogs);
+      console.log("ILM tool logs:", ilmLogs);
     } else {
-      console.log("❌ No ILM tool execution found");
+      console.log("No ILM tool execution found");
     }
     
     child.kill();
@@ -58,7 +58,7 @@ child.stderr.on('data', (data) => {
   if (logText.includes('Executing tool with tracing') || 
       logText.includes('Getting ILM lifecycle policies') ||
       logText.includes('limitParam')) {
-    console.log("📋 Debug:", logText.trim());
+    console.log("Debug:", logText.trim());
   }
 });
 
@@ -75,16 +75,16 @@ child.stdout.on('data', (data) => {
       if (response.result?.content?.[0]?.text) {
         const content = response.result.content[0].text;
         const policyCount = (content.match(/### [^#]/g) || []).length;
-        console.log(`📊 Final result: ${policyCount} policies returned`);
+        console.log(`Final result: ${policyCount} policies returned`);
         
         if (policyCount === 3) {
-          console.log("✅ SUCCESS!");
+          console.log("SUCCESS!");
         } else {
-          console.log(`❌ FAILED! Expected 3, got ${policyCount}`);
+          console.log(`FAILED! Expected 3, got ${policyCount}`);
         }
       }
     } catch (e) {
-      console.log("❌ Response parse error:", e.message);
+      console.log("Response parse error:", e.message);
     }
     
     child.kill();

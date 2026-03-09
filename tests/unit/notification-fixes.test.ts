@@ -141,4 +141,4 @@ describe("NotificationManager fixes", () => {
   });
 });
 
-console.log("✅ Notification fixes test completed");
+console.log("Notification fixes test completed");

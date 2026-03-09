@@ -139,7 +139,7 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (server: McpSe
           content: [
             {
               type: "text",
-              text: "⚠️ No parameters specified. Returning node names only. Use {metric: 'os,jvm'} for basic info or {compact: true} for essential metrics.",
+              text: "No parameters specified. Returning node names only. Use {metric: 'os,jvm'} for basic info or {compact: true} for essential metrics.",
             } as TextContent,
             { type: "text", text: JSON.stringify(result, null, 2) } as TextContent,
           ],
@@ -172,7 +172,7 @@ export const registerGetNodesInfoTool: ToolRegistrationFunction = (server: McpSe
           content: [
             {
               type: "text",
-              text: "📊 Compact node information (os,jvm,process,transport metrics)",
+              text: "Compact node information (os,jvm,process,transport metrics)",
             } as TextContent,
             { type: "text", text: responseContent } as TextContent,
           ],

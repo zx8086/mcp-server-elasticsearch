@@ -353,22 +353,22 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
 /*
 IMPROVEMENTS vs get_lifecycle_improved.ts:
 
-1. ✅ ELIMINATED COMPLEX ZOD CONVERSION
+1. ELIMINATED COMPLEX ZOD CONVERSION
    - Direct JSON Schema (getLifecycleSchema) instead of complex Zod transformations
    - Simple union types eliminated (z.union with complex transforms)
    - No more `.pipe()` chaining complexity
 
-2. ✅ STANDARDIZED MCP ERROR CODES
+2. STANDARDIZED MCP ERROR CODES
    - Using ErrorCode.InvalidParams, ErrorCode.InternalError, ErrorCode.InvalidRequest
    - No more generic string error messages
    - Proper error categorization with context
 
-3. ✅ SIMPLIFIED TOOL REGISTRATION
+3. SIMPLIFIED TOOL REGISTRATION
    - Direct server.tool() call with JSON Schema
    - No complex parameter extraction or wrapper logic
    - Trust MCP SDK parameter handling
 
-4. ✅ IMPROVED MAINTAINABILITY  
+4. IMPROVED MAINTAINABILITY  
    - Cleaner separation of concerns
    - Better error context and logging
    - Simplified response building
@@ -378,9 +378,9 @@ LINE REDUCTION:
 - Simplified: ~280 lines total (2.5x reduction in total complexity)
 
 BENEFITS:
-- 🚀 Better MCP protocol compliance
-- 🔧 Easier to debug and maintain  
-- 📈 Better error reporting with context
-- ⚡ No expensive schema conversions
-- 🎯 More predictable parameter handling
+- Better MCP protocol compliance
+- Easier to debug and maintain
+- Better error reporting with context
+- No expensive schema conversions
+- More predictable parameter handling
 */

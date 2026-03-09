@@ -2,7 +2,7 @@
 
 This guide provides comprehensive instructions for deploying the Elasticsearch MCP Server in production environments.
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
@@ -15,7 +15,7 @@ This guide provides comprehensive instructions for deploying the Elasticsearch M
 - [Troubleshooting](#troubleshooting)
 - [Maintenance](#maintenance)
 
-## 🔧 Prerequisites
+## Prerequisites
 
 ### System Requirements
 
@@ -39,7 +39,7 @@ This guide provides comprehensive instructions for deploying the Elasticsearch M
 - **Node.js**: Not required (Bun replaces Node.js)
 - **SSL/TLS**: Certificates if using HTTPS
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Option 1: Docker Compose (Recommended for testing)
 
@@ -88,7 +88,7 @@ kubectl get pods -n elasticsearch-mcp
 kubectl logs -f deployment/elasticsearch-mcp-server -n elasticsearch-mcp
 ```
 
-## 📦 Container Deployment
+## Container Deployment
 
 ### Building the Production Image
 
@@ -146,7 +146,7 @@ docker run -d \
   elasticsearch-mcp-server:latest
 ```
 
-## ☸️ Kubernetes Deployment
+## Kubernetes Deployment
 
 ### Prerequisites
 
@@ -191,7 +191,7 @@ kubectl apply -f k8s/secret.yaml
 kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/service.yaml
 kubectl apply -f k8s/hpa.yaml
-kubectl apply -f k8s/ingress.yaml  # Optional
+kubectl apply -f k8s/ingress.yaml # Optional
 ```
 
 4. **Verify Deployment**:
@@ -223,7 +223,7 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.2/cert-manager.yaml
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables Reference
 
@@ -274,7 +274,7 @@ bun run scripts/run-working-tests.ts
    - Use multiple replicas for high availability
    - Configure proper logging levels
 
-## 🔒 Security Hardening
+## Security Hardening
 
 ### Container Security
 
@@ -329,11 +329,11 @@ spec:
   - to: []
     ports:
     - protocol: TCP
-      port: 443  # HTTPS to Elasticsearch
+      port: 443 # HTTPS to Elasticsearch
     - protocol: TCP
-      port: 53   # DNS
+      port: 53 # DNS
     - protocol: UDP
-      port: 53   # DNS
+      port: 53 # DNS
 ```
 
 ### Authentication & Authorization
@@ -365,7 +365,7 @@ curl -X POST "https://elasticsearch:9200/_security/api_key" \
   }'
 ```
 
-## 📊 Monitoring & Health Checks
+## Monitoring & Health Checks
 
 ### Health Check Endpoints
 
@@ -427,7 +427,7 @@ Create alerts for:
 - Response time degradation
 - Circuit breaker trips
 
-## 🚀 Scaling & Performance
+## Scaling & Performance
 
 ### Horizontal Scaling
 
@@ -448,11 +448,11 @@ Adjust resource limits based on usage patterns:
 ```yaml
 resources:
   requests:
-    memory: "512Mi"    # Increase for heavy workloads
-    cpu: "500m"        # Increase for CPU-intensive operations
+    memory: "512Mi" # Increase for heavy workloads
+    cpu: "500m" # Increase for CPU-intensive operations
   limits:
-    memory: "1Gi"      # Set appropriate limits
-    cpu: "1000m"       # Prevent resource starvation
+    memory: "1Gi" # Set appropriate limits
+    cpu: "1000m" # Prevent resource starvation
 ```
 
 ### Performance Tuning
@@ -472,7 +472,7 @@ resources:
    - Configure proper sharding strategy
    - Enable compression for large responses
 
-## 🔍 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -554,7 +554,7 @@ grep "Circuit breaker" /var/log/mcp-server.log
 grep "Health check failed" /var/log/mcp-server.log
 ```
 
-## 🛠️ Maintenance
+## Maintenance
 
 ### Updates and Upgrades
 
@@ -606,7 +606,7 @@ Regular maintenance tasks:
 - [ ] Test backup and recovery procedures
 - [ ] Update documentation
 
-## 📞 Support
+## Support
 
 For issues and questions:
 
@@ -620,6 +620,6 @@ For issues and questions:
    - Error logs
    - Steps to reproduce
 
-## 📝 License
+## License
 
 This deployment guide is provided under the same license as the main project (Apache 2.0).

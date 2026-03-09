@@ -50,15 +50,12 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpS
       });
 
       // CRITICAL SAFETY WARNING for destructive operation
-      await notificationManager.sendWarning(
-        `🚨 DESTRUCTIVE OPERATION: About to delete documents from ${params.index}`,
-        {
-          operation_type: "delete_by_query",
-          target_index: params.index,
-          max_docs: params.maxDocs,
-          warning: "This operation permanently deletes documents and cannot be undone",
-        },
-      );
+      await notificationManager.sendWarning(`DESTRUCTIVE OPERATION: About to delete documents from ${params.index}`, {
+        operation_type: "delete_by_query",
+        target_index: params.index,
+        max_docs: params.maxDocs,
+        warning: "This operation permanently deletes documents and cannot be undone",
+      });
 
       // First, get a count of documents that will be deleted
       let documentsToDelete = 0;
@@ -71,7 +68,7 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpS
         documentsToDelete = countResult.count;
 
         await notificationManager.sendWarning(
-          `⚠️  DELETION SCOPE: ${documentsToDelete} documents will be permanently deleted`,
+          `DELETION SCOPE: ${documentsToDelete} documents will be permanently deleted`,
           {
             operation_type: "delete_by_query",
             documents_to_delete: documentsToDelete,
@@ -82,7 +79,7 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpS
 
         if (documentsToDelete > 10000) {
           await notificationManager.sendWarning(
-            `🔥 LARGE DELETION: Deleting ${documentsToDelete} documents - this may impact cluster performance`,
+            `LARGE DELETION: Deleting ${documentsToDelete} documents - this may impact cluster performance`,
             {
               operation_type: "delete_by_query",
               large_deletion_warning: true,
@@ -184,7 +181,7 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpS
           );
 
           await notificationManager.sendInfo(
-            `✅ Delete by query completed: ${summary.deleted} documents permanently deleted`,
+            `Delete by query completed: ${summary.deleted} documents permanently deleted`,
             {
               ...summary,
               operation_type: "delete_by_query",

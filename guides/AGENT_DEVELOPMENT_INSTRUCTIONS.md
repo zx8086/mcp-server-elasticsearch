@@ -1,23 +1,23 @@
 # Agent Development Instructions for MCP Servers
 
-## 🤖 **For AI Development Agents**
+## **For AI Development Agents**
 
 This document provides specific instructions for AI agents working on MCP (Model Context Protocol) server development, based on lessons learned from building a production-ready Elasticsearch MCP server.
 
-## ⚡ **Critical Rules - Follow Always**
+## **Critical Rules - Follow Always**
 
 ### **1. MCP Parameter Handling (CRITICAL)**
 
 **NEVER use JSON schemas in `server.tool()` calls. ALWAYS use Zod schemas.**
 
 ```typescript
-// ❌ NEVER DO THIS - Parameters will be lost
+// NEVER DO THIS - Parameters will be lost
 server.tool("name", "description", {
   type: "object",
   properties: { limit: { type: "number" } }
 }, handler);
 
-// ✅ ALWAYS DO THIS - Parameters flow correctly  
+// ALWAYS DO THIS - Parameters flow correctly 
 server.tool("name", "description", {
   limit: z.number().optional()
 }, handler);
@@ -50,7 +50,7 @@ const handler = async (toolArgs: any, extra: any) => {
 };
 ```
 
-## 🔧 **Development Workflow for Agents**
+## **Development Workflow for Agents**
 
 ### **Step 1: Analyze Existing Patterns**
 
@@ -166,7 +166,7 @@ export const registerToolName: ToolRegistrationFunction = (server: McpServer, es
 
 ```typescript
 // Add to handler for testing
-console.log("🧪 PARAMETER TEST:", {
+console.log("PARAMETER TEST:", {
   toolArgsType: typeof toolArgs,
   toolArgsKeys: toolArgs ? Object.keys(toolArgs) : "NONE",
   expectedParams: ["limit", "summary"], // Your expected params
@@ -176,7 +176,7 @@ console.log("🧪 PARAMETER TEST:", {
 });
 ```
 
-## 🛡 **Security Patterns**
+## **Security Patterns**
 
 ### **Elasticsearch-Specific Security**
 
@@ -205,7 +205,7 @@ const readOnlyTools = [
 ];
 ```
 
-## 📊 **Tracing Integration**
+## **Tracing Integration**
 
 ### **Universal Tracing Wrapper**
 
@@ -233,17 +233,17 @@ export function traceToolExecution(toolName: string, toolArgs: any, extra: any, 
     { name: toolName, run_type: "tool" }
   );
   
-  // ✅ Pass structured inputs for LangSmith capture
+  // Pass structured inputs for LangSmith capture
   return toolTracer({
     tool_name: toolName,
-    arguments: toolArgs,     // ← User parameters
-    extra_context: extra,    // ← MCP context  
+    arguments: toolArgs, // ← User parameters
+    extra_context: extra, // ← MCP context 
     timestamp: new Date().toISOString(),
   });
 }
 ```
 
-## 🧪 **Testing and Error Resolution**
+## **Testing and Error Resolution**
 
 ### **Testing Best Practices**
 
@@ -271,9 +271,9 @@ afterAll(async () => {
 
 **Testing Reference**: See `TESTING_STRATEGY_ANALYSIS.md` for comprehensive testing approach that achieved 100% TypeError elimination.
 
-## 🚨 **Common Mistakes to Avoid**
+## **Common Mistakes to Avoid**
 
-### **❌ Schema Mistakes**
+### **Schema Mistakes**
 ```typescript
 // DON'T use JSON schema
 const schema = { type: "object", properties: {...} };
@@ -285,7 +285,7 @@ const result = schema.safeParse(args); // Errors ignored
 const tracedHandler = traceable(handler); // Wrong approach
 ```
 
-### **❌ Handler Mistakes**  
+### **Handler Mistakes** 
 ```typescript
 // DON'T use single parameter
 const handler = async (args: any) => {...};
@@ -299,7 +299,7 @@ const { limit, summary } = args; // Unsafe direct access
 }
 ```
 
-### **❌ Registration Mistakes**
+### **Registration Mistakes**
 ```typescript
 // DON'T pass JSON schema to server.tool()
 server.tool("name", "desc", jsonSchemaObject, handler);
@@ -311,12 +311,12 @@ server.tool("name", "desc", validator, handler); // Wrong
 server.tool("name", "desc", schema, traceable(handler)); // Redundant
 ```
 
-## ✅ **Agent Checklist**
+## **Agent Checklist**
 
 When working on any MCP tool:
 
 - [ ] **Schema**: Uses Zod schema in `server.tool()` call
-- [ ] **Handler**: Has `(toolArgs, extra)` signature  
+- [ ] **Handler**: Has `(toolArgs, extra)` signature 
 - [ ] **Validation**: Validates parameters with `validator.parse(toolArgs)`
 - [ ] **Debug**: Adds parameter debugging during development
 - [ ] **Errors**: Handles Zod validation errors specifically
@@ -324,7 +324,7 @@ When working on any MCP tool:
 - [ ] **Security**: Considers domain-specific exemptions
 - [ ] **Tracing**: Relies on universal wrapper (no manual tracing)
 
-## 🔍 **Debugging Commands**
+## **Debugging Commands**
 
 **Quick diagnosis:**
 ```bash
@@ -338,26 +338,26 @@ LOG_LEVEL=debug bun run dev | grep "PARAMETER"
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"tool_name","arguments":{"limit":5}}}' | bun run dist/index.js
 ```
 
-## 📚 **Reference Examples**
+## **Reference Examples**
 
-**✅ Good Example** - `src/tools/ilm/get_lifecycle.ts`:
+**Good Example** - `src/tools/ilm/get_lifecycle.ts`:
 - Uses Zod schema in registration
 - Proper parameter validation
 - Handles multiple resource patterns
 - Complete error handling
 
-**❌ Bad Example** - Any tool using JSON schema:
+**Bad Example** - Any tool using JSON schema:
 - Parameters don't flow to handler
 - Default values always applied
 - User inputs ignored
 
-## 🎯 **Success Metrics**
+## **Success Metrics**
 
 Your MCP tool is working correctly when:
 
 1. **Parameters flow**: `{limit: 50}` → handler receives `params.limit = 50`
 2. **Validation works**: Invalid params throw proper MCP errors
-3. **Security passes**: Legitimate patterns don't trigger violations  
+3. **Security passes**: Legitimate patterns don't trigger violations 
 4. **Tracing captures**: LangSmith shows both inputs and outputs
 5. **Errors are clear**: Users get actionable error messages
 

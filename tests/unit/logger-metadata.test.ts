@@ -151,4 +151,4 @@ describe("Logger Metadata Handling", () => {
   });
 });
 
-console.log("✅ Logger metadata test completed");
+console.log("Logger metadata test completed");

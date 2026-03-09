@@ -118,8 +118,8 @@ async function analyzeTools(): Promise<void> {
     console.log(`\n### ${category} (${testedCount}/${categoryTools.length} - ${coverage}%)`);
 
     for (const tool of categoryTools) {
-      const status = tool.hasIntegrationTest ? "✅" : "❌";
-      const type = tool.isDestructive ? "💥" : "👁️";
+      const status = tool.hasIntegrationTest ? "[PASS]" : "[FAIL]";
+      const type = tool.isDestructive ? "[WRITE]" : "[READ]";
       console.log(`  ${status} ${type} ${tool.name} (${tool.file})`);
     }
   }

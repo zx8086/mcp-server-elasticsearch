@@ -4,7 +4,7 @@ This document provides a comprehensive explanation of how LangSmith tracing is i
 
 ## Table of Contents
 
-1. [⚠️ Critical Bug Fix - MUST READ FIRST](#️-critical-bug-fix---must-read-first)
+1. [Critical Bug Fix - MUST READ FIRST](#critical-bug-fix---must-read-first)
 2. [Overview](#overview)
 3. [Architecture](#architecture)
 4. [Critical Implementation Details](#critical-implementation-details)
@@ -23,18 +23,18 @@ This document provides a comprehensive explanation of how LangSmith tracing is i
 17. [Universal Patterns for Any MCP Server](#universal-patterns-for-any-mcp-server)
 18. [Troubleshooting](#troubleshooting)
 
-## ⚠️ Critical Bug Fix - MUST READ FIRST
+## Critical Bug Fix - MUST READ FIRST
 
-**🔥 CRITICAL**: The LangSmithClient requires explicit project routing to ensure traces go to the correct project. This is essential for proper implementation in any MCP server.
+**CRITICAL**: The LangSmithClient requires explicit project routing to ensure traces go to the correct project. This is essential for proper implementation in any MCP server.
 
 ### Essential LangSmith Client Configuration
 
-**✅ REQUIRED Implementation:**
+**REQUIRED Implementation:**
 ```typescript
 langsmithClient = new LangSmithClient({
   apiKey: apiKey,
   apiUrl: endpoint,
-  projectName: project, // 🔥 CRITICAL: Explicit project routing parameter
+  projectName: project, // CRITICAL: Explicit project routing parameter
 });
 ```
 
@@ -49,7 +49,7 @@ langsmithClient = new LangSmithClient({
 
 To verify traces go to the correct project:
 1. Check LangSmith dashboard - traces should appear in your specified project
-2. Look for debug log: `✅ LangSmith tracing initialized {"project":"your-project-name"}`
+2. Look for debug log: ` LangSmith tracing initialized {"project":"your-project-name"}`
 3. Verify tool traces include project context in logs
 
 ## Overview
@@ -67,39 +67,39 @@ The LangSmith tracing system provides comprehensive observability for all MCP to
 ## Architecture
 
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   MCP Client    │───▶│   MCP Server     │───▶│   LangSmith     │
-│   (Claude)      │    │                  │    │   Dashboard     │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                │
-                                ▼
-                    ┌──────────────────────┐
-                    │  Tool Registration   │
-                    │      System          │
-                    └──────────────────────┘
-                                │
-                                ▼
-                    ┌──────────────────────┐
-                    │   Tool Execution     │
-                    │   Wrapper Layer      │
-                    └──────────────────────┘
-                                │
-                                ▼
-                    ┌──────────────────────┐
-                    │  Dynamic Tracing     │
-                    │     Function         │
-                    └──────────────────────┘
+        
+   MCP Client MCP Server LangSmith 
+   (Claude) Dashboard 
+        
+                                
+                                
+                    
+                      Tool Registration 
+                          System 
+                    
+                                
+                                
+                    
+                       Tool Execution 
+                       Wrapper Layer 
+                    
+                                
+                                
+                    
+                      Dynamic Tracing 
+                         Function 
+                    
 ```
 
 ## Critical Implementation Details
 
 ### 1. Project Configuration and Routing
 
-**⚠️ CRITICAL**: Project configuration is the most common source of tracing issues. Traces often go to the wrong project due to parameter precedence misunderstandings.
+**CRITICAL**: Project configuration is the most common source of tracing issues. Traces often go to the wrong project due to parameter precedence misunderstandings.
 
 #### Environment Variable Precedence (Highest to Lowest Priority)
 
-**🔥 REQUIRED**: Always use explicit project configuration with consistent naming across all components.
+**REQUIRED**: Always use explicit project configuration with consistent naming across all components.
 
 ```typescript
 // 1. HIGHEST: Direct client constructor parameters
@@ -121,19 +121,19 @@ process.env.LANGSMITH_PROJECT = "default-project"; // Only used if not specified
 
 #### Essential Project Configuration Pattern
 
-**🔥 REQUIRED Implementation for Consistent Tracing:**
+**REQUIRED Implementation for Consistent Tracing:**
 
 ```typescript
 const projectName = process.env.LANGSMITH_PROJECT || "default-project";
 
 const client = new LangSmithClient({
   apiKey: apiKey,
-  projectName: projectName // 🔥 CRITICAL: Explicit project routing
+  projectName: projectName // CRITICAL: Explicit project routing
 });
 
 const toolTracer = traceable(handler, {
   name: toolName,
-  project_name: projectName, // 🔥 CRITICAL: Same project as client
+  project_name: projectName, // CRITICAL: Same project as client
   run_type: "tool"
 });
 ```
@@ -228,7 +228,7 @@ export function initializeTracing(): void {
 
 ### 3. Conversation-Aware Tool Tracing Function
 
-**🔥 REQUIRED**: Our implementation uses conversation-aware tracing with session context for better trace organization.
+**REQUIRED**: Our implementation uses conversation-aware tracing with session context for better trace organization.
 
 **Essential Implementation Pattern:**
 
@@ -424,7 +424,7 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
 1. **RegisterTool Method Override**: Intercepts `server.registerTool()` calls to add wrappers
 2. **Conversation-Aware Tracing**: Uses session context for better trace organization
 3. **Layered Enhancement**: Tracing + Security validation in sequence
-4. **Unconditional Tracing**: Every tool gets traced, no exceptions  
+4. **Unconditional Tracing**: Every tool gets traced, no exceptions 
 5. **Preserved Functionality**: Original tool logic unchanged
 6. **Production Safety**: Security validation maintained
 
@@ -433,11 +433,11 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
 ```
 Original Tool Handler
         ↓
-Conversation-Aware Tracing Wrapper  ← traceToolExecutionWithConversation(name, args, extra, context, originalHandler)
+Conversation-Aware Tracing Wrapper ← traceToolExecutionWithConversation(name, args, extra, context, originalHandler)
         ↓
-Security Wrapper                    ← withSecurityValidation(name, tracedHandler) [if needed]
+Security Wrapper ← withSecurityValidation(name, tracedHandler) [if needed]
         ↓
-MCP Server Tool                     ← server.registerTool(name, config, enhancedHandler)
+MCP Server Tool ← server.registerTool(name, config, enhancedHandler)
 ```
 
 ## Dynamic Tool Name Resolution
@@ -474,7 +474,7 @@ export function traceToolExecution(toolName: string, _args: any, handler: () => 
 **Before (Wrong):**
 ```
 Tool Execution
-Tool Execution  
+Tool Execution 
 Tool Execution
 ...
 ```
@@ -618,9 +618,9 @@ catch (error) {
   const executionTime = Date.now() - startTime;
   
   logger.error("Tool execution failed", {
-    toolName,           // Which tool failed
-    executionTime,      // How long it took
-    hasParentTrace: !!currentRun,  // Trace context
+    toolName, // Which tool failed
+    executionTime, // How long it took
+    hasParentTrace: !!currentRun, // Trace context
     parentTraceId: currentRun?.id, // Parent trace
     error: error instanceof Error ? error.message : String(error),
   });
@@ -739,7 +739,7 @@ export function initializeTracing(): boolean {
   try {
     // Initialize LangSmith client
     const client = new LangSmithClient({ apiKey });
-    console.log('✅ LangSmith tracing initialized');
+    console.log('LangSmith tracing initialized');
     return true;
   } catch (error) {
     console.error('Failed to initialize tracing:', error);
@@ -752,7 +752,7 @@ export function initializeTracing(): boolean {
 
 ### Critical Issues and Solutions
 
-#### 1. **🔥 MOST COMMON: Traces Go to Wrong Project**
+#### 1. **MOST COMMON: Traces Go to Wrong Project**
 
 **Problem**: Traces appear in default project instead of specified project.
 
@@ -798,14 +798,14 @@ const toolTracer = traceable(
 
 #### 2. **Essential `project_name` Parameter in traceable Function**
 
-**🔥 REQUIRED**: Always include explicit `project_name` parameter in traceable functions for consistent routing.
+**REQUIRED**: Always include explicit `project_name` parameter in traceable functions for consistent routing.
 
 **Essential Implementation:**
 ```typescript
 const toolTracer = traceable(handler, {
   name: toolName,
   run_type: "tool",
-  project_name: getConfiguredProject() // 🔥 CRITICAL: Explicit project routing
+  project_name: getConfiguredProject() // CRITICAL: Explicit project routing
 });
 ```
 
@@ -853,7 +853,7 @@ const toolTracer = traceable(handler, {
 
 **Problem**: Environment variables not being read in expected order.
 
-**🔥 REQUIRED Implementation - Explicit Precedence Chain:**
+**REQUIRED Implementation - Explicit Precedence Chain:**
 ```typescript
 function resolveProjectName(): string {
   const sources = [
@@ -889,7 +889,7 @@ function resolveProjectName(): string {
 // Wrong
 traceable(handler, { name: "Tool Execution" })
 
-// Right  
+// Right 
 traceable(handler, { name: toolName })
 ```
 
@@ -948,37 +948,37 @@ LOG_LEVEL=debug LANGSMITH_TRACING=true bun run dev
 
 **Key Log Messages to Watch For:**
 
-**✅ SUCCESS Indicators:**
-- `✅ LangSmith tracing initialized` with project name
-- `🚀 Registering all tools with automatic tracing`
+**SUCCESS Indicators:**
+- `LangSmith tracing initialized` with project name
+- `Registering all tools with automatic tracing`
 - `Executing tool with tracing` with project name
 - `Tool execution completed` with project name
 
-**🔍 PROJECT ROUTING Debug Messages:**
+**PROJECT ROUTING Debug Messages:**
 ```bash
 # Good - Shows explicit project routing
 Using project from LANGSMITH_PROJECT: my-mcp-server
-✅ LangSmith tracing initialized {"project":"my-mcp-server"}
+LangSmith tracing initialized {"project":"my-mcp-server"}
 Executing tool with tracing {"toolName":"search","project":"my-mcp-server"}
 
 # Bad - Missing project context
-✅ LangSmith tracing initialized {}
+LangSmith tracing initialized {}
 Executing tool with tracing {"toolName":"search"}
 ```
 
-**⚠️ WARNING Signs:**
+**WARNING Signs:**
 - Missing project name in initialization logs
 - Inconsistent project names between messages
 - "Failed to initialize LangSmith tracing" errors
 - Tools executing without tracing context
 
-**🔍 Project Routing Verification:**
+**Project Routing Verification:**
 ```typescript
 // Add this debug logging to your initialization
 export function initializeTracing(): void {
   const projectName = resolveProjectName();
   
-  console.log("🔍 LangSmith Project Resolution:", {
+  console.log("LangSmith Project Resolution:", {
     resolved: projectName,
     env_langsmith: process.env.LANGSMITH_PROJECT,
     env_langchain: process.env.LANGCHAIN_PROJECT,
@@ -1021,9 +1021,9 @@ LANGSMITH_ENDPOINT=https://api.smith.langchain.com
 LANGSMITH_TRACING=true
 LANGCHAIN_TRACING_V2=true
 LANGSMITH_API_KEY=lsv2_sk_prod_key_here
-LANGCHAIN_API_KEY=lsv2_sk_prod_key_here  # Fallback
+LANGCHAIN_API_KEY=lsv2_sk_prod_key_here # Fallback
 LANGSMITH_PROJECT=kong-mcp-production
-LANGCHAIN_PROJECT=kong-mcp-production    # Fallback
+LANGCHAIN_PROJECT=kong-mcp-production # Fallback
 LANGSMITH_ENDPOINT=https://api.smith.langchain.com
 ```
 
@@ -1079,7 +1079,7 @@ const toolTracer = traceable(handler, { name: toolName }); // No project!
 // Good
 const toolTracer = traceable(handler, { name: toolName });
 
-// Bad  
+// Bad 
 const toolTracer = traceable(handler, { name: "Generic Tool" });
 ```
 
@@ -1164,7 +1164,7 @@ export function validateTracingConfig(config: TracingConfig): void {
     throw new Error('Invalid LANGSMITH_API_KEY format');
   }
   
-  console.log('✅ Tracing configuration validated:', {
+  console.log('Tracing configuration validated:', {
     project: config.projectName,
     hasApiKey: !!config.apiKey,
     enabled: config.enabled
@@ -1178,7 +1178,7 @@ export function validateTracingConfig(config: TracingConfig): void {
 ```typescript
 // Test that tracing function exists and is callable
 import { traceToolExecution } from './src/utils/tracing.js';
-console.log('✓ Tracing function imported');
+console.log('Tracing function imported');
 ```
 
 ### 2. Integration Test
@@ -1187,8 +1187,8 @@ console.log('✓ Tracing function imported');
 LOG_LEVEL=debug bun run dev
 
 # Look for trace initialization messages
-# ✅ LangSmith tracing initialized
-# 🚀 Registering all tools with automatic tracing
+# LangSmith tracing initialized
+# Registering all tools with automatic tracing
 ```
 
 ### 3. End-to-End Test
@@ -1221,11 +1221,11 @@ The session management system consists of three primary components:
 
 ```typescript
 export interface SessionContext {
-  sessionId: string;           // Unique session identifier
-  connectionId: string;        // Connection-specific ID
+  sessionId: string; // Unique session identifier
+  connectionId: string; // Connection-specific ID
   transportMode: "stdio" | "sse";
   clientInfo?: {
-    name?: string;             // e.g., "Claude Desktop", "n8n"
+    name?: string; // e.g., "Claude Desktop", "n8n"
     version?: string;
     platform?: string;
   };
@@ -2196,11 +2196,11 @@ The session system uses Node.js AsyncLocalStorage to maintain context across asy
 ```typescript
 // Session context structure
 export interface SessionContext {
-  sessionId: string;           // Unique session identifier
-  connectionId: string;        // Connection-specific ID
+  sessionId: string; // Unique session identifier
+  connectionId: string; // Connection-specific ID
   transportMode: "stdio" | "sse";
   clientInfo?: {
-    name?: string;             // e.g., "Claude Desktop", "n8n"
+    name?: string; // e.g., "Claude Desktop", "n8n"
     version?: string;
     platform?: string;
   };
@@ -2277,7 +2277,7 @@ export const traceNamedMcpConnection = (context: ConnectionContext) => {
     async (handler: () => Promise<any>) => {
       const startTime = Date.now();
       
-      logger.info(`🔗 Starting MCP session: ${traceName}`, {
+      logger.info(` Starting MCP session: ${traceName}`, {
         connectionId: context.connectionId,
         transportMode: context.transportMode,
         clientInfo: context.clientInfo,
@@ -2288,19 +2288,19 @@ export const traceNamedMcpConnection = (context: ConnectionContext) => {
         const result = await handler();
         const executionTime = Date.now() - startTime;
         
-        logger.info(`✅ MCP session established: ${traceName}`, {
+        logger.info(` MCP session established: ${traceName}`, {
           executionTime
         });
         
         return result;
       } catch (error) {
-        logger.error(`❌ MCP session failed: ${traceName}`, { error });
+        logger.error(` MCP session failed: ${traceName}`, { error });
         throw error;
       }
     },
     {
       name: traceName,
-      run_type: "chain",                    // Parent trace type
+      run_type: "chain", // Parent trace type
       metadata: {
         connection_id: context.connectionId,
         transport_mode: context.transportMode,
@@ -2349,10 +2349,10 @@ export function traceToolExecution(toolName: string, args: any, handler: () => P
         return {
           ...result,
           _trace: {
-            runId: currentRun?.id,           // Parent session trace ID
+            runId: currentRun?.id, // Parent session trace ID
             executionTime,
             project: projectName,
-            sessionId: session?.sessionId,   // Session grouping identifier
+            sessionId: session?.sessionId, // Session grouping identifier
           },
         };
       } catch (error) {
@@ -2366,12 +2366,12 @@ export function traceToolExecution(toolName: string, args: any, handler: () => P
       }
     },
     {
-      name: toolName,                        // Dynamic tool name
-      run_type: "tool",                      // Child trace type
-      project_name: projectName,             // Consistent project routing
+      name: toolName, // Dynamic tool name
+      run_type: "tool", // Child trace type
+      project_name: projectName, // Consistent project routing
       metadata: {
         tool_name: toolName,
-        session_id: session?.sessionId,      // Session grouping metadata
+        session_id: session?.sessionId, // Session grouping metadata
         connection_id: session?.connectionId,
         client_name: session?.clientInfo?.name,
       },
@@ -2409,7 +2409,7 @@ export async function traceWorkflow<T>(
       const startTime = Date.now();
       const results: any[] = [];
       
-      logger.info(`🔄 Starting workflow: ${workflowName}`, {
+      logger.info(` Starting workflow: ${workflowName}`, {
         stepCount: steps.length,
         sessionId: session?.sessionId,
       });
@@ -2419,7 +2419,7 @@ export async function traceWorkflow<T>(
         const stepStartTime = Date.now();
         
         try {
-          logger.debug(`▶️  Workflow step ${i + 1}/${steps.length}: ${step.name}`);
+          logger.debug(` Workflow step ${i + 1}/${steps.length}: ${step.name}`);
           const result = await step.operation();
           const stepExecutionTime = Date.now() - stepStartTime;
           
@@ -2430,11 +2430,11 @@ export async function traceWorkflow<T>(
             success: true,
           });
           
-          logger.debug(`✅ Workflow step completed: ${step.name} (${stepExecutionTime}ms)`);
+          logger.debug(` Workflow step completed: ${step.name} (${stepExecutionTime}ms)`);
         } catch (error) {
           const stepExecutionTime = Date.now() - stepStartTime;
           
-          logger.error(`❌ Workflow step failed: ${step.name}`, {
+          logger.error(` Workflow step failed: ${step.name}`, {
             executionTime: stepExecutionTime,
             error: error.message,
           });
@@ -2452,7 +2452,7 @@ export async function traceWorkflow<T>(
       
       const totalExecutionTime = Date.now() - startTime;
       
-      logger.info(`🎉 Workflow completed: ${workflowName}`, {
+      logger.info(` Workflow completed: ${workflowName}`, {
         totalExecutionTime,
         stepCount: steps.length,
         sessionId: session?.sessionId,
@@ -2461,7 +2461,7 @@ export async function traceWorkflow<T>(
       return results;
     },
     {
-      name: `🔄 ${workflowName}`,
+      name: ` ${workflowName}`,
       run_type: "chain",
       project_name: getConfiguredProject(),
       metadata: {
@@ -2521,7 +2521,7 @@ export async function traceParallelOperations<T>(
     async () => {
       const startTime = Date.now();
       
-      logger.info(`⚡ Starting parallel operations: ${operationName}`, {
+      logger.info(` Starting parallel operations: ${operationName}`, {
         operationCount: operations.length,
         sessionId: session?.sessionId,
       });
@@ -2535,7 +2535,7 @@ export async function traceParallelOperations<T>(
             const result = await op.operation();
             const opExecutionTime = Date.now() - opStartTime;
             
-            logger.debug(`✅ Parallel operation completed: ${op.name} (${opExecutionTime}ms)`);
+            logger.debug(` Parallel operation completed: ${op.name} (${opExecutionTime}ms)`);
             
             return {
               name: op.name,
@@ -2547,7 +2547,7 @@ export async function traceParallelOperations<T>(
           } catch (error) {
             const opExecutionTime = Date.now() - opStartTime;
             
-            logger.error(`❌ Parallel operation failed: ${op.name}`, {
+            logger.error(` Parallel operation failed: ${op.name}`, {
               executionTime: opExecutionTime,
               error: error.message,
             });
@@ -2566,7 +2566,7 @@ export async function traceParallelOperations<T>(
         const totalExecutionTime = Date.now() - startTime;
         const successCount = results.filter(r => r.success).length;
         
-        logger.info(`🎉 Parallel operations completed: ${operationName}`, {
+        logger.info(` Parallel operations completed: ${operationName}`, {
           totalExecutionTime,
           operationCount: operations.length,
           successCount,
@@ -2576,12 +2576,12 @@ export async function traceParallelOperations<T>(
         
         return results;
       } catch (error) {
-        logger.error(`❌ Parallel operations failed: ${operationName}`, { error });
+        logger.error(` Parallel operations failed: ${operationName}`, { error });
         throw error;
       }
     },
     {
-      name: `⚡ ${operationName}`,
+      name: ` ${operationName}`,
       run_type: "chain",
       project_name: getConfiguredProject(),
       metadata: {
@@ -2627,7 +2627,7 @@ await tracedConnection(async () => {
     return esClient.search(searchParams);
   });
   
-  // Another tool execution (sibling child trace)  
+  // Another tool execution (sibling child trace) 
   const mappingResult = await traceToolExecution("elasticsearch_get_mappings", args, () => {
     return esClient.indices.getMapping();
   });
@@ -2643,13 +2643,13 @@ await tracedConnection(async () => {
 
 **Trace Hierarchy in LangSmith:**
 ```
-📊 Claude Desktop (STDIO) [a1b2c3]                    [run_type: "chain"]
-├── 📊 elasticsearch_search                            [run_type: "tool", parent: session]
-├── 📊 elasticsearch_get_mappings                      [run_type: "tool", parent: session]
-└── 🔄 Data Analysis Pipeline                          [run_type: "chain", parent: session]
-    ├── 📊 Search documents                            [run_type: "tool", parent: workflow]
-    ├── 📊 Analyze results                             [run_type: "tool", parent: workflow]
-    └── 📊 Generate report                             [run_type: "tool", parent: workflow]
+ Claude Desktop (STDIO) [a1b2c3] [run_type: "chain"]
+  elasticsearch_search [run_type: "tool", parent: session]
+  elasticsearch_get_mappings [run_type: "tool", parent: session]
+  Data Analysis Pipeline [run_type: "chain", parent: session]
+      Search documents [run_type: "tool", parent: workflow]
+      Analyze results [run_type: "tool", parent: workflow]
+      Generate report [run_type: "tool", parent: workflow]
 ```
 
 ### Session Grouping in LangSmith Dashboard
@@ -2681,24 +2681,24 @@ The system provides rich metadata for powerful dashboard queries:
 ```typescript
 // Tool-level tags for filtering
 tags: [
-  "mcp-tool",                    // All MCP tool operations
-  "tool:elasticsearch_search",   // Specific tool type  
-  "client:Claude Desktop",       // Client identification
-  "session:a1b2c3",             // Session grouping
+  "mcp-tool", // All MCP tool operations
+  "tool:elasticsearch_search", // Specific tool type 
+  "client:Claude Desktop", // Client identification
+  "session:a1b2c3", // Session grouping
 ]
 
 // Session-level tags
 tags: [
-  "mcp-connection",             // All MCP sessions
-  "transport:stdio",            // Transport mode
-  "client:Claude Desktop",      // Client type
+  "mcp-connection", // All MCP sessions
+  "transport:stdio", // Transport mode
+  "client:Claude Desktop", // Client type
 ]
 
-// Workflow-level tags  
+// Workflow-level tags 
 tags: [
-  "mcp-workflow",               // All workflow operations
-  "workflow:Data Analysis",     // Specific workflow
-  "steps:3",                    // Step count
+  "mcp-workflow", // All workflow operations
+  "workflow:Data Analysis", // Specific workflow
+  "steps:3", // Step count
 ]
 ```
 
@@ -2859,7 +2859,7 @@ export function updateSessionMetrics(sessionId: string, metrics: Partial<Session
 The LangSmith tracing implementation provides comprehensive observability for MCP servers with these key benefits:
 
 - **Dynamic Tool Identification**: Each tool appears with its actual name
-- **Universal Coverage**: All tools traced automatically  
+- **Universal Coverage**: All tools traced automatically 
 - **Session Grouping**: Related operations grouped by session with client identification
 - **Parent-Child Relationships**: Proper trace hierarchy for complex workflows
 - **Workflow Tracking**: Multi-step operation tracing with parallel and sequential patterns
@@ -2934,7 +2934,7 @@ export function initializeTracing(): void {
   process.env.LANGSMITH_API_KEY = tracingConfig.apiKey;
   process.env.LANGSMITH_TRACING = 'true';
   
-  console.log('✅ LangSmith tracing initialized', {
+  console.log('LangSmith tracing initialized', {
     project: tracingConfig.projectName,
     endpoint: tracingConfig.endpoint
   });
@@ -3009,7 +3009,7 @@ LOG_LEVEL=debug
 import { tracingConfig, initializeTracing, traceToolExecution } from '../src/config/tracing.js';
 
 async function verifyTracing() {
-  console.log('🔍 Verifying LangSmith configuration...');
+  console.log('Verifying LangSmith configuration...');
   
   // Check environment
   console.log('Environment variables:', {
@@ -3034,17 +3034,17 @@ async function verifyTracing() {
     return { success: true, message: 'Test completed' };
   });
   
-  console.log('✅ Test tool execution result:', result);
-  console.log('🎉 Tracing verification complete!');
+  console.log('Test tool execution result:', result);
+  console.log('Tracing verification complete!');
 }
 
 verifyTracing().catch(console.error);
 ```
 
 This complete example ensures:
-- ✅ Explicit project routing in both client and traceable functions
-- ✅ Consistent project names throughout the system
-- ✅ Proper environment variable precedence
-- ✅ Comprehensive error handling and logging
-- ✅ Easy verification and debugging
-- ✅ Production-ready configuration patterns
+- Explicit project routing in both client and traceable functions
+- Consistent project names throughout the system
+- Proper environment variable precedence
+- Comprehensive error handling and logging
+- Easy verification and debugging
+- Production-ready configuration patterns

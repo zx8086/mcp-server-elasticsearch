@@ -1,6 +1,6 @@
 # MCP Parameter Debugging Guide
 
-## 🔍 **Quick Diagnosis: Parameter Flow Issues**
+## **Quick Diagnosis: Parameter Flow Issues**
 
 ### **Symptoms Checklist**
 - [ ] User sends `{limit: 50}` but tool receives `{limit: 20}` (defaults applied)
@@ -16,16 +16,16 @@
 # Check for JSON schema usage (problematic)
 rg "type:\s*[\"']object[\"']" src/tools/
 
-# Check for Zod schema usage (correct)  
+# Check for Zod schema usage (correct) 
 rg "z\.(string|number|boolean|object)" src/tools/
 ```
 
 **2. Handler Signature Mismatch**
 ```typescript
-// ❌ Wrong: Single parameter
+// Wrong: Single parameter
 const handler = async (args: any) => { ... }
 
-// ✅ Correct: Two parameters for tracing compatibility
+// Correct: Two parameters for tracing compatibility
 const handler = async (toolArgs: any, extra: any) => { ... }
 ```
 
@@ -35,7 +35,7 @@ const handler = async (toolArgs: any, extra: any) => { ... }
 tail -f logs/debug.log | grep "Security violation"
 ```
 
-## 🛠 **Step-by-Step Debugging Process**
+## **Step-by-Step Debugging Process**
 
 ### **Step 1: Verify Tool Registration Schema**
 
@@ -52,13 +52,13 @@ server.tool(
 
 **Fix Pattern**:
 ```typescript
-// ❌ BROKEN: JSON Schema
+// BROKEN: JSON Schema
 server.tool("name", "desc", {
   type: "object",
   properties: { limit: { type: "number" } }
 }, handler);
 
-// ✅ FIXED: Zod Schema  
+// FIXED: Zod Schema 
 server.tool("name", "desc", {
   limit: z.number().optional()
 }, handler);
@@ -70,7 +70,7 @@ Add this to your handler start:
 ```typescript
 const handler = async (toolArgs: any, extra: any): Promise<SearchResult> => {
   // Debug parameter reception
-  console.log("🔍 PARAMETER DEBUG:", {
+  console.log("PARAMETER DEBUG:", {
     toolArgsReceived: !!toolArgs,
     toolArgsType: typeof toolArgs,
     toolArgsKeys: toolArgs ? Object.keys(toolArgs) : "NO ARGS",
@@ -110,13 +110,13 @@ Check if tracing captures inputs:
 // In tracing.ts, look for this pattern
 return toolTracer({
   tool_name: toolName,
-  arguments: toolArgs,        // ← Should contain user params
-  extra_context: extra,       // ← Should contain MCP context
+  arguments: toolArgs, // ← Should contain user params
+  extra_context: extra, // ← Should contain MCP context
   timestamp: new Date().toISOString(),
 });
 ```
 
-## 🔧 **Common Fixes**
+## **Common Fixes**
 
 ### **Fix 1: Convert JSON Schema to Zod**
 
@@ -184,7 +184,7 @@ return toolTracer({
 });
 ```
 
-## 🧪 **Testing Patterns**
+## **Testing Patterns**
 
 ### **Parameter Flow Test**
 ```bash
@@ -216,7 +216,7 @@ console.log("Validation passed:", testResult);
 3. Confirm "Output" section shows results
 4. Look for proper tool naming
 
-## 🚨 **Emergency Fixes**
+## **Emergency Fixes**
 
 ### **Quick Parameter Fix**
 If parameters are completely broken:
@@ -248,7 +248,7 @@ If inputs missing from traces:
    return toolTracer({ arguments: toolArgs }); // ← Must pass arguments
    ```
 
-## 📊 **Debugging Checklist**
+## **Debugging Checklist**
 
 - [ ] Tool uses Zod schema in `server.tool()` call
 - [ ] Handler has `(toolArgs, extra)` signature
@@ -260,11 +260,11 @@ If inputs missing from traces:
 - [ ] Error handling provides clear messages
 - [ ] All TypeErrors eliminated (see TESTING_STRATEGY_ANALYSIS.md)
 
-## 🔍 **Log Analysis Patterns**
+## **Log Analysis Patterns**
 
 **Good Parameter Flow**:
 ```
-🔍 PARAMETER DEBUG: {
+PARAMETER DEBUG: {
   toolArgsReceived: true,
   toolArgsKeys: ["limit", "summary"],
   limitParam: 50,
@@ -274,16 +274,16 @@ If inputs missing from traces:
 
 **Broken Parameter Flow**:
 ```
-🔍 PARAMETER DEBUG: {
+PARAMETER DEBUG: {
   toolArgsReceived: true,
-  toolArgsKeys: ["sessionId", "signal"],  ← Wrong keys (MCP context)
-  limitParam: undefined,                   ← Missing user params
+  toolArgsKeys: ["sessionId", "signal"], ← Wrong keys (MCP context)
+  limitParam: undefined, ← Missing user params
   summaryParam: undefined
 }
 ```
 
 Use this guide to quickly identify and fix MCP parameter handling issues.
 
-## 🎯 **Success Reference**
+## **Success Reference**
 
-This debugging approach has achieved **100% TypeError elimination** in the Elasticsearch MCP Server. For comprehensive results and validation, see `TESTING_STRATEGY_ANALYSIS.md`.
+This debugging approach has achieved **100% TypeError elimination**in the Elasticsearch MCP Server. For comprehensive results and validation, see `TESTING_STRATEGY_ANALYSIS.md`.

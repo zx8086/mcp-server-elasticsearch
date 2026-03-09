@@ -10,12 +10,12 @@ The notification system supports two main types of notifications:
 
 ## Key Features
 
-✅ **Real-time Progress Tracking**: Users see live progress updates during bulk operations
-✅ **Operation Lifecycle Management**: Start, update, complete, and fail operations with context
-✅ **Multiple Notification Types**: Info, warning, error notifications with structured data
-✅ **Concurrent Operation Support**: Track multiple operations simultaneously
-✅ **Automatic Integration**: All tools automatically get notification capabilities
-✅ **Error Recovery**: Graceful error handling with recovery suggestions
+ **Real-time Progress Tracking**: Users see live progress updates during bulk operations
+ **Operation Lifecycle Management**: Start, update, complete, and fail operations with context
+ **Multiple Notification Types**: Info, warning, error notifications with structured data
+ **Concurrent Operation Support**: Track multiple operations simultaneously
+ **Automatic Integration**: All tools automatically get notification capabilities
+ **Error Recovery**: Graceful error handling with recovery suggestions
 
 ## Implementation Details
 
@@ -26,7 +26,7 @@ The MCP server is configured with notification capabilities in `src/server.ts`:
 ```typescript
 const server = new McpServer(
   { name: config.server.name, version: config.server.version },
-  { capabilities: { notifications: {} } }  // Enable notifications
+  { capabilities: { notifications: {} } } // Enable notifications
 );
 ```
 
@@ -122,7 +122,7 @@ await notificationManager.sendInfo("Process started", {
   total_documents: 1000
 });
 
-// Warning notifications  
+// Warning notifications 
 await notificationManager.sendWarning("High memory usage", {
   memory_usage: "85%",
   threshold: "80%"
@@ -150,10 +150,10 @@ When using tools with notifications, users will see:
 ### Automatic Security & Tracing
 
 All notification-enabled tools automatically receive:
-- **Security validation** for write operations
-- **Universal tool tracing** with LangSmith integration  
-- **Read-only mode** compliance
-- **Error handling** with MCP-compliant responses
+- **Security validation**for write operations
+- **Universal tool tracing**with LangSmith integration 
+- **Read-only mode**compliance
+- **Error handling**with MCP-compliant responses
 
 ### Tool Registration
 
@@ -193,7 +193,7 @@ for (let i = 0; i < batches.length; i++) {
 // Success
 await tracker.complete(results, "Operation completed successfully");
 
-// Failure  
+// Failure 
 await tracker.fail(error, "Operation failed due to...");
 ```
 

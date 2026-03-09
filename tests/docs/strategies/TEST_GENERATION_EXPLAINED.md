@@ -8,7 +8,7 @@ Writing tests for 98 tools manually would require:
 
 ## The Solution: Pattern Recognition + Code Generation
 
-### 1️⃣ Pattern Discovery
+### Pattern Discovery
 
 We discovered that ALL tools follow this pattern:
 
@@ -28,7 +28,7 @@ export const registerXxxTool = (server, client) => {
 };
 ```
 
-### 2️⃣ Tool Analysis Algorithm
+### 2. Tool Analysis Algorithm
 
 ```javascript
 // Step 1: Scan the filesystem
@@ -49,7 +49,7 @@ for each file in src/tools/*/*.ts {
 }
 ```
 
-### 3️⃣ Test Pattern Templates
+### 3. Test Pattern Templates
 
 Based on tool type, we apply templates:
 
@@ -86,7 +86,7 @@ test("TOOL_NAME should delete successfully", () => {
 })
 ```
 
-### 4️⃣ Code Generation Process
+### 4. Code Generation Process
 
 ```
 ┌─────────────────────┐

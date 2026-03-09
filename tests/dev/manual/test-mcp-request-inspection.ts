@@ -4,7 +4,7 @@
 
 import { spawn } from "child_process";
 
-console.log("🔍 Deep MCP request structure inspection...");
+console.log("Deep MCP request structure inspection...");
 
 const testRequest = {
   jsonrpc: "2.0",
@@ -16,7 +16,7 @@ const testRequest = {
   }
 };
 
-console.log("📝 Sending request structure:");
+console.log("Sending request structure:");
 console.log(JSON.stringify(testRequest, null, 2));
 
 const child = spawn("bun", ["run", "dist/index.js"], {
@@ -29,25 +29,25 @@ child.stderr.on('data', (data) => {
   
   // Look for any debug logs that might show the full argument structure
   if (logText.includes('fullToolArgs') || logText.includes('ILM Handler received')) {
-    console.log("🔍 Full debug log:");
+    console.log("Full debug log:");
     console.log(logText);
   }
 });
 
 child.stdout.on('data', (data) => {
-  console.log("📤 Server response received");
+  console.log("Server response received");
   child.kill();
   process.exit(0);
 });
 
 // Send the test request after server startup
 setTimeout(() => {
-  console.log("📤 Sending MCP request...");
+  console.log("Sending MCP request...");
   child.stdin.write(JSON.stringify(testRequest) + '\n');
 }, 3000);
 
 setTimeout(() => {
-  console.log("❌ Timeout - killing process");
+  console.log("Timeout - killing process");
   child.kill();
   process.exit(1);
 }, 10000);

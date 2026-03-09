@@ -9,13 +9,13 @@ import { createServer } from "../../../src/server.js";
 import { logger } from "../../../src/utils/logger.js";
 import { notificationManager } from "../../../src/utils/notifications.js";
 
-console.log("🔍 Testing elasticsearch_search with notifications");
+console.log("Testing elasticsearch_search with notifications");
 console.log("================================================");
 
 // Mock MCP server for notifications
 const mockServer = {
   sendNotification: async (params: any) => {
-    console.log(`📢 Notification: ${params.method}`);
+    console.log(`Notification: ${params.method}`);
     if (params.method === "notifications/progress") {
       console.log(`   Progress: ${params.params.progress}/${params.params.total || 100}`);
     } else if (params.method === "notifications/message") {
@@ -31,20 +31,20 @@ notificationManager.setServer(mockServer);
 
 async function testSearchNotifications() {
   try {
-    console.log("\n🚀 Starting search notification test...");
+    console.log("\nStarting search notification test...");
     
     // This would normally be called by the MCP framework
     // We're just testing that our imports and structure are correct
     const { registerSearchTool } = await import("../../../src/tools/core/search.js");
     
-    console.log("✅ Search tool with notifications loaded successfully");
-    console.log("✅ Progress tracker import verified");
-    console.log("✅ Notification manager integration confirmed");
+    console.log("Search tool with notifications loaded successfully");
+    console.log("Progress tracker import verified");
+    console.log("Notification manager integration confirmed");
     
     // Test notification manager directly
     await notificationManager.sendInfo("Test notification", { test: true });
     
-    console.log("\n🎉 All tests passed!");
+    console.log("\nAll tests passed!");
     console.log("The elasticsearch_search tool now includes:");
     console.log("  • Progress tracking (0-100%)");
     console.log("  • Step-by-step notifications");
@@ -53,7 +53,7 @@ async function testSearchNotifications() {
     console.log("  • Comprehensive error handling");
     
   } catch (error) {
-    console.error("❌ Test failed:", error);
+    console.error("Test failed:", error);
     process.exit(1);
   }
 }

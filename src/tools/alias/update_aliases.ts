@@ -171,7 +171,7 @@ export const registerUpdateAliasesTool: ToolRegistrationFunction = (server: McpS
 
       return {
         content: [
-          { type: "text", text: `✅ Successfully executed ${params.actions.length} alias actions: ${actionMessages}` },
+          { type: "text", text: `Successfully executed ${params.actions.length} alias actions: ${actionMessages}` },
           { type: "text", text: JSON.stringify(summary, null, 2) },
           { type: "text", text: JSON.stringify(result, null, 2) },
         ],

@@ -83,7 +83,7 @@ export const registerStartTool: ToolRegistrationFunction = (server: McpServer, e
         content: [
           {
             type: "text",
-            text: `✅ **ILM Started Successfully**
+            text: `**ILM Started Successfully**
 
 Index Lifecycle Management is now running and will begin processing policies.
 

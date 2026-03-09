@@ -17,9 +17,9 @@ describe("Notification Integration Tests", () => {
     // Create server but don't connect to transport
     try {
       server = await createElasticsearchMcpServer(config);
-      console.log("✅ Server created successfully for notification testing");
+      console.log("Server created successfully for notification testing");
     } catch (error) {
-      console.warn("⚠️ Could not create server (likely ES connection issue):", error.message);
+      console.warn("Could not create server (likely ES connection issue):", error.message);
       // Skip tests if server can't be created
       return;
     }
@@ -27,7 +27,7 @@ describe("Notification Integration Tests", () => {
 
   test("should have notification manager initialized", () => {
     if (!server) {
-      console.log("⏭️ Skipping test - server not available");
+      console.log("Skipping test - server not available");
       return;
     }
 
@@ -38,7 +38,7 @@ describe("Notification Integration Tests", () => {
 
   test("should be able to create progress trackers", async () => {
     if (!server) {
-      console.log("⏭️ Skipping test - server not available");
+      console.log("Skipping test - server not available");
       return;
     }
 
@@ -71,7 +71,7 @@ describe("Notification Integration Tests", () => {
 
   test("should handle notification errors gracefully", async () => {
     if (!server) {
-      console.log("⏭️ Skipping test - server not available");
+      console.log("Skipping test - server not available");
       return;
     }
 
@@ -102,4 +102,4 @@ describe("Notification Integration Tests", () => {
   });
 });
 
-console.log("✅ Notification integration test completed");
+console.log("Notification integration test completed");

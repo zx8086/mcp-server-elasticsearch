@@ -95,7 +95,7 @@ class PerformanceTestSuite {
     args: any,
     iterations: number = 100
   ): Promise<PerformanceBenchmark> {
-    console.log(`🏃 Running performance test for ${toolName} (${iterations} iterations)`);
+    console.log(`Running performance test for ${toolName} (${iterations} iterations)`);
     
     const metrics: PerformanceMetrics[] = [];
     let successCount = 0;
@@ -281,14 +281,14 @@ class PerformanceTestSuite {
       if (this.baselines.has(toolName)) {
         try {
           const comparison = this.compareWithBaseline(toolName);
-          const status = comparison.regression ? '❌ REGRESSION' : '✅ PASSED';
+          const status = comparison.regression ? 'REGRESSION' : 'PASSED';
           
           report += `### ${toolName} - ${status}\n\n`;
           report += `- **Duration**: ${comparison.results.duration.current.toFixed(2)}ms (${comparison.results.duration.change > 0 ? '+' : ''}${comparison.results.duration.change.toFixed(1)}%)\n`;
           report += `- **Memory**: ${Math.round(comparison.results.memory.current)} bytes (${comparison.results.memory.change > 0 ? '+' : ''}${comparison.results.memory.change.toFixed(1)}%)\n`;
           report += `- **Success Rate**: ${comparison.results.successRate.current.toFixed(1)}% (${comparison.results.successRate.change > 0 ? '+' : ''}${comparison.results.successRate.change.toFixed(1)}%)\n\n`;
         } catch (error) {
-          report += `### ${toolName} - ⚠️ NO BASELINE\n\nNo baseline data available for comparison.\n\n`;
+          report += `### ${toolName} - NO BASELINE\n\nNo baseline data available for comparison.\n\n`;
         }
       }
     }
@@ -304,7 +304,7 @@ class PerformanceTestSuite {
     };
 
     await Bun.write(`performance/${filename}`, JSON.stringify(results, null, 2));
-    console.log(`📊 Results saved to performance/${filename}`);
+    console.log(`Results saved to performance/${filename}`);
   }
 }
 

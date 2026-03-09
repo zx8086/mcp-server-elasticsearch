@@ -2,7 +2,7 @@
 
 This document captures the essential patterns, fixes, and learnings from building a production-ready MCP (Model Context Protocol) server with proper parameter handling, security validation, and LangSmith tracing integration.
 
-## 🎯 **Critical MCP Parameter Handling**
+## **Critical MCP Parameter Handling**
 
 ### **The Root Issue: JSON Schema vs Zod Schema**
 
@@ -15,7 +15,7 @@ This document captures the essential patterns, fixes, and learnings from buildin
 
 **Solution Pattern**:
 ```typescript
-// ❌ BROKEN: JSON Schema (parameters lost)
+// BROKEN: JSON Schema (parameters lost)
 const schema = {
   type: "object",
   properties: {
@@ -25,7 +25,7 @@ const schema = {
 };
 server.tool("name", "desc", schema, handler);
 
-// ✅ FIXED: Zod Schema (parameters flow correctly)
+// FIXED: Zod Schema (parameters flow correctly)
 server.tool("name", "desc", {
   limit: z.number().min(1).max(100).optional(),
   summary: z.boolean().optional()
@@ -58,7 +58,7 @@ const handler = async (args: any): Promise<SearchResult> => {
 };
 ```
 
-## 🔐 **Security Validation Patterns**
+## **Security Validation Patterns**
 
 ### **Elasticsearch-Specific Security Exemptions**
 
@@ -91,7 +91,7 @@ const readOnlyTools = [
 const shouldValidate = !readOnlyTools.includes(toolName);
 ```
 
-## 📊 **LangSmith Tracing Integration**
+## **LangSmith Tracing Integration**
 
 ### **Proper Input/Output Capture**
 
@@ -103,7 +103,7 @@ const shouldValidate = !readOnlyTools.includes(toolName);
 ```typescript
 export function traceToolExecution(toolName: string, toolArgs: any, extra: any, handler: Function) {
   const toolTracer = traceable(
-    async (inputs: any) => { // ✅ Accept inputs parameter
+    async (inputs: any) => { // Accept inputs parameter
       const result = await handler(toolArgs, extra);
       return result;
     },
@@ -114,11 +114,11 @@ export function traceToolExecution(toolName: string, toolArgs: any, extra: any, 
     },
   );
 
-  // ✅ Pass structured inputs to capture in trace
+  // Pass structured inputs to capture in trace
   return toolTracer({
     tool_name: toolName,
-    arguments: toolArgs,     // User parameters
-    extra_context: extra,    // MCP context
+    arguments: toolArgs, // User parameters
+    extra_context: extra, // MCP context
     timestamp: new Date().toISOString(),
   });
 }
@@ -139,7 +139,7 @@ server.tool = (name: string, description: string, inputSchema: any, handler: any
 };
 ```
 
-## 🛠 **Query Handling Patterns**
+## **Query Handling Patterns**
 
 ### **Empty Query Handling**
 
@@ -189,7 +189,7 @@ if (params.policy) {
 }
 ```
 
-## 🏗 **Tool Architecture Patterns**
+## **Tool Architecture Patterns**
 
 ### **Universal Tool Registration**
 
@@ -250,7 +250,7 @@ function createMcpError(error: Error | string, context: {
 }
 ```
 
-## 🚀 **Development Workflow**
+## **Development Workflow**
 
 ### **Testing Parameter Flow**
 
@@ -297,41 +297,41 @@ const convertToZodSchema = (jsonSchema: any) => {
 };
 ```
 
-## 🔄 **Migration Checklist**
+## **Migration Checklist**
 
 ### **From JSON Schema to Zod Schema**
 
-1. ✅ **Identify tools using JSON schemas**
+1. **Identify tools using JSON schemas**
    ```bash
    rg -l "type:\s*[\"']object[\"']" src/tools/
    ```
 
-2. ✅ **Convert schema definitions**
+2. **Convert schema definitions**
    - Replace JSON schema objects with Zod schema objects
    - Maintain validation rules (min, max, enum)
    - Make fields optional unless required
 
-3. ✅ **Update tool registrations**
+3. **Update tool registrations**
    - Use Zod schema directly in `server.tool()` calls
    - Remove JSON schema constants
    - Update descriptions to mention Zod schema usage
 
-4. ✅ **Test parameter flow**
+4. **Test parameter flow**
    - Verify user parameters reach handlers correctly
    - Test pagination, filtering, and complex objects
    - Validate error handling works
 
-5. ✅ **Security validation**
+5. **Security validation**
    - Add Elasticsearch-specific exemptions
    - Test with comma-separated index patterns
    - Verify read-only tools are exempt
 
-6. ✅ **Tracing integration**
+6. **Tracing integration**
    - Verify inputs appear in LangSmith traces
    - Test error tracing works
    - Validate performance metrics
 
-## 💡 **Key Insights for Developers**
+## **Key Insights for Developers**
 
 ### **MCP Protocol Understanding**
 
@@ -352,16 +352,16 @@ const convertToZodSchema = (jsonSchema: any) => {
 3. **Comprehensive Logging**: Debug parameter flow at every step
 4. **Error Context**: Provide detailed error information for troubleshooting
 
-## 📚 **Agent Instructions**
+## **Agent Instructions**
 
 When working on MCP servers, agents should:
 
-1. **Always use Zod schemas** in `server.tool()` calls, never JSON schemas
-2. **Test parameter flow** explicitly - don't assume parameters work
-3. **Add tracing wrappers** using the universal pattern
-4. **Handle empty queries** and edge cases gracefully
-5. **Validate security exemptions** for domain-specific patterns
-6. **Create comprehensive tests** covering parameter edge cases
-7. **Eliminate all TypeErrors** using established testing patterns (see TESTING_STRATEGY_ANALYSIS.md)
+1. **Always use Zod schemas**in `server.tool()` calls, never JSON schemas
+2. **Test parameter flow**explicitly - don't assume parameters work
+3. **Add tracing wrappers**using the universal pattern
+4. **Handle empty queries**and edge cases gracefully
+5. **Validate security exemptions**for domain-specific patterns
+6. **Create comprehensive tests**covering parameter edge cases
+7. **Eliminate all TypeErrors**using established testing patterns (see TESTING_STRATEGY_ANALYSIS.md)
 
-This documentation ensures consistent, scalable, and production-ready MCP server development with **100% TypeError elimination** achieved through systematic testing and validation.
+This documentation ensures consistent, scalable, and production-ready MCP server development with **100% TypeError elimination**achieved through systematic testing and validation.

@@ -17,7 +17,7 @@ describe("Tracing Initialization Fix - Integration Test", () => {
     // Check for marking initialization as complete
     expect(tracingSource).toContain("isInitialized = true");
     
-    console.log("✅ Tracing initialization guard is properly implemented");
+    console.log("Tracing initialization guard is properly implemented");
   });
 
   it("should verify server.ts no longer has redundant initialization call", async () => {
@@ -31,7 +31,7 @@ describe("Tracing Initialization Fix - Integration Test", () => {
     // Should have no direct calls (it's only imported, not called)
     expect(initializeCalls).toBe(0);
     
-    console.log("✅ Server.ts no longer has redundant tracing initialization");
+    console.log("Server.ts no longer has redundant tracing initialization");
   });
 
   it("should verify index.ts still has the main initialization call", async () => {
@@ -47,7 +47,7 @@ describe("Tracing Initialization Fix - Integration Test", () => {
     expect(indexSource).toContain("// Initialize tracing first");
     expect(indexSource).toContain("initializeTracing();");
     
-    console.log("✅ Index.ts maintains proper main initialization call");
+    console.log("Index.ts maintains proper main initialization call");
   });
 
   it("should verify tracing module no longer has module-level initialization", async () => {
@@ -59,17 +59,17 @@ describe("Tracing Initialization Fix - Integration Test", () => {
     const initCallsInFile = (tracingSource.match(/^initializeTracing\(\);/gm) || []).length;
     expect(initCallsInFile).toBe(0);
     
-    console.log("✅ Tracing module no longer has module-level initialization");
+    console.log("Tracing module no longer has module-level initialization");
   });
 
   it("should summarize the fix implementation", () => {
-    console.log("\n📋 TRACING INITIALIZATION FIX SUMMARY:");
-    console.log("1. ✅ Added isInitialized guard to prevent multiple initializations");
-    console.log("2. ✅ Removed redundant initializeTracing() call from server.ts");
-    console.log("3. ✅ Kept main initialization in index.ts");
-    console.log("4. ✅ Removed module-level initialization in tracing.ts");
-    console.log("5. ✅ Now only one LangSmith client will be created per process");
-    console.log("\n🎯 EXPECTED RESULT:");
+    console.log("\nTRACING INITIALIZATION FIX SUMMARY:");
+    console.log("1. Added isInitialized guard to prevent multiple initializations");
+    console.log("2. Removed redundant initializeTracing() call from server.ts");
+    console.log("3. Kept main initialization in index.ts");
+    console.log("4. Removed module-level initialization in tracing.ts");
+    console.log("5. Now only one LangSmith client will be created per process");
+    console.log("\nEXPECTED RESULT:");
     console.log("- No more duplicate server instances in traces");
     console.log("- Each session will have proper isolation");
     console.log("- All traces will appear under their respective sessions/connections");

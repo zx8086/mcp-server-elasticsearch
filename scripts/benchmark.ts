@@ -13,7 +13,7 @@ interface BenchmarkConfig {
 }
 
 async function runBenchmarks() {
-  console.log("🚀 Starting Elasticsearch MCP Server Benchmark Suite");
+  console.log("Starting Elasticsearch MCP Server Benchmark Suite");
   console.log("=".repeat(60));
 
   const config = getConfig();
@@ -37,14 +37,14 @@ async function runBenchmarks() {
     warmup: 10,
   };
 
-  console.log("📊 Configuration:");
+  console.log("Configuration:");
   console.log(`   Tools: ${benchmarkConfig.tools.length}`);
   console.log(`   Iterations per tool: ${benchmarkConfig.iterations}`);
   console.log(`   Warmup iterations: ${benchmarkConfig.warmup}`);
   console.log("");
 
   // System information
-  console.log("🖥️  System Information:");
+  console.log("System Information:");
   console.log(`   Runtime: Bun ${Bun.version}`);
   console.log(`   Platform: ${process.platform} ${process.arch}`);
   console.log(`   Node.js: ${process.version}`);
@@ -56,7 +56,7 @@ async function runBenchmarks() {
 
   // Run benchmarks for each tool
   for (const toolName of benchmarkConfig.tools) {
-    console.log(`\n🔧 Benchmarking ${toolName}...`);
+    console.log(`\nBenchmarking ${toolName}...`);
 
     try {
       // Warmup
@@ -71,21 +71,21 @@ async function runBenchmarks() {
 
       // Print immediate results
       console.log(
-        `   ✅ Completed: avg ${benchmark.summary.avgDuration.toFixed(2)}ms, ` +
+        `   [PASS] Completed: avg ${benchmark.summary.avgDuration.toFixed(2)}ms, ` +
           `p95 ${benchmark.summary.p95Duration.toFixed(2)}ms, ` +
           `success ${benchmark.summary.successRate.toFixed(1)}%`,
       );
     } catch (error) {
-      console.error(`   ❌ Failed: ${error}`);
+      console.error(`   [FAIL] Failed: ${error}`);
       results.set(toolName, { error: error.message });
     }
   }
 
   const totalTime = performance.now() - startTime;
-  console.log(`\n⏱️  Total benchmark time: ${(totalTime / 1000).toFixed(2)}s`);
+  console.log(`\nTotal benchmark time: ${(totalTime / 1000).toFixed(2)}s`);
 
   // Generate comprehensive report
-  console.log("\n📊 Generating performance report...");
+  console.log("\nGenerating performance report...");
   const report = await generateComprehensiveReport(performanceSuite, results, totalTime);
 
   // Save results
@@ -96,7 +96,7 @@ async function runBenchmarks() {
   const resultsPath = `performance/benchmark-results-${timestamp}.json`;
   await performanceSuite.saveResults(resultsPath);
 
-  console.log("\n📝 Reports saved:");
+  console.log("\nReports saved:");
   console.log(`   ${reportPath}`);
   console.log(`   ${resultsPath}`);
 
@@ -106,7 +106,7 @@ async function runBenchmarks() {
   console.log("=".repeat(80));
 
   const successfulTests = Array.from(results.values()).filter((r) => !r.error).length;
-  console.log(`✅ Successful tests: ${successfulTests}/${benchmarkConfig.tools.length}`);
+  console.log(`[PASS] Successful tests: ${successfulTests}/${benchmarkConfig.tools.length}`);
 
   if (successfulTests > 0) {
     const averages = Array.from(results.values())
@@ -114,13 +114,13 @@ async function runBenchmarks() {
       .map((r) => r.summary.avgDuration);
 
     const avgResponse = averages.reduce((sum, avg) => sum + avg, 0) / averages.length;
-    console.log(`⚡ Average response time: ${avgResponse.toFixed(2)}ms`);
+    console.log(`Average response time: ${avgResponse.toFixed(2)}ms`);
 
     const p95s = Array.from(results.values())
       .filter((r) => !r.error)
       .map((r) => r.summary.p95Duration);
     const avgP95 = p95s.reduce((sum, p95) => sum + p95, 0) / p95s.length;
-    console.log(`📈 Average P95: ${avgP95.toFixed(2)}ms`);
+    console.log(`Average P95: ${avgP95.toFixed(2)}ms`);
   }
 
   // Regression warnings
@@ -137,9 +137,9 @@ async function runBenchmarks() {
   }
 
   if (regressions.length > 0) {
-    console.log(`\n⚠️  Performance regressions detected in: ${regressions.join(", ")}`);
+    console.log(`\n[WARN] Performance regressions detected in: ${regressions.join(", ")}`);
   } else {
-    console.log("\n🎉 No performance regressions detected!");
+    console.log("\nNo performance regressions detected!");
   }
 
   console.log("=".repeat(80));
@@ -237,11 +237,11 @@ async function generateComprehensiveReport(
 
   for (const [toolName, result] of results) {
     if (result.error) {
-      report += `| ${toolName} | - | - | - | - | - | - | - | ❌ ERROR |\n`;
+      report += `| ${toolName} | - | - | - | - | - | - | - | ERROR |\n`;
     } else {
       const { summary } = result;
       const memoryKB = Math.round(summary.avgMemoryGrowth / 1024);
-      const status = summary.successRate >= 95 ? "✅" : summary.successRate >= 90 ? "⚠️" : "❌";
+      const status = summary.successRate >= 95 ? "PASS" : summary.successRate >= 90 ? "WARN" : "FAIL";
 
       report += `| ${toolName} | ${result.category} | ${summary.avgDuration.toFixed(2)} | ${summary.minDuration.toFixed(2)} | ${summary.maxDuration.toFixed(2)} | ${summary.p95Duration.toFixed(2)} | ${memoryKB} | ${summary.successRate.toFixed(1)}% | ${status} |\n`;
     }
@@ -255,13 +255,13 @@ async function generateComprehensiveReport(
   for (const [toolName] of results) {
     try {
       const comparison = performanceSuite.compareWithBaseline(toolName);
-      const status = comparison.regression ? "❌ REGRESSION" : "✅ PASSED";
+      const status = comparison.regression ? "REGRESSION" : "PASSED";
 
       report += `### ${toolName} - ${status}\n\n`;
 
       if (comparison.regression) {
         hasRegressions = true;
-        report += "**⚠️ Performance regression detected!**\n\n";
+        report += "**Performance regression detected!**\n\n";
       }
 
       report += `- **Duration:** ${comparison.results.duration.current.toFixed(2)}ms `;
@@ -273,12 +273,12 @@ async function generateComprehensiveReport(
       report += `- **Success Rate:** ${comparison.results.successRate.current.toFixed(1)}% `;
       report += `(${comparison.results.successRate.change > 0 ? "+" : ""}${comparison.results.successRate.change.toFixed(1)}% vs baseline)\n\n`;
     } catch (_error) {
-      report += `### ${toolName} - ⚠️ NO BASELINE\n\nNo baseline data available for regression analysis.\n\n`;
+      report += `### ${toolName} - NO BASELINE\n\nNo baseline data available for regression analysis.\n\n`;
     }
   }
 
   if (!hasRegressions) {
-    report += "🎉 **No performance regressions detected!**\n\n";
+    report += "**No performance regressions detected!**\n\n";
   }
 
   // Performance Categories
@@ -322,13 +322,13 @@ async function generateComprehensiveReport(
   report += "## Recommendations\n\n";
 
   if (hasRegressions) {
-    report += "🔍 **Performance Investigation Required:**\n";
+    report += "**Performance Investigation Required:**\n";
     report += "- Review recent changes that may impact performance\n";
     report += "- Consider profiling regressed operations\n";
     report += "- Check for memory leaks or inefficient algorithms\n\n";
   }
 
-  report += "⚡ **Optimization Opportunities:**\n";
+  report += "**Optimization Opportunities:**\n";
 
   const slowOperations = Array.from(results.entries())
     .filter(([_, result]) => !result.error && result.summary.avgDuration > 100)

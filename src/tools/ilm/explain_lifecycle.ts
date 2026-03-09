@@ -100,7 +100,7 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
       // Warn about large cluster analysis
       if (!params.limit && index === "*") {
         await notificationManager.sendWarning(
-          `⚠️  Analyzing ALL indices without limit - this may return 1000+ indices and impact performance`,
+          `Analyzing ALL indices without limit - this may return 1000+ indices and impact performance`,
           {
             operation_type: "ilm_explain_lifecycle",
             performance_warning: true,
@@ -225,7 +225,7 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
 
       // Error summary
       if (errorIndices.length > 0) {
-        content.push(`### ⚠️ Errors Found (${errorIndices.length})`);
+        content.push(`### Errors Found (${errorIndices.length})`);
         content.push(
           errorIndices
             .slice(0, 10)
@@ -265,11 +265,11 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
           content.push("```\n");
         } else {
           // Compact mode - key information only
-          const managed = idx.managed ? "✓" : "✗";
+          const managed = idx.managed ? "yes" : "no";
           const policy = idxAny.policy || "none";
           const phase = idxAny.phase || "unknown";
           const action = idxAny.action ? `:${idxAny.action}` : "";
-          const error = idxAny.step_info?.type === "error" || idxAny.failed_step ? " ⚠️ ERROR" : "";
+          const error = idxAny.step_info?.type === "error" || idxAny.failed_step ? " ERROR" : "";
 
           content.push(
             `- **${idx.name}** | Managed: ${managed} | Policy: ${policy} | Phase: ${phase}${action}${error}`,
@@ -320,7 +320,7 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
 
       // Send error summary if errors were found
       if (errorIndices.length > 0) {
-        await notificationManager.sendWarning(`⚠️  ILM errors detected in ${errorIndices.length} indices`, {
+        await notificationManager.sendWarning(`ILM errors detected in ${errorIndices.length} indices`, {
           operation_type: "ilm_explain_lifecycle",
           error_count: errorIndices.length,
           error_indices: errorIndices.slice(0, 5), // Show first 5 error indices
@@ -425,35 +425,35 @@ export const registerExplainLifecycleTool: ToolRegistrationFunction = (server: M
 /*
 IMPROVEMENTS vs explain_lifecycle.ts:
 
-1. ✅ ELIMINATED COMPLEX ZOD CONVERSION
+1. ELIMINATED COMPLEX ZOD CONVERSION
    - Direct JSON Schema instead of complex z.union with transforms
    - No more .pipe() chaining and regex transformations
    - Simple number validation instead of string->number transforms
 
-2. ✅ STANDARDIZED MCP ERROR CODES
+2. STANDARDIZED MCP ERROR CODES
    - Using ErrorCode.InvalidParams, ErrorCode.InternalError, ErrorCode.InvalidRequest
    - Proper error categorization (validation, execution, not_found, permission)
    - Better error context and details
 
-3. ✅ SIMPLIFIED TOOL REGISTRATION
+3. SIMPLIFIED TOOL REGISTRATION
    - Direct server.tool() call with JSON Schema
    - No complex parameter extraction
    - Trust MCP SDK parameter handling
 
-4. ✅ IMPROVED RESPONSE FORMATTING
+4. IMPROVED RESPONSE FORMATTING
    - Better structured output with clear sections
    - Smart auto-limiting for large result sets
    - More readable compact vs detailed modes
 
-5. ✅ BETTER PERFORMANCE MONITORING
+5. BETTER PERFORMANCE MONITORING
    - Simple performance tracking
    - No complex wrapper overhead
 
 BENEFITS:
-- 🚀 Better MCP protocol compliance
-- 🔧 Easier to debug and maintain
-- 📈 Better error reporting with specific context
-- ⚡ No expensive schema conversions
-- 🎯 More predictable parameter handling
-- 📊 Clearer response formatting
+- Better MCP protocol compliance
+- Easier to debug and maintain
+- Better error reporting with specific context
+- No expensive schema conversions
+- More predictable parameter handling
+- Clearer response formatting
 */

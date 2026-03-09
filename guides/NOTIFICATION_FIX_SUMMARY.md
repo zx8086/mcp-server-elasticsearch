@@ -5,7 +5,7 @@ The user reported that all traces were appearing on a single thread/connection i
 
 ## Root Cause
 The notification manager was trying to call `sendNotification()` method on the MCP server instance, but this method doesn't exist in the MCP SDK. The correct methods are:
-- `notification()` for generic notifications (from Protocol class)  
+- `notification()` for generic notifications (from Protocol class) 
 - `sendLoggingMessage()` for logging messages (from Server class)
 
 ## Solution
@@ -43,8 +43,8 @@ await this.server.sendLoggingMessage({
 ```
 
 ### 2. Fixed Server Instance Type
-**Before:** Expected `McpServer` (wrapper class)
-**After:** Expects `Server` (underlying MCP SDK class)
+**Before:**Expected `McpServer` (wrapper class)
+**After:**Expects `Server` (underlying MCP SDK class)
 
 ### 3. Updated Server Initialization
 **File: `/src/server.ts`**
@@ -64,34 +64,34 @@ notificationManager.setServer(server.server); // Access underlying Server instan
 ### Progress Notifications
 - **Method:** `notifications/progress`
 - **Parameters:** `{ progressToken, progress, total }`
-- **Used for:** Long-running operation progress tracking
+- **Used for:**Long-running operation progress tracking
 
-### Logging Notifications  
+### Logging Notifications 
 - **Method:** `notifications/message` (handled by `sendLoggingMessage`)
 - **Parameters:** `{ level, logger, data }`
-- **Used for:** General status messages, warnings, and errors
+- **Used for:**General status messages, warnings, and errors
 
 ## Error Handling
 The notification system now properly handles errors:
-- **Graceful degradation:** Errors are logged but don't break tool execution
-- **No exceptions:** Operations continue even if notifications fail
-- **Transport awareness:** Handles "Not connected" states appropriately
+- **Graceful degradation:**Errors are logged but don't break tool execution
+- **No exceptions:**Operations continue even if notifications fail
+- **Transport awareness:**Handles "Not connected" states appropriately
 
 ## Testing
 Created comprehensive tests to verify:
-- ✅ Progress notifications use correct API
-- ✅ Message notifications use logging API
-- ✅ Missing server handled gracefully  
-- ✅ Server errors don't break execution
-- ✅ Operation tracking works correctly
-- ✅ Integration with real MCP server works
+- Progress notifications use correct API
+- Message notifications use logging API
+- Missing server handled gracefully 
+- Server errors don't break execution
+- Operation tracking works correctly
+- Integration with real MCP server works
 
 ## Impact
-- **✅ Fixed:** No more `sendNotification is not a function` errors
-- **✅ Working:** Progress tracking for long-running operations
-- **✅ Clean:** No error spam in production logs
-- **✅ Compatible:** Full MCP protocol compliance
-- **✅ Tested:** Comprehensive test coverage
+- **Fixed:**No more `sendNotification is not a function` errors
+- **Working:**Progress tracking for long-running operations
+- **Clean:**No error spam in production logs
+- **Compatible:**Full MCP protocol compliance
+- **Tested:**Comprehensive test coverage
 
 ## Files Modified
 1. `/src/utils/notifications.ts` - Fixed notification API usage
@@ -100,8 +100,8 @@ Created comprehensive tests to verify:
 4. `/tests/integration/notification-integration.test.ts` - Integration tests
 
 ## Verification
-- **Build:** ✅ Production build succeeds
-- **Tests:** ✅ 85 tests passing (5 new notification tests)
-- **Config:** ✅ Configuration validation passes
-- **Integration:** ✅ Server startup and operation tracking works
-- **No regressions:** ✅ All existing functionality preserved
+- **Build:**Production build succeeds
+- **Tests:** 85 tests passing (5 new notification tests)
+- **Config:**Configuration validation passes
+- **Integration:**Server startup and operation tracking works
+- **No regressions:**All existing functionality preserved

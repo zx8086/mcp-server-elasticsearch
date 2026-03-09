@@ -61,12 +61,12 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (serve
         output += `- **Unassigned Shards:** ${health.unassigned_shards}\n`;
 
         if (health.unassigned_shards > 0) {
-          output += "\n⚠️ **Warning:** Unassigned shards detected - this may indicate cluster issues\n";
+          output += "\n**Warning:** Unassigned shards detected - this may indicate cluster issues\n";
         }
         output += "\n";
       } catch (error) {
         output += "## Cluster Health\n\n";
-        output += `⚠️ Could not retrieve cluster health: ${error instanceof Error ? error.message : String(error)}\n\n`;
+        output += `Could not retrieve cluster health: ${error instanceof Error ? error.message : String(error)}\n\n`;
       }
 
       if (params.includeMetrics) {
@@ -81,7 +81,7 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (serve
           output += `- **Memory Usage:** ${stats.nodes?.jvm?.mem?.heap_used_in_bytes ? `${Math.round(stats.nodes.jvm.mem.heap_used_in_bytes / 1024 / 1024)}MB` : "N/A"}\n\n`;
         } catch (error) {
           output += "## Cluster Statistics\n\n";
-          output += `⚠️ Could not retrieve cluster stats: ${error instanceof Error ? error.message : String(error)}\n\n`;
+          output += `Could not retrieve cluster stats: ${error instanceof Error ? error.message : String(error)}\n\n`;
         }
       }
 
@@ -111,18 +111,18 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (serve
           const startTime = Date.now();
           await esClient.cat.indices({ format: "json", h: "index,docs.count,store.size" });
           const duration = Date.now() - startTime;
-          output += `✅ Index listing: ${duration}ms\n`;
+          output += `Index listing: ${duration}ms\n`;
         } catch (error) {
-          output += `❌ Index listing failed: ${error instanceof Error ? error.message : String(error)}\n`;
+          output += `Index listing failed: ${error instanceof Error ? error.message : String(error)}\n`;
         }
 
         try {
           const startTime = Date.now();
           await esClient.cluster.health();
           const duration = Date.now() - startTime;
-          output += `✅ Health check: ${duration}ms\n`;
+          output += `Health check: ${duration}ms\n`;
         } catch (error) {
-          output += `❌ Health check failed: ${error instanceof Error ? error.message : String(error)}\n`;
+          output += `Health check failed: ${error instanceof Error ? error.message : String(error)}\n`;
         }
         output += "\n";
       }

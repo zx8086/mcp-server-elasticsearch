@@ -105,17 +105,17 @@ export const registerMigrateToDataTiersTool: ToolRegistrationFunction = (server:
         content: [
           {
             type: "text",
-            text: `🔄 **Data Tiers Migration ${isDryRun ? "Preview" : "Completed"}**
+            text: `**Data Tiers Migration ${isDryRun ? "Preview" : "Completed"}**
 
-${isDryRun ? "⚠️ **DRY RUN**: No actual changes were made" : "✅ **APPLIED**: Changes have been applied to the cluster"}
+${isDryRun ? "**DRY RUN**: No actual changes were made" : "**APPLIED**: Changes have been applied to the cluster"}
 
 **Migration Summary:**
 - **Policies Migrated**: ${(result.migrated_ilm_policies || []).length}
 - **Indices Migrated**: ${(result.migrated_indices || []).length}
 - **Templates Migrated**: ${(result.migrated_legacy_templates || []).length}
-- **Legacy Template Removed**: ${result.removed_legacy_template ? "✅ Yes" : "❌ No"}
+- **Legacy Template Removed**: ${result.removed_legacy_template ? "Yes" : "No"}
 
-${isDryRun ? "ℹ️ **Next Step**: Run without dryRun to apply changes" : "ℹ️ **Complete**: Your cluster now uses data tiers routing"}
+${isDryRun ? "**Next Step**: Run without dryRun to apply changes" : "**Complete**: Your cluster now uses data tiers routing"}
 
 Operation completed at: ${new Date().toISOString()}`,
           },

@@ -13,7 +13,7 @@
 import { describe, test, expect } from 'bun:test';
 import { z } from 'zod';
 
-console.log("🔗 REAL SEARCH TOOL INTEGRATION TEST");
+console.log("REAL SEARCH TOOL INTEGRATION TEST");
 console.log("===================================");
 
 // Import the actual search tool schema from the implementation
@@ -33,15 +33,15 @@ async function getSearchToolSchema() {
     
     return SearchParams;
   } catch (error) {
-    console.log("⚠️  Could not import actual search tool, using expected schema");
+    console.log(" Could not import actual search tool, using expected schema");
     throw error;
   }
 }
 
-describe('🔗 Real Tool Schema Integration', () => {
+describe('Real Tool Schema Integration', () => {
 
   test('Should match the fixed search tool schema exactly', async () => {
-    console.log("\n📋 Validating schema compatibility...");
+    console.log("\nValidating schema compatibility...");
     
     const SearchParams = await getSearchToolSchema();
     
@@ -89,11 +89,11 @@ describe('🔗 Real Tool Schema Integration', () => {
     expect(result.aggs.log_levels).toBeDefined();
     expect(result.aggs.services).toBeDefined();
     
-    console.log("✅ Schema compatibility confirmed");
+    console.log("Schema compatibility confirmed");
   });
 
   test('Should reject old problematic string format', async () => {
-    console.log("\n🚫 Validating string format rejection...");
+    console.log("\nValidating string format rejection...");
     
     const SearchParams = await getSearchToolSchema();
     
@@ -109,14 +109,14 @@ describe('🔗 Real Tool Schema Integration', () => {
       SearchParams.parse(problematicInput);
     }).toThrow();
     
-    console.log("✅ Problematic string format correctly rejected");
+    console.log("Problematic string format correctly rejected");
   });
 });
 
-describe('🛡️ Security Integration Tests', () => {
+describe('Security Integration Tests', () => {
 
   test('Read-only tool list should include elasticsearch_search', () => {
-    console.log("\n🔒 Validating security bypass configuration...");
+    console.log("\nValidating security bypass configuration...");
     
     // This matches our implementation in src/tools/index.ts
     const readOnlyTools = [
@@ -134,14 +134,14 @@ describe('🛡️ Security Integration Tests', () => {
     const shouldValidate = !readOnlyTools.includes(toolName);
     expect(shouldValidate).toBe(false);
     
-    console.log("✅ Security bypass correctly configured");
+    console.log("Security bypass correctly configured");
   });
 });
 
-describe('🎯 Real Request Generation Tests', () => {
+describe('Real Request Generation Tests', () => {
 
   test('Should generate the exact format Elasticsearch expects', async () => {
-    console.log("\n🔍 Testing real Elasticsearch request format...");
+    console.log("\nTesting real Elasticsearch request format...");
     
     const SearchParams = await getSearchToolSchema();
     
@@ -222,16 +222,16 @@ describe('🎯 Real Request Generation Tests', () => {
     expect(serialized).not.toContain('\\{');
     expect(serialized).not.toContain('\\}');
     
-    console.log("✅ Clean Elasticsearch request format validated");
+    console.log("Clean Elasticsearch request format validated");
     console.log(`   Request size: ${serialized.length} characters`);
     console.log(`   No escaped characters found`);
   });
 });
 
-describe('📊 Performance and Format Validation', () => {
+describe('Performance and Format Validation', () => {
 
   test('Should handle complex nested structures efficiently', async () => {
-    console.log("\n⚡ Testing complex structure performance...");
+    console.log("\nTesting complex structure performance...");
     
     const SearchParams = await getSearchToolSchema();
     
@@ -306,21 +306,21 @@ describe('📊 Performance and Format Validation', () => {
     expect(result.aggs.services.aggs.hourly_breakdown.aggs.response_times).toBeDefined();
     expect(result.aggs.geographic_breakdown).toBeDefined();
     
-    console.log(`✅ Complex structure parsed in ${parseTime.toFixed(2)}ms`);
+    console.log(`Complex structure parsed in ${parseTime.toFixed(2)}ms`);
   });
 });
 
-console.log("\n🎉 INTEGRATION TEST SUMMARY");
+console.log("\nINTEGRATION TEST SUMMARY");
 console.log("===========================");
-console.log("✅ Real search tool schema compatibility confirmed");
-console.log("✅ Security bypass implementation validated");
-console.log("✅ Clean Elasticsearch request format verified");
-console.log("✅ Complex nested structures supported");
-console.log("✅ Performance requirements met");
-console.log("✅ No escaped character artifacts detected");
+console.log("Real search tool schema compatibility confirmed");
+console.log("Security bypass implementation validated");
+console.log("Clean Elasticsearch request format verified");
+console.log("Complex nested structures supported");
+console.log("Performance requirements met");
+console.log("No escaped character artifacts detected");
 console.log("");
-console.log("🚀 Search tool integration fully validated!");
+console.log("Search tool integration fully validated!");
 
 if (import.meta.main) {
-  console.log("\n🧪 Running real search tool integration tests...");
+  console.log("\nRunning real search tool integration tests...");
 }

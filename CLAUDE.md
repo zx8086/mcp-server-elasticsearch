@@ -10,33 +10,33 @@ This is an Elasticsearch MCP (Model Context Protocol) Server that enables AI ass
 
 ### Development
 ```bash
-bun run dev                    # Start development server with hot reload
-bun run dev:hot                # Start with hot module replacement
-bun run build                  # Build production bundle
-bun run build:dev              # Development build with inline sourcemaps
-bun run build:production       # Optimized production build
-bun run build:analyze          # Build with bundle analysis
-bun run test                   # Run tests
-bun run lint                   # Run Biome linting
-bun run lint:fix               # Fix linting issues
-bun run format                 # Format code with Biome
+bun run dev # Start development server with hot reload
+bun run dev:hot # Start with hot module replacement
+bun run build # Build production bundle
+bun run build:dev # Development build with inline sourcemaps
+bun run build:production # Optimized production build
+bun run build:analyze # Build with bundle analysis
+bun run test # Run tests
+bun run lint # Run Biome linting
+bun run lint:fix # Fix linting issues
+bun run format # Format code with Biome
 ```
 
 ### Configuration & Validation
 ```bash
-bun run validate-config        # Validate .env configuration
-bun run validate-config:full   # Validate config + test ES connection
-bun run test-connection        # Test Elasticsearch connectivity
+bun run validate-config # Validate .env configuration
+bun run validate-config:full # Validate config + test ES connection
+bun run test-connection # Test Elasticsearch connectivity
 ```
 
 ### Debugging
 ```bash
-bun run inspector              # MCP protocol inspector (stdio mode) - BROWSER REQUIRED
-bun run build:inspector        # Build and run inspector - BROWSER REQUIRED  
-LOG_LEVEL=debug bun run dev    # Enable debug logging
-bun run dev-tools              # Development tools suite
-bun run dev-tools:full         # Full dev tools with tests and profiling
-bun run dev-tools:minimal      # Minimal dev tools (no lint/typecheck)
+bun run inspector # MCP protocol inspector (stdio mode) - BROWSER REQUIRED
+bun run build:inspector # Build and run inspector - BROWSER REQUIRED 
+LOG_LEVEL=debug bun run dev # Enable debug logging
+bun run dev-tools # Development tools suite
+bun run dev-tools:full # Full dev tools with tests and profiling
+bun run dev-tools:minimal # Minimal dev tools (no lint/typecheck)
 ```
 
 ### CRITICAL: Tool Validation Best Practice
@@ -57,7 +57,7 @@ echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "el
 
 ### Connectivity Testing
 ```bash
-bun run connectivity-test      # Test connectivity
+bun run connectivity-test # Test connectivity
 ```
 
 ## Architecture & Key Patterns
@@ -70,22 +70,22 @@ The project uses a type-safe, layered configuration system with single source of
 
 #### Configuration Architecture Pattern:
 ```typescript
-// ✅ SINGLE SOURCE OF TRUTH: Defaults in defaultConfig object only
+// SINGLE SOURCE OF TRUTH: Defaults in defaultConfig object only
 const defaultConfig: Config = {
   server: { name: "elasticsearch-mcp-server", version: "0.1.1", /* ... */ },
   elasticsearch: { url: "http://localhost:9200", /* ... */ },
   // ...
 };
 
-// ✅ CLEAN SCHEMAS: No .default() calls - pure validation
+// CLEAN SCHEMAS: No .default() calls - pure validation
 const ServerConfigSchema = z.object({
-  name: z.string().min(1),           // No .default()
-  version: z.string().min(1),        // No .default()
-  readOnlyMode: z.boolean(),         // No .default()
+  name: z.string().min(1), // No .default()
+  version: z.string().min(1), // No .default()
+  readOnlyMode: z.boolean(), // No .default()
   // ...
 });
 
-// ✅ MERGE PATTERN: Environment overrides defaults
+// MERGE PATTERN: Environment overrides defaults
 const envConfig = loadConfigFromEnv();
 const mergedConfig = {
   server: { ...defaultConfig.server, ...envConfig.server },
@@ -93,7 +93,7 @@ const mergedConfig = {
   // ...
 };
 
-// ✅ VALIDATION: Schemas validate merged config
+// VALIDATION: Schemas validate merged config
 config = ConfigSchema.parse(mergedConfig);
 ```
 
@@ -229,8 +229,8 @@ export function traceToolExecution(toolName: string, toolArgs: any, extra: any, 
   // Pass structured inputs to capture in trace
   return toolTracer({
     tool_name: toolName,
-    arguments: toolArgs,     // User parameters
-    extra_context: extra,    // MCP context
+    arguments: toolArgs, // User parameters
+    extra_context: extra, // MCP context
     timestamp: new Date().toISOString(),
   });
 }
@@ -311,97 +311,97 @@ The project uses an organized test structure with different categories for diffe
 
 ```
 tests/
-├── unit/                     # Fast, isolated unit tests
-│   ├── config/              # Configuration validation
-│   ├── tools/               # Individual tool tests
-│   ├── utils/               # Utility function tests
-│   └── schemas/             # Schema validation
-│
-├── integration/             # Tests requiring Elasticsearch
-│   ├── tools/              # Tool integration tests
-│   ├── generated/          # Auto-generated tests
-│   └── e2e/                # End-to-end workflows
-│
-├── validation/              # MCP parameter validation
-│   ├── natural-params/     # Natural parameter tests
-│   ├── mcp-protocol/       # MCP protocol tests
-│   └── search/             # Search validation
-│
-├── infrastructure/          # System infrastructure tests
-│   ├── monitoring/         # Prometheus, Grafana
-│   ├── caching/           # Cache system
-│   ├── performance/       # Performance benchmarks
-│   ├── health/            # Health checks
-│   └── security/          # Audit trail, security
-│
-├── dev/                    # Development & debugging
-│   ├── manual/            # Manual test scripts
-│   ├── debug/             # Debug utilities
-│   └── fixtures/          # Test data
-│
-├── utils/                   # Test utilities and helpers
-├── regression/             # Regression test suite
-│
-└── docs/                   # Test documentation
-    ├── coverage/          # Coverage reports
-    └── strategies/        # Test strategies
+ unit/ # Fast, isolated unit tests
+    config/ # Configuration validation
+    tools/ # Individual tool tests
+    utils/ # Utility function tests
+    schemas/ # Schema validation
+
+ integration/ # Tests requiring Elasticsearch
+    tools/ # Tool integration tests
+    generated/ # Auto-generated tests
+    e2e/ # End-to-end workflows
+
+ validation/ # MCP parameter validation
+    natural-params/ # Natural parameter tests
+    mcp-protocol/ # MCP protocol tests
+    search/ # Search validation
+
+ infrastructure/ # System infrastructure tests
+    monitoring/ # Prometheus, Grafana
+    caching/ # Cache system
+    performance/ # Performance benchmarks
+    health/ # Health checks
+    security/ # Audit trail, security
+
+ dev/ # Development & debugging
+    manual/ # Manual test scripts
+    debug/ # Debug utilities
+    fixtures/ # Test data
+
+ utils/ # Test utilities and helpers
+ regression/ # Regression test suite
+
+ docs/ # Test documentation
+     coverage/ # Coverage reports
+     strategies/ # Test strategies
 ```
 
 ### Testing Commands
 
 #### Primary Testing (Recommended for Daily Development)
 ```bash
-bun run test                   # Run unit + validation tests (fast, reliable)
-bun run test:all               # Run all tests (comprehensive)
-bun run test:watch             # Live testing during development
+bun run test # Run unit + validation tests (fast, reliable)
+bun run test:all # Run all tests (comprehensive)
+bun run test:watch # Live testing during development
 ```
 
 #### Category-Specific Testing
 ```bash
-bun run test:unit              # Unit tests only (fastest)
-bun run test:integration       # Integration tests (requires ES)
-bun run test:validation        # Parameter validation tests
-bun run test:infrastructure    # Infrastructure tests
+bun run test:unit # Unit tests only (fastest)
+bun run test:integration # Integration tests (requires ES)
+bun run test:validation # Parameter validation tests
+bun run test:infrastructure # Infrastructure tests
 ```
 
 #### Subcategory Testing
 ```bash
-bun run test:config            # Configuration tests
-bun run test:tools             # Tool integration tests
-bun run test:e2e               # End-to-end workflows
-bun run test:performance       # Performance benchmarks
+bun run test:config # Configuration tests
+bun run test:tools # Tool integration tests
+bun run test:e2e # End-to-end workflows
+bun run test:performance # Performance benchmarks
 ```
 
 #### Special Test Modes
 ```bash
-bun run test:coverage          # Test coverage analysis
-bun run test:ci                # CI/CD optimized tests
-bun run test:pre-deploy        # Pre-deployment validation
-bun run test:working           # Working test suite (legacy)
-bun run test:dev               # Development manual tests
+bun run test:coverage # Test coverage analysis
+bun run test:ci # CI/CD optimized tests
+bun run test:pre-deploy # Pre-deployment validation
+bun run test:working # Working test suite (legacy)
+bun run test:dev # Development manual tests
 ```
 
 #### Testing Workflow (Recommended)
 ```bash
 # Regular Development:
-bun run test                   # Unit + validation tests (< 30 seconds)
-bun run test:config            # After config changes
+bun run test # Unit + validation tests (< 30 seconds)
+bun run test:config # After config changes
 
 # Before Commits:
-bun run validate-config        # Environment validation
-bun run test:ci                # CI optimized tests
-bun run test-connection        # Elasticsearch connectivity
+bun run validate-config # Environment validation
+bun run test:ci # CI optimized tests
+bun run test-connection # Elasticsearch connectivity
 
 # Pre-Deployment:
-bun run test:pre-deploy        # Comprehensive pre-deployment suite
-bun run test:performance       # Performance validation
-bun run test:coverage          # Coverage analysis
+bun run test:pre-deploy # Comprehensive pre-deployment suite
+bun run test:performance # Performance validation
+bun run test:coverage # Coverage analysis
 ```
 
 #### Development Testing
 ```bash
-bun run inspector              # MCP protocol testing
-bun run test:dev               # Manual development tests
+bun run inspector # MCP protocol testing
+bun run test:dev # Manual development tests
 # Development files available in tests/dev/manual/
 ```
 
@@ -435,7 +435,7 @@ bun run test:dev               # Manual development tests
 
 #### Dual Wrapper System:
 ```typescript
-// ✅ BOTH METHODS FULLY SUPPORTED with identical tracing and security
+// BOTH METHODS FULLY SUPPORTED with identical tracing and security
 
 // Method 1: Legacy server.tool() - 169 tools use this
 server.tool(
@@ -445,7 +445,7 @@ server.tool(
   handler
 );
 
-// Method 2: Modern server.registerTool() - 5 tools use this  
+// Method 2: Modern server.registerTool() - 5 tools use this 
 server.registerTool(
   "tool_name",
   {
@@ -465,9 +465,9 @@ server.registerTool(
 - **Gradual Migration**: Can migrate tools over time without pressure
 
 **Current Status**: 
-- **170+ total tools** supported with dual wrapper system
+- **170+ total tools**supported with dual wrapper system
 - All tools using `server.registerTool()` method for consistency
-- **All tools** get conversation-aware tracing and security validation
+- **All tools**get conversation-aware tracing and security validation
 
 ## Critical Dependencies
 
@@ -582,7 +582,7 @@ This comprehensive documentation update was performed using coordinated multi-ag
 # 1. Task Analysis
 meta-orchestrator → Analyzed documentation gaps and infrastructure issues
 
-# 2. Specialized Analysis  
+# 2. Specialized Analysis 
 mcp-developer → Verified monitoring integration in server startup (working correctly)
 config-manager → Validated environment variable documentation
 observability-engineer → Reviewed metrics and monitoring architecture

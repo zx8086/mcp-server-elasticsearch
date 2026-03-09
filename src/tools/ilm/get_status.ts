@@ -78,7 +78,7 @@ export const registerGetStatusTool: ToolRegistrationFunction = (server: McpServe
         content: [
           {
             type: "text",
-            text: `## ILM Status: ${isEnabled ? "✅ RUNNING" : `❌ ${status}`}
+            text: `## ILM Status: ${isEnabled ? "RUNNING" : `${status}`}
 
 **Operation Mode**: ${result.operation_mode || "unknown"}
 ${resultAny.policy_count !== undefined ? `**Policy Count**: ${resultAny.policy_count}` : ""}

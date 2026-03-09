@@ -100,7 +100,7 @@ export const registerMoveToStepTool: ToolRegistrationFunction = (server: McpServ
         content: [
           {
             type: "text",
-            text: `⚙️ **ILM Step Transition Completed**
+            text: `**ILM Step Transition Completed**
 
 **Index**: ${params.index}
 
@@ -114,8 +114,8 @@ export const registerMoveToStepTool: ToolRegistrationFunction = (server: McpServ
 - Action: ${params.nextStep.action || "default"}
 - Step: ${params.nextStep.name || "default"}
 
-⚠️ **Warning**: This is an expert-level operation that manually overrides ILM progression.
-ℹ️ **Next**: Use \`elasticsearch_ilm_explain_lifecycle\` to verify the index is in the expected step.
+**Warning**: This is an expert-level operation that manually overrides ILM progression.
+**Next**: Use \`elasticsearch_ilm_explain_lifecycle\` to verify the index is in the expected step.
 
 Operation completed at: ${new Date().toISOString()}`,
           },

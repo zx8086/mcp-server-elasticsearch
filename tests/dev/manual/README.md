@@ -2,7 +2,7 @@
 
 This directory contains test scripts, reports, and logs used during development and debugging of the MCP server.
 
-## 📁 Contents
+## Contents
 
 ### **Test Scripts**
 - `test-debug-logs.ts` - Debug logging tests
@@ -21,7 +21,7 @@ This directory contains test scripts, reports, and logs used during development 
 ### **Test Directories**
 - `test-audit-integration/` - Audit integration test files
 
-## 🎯 Purpose
+## Purpose
 
 These files were created during the development process to:
 - Debug parameter handling issues
@@ -30,6 +30,6 @@ These files were created during the development process to:
 - Implement LangSmith tracing
 - Perform integration testing
 
-## 🗑️ Cleanup
+## Cleanup
 
 These files can be safely removed once development is complete, as the knowledge has been captured in the main documentation in the `guides/` directory.

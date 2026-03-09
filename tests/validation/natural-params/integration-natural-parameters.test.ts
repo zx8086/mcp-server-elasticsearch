@@ -13,7 +13,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { registerSearchTool } from '../../../src/tools/core/search';
 import { getConfig } from '../../../src/config';
 
-console.log("🔗 INTEGRATION TEST - NATURAL PARAMETER SCHEMA");
+console.log("INTEGRATION TEST - NATURAL PARAMETER SCHEMA");
 console.log("===============================================");
 
 describe('Integration Test - Natural Parameter Schema', () => {
@@ -39,9 +39,9 @@ describe('Integration Test - Natural Parameter Schema', () => {
     // Create mock Elasticsearch client
     mockClient = {
       search: async (searchRequest: any) => {
-        console.log("\n🔍 Mock Elasticsearch search called with:");
+        console.log("\nMock Elasticsearch search called with:");
         console.log(JSON.stringify(searchRequest, null, 2));
-        console.log(`🔍 size: ${searchRequest.size}, hasAggs: ${!!searchRequest.aggs}`);
+        console.log(`size: ${searchRequest.size}, hasAggs: ${!!searchRequest.aggs}`);
         
         // Validate that the search request has the correct structure
         expect(searchRequest).toBeDefined();
@@ -49,7 +49,7 @@ describe('Integration Test - Natural Parameter Schema', () => {
         
         // Return mock response based on query - prioritize aggregation queries
         if (searchRequest.size === 0 && searchRequest.aggs) {
-          console.log("🎯 Detected aggregation query, returning mock aggregation data");
+          console.log("Detected aggregation query, returning mock aggregation data");
           return {
             hits: {
               total: { value: 100 },
@@ -128,11 +128,11 @@ describe('Integration Test - Natural Parameter Schema', () => {
 
     // Register the search tool
     registerSearchTool(mockServer, mockClient);
-    console.log("✅ Integration test environment ready");
+    console.log("Integration test environment ready");
   });
 
   test('Should handle natural time range query (user\'s original problem)', async () => {
-    console.log("\n🎯 Testing user's original time range query problem...");
+    console.log("\nTesting user's original time range query problem...");
     
     // This is how users should call it with the new schema
     const naturalParams = {
@@ -148,11 +148,11 @@ describe('Integration Test - Natural Parameter Schema', () => {
       sort: [{ '@timestamp': { order: 'desc' } }]
     };
     
-    console.log("📥 Input parameters:", JSON.stringify(naturalParams, null, 2));
+    console.log("Input parameters:", JSON.stringify(naturalParams, null, 2));
     
     const result = await searchHandler(naturalParams);
     
-    console.log("📤 Search result:");
+    console.log("Search result:");
     console.log("- Content blocks:", result.content.length);
     console.log("- First block:", result.content[0]?.text);
     
@@ -165,11 +165,11 @@ describe('Integration Test - Natural Parameter Schema', () => {
     expect(resultText).toContain('2025-01-24'); // Current date data
     expect(resultText).toContain('Recent log entry from last 24h');
     
-    console.log("✅ Time range query now returns RECENT data (fixed!)");
+    console.log("Time range query now returns RECENT data (fixed!)");
   });
 
   test('Should handle aggregation query with natural parameters', async () => {
-    console.log("\n📊 Testing aggregation query...");
+    console.log("\nTesting aggregation query...");
     
     const aggParams = {
       index: 'metrics-*',
@@ -191,7 +191,7 @@ describe('Integration Test - Natural Parameter Schema', () => {
       }
     };
     
-    console.log("📥 Aggregation parameters:", JSON.stringify(aggParams, null, 2));
+    console.log("Aggregation parameters:", JSON.stringify(aggParams, null, 2));
     
     const result = await searchHandler(aggParams);
     
@@ -202,36 +202,36 @@ describe('Integration Test - Natural Parameter Schema', () => {
     expect(resultText).toContain('aggregations');
     expect(resultText).toContain('time_histogram');
     
-    console.log("✅ Aggregation query works with natural parameters");
+    console.log("Aggregation query works with natural parameters");
   });
 
   test('Should handle minimal query with defaults', async () => {
-    console.log("\n🎯 Testing minimal query...");
+    console.log("\nTesting minimal query...");
     
     const minimalParams = {
       index: 'test-*'
     };
     
-    console.log("📥 Minimal parameters:", JSON.stringify(minimalParams, null, 2));
+    console.log("Minimal parameters:", JSON.stringify(minimalParams, null, 2));
     
     const result = await searchHandler(minimalParams);
     
     expect(result).toBeDefined();
     expect(result.content).toBeDefined();
     
-    console.log("✅ Minimal query works with defaults");
+    console.log("Minimal query works with defaults");
   });
 
   test('Should demonstrate the exact fix for the user\'s problem', async () => {
-    console.log("\n🔧 DEMONSTRATING THE EXACT FIX...");
+    console.log("\nDEMONSTRATING THE EXACT FIX...");
     
     // OLD problematic way (would fail)
-    console.log("❌ OLD WAY (what was broken):");
+    console.log("OLD WAY (what was broken):");
     console.log("User had to do: { queryBody: '{\"query\":{\"range\":{...}}}' }");
     console.log("This got spread as character indices, breaking the query");
     
     // NEW working way (what we fixed)
-    console.log("\n✅ NEW WAY (what's now working):");
+    console.log("\nNEW WAY (what's now working):");
     const userQuery = {
       index: 'logs-*',
       query: {
@@ -258,21 +258,21 @@ describe('Integration Test - Natural Parameter Schema', () => {
     expect(resultText).not.toContain('May 2025'); // Should not contain old data
     expect(resultText).not.toContain('August 2025'); // Should not contain old data
     
-    console.log("🎉 THE FIX WORKS! User gets recent data, not old data!");
+    console.log("THE FIX WORKS! User gets recent data, not old data!");
   });
 });
 
-console.log("\n📋 INTEGRATION TEST ANALYSIS");
+console.log("\nINTEGRATION TEST ANALYSIS");
 console.log("============================");
 
-console.log("\n🎯 WHAT THIS PROVES:");
+console.log("\nWHAT THIS PROVES:");
 console.log("1. The new schema accepts natural Elasticsearch parameters");
 console.log("2. Time range queries now work correctly (no more old data)");
 console.log("3. Query objects are preserved through the entire pipeline");
 console.log("4. All Elasticsearch query types are supported");
 console.log("5. The original queryBody problem is completely eliminated");
 
-console.log("\n✅ USER'S PROBLEM IS SOLVED:");
+console.log("\nUSER'S PROBLEM IS SOLVED:");
 console.log("1. No more 'queryBody undefined' errors");
 console.log("2. Time range queries like 'now-24h' work correctly");
 console.log("3. Users get recent data, not old May/August 2025 data");
@@ -280,5 +280,5 @@ console.log("4. Natural Elasticsearch query syntax is supported");
 console.log("5. No more need to stringify queries into queryBody");
 
 if (import.meta.main) {
-  console.log("\n🚀 Running integration tests...");
+  console.log("\nRunning integration tests...");
 }

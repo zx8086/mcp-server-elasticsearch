@@ -144,11 +144,11 @@ export const registerPutLifecycleTool: ToolRegistrationFunction = (server: McpSe
         content: [
           {
             type: "text",
-            text: `📝 **ILM Policy Created/Updated: ${params.policy}**
+            text: `**ILM Policy Created/Updated: ${params.policy}**
 
 The Index Lifecycle Management policy has been successfully ${result.acknowledged ? "created or updated" : "processed"}.
 
-ℹ️ **Next Steps**: The policy will apply to indices matching the configured patterns. Use \`elasticsearch_ilm_explain_lifecycle\` to check policy application.
+**Next Steps**: The policy will apply to indices matching the configured patterns. Use \`elasticsearch_ilm_explain_lifecycle\` to check policy application.
 
 Operation completed at: ${new Date().toISOString()}`,
           },

@@ -7,7 +7,7 @@
 
 import { z } from "zod";
 
-console.log("🔍 Parameter Validation Test Coverage Analysis");
+console.log("Parameter Validation Test Coverage Analysis");
 console.log("===============================================");
 
 /**
@@ -15,7 +15,7 @@ console.log("===============================================");
  * These would catch the "Required, Required" errors
  */
 async function testSchemaValidation() {
-  console.log("\n📋 Schema Validation Tests (Would catch 'Required' errors)");
+  console.log("\nSchema Validation Tests (Would catch 'Required' errors)");
   console.log("----------------------------------------------------------");
 
   try {
@@ -50,10 +50,10 @@ async function testSchemaValidation() {
     };
 
     const result = moveToStepSchema.parse(testInput);
-    console.log("✅ elasticsearch_ilm_move_to_step validation PASSED");
+    console.log("elasticsearch_ilm_move_to_step validation PASSED");
 
   } catch (error) {
-    console.log("❌ elasticsearch_ilm_move_to_step validation FAILED:", error);
+    console.log("elasticsearch_ilm_move_to_step validation FAILED:", error);
   }
 
   try {
@@ -78,10 +78,10 @@ async function testSchemaValidation() {
     };
 
     const result = reindexSchema.parse(testInput);
-    console.log("✅ elasticsearch_reindex_documents validation PASSED");
+    console.log("elasticsearch_reindex_documents validation PASSED");
 
   } catch (error) {
-    console.log("❌ elasticsearch_reindex_documents validation FAILED:", error);
+    console.log("elasticsearch_reindex_documents validation FAILED:", error);
   }
 }
 
@@ -90,13 +90,13 @@ async function testSchemaValidation() {
  * These would catch the parameter extraction issues
  */
 async function testMcpParameterFlow() {
-  console.log("\n🔄 MCP Parameter Flow Tests (Would catch parameter extraction)");
+  console.log("\nMCP Parameter Flow Tests (Would catch parameter extraction)");
   console.log("--------------------------------------------------------------");
 
   // Simulate the MCP tool registration and parameter flow
   const mockMcpServer = {
     tool: (name: string, description: string, schema: any, handler: any) => {
-      console.log(`📝 Testing MCP flow for ${name}`);
+      console.log(`Testing MCP flow for ${name}`);
       
       // This is what the MCP SDK does - it extracts parameters using the schema
       try {
@@ -109,13 +109,13 @@ async function testMcpParameterFlow() {
 
         // The schema should properly extract these parameters
         if (typeof schema === 'object' && schema.index && schema.settings) {
-          console.log(`  ✅ Schema has required fields for ${name}`);
+          console.log(`  Schema has required fields for ${name}`);
         } else {
-          console.log(`  ❌ Schema missing required fields for ${name}`);
+          console.log(`  Schema missing required fields for ${name}`);
         }
 
       } catch (error) {
-        console.log(`  ❌ Parameter extraction failed for ${name}:`, error);
+        console.log(`  Parameter extraction failed for ${name}:`, error);
       }
     }
   };
@@ -128,7 +128,7 @@ async function testMcpParameterFlow() {
  * These would catch the "no settings to update" errors
  */
 async function testElasticsearchResponseValidation() {
-  console.log("\n⚡ Elasticsearch Response Validation Tests");
+  console.log("\nElasticsearch Response Validation Tests");
   console.log("------------------------------------------");
 
   // Simulate common Elasticsearch validation errors
@@ -148,7 +148,7 @@ async function testElasticsearchResponseValidation() {
   ];
 
   commonErrors.forEach(error => {
-    console.log(`🧪 Testing ${error.tool}:`);
+    console.log(`Testing ${error.tool}:`);
     console.log(`   Error: ${error.name}`);
     console.log(`   Cause: ${error.inputCause}`);
     console.log(`   Would be caught by: Pre-validation test suite`);
@@ -160,7 +160,7 @@ async function testElasticsearchResponseValidation() {
  * These would catch the actual API interaction issues
  */
 async function testIntegrationScenarios() {
-  console.log("\n🔧 Integration Test Scenarios");
+  console.log("\nIntegration Test Scenarios");
   console.log("-----------------------------");
 
   const testScenarios = [
@@ -213,17 +213,17 @@ async function testIntegrationScenarios() {
 }
 
 async function runAnalysis() {
-  console.log("🚀 Starting test coverage analysis...");
+  console.log("Starting test coverage analysis...");
   
   await testSchemaValidation();
   await testMcpParameterFlow();
   await testElasticsearchResponseValidation();
   await testIntegrationScenarios();
 
-  console.log("\n📊 Test Coverage Recommendations");
+  console.log("\nTest Coverage Recommendations");
   console.log("=================================");
   
-  console.log("\n🎯 High Priority Tests (Would have caught these issues):");
+  console.log("\nHigh Priority Tests (Would have caught these issues):");
   console.log("1. Parameter Schema Validation Tests");
   console.log("   • Test each tool with real user input examples");
   console.log("   • Validate required fields are properly defined");
@@ -244,13 +244,13 @@ async function runAnalysis() {
   console.log("   • Real data stream and index patterns");
   console.log("   • Edge cases and error conditions");
 
-  console.log("\n💡 Testing Strategy Summary:");
+  console.log("\nTesting Strategy Summary:");
   console.log("• Unit Tests: Schema validation, parameter extraction");
   console.log("• Integration Tests: Tool + mock Elasticsearch client");
   console.log("• End-to-End Tests: Full MCP protocol simulation");
   console.log("• Error Scenario Tests: Common failure patterns");
   
-  console.log("\n✅ These tests would have prevented ALL reported issues!");
+  console.log("\nThese tests would have prevented ALL reported issues!");
 }
 
 runAnalysis();

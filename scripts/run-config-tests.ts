@@ -30,7 +30,7 @@ export class ConfigurationTestRunner {
   }
 
   async runConfigTests(): Promise<{ summary: TestSummary; results: TestResult[] }> {
-    console.log("🔧 Configuration Test Suite");
+    console.log("Configuration Test Suite");
     console.log("════════════════════════════════════════════════════════");
 
     const configTestSuites = [
@@ -40,23 +40,23 @@ export class ConfigurationTestRunner {
       { name: "New Configuration Sections", path: "tests/config/new-configuration-sections.test.ts" },
     ];
 
-    console.log(`📋 Running ${configTestSuites.length} configuration test suites...\n`);
+    console.log(`Running ${configTestSuites.length} configuration test suites...\n`);
 
     const results: TestResult[] = [];
     const startTime = Date.now();
 
     for (const suite of configTestSuites) {
       if (!existsSync(suite.path)) {
-        console.log(`⚠️  Skipping ${suite.name}: File not found at ${suite.path}`);
+        console.log(`[WARN] Skipping ${suite.name}: File not found at ${suite.path}`);
         continue;
       }
 
-      console.log(`🧪 Running ${suite.name}...`);
+      console.log(`Running ${suite.name}...`);
       const result = await this.runTestSuite(suite.path);
       result.suite = suite.name;
       results.push(result);
 
-      const status = result.success ? "✅" : "❌";
+      const status = result.success ? "[PASS]" : "[FAIL]";
       if (result.success) {
         console.log(`   ${status} ${suite.name}: ${result.passed} passed (${result.duration}ms)`);
       } else {
@@ -65,7 +65,7 @@ export class ConfigurationTestRunner {
         );
         if (this.verbose && result.errors.length > 0) {
           result.errors.forEach((error) => {
-            console.log(`       🔍 ${error}`);
+            console.log(`       ${error}`);
           });
         }
       }
@@ -79,7 +79,7 @@ export class ConfigurationTestRunner {
   }
 
   async validateConfigRefactoring(): Promise<boolean> {
-    console.log("🔍 Configuration Refactoring Validation");
+    console.log("Configuration Refactoring Validation");
     console.log("════════════════════════════════════════════════════════");
 
     const _criticalTests = [
@@ -90,7 +90,7 @@ export class ConfigurationTestRunner {
       "should validate new environment variable mappings",
     ];
 
-    console.log("📋 Running critical refactoring validation tests...\n");
+    console.log("Running critical refactoring validation tests...\n");
 
     // Run specific tests that validate our refactoring
     const { results } = await this.runConfigTests();
@@ -100,11 +100,11 @@ export class ConfigurationTestRunner {
 
     for (const result of results) {
       if (!result.success && result.suite.includes("Single Source")) {
-        console.log(`❌ Critical: Single source of truth validation failed`);
+        console.log(`[FAIL] Critical: Single source of truth validation failed`);
         allCriticalTestsPassed = false;
       }
       if (!result.success && result.suite.includes("Breaking Change")) {
-        console.log(`❌ Critical: Breaking change detection failed`);
+        console.log(`[FAIL] Critical: Breaking change detection failed`);
         allCriticalTestsPassed = false;
       }
       if (result.success) {
@@ -112,16 +112,16 @@ export class ConfigurationTestRunner {
       }
     }
 
-    console.log("\n🎯 Refactoring Validation Results");
+    console.log("\nRefactoring Validation Results");
     console.log("────────────────────────────────────────");
-    console.log(`✅ Critical Tests Passed: ${criticalTestsPassed}/${results.length}`);
-    console.log(`📊 Success Rate: ${((criticalTestsPassed / results.length) * 100).toFixed(1)}%`);
+    console.log(`[PASS] Critical Tests Passed: ${criticalTestsPassed}/${results.length}`);
+    console.log(`Success Rate: ${((criticalTestsPassed / results.length) * 100).toFixed(1)}%`);
 
     if (allCriticalTestsPassed) {
-      console.log("🎉 Configuration refactoring validation PASSED");
+      console.log("Configuration refactoring validation PASSED");
       return true;
     } else {
-      console.log("⚠️  Configuration refactoring validation FAILED");
+      console.log("[WARN] Configuration refactoring validation FAILED");
       return false;
     }
   }
@@ -205,7 +205,7 @@ export class ConfigurationTestRunner {
   }
 
   private displayResults(summary: TestSummary, results: TestResult[]): void {
-    console.log("\n📊 Configuration Test Results Summary");
+    console.log("\nConfiguration Test Results Summary");
     console.log("────────────────────────────────────────");
 
     // Group results by category
@@ -217,10 +217,10 @@ export class ConfigurationTestRunner {
     }
 
     for (const [category, categoryResults] of Object.entries(categories)) {
-      console.log(`\n🏷️  ${category}:`);
+      console.log(`\n${category}:`);
 
       for (const result of categoryResults) {
-        const status = result.success ? "✅" : "❌";
+        const status = result.success ? "[PASS]" : "[FAIL]";
         const percentage =
           result.passed + result.failed > 0
             ? ((result.passed / (result.passed + result.failed)) * 100).toFixed(1)
@@ -231,21 +231,21 @@ export class ConfigurationTestRunner {
         );
 
         if (!result.success && result.errors.length > 0 && this.verbose) {
-          console.log(`      💡 ${result.errors[0]}`);
+          console.log(`      ${result.errors[0]}`);
         }
       }
     }
 
-    console.log("\n🏁 Overall Results");
+    console.log("\nOverall Results");
     console.log("────────────────────────────────────────");
-    console.log(`📈 Test Suites: ${summary.successful_suites}/${summary.total_suites} successful`);
-    console.log(`📊 Test Cases: ${summary.passed_tests}/${summary.total_tests} passed (${summary.success_rate}%)`);
-    console.log(`⏱️  Total Duration: ${summary.duration}ms`);
+    console.log(`Test Suites: ${summary.successful_suites}/${summary.total_suites} successful`);
+    console.log(`Test Cases: ${summary.passed_tests}/${summary.total_tests} passed (${summary.success_rate}%)`);
+    console.log(`Total Duration: ${summary.duration}ms`);
 
     if (summary.failed_tests > 0) {
-      console.log(`\n⚠️  ${summary.total_suites - summary.successful_suites} test suite(s) need attention`);
+      console.log(`\n[WARN] ${summary.total_suites - summary.successful_suites} test suite(s) need attention`);
     } else {
-      console.log("\n🎉 All configuration tests passed!");
+      console.log("\nAll configuration tests passed!");
     }
   }
 }

@@ -176,7 +176,7 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: Mcp
 
       return {
         content: [
-          { type: "text", text: `📊 Indices Summary for pattern: ${indexPattern || "*"}` },
+          { type: "text", text: `Indices Summary for pattern: ${indexPattern || "*"}` },
           { type: "text", text: JSON.stringify(summary, null, 2) },
         ],
       };

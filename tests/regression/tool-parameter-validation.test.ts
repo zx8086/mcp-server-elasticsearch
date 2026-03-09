@@ -391,4 +391,4 @@ describe("Tool Integration Tests", () => {
   });
 });
 
-console.log("🧪 Regression tests completed - these would have caught all reported issues!");
+console.log("Regression tests completed - these would have caught all reported issues!");

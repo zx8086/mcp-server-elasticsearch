@@ -16,7 +16,7 @@
 import { describe, test, expect, beforeAll } from 'bun:test';
 import { z } from 'zod';
 
-console.log("🧪 NATURAL PARAMETER SCHEMA VALIDATION TEST");
+console.log("NATURAL PARAMETER SCHEMA VALIDATION TEST");
 console.log("===========================================");
 
 // Import the new search schema and validator
@@ -87,7 +87,7 @@ type SearchParams = z.infer<typeof searchValidator>;
 describe('Natural Parameter Schema Tests', () => {
   
   test('Should accept natural time range query (the user\'s exact use case)', () => {
-    console.log("\n📅 Testing natural time range query...");
+    console.log("\nTesting natural time range query...");
     
     const naturalParams: SearchParams = {
       index: 'logs-*',
@@ -110,7 +110,7 @@ describe('Natural Parameter Schema Tests', () => {
     
     if (validationResult.success) {
       const parsed = validationResult.data;
-      console.log("✅ Zod validation passed");
+      console.log("Zod validation passed");
       console.log("Parsed query:", JSON.stringify(parsed.query, null, 2));
       
       // Test the spread operation that was causing issues
@@ -124,12 +124,12 @@ describe('Natural Parameter Schema Tests', () => {
       expect(searchRequest.query.range['@timestamp'].gte).toBe('now-24h');
       expect(searchRequest.size).toBe(50);
       
-      console.log("✅ Query structure correctly preserved");
+      console.log("Query structure correctly preserved");
     }
   });
 
   test('Should handle match_all query with natural parameters', () => {
-    console.log("\n🔍 Testing match_all query...");
+    console.log("\nTesting match_all query...");
     
     const naturalParams: SearchParams = {
       index: 'test-index',
@@ -148,12 +148,12 @@ describe('Natural Parameter Schema Tests', () => {
       expect(searchRequest.query.match_all).toBeDefined();
       expect(searchRequest.size).toBe(20);
       expect(searchRequest.from).toBe(0);
-      console.log("✅ Match all query preserved correctly");
+      console.log("Match all query preserved correctly");
     }
   });
 
   test('Should handle aggregation query with size 0', () => {
-    console.log("\n📊 Testing aggregation query...");
+    console.log("\nTesting aggregation query...");
     
     const naturalParams: SearchParams = {
       index: 'metrics-*',
@@ -185,12 +185,12 @@ describe('Natural Parameter Schema Tests', () => {
       expect(searchRequest.size).toBe(0);
       expect(searchRequest.aggs).toBeDefined();
       expect(searchRequest.aggs.time_histogram).toBeDefined();
-      console.log("✅ Aggregation query preserved correctly");
+      console.log("Aggregation query preserved correctly");
     }
   });
 
   test('Should handle complex query with all parameters', () => {
-    console.log("\n🎯 Testing complex query with all parameters...");
+    console.log("\nTesting complex query with all parameters...");
     
     const naturalParams: SearchParams = {
       index: 'logs-2025.*',
@@ -240,15 +240,15 @@ describe('Natural Parameter Schema Tests', () => {
       expect(searchRequest._source).toHaveLength(3);
       expect(searchRequest.highlight).toBeDefined();
       
-      console.log("✅ All complex parameters preserved correctly");
+      console.log("All complex parameters preserved correctly");
     }
   });
 
   test('Should demonstrate the OLD problem vs NEW solution', () => {
-    console.log("\n🔄 Demonstrating OLD problem vs NEW solution...");
+    console.log("\nDemonstrating OLD problem vs NEW solution...");
     
     // OLD problematic approach (what was causing the bug)
-    console.log("❌ OLD APPROACH (problematic):");
+    console.log("OLD APPROACH (problematic):");
     const oldApproach = {
       index: 'logs-*',
       queryBody: '{"query":{"range":{"@timestamp":{"gte":"now-24h"}}},"size":50}'
@@ -260,7 +260,7 @@ describe('Natural Parameter Schema Tests', () => {
     console.log("Old spread result (BROKEN):", JSON.stringify(oldSpreadResult, null, 2));
     
     // NEW natural approach (what fixes the bug)
-    console.log("\n✅ NEW APPROACH (working):");
+    console.log("\nNEW APPROACH (working):");
     const newApproach: SearchParams = {
       index: 'logs-*',
       query: {
@@ -287,12 +287,12 @@ describe('Natural Parameter Schema Tests', () => {
       expect(typeof newSpreadResult.query).toBe('object');
       expect(newSpreadResult.size).toBe(50);
       
-      console.log("🎉 NEW APPROACH WORKS! Query structure is preserved!");
+      console.log("NEW APPROACH WORKS! Query structure is preserved!");
     }
   });
 
   test('Should handle minimal query (default behavior)', () => {
-    console.log("\n🎯 Testing minimal query with defaults...");
+    console.log("\nTesting minimal query with defaults...");
     
     const minimalParams: SearchParams = {
       index: 'test-*'
@@ -317,30 +317,30 @@ describe('Natural Parameter Schema Tests', () => {
       
       expect(searchRequest.query).toEqual({ match_all: {} });
       expect(searchRequest.size).toBe(10);
-      console.log("✅ Default behavior works correctly");
+      console.log("Default behavior works correctly");
     }
   });
 });
 
 // Run a comprehensive analysis
-console.log("\n📋 COMPREHENSIVE ANALYSIS");
+console.log("\nCOMPREHENSIVE ANALYSIS");
 console.log("=========================");
 
-console.log("\n✅ WHAT THE NEW SCHEMA FIXES:");
+console.log("\nWHAT THE NEW SCHEMA FIXES:");
 console.log("1. No more queryBody string parameter that gets spread incorrectly");
 console.log("2. Natural Elasticsearch parameters that preserve object structure");
 console.log("3. Direct validation of individual query components");
 console.log("4. Proper TypeScript types for all parameters");
 console.log("5. Eliminates the JSON string parsing/spreading bug");
 
-console.log("\n🎯 HOW THIS SOLVES THE USER'S PROBLEM:");
+console.log("\nHOW THIS SOLVES THE USER'S PROBLEM:");
 console.log("1. Time range queries like 'now-24h' are now properly preserved");
 console.log("2. Query objects maintain their structure through the spread operator");
 console.log("3. No more undefined queryBody issues");
 console.log("4. Direct mapping to Elasticsearch Query DSL");
 console.log("5. Better error messages and validation");
 
-console.log("\n🔧 TECHNICAL IMPROVEMENTS:");
+console.log("\nTECHNICAL IMPROVEMENTS:");
 console.log("1. Schema matches actual Elasticsearch API parameters");
 console.log("2. Zod validation ensures type safety at runtime");
 console.log("3. Optional parameters with sensible defaults");
@@ -348,5 +348,5 @@ console.log("4. Support for all major ES query features");
 console.log("5. Backwards compatibility through optional parameters");
 
 if (import.meta.main) {
-  console.log("\n🚀 Running all tests...");
+  console.log("\nRunning all tests...");
 }

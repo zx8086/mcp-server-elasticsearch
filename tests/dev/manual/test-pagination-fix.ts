@@ -42,7 +42,7 @@ function generateMockIndices(count: number) {
 }
 
 async function testPaginationUtility() {
-  console.log('🧪 Testing pagination utility functions...\n');
+  console.log('Testing pagination utility functions...\n');
   
   // Test basic pagination
   console.log('1. Testing basic pagination:');
@@ -141,7 +141,7 @@ async function testEdgeCases() {
 }
 
 async function runAllTests() {
-  console.log('🔧 Pagination Fix Validation Tests\n');
+  console.log('Pagination Fix Validation Tests\n');
   console.log('This test validates that the pagination fixes correctly handle:');
   console.log('- Respecting limit parameters (fixing the original bug)');
   console.log('- Providing sensible defaults');
@@ -155,16 +155,16 @@ async function runAllTests() {
     await testLargeDatasetScenarios();
     await testEdgeCases();
     
-    console.log('✅ All pagination tests passed!');
-    console.log('\n🎯 Key improvements validated:');
-    console.log('   ✓ limit parameter is now properly respected');
-    console.log('   ✓ Default limits prevent overwhelming responses');
-    console.log('   ✓ Large production datasets are handled gracefully');
-    console.log('   ✓ Consistent pagination across all fixed tools');
-    console.log('   ✓ Clear user feedback about truncated results\n');
+    console.log('All pagination tests passed!');
+    console.log('\nKey improvements validated:');
+    console.log('   [PASS] limit parameter is now properly respected');
+    console.log('   [PASS] Default limits prevent overwhelming responses');
+    console.log('   [PASS] Large production datasets are handled gracefully');
+    console.log('   [PASS] Consistent pagination across all fixed tools');
+    console.log('   [PASS] Clear user feedback about truncated results\n');
     
   } catch (error) {
-    console.error('❌ Test failed:', error);
+    console.error('Test failed:', error);
     process.exit(1);
   }
 }

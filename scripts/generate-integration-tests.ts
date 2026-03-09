@@ -368,18 +368,18 @@ async function generateTests() {
         const testFile = join(testsDir, `${category}.test.ts`);
         await writeFile(testFile, testContent);
         totalTests++;
-        console.log(`✅ Generated tests for ${category}: ${tools.length} tools`);
+        console.log(`[PASS] Generated tests for ${category}: ${tools.length} tools`);
       }
     } catch {
       // Skip non-directories
     }
   }
 
-  console.log("\n📊 Test Generation Summary:");
+  console.log("\nTest Generation Summary:");
   console.log(`   Total tools found: ${totalTools}`);
   console.log(`   Test files generated: ${totalTests}`);
   console.log(`   Location: ${testsDir}`);
-  console.log("\n🚀 Run tests with: bun test tests/integration/generated/");
+  console.log("\nRun tests with: bun test tests/integration/generated/");
 }
 
 // Generate the tests

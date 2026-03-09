@@ -20,10 +20,10 @@ async function checkVersionCompatibility() {
   const zodMajor = Number.parseInt(zodVersion.replace(/[\^~]/, "").split(".")[0], 10);
 
   if (zodMajor < 4) {
-    console.warn("⚠️  Using Zod 3.x - consider upgrading to Zod 4.x");
+    console.warn("[WARN] Using Zod 3.x - consider upgrading to Zod 4.x");
     console.log(`   Zod: ${zodVersion}`);
   } else {
-    console.log("✅ Using Zod 4.x with MCP SDK native conversion");
+    console.log("[PASS] Using Zod 4.x with MCP SDK native conversion");
     console.log(`   Zod: ${zodVersion}`);
   }
 
@@ -130,7 +130,7 @@ async function findToolFiles(dir: string): Promise<string[]> {
  * Test schema conversion
  */
 function testSchemaConversion() {
-  console.log("\n📋 Testing Schema Patterns:\n");
+  console.log("\nTesting Schema Patterns:\n");
 
   // Test case 1: Plain object with Zod validators (MCP SDK compatible)
   const _plainObjectSchema = {
@@ -138,7 +138,7 @@ function testSchemaConversion() {
     age: z.number().positive(),
   };
 
-  console.log("✅ Plain object with Zod validators:");
+  console.log("[PASS] Plain object with Zod validators:");
   console.log("   MCP SDK handles conversion via registerTool()\n");
 
   // Test case 2: Zod object shape (used with registerTool inputSchema)
@@ -147,7 +147,7 @@ function testSchemaConversion() {
     age: z.number().positive(),
   });
 
-  console.log("✅ Zod object with registerTool():");
+  console.log("[PASS] Zod object with registerTool():");
   console.log("   MCP SDK converts Zod schemas automatically\n");
 }
 
@@ -155,11 +155,11 @@ function testSchemaConversion() {
  * Main validation function
  */
 async function main() {
-  console.log("🔍 MCP Tool Schema Validator\n");
+  console.log("MCP Tool Schema Validator\n");
   console.log("=".repeat(60));
 
   // Check version compatibility first
-  console.log("\n📦 Checking dependency versions...\n");
+  console.log("\nChecking dependency versions...\n");
   const versionOk = await checkVersionCompatibility();
   if (!versionOk) {
     process.exit(1);
@@ -169,7 +169,7 @@ async function main() {
   testSchemaConversion();
 
   console.log("=".repeat(60));
-  console.log("\n📂 Scanning tool files...\n");
+  console.log("\nScanning tool files...\n");
 
   const toolsDir = join(process.cwd(), "src", "tools");
   const toolFiles = await findToolFiles(toolsDir);
@@ -188,7 +188,7 @@ async function main() {
 
   // Display results
   if (invalid.length > 0) {
-    console.log("❌ Invalid Schemas Found:\n");
+    console.log("[FAIL] Invalid Schemas Found:\n");
     for (const r of invalid) {
       console.log(`   ${r.file}: ${r.message}`);
     }
@@ -196,20 +196,20 @@ async function main() {
   }
 
   if (warnings.length > 0) {
-    console.log("⚠️  Warnings:\n");
+    console.log("[WARN] Warnings:\n");
     for (const r of warnings) {
       console.log(`   ${r.file}: ${r.message}`);
     }
     console.log();
   }
 
-  console.log("📊 Summary:");
-  console.log(`   ✅ Valid: ${valid.length}`);
-  console.log(`   ⚠️  Warnings: ${warnings.length}`);
-  console.log(`   ❌ Invalid: ${invalid.length}`);
+  console.log("Summary:");
+  console.log(`   [PASS] Valid: ${valid.length}`);
+  console.log(`   [WARN] Warnings: ${warnings.length}`);
+  console.log(`   [FAIL] Invalid: ${invalid.length}`);
 
   if (invalid.length > 0) {
-    console.log("\n❗ Action Required:");
+    console.log("\nAction Required:");
     console.log("   Fix invalid schemas by either:");
     console.log("   1. Using plain objects with Zod validators");
     console.log("   2. Converting Zod objects with zodToJsonSchema");
@@ -217,7 +217,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("\n✅ All schemas are properly configured!");
+  console.log("\n[PASS] All schemas are properly configured!");
 }
 
 // Run the validator

@@ -131,7 +131,7 @@ export function createPaginationHeader(metadata: ResponseMetadata, entityName = 
   ];
 
   if (metadata.truncated) {
-    lines.push(`⚠️ ${metadata.summary}`);
+    lines.push(`${metadata.summary}`);
   }
 
   return `${lines.join("\n")}\n`;
