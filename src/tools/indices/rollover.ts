@@ -19,6 +19,7 @@ const rolloverValidator = z.object({
   newIndex: z.string().optional(),
   aliases: z
     .record(
+      z.string(),
       z.object({
         filter: z.object({}).passthrough().optional(),
         indexRouting: z.string().optional(),
@@ -57,7 +58,7 @@ const rolloverValidator = z.object({
   lazy: booleanField().optional(),
 });
 
-type RolloverParams = z.infer<typeof rolloverValidator>;
+type _RolloverParams = z.infer<typeof rolloverValidator>;
 
 // MCP error handling
 function createRolloverMcpError(
@@ -81,7 +82,7 @@ function createRolloverMcpError(
     alias_not_found: ErrorCode.InvalidParams,
     rollover_conditions_not_met: ErrorCode.InvalidParams,
     index_already_exists: ErrorCode.InvalidParams,
-    permission_denied: ErrorCode.MethodNotAllowed,
+    permission_denied: ErrorCode.InvalidRequest,
   };
 
   return new McpError(errorCodeMap[context.type], `[elasticsearch_rollover] ${message}`, context.details);
@@ -106,8 +107,8 @@ export const registerRolloverTool: ToolRegistrationFunction = (server: McpServer
         {
           alias: params.alias,
           new_index: params.newIndex,
-          aliases: params.aliases,
-          conditions: params.conditions,
+          aliases: params.aliases as any,
+          conditions: params.conditions as any,
           mappings: params.mappings,
           settings: params.settings,
           dry_run: params.dryRun,
@@ -132,9 +133,9 @@ export const registerRolloverTool: ToolRegistrationFunction = (server: McpServer
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createRolloverMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createRolloverMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -185,32 +186,29 @@ export const registerRolloverTool: ToolRegistrationFunction = (server: McpServer
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_rollover",
 
     {
-
       title: "Rollover",
 
-      description: "Roll over to a new index in Elasticsearch for data streams or aliases. Best for index lifecycle management, data stream rotation, automated archiving. Use when you need to create new indices based on size, age, or document count thresholds in Elasticsearch.",
+      description:
+        "Roll over to a new index in Elasticsearch for data streams or aliases. Best for index lifecycle management, data stream rotation, automated archiving. Use when you need to create new indices based on size, age, or document count thresholds in Elasticsearch.",
 
       inputSchema: {
-      alias: z.string(), // Alias name for the data stream or index to roll over
-      newIndex: z.string().optional(), // Name of the new index to create during rollover
-      aliases: z.object({}).optional(), // Aliases to add to the new index
-      conditions: z.object({}).optional(), // Rollover conditions
-      mappings: z.object({}).optional(), // Mapping definition for the new index
-      settings: z.object({}).optional(), // Settings for the new index
-      dryRun: z.boolean().optional(), // Whether to perform a dry run without actually rolling over
-      masterTimeout: z.string().optional(), // Timeout for connection to master node
-      timeout: z.string().optional(), // Timeout for the rollover operation
-      waitForActiveShards: z.any().optional(), // Number of active shards to wait for
-      lazy: z.boolean().optional(), // Whether to perform lazy rollover
-    },
-
+        alias: z.string(), // Alias name for the data stream or index to roll over
+        newIndex: z.string().optional(), // Name of the new index to create during rollover
+        aliases: z.object({}).optional(), // Aliases to add to the new index
+        conditions: z.object({}).optional(), // Rollover conditions
+        mappings: z.object({}).optional(), // Mapping definition for the new index
+        settings: z.object({}).optional(), // Settings for the new index
+        dryRun: z.boolean().optional(), // Whether to perform a dry run without actually rolling over
+        masterTimeout: z.string().optional(), // Timeout for connection to master node
+        timeout: z.string().optional(), // Timeout for the rollover operation
+        waitForActiveShards: z.any().optional(), // Number of active shards to wait for
+        lazy: z.boolean().optional(), // Whether to perform lazy rollover
+      },
     },
 
     withReadOnlyCheck("elasticsearch_rollover", rolloverHandler, OperationType.WRITE),
-
-  );;
+  );
 };

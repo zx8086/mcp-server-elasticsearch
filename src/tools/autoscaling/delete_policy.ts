@@ -17,17 +17,15 @@ export const registerAutoscalingDeletePolicyTool: ToolRegistrationFunction = (se
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_autoscaling_delete_policy",
 
     {
-
       title: "Autoscaling Delete Policy",
 
-      description: "Delete an autoscaling policy in Elasticsearch. Best for policy cleanup, configuration management, resource optimization. Use when you need to remove autoscaling policies in Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
+      description:
+        "Delete an autoscaling policy in Elasticsearch. Best for policy cleanup, configuration management, resource optimization. Use when you need to remove autoscaling policies in Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
 
       inputSchema: DeleteAutoscalingPolicyParams.shape,
-
     },
 
     async (
@@ -62,6 +60,5 @@ export const registerAutoscalingDeletePolicyTool: ToolRegistrationFunction = (se
         };
       }
     },
-
-  );;
+  );
 };

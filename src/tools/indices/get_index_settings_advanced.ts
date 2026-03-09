@@ -7,7 +7,7 @@ import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
-import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
 // FIXED: Original JSON Schema definition removed - now using Zod schema inline
@@ -28,7 +28,7 @@ const getIndexSettingsAdvancedValidator = z.object({
   masterTimeout: z.string().optional(),
 });
 
-type GetIndexSettingsAdvancedParams = z.infer<typeof getIndexSettingsAdvancedValidator>;
+type _GetIndexSettingsAdvancedParams = z.infer<typeof getIndexSettingsAdvancedValidator>;
 
 // MCP error handling
 function createGetIndexSettingsAdvancedMcpError(
@@ -91,10 +91,10 @@ export const registerGetIndexSettingsAdvancedTool: ToolRegistrationFunction = (s
       // Error handling
       if (error instanceof z.ZodError) {
         throw createGetIndexSettingsAdvancedMcpError(
-          `Validation failed: ${error.errors.map((e) => e.message).join(", ")}`,
+          `Validation failed: ${error.issues.map((e) => e.message).join(", ")}`,
           {
             type: "validation",
-            details: { validationErrors: error.errors, providedArgs: args },
+            details: { validationErrors: error.issues, providedArgs: args },
           },
         );
       }
@@ -133,30 +133,27 @@ export const registerGetIndexSettingsAdvancedTool: ToolRegistrationFunction = (s
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_get_index_settings_advanced",
 
     {
-
       title: "Get Index Settings Advanced",
 
-      description: "Get comprehensive index settings from Elasticsearch with advanced options. Best for configuration analysis, performance tuning, troubleshooting. Use when you need detailed index settings including data stream backing indices in Elasticsearch.",
+      description:
+        "Get comprehensive index settings from Elasticsearch with advanced options. Best for configuration analysis, performance tuning, troubleshooting. Use when you need detailed index settings including data stream backing indices in Elasticsearch.",
 
       inputSchema: {
-      index: z.any().optional(), // Index name(s) or pattern(s) to get settings for. Examples: 'logs-*', ['users', 'products']
-      name: z.any().optional(), // Setting name(s) to retrieve. If not specified, all settings are returned
-      allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard indices expression resolves into no concrete indices
-      expandWildcards: z.any().optional(), // Type of index that wildcard patterns can match
-      flatSettings: z.boolean().optional(), // Return settings in flat format
-      ignoreUnavailable: z.boolean().optional(), // Whether specified concrete indices should be ignored when unavailable
-      includeDefaults: z.boolean().optional(), // Whether to return default values in the response
-      local: z.boolean().optional(), // Return local information, do not retrieve the state from master node
-      masterTimeout: z.string().optional(), // Timeout for connection to master node
-    },
-
+        index: z.any().optional(), // Index name(s) or pattern(s) to get settings for. Examples: 'logs-*', ['users', 'products']
+        name: z.any().optional(), // Setting name(s) to retrieve. If not specified, all settings are returned
+        allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard indices expression resolves into no concrete indices
+        expandWildcards: z.any().optional(), // Type of index that wildcard patterns can match
+        flatSettings: z.boolean().optional(), // Return settings in flat format
+        ignoreUnavailable: z.boolean().optional(), // Whether specified concrete indices should be ignored when unavailable
+        includeDefaults: z.boolean().optional(), // Whether to return default values in the response
+        local: z.boolean().optional(), // Return local information, do not retrieve the state from master node
+        masterTimeout: z.string().optional(), // Timeout for connection to master node
+      },
     },
 
     getIndexSettingsAdvancedHandler,
-
   );
 };

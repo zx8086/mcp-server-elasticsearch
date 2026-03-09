@@ -27,9 +27,11 @@ describe('Integration Test - Natural Parameter Schema', () => {
     // Create mock MCP server
     mockServer = {
       tool: (name: string, description: string, schema: any, handler: Function) => {
-        console.log(`📝 Registered tool: ${name}`);
-        console.log(`📋 Description: ${description}`);
-        console.log(`🔧 Schema properties:`, Object.keys(schema.properties || {}));
+        console.log(`Registered tool: ${name}`);
+        searchHandler = handler;
+      },
+      registerTool: (name: string, metadata: any, handler: Function) => {
+        console.log(`Registered tool: ${name}`);
         searchHandler = handler;
       }
     } as any;

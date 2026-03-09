@@ -23,7 +23,7 @@ const removePolicyValidator = z.object({
   index: z.string().min(1, "Index name cannot be empty"),
 });
 
-type RemovePolicyParams = z.infer<typeof removePolicyValidator>;
+type _RemovePolicyParams = z.infer<typeof removePolicyValidator>;
 
 // =============================================================================
 // 2. STANDARDIZED MCP ERROR HANDLING
@@ -56,10 +56,11 @@ function createIlmRemovePolicyMcpError(
 export const registerRemovePolicyTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const removePolicyHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
+    let params: z.infer<typeof removePolicyValidator> | undefined;
 
     try {
       // Simple validation - no complex parameter extraction
-      const params = removePolicyValidator.parse(args);
+      params = removePolicyValidator.parse(args);
 
       logger.debug("Removing ILM policy from index", {
         index: params.index,
@@ -117,9 +118,9 @@ Operation completed at: ${new Date().toISOString()}`,
     } catch (error) {
       // Standardized MCP error handling
       if (error instanceof z.ZodError) {
-        throw createIlmRemovePolicyMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createIlmRemovePolicyMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -160,23 +161,20 @@ Operation completed at: ${new Date().toISOString()}`,
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_ilm_remove_policy",
 
     {
-
       title: "Ilm Remove Policy",
 
-      description: "Remove ILM policy from indices. Remove Index Lifecycle Management policy assignment from indices, stopping automated lifecycle management. Uses direct JSON Schema and standardized MCP error codes. Examples: {index: logs-*}, {index: my-index-000001}",
+      description:
+        "Remove ILM policy from indices. Remove Index Lifecycle Management policy assignment from indices, stopping automated lifecycle management. Uses direct JSON Schema and standardized MCP error codes. Examples: {index: logs-*}, {index: my-index-000001}",
 
       inputSchema: {
-      index: z.string(), // Index name or pattern to remove ILM policy from (cannot be empty)
-    },
-
+        index: z.string(), // Index name or pattern to remove ILM policy from (cannot be empty)
+      },
     },
 
     // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_remove_policy", removePolicyHandler, OperationType.WRITE),
-
-  );;
+  );
 };

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { readFile, readdir } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 
 interface SizeDefault {
@@ -84,7 +84,7 @@ async function main() {
     // Skip if it's a scroll timeout or other non-result size
     if (issue.code.includes("scroll") && issue.value === "30") return false;
     // Skip large values that are probably byte sizes
-    if (Number.parseInt(issue.value) > 1000) return false;
+    if (Number.parseInt(issue.value, 10) > 1000) return false;
     // Skip if it's in test files
     if (issue.file.includes(".test.")) return false;
 

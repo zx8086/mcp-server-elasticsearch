@@ -20,12 +20,12 @@ const updateWatcherSettingsValidator = z.object({
   timeout: z.string().optional(),
 });
 
-type UpdateWatcherSettingsParams = z.infer<typeof updateWatcherSettingsValidator>;
+type _UpdateWatcherSettingsParams = z.infer<typeof updateWatcherSettingsValidator>;
 
 // MCP error handling
 function createUpdateWatcherSettingsMcpError(
   error: Error | string,
-  context: { type: string; details?: any },
+  context: { type: "validation" | "execution"; details?: any },
 ): McpError {
   const message = error instanceof Error ? error.message : error;
 
@@ -74,10 +74,10 @@ export const registerWatcherUpdateSettingsTool: ToolRegistrationFunction = (serv
       // Error handling
       if (error instanceof z.ZodError) {
         throw createUpdateWatcherSettingsMcpError(
-          `Validation failed: ${error.errors.map((e) => e.message).join(", ")}`,
+          `Validation failed: ${error.issues.map((e) => e.message).join(", ")}`,
           {
             type: "validation",
-            details: { validationErrors: error.errors, providedArgs: args },
+            details: { validationErrors: error.issues, providedArgs: args },
           },
         );
       }
@@ -96,25 +96,22 @@ export const registerWatcherUpdateSettingsTool: ToolRegistrationFunction = (serv
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_watcher_update_settings",
 
     {
-
       title: "Watcher Update Settings",
 
-      description: "Update Elasticsearch Watcher index settings for .watches index. Best for configuration management, performance tuning, allocation control. Use when you need to modify Watcher internal index settings like replicas and allocation in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Update Elasticsearch Watcher index settings for .watches index. Best for configuration management, performance tuning, allocation control. Use when you need to modify Watcher internal index settings like replicas and allocation in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      "index.auto_expand_replicas": z.string().optional(), // Auto expand replicas setting
-      "index.number_of_replicas": z.number().optional(), // Number of replica shards
-      master_timeout: z.string().optional(), // Explicit operation timeout for connection to master node
-      timeout: z.string().optional(), // Explicit operation timeout
-    },
-
+        "index.auto_expand_replicas": z.string().optional(), // Auto expand replicas setting
+        "index.number_of_replicas": z.number().optional(), // Number of replica shards
+        master_timeout: z.string().optional(), // Explicit operation timeout for connection to master node
+        timeout: z.string().optional(), // Explicit operation timeout
+      },
     },
 
     withReadOnlyCheck("elasticsearch_watcher_update_settings", updateWatcherSettingsHandler, OperationType.WRITE),
-
-  );;
+  );
 };

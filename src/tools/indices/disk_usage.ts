@@ -7,7 +7,7 @@ import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
-import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
 // FIXED: Original JSON Schema definition removed - now using Zod schema inline
@@ -25,7 +25,7 @@ const diskUsageValidator = z.object({
   runExpensiveTasks: booleanField().optional(),
 });
 
-type DiskUsageParams = z.infer<typeof diskUsageValidator>;
+type _DiskUsageParams = z.infer<typeof diskUsageValidator>;
 
 // MCP error handling
 function createDiskUsageMcpError(
@@ -41,7 +41,7 @@ function createDiskUsageMcpError(
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
     index_not_found: ErrorCode.InvalidParams,
-    permission_denied: ErrorCode.MethodNotAllowed,
+    permission_denied: ErrorCode.InvalidRequest,
   };
 
   return new McpError(errorCodeMap[context.type], `[elasticsearch_disk_usage] ${message}`, context.details);
@@ -76,9 +76,9 @@ export const registerDiskUsageTool: ToolRegistrationFunction = (server: McpServe
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createDiskUsageMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createDiskUsageMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -109,27 +109,24 @@ export const registerDiskUsageTool: ToolRegistrationFunction = (server: McpServe
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_disk_usage",
 
     {
-
       title: "Disk Usage",
 
-      description: "Analyze index disk usage per field in Elasticsearch. Best for storage optimization, field analysis, capacity planning. Use when you need to understand disk consumption patterns and optimize storage usage for Elasticsearch indices and data streams.",
+      description:
+        "Analyze index disk usage per field in Elasticsearch. Best for storage optimization, field analysis, capacity planning. Use when you need to understand disk consumption patterns and optimize storage usage for Elasticsearch indices and data streams.",
 
       inputSchema: {
-      index: z.any(), // Index name(s) or pattern(s) to analyze disk usage for. Examples: 'logs-*', ['users', 'products']
-      allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard indices expression resolves into no concrete indices
-      expandWildcards: z.any().optional(), // Type of index that wildcard patterns can match
-      flush: z.boolean().optional(), // Whether to flush the index before getting the disk usage
-      ignoreUnavailable: z.boolean().optional(), // Whether specified concrete indices should be ignored when unavailable
-      runExpensiveTasks: z.boolean().optional(), // Whether to run expensive disk usage tasks
-    },
-
+        index: z.any(), // Index name(s) or pattern(s) to analyze disk usage for. Examples: 'logs-*', ['users', 'products']
+        allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard indices expression resolves into no concrete indices
+        expandWildcards: z.any().optional(), // Type of index that wildcard patterns can match
+        flush: z.boolean().optional(), // Whether to flush the index before getting the disk usage
+        ignoreUnavailable: z.boolean().optional(), // Whether specified concrete indices should be ignored when unavailable
+        runExpensiveTasks: z.boolean().optional(), // Whether to run expensive disk usage tasks
+      },
     },
 
     diskUsageHandler,
-
   );
 };

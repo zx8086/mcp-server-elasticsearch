@@ -39,7 +39,7 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpS
     const tracker = await createProgressTracker(
       "delete_by_query",
       100, // percentage-based
-      `Deleting documents from ${params.index} matching query`
+      `Deleting documents from ${params.index} matching query`,
     );
 
     try {
@@ -57,7 +57,7 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpS
           target_index: params.index,
           max_docs: params.maxDocs,
           warning: "This operation permanently deletes documents and cannot be undone",
-        }
+        },
       );
 
       // First, get a count of documents that will be deleted
@@ -67,9 +67,9 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpS
         const countResult = await esClient.count({
           index: params.index,
           body: { query: params.query },
-        });
+        } as any);
         documentsToDelete = countResult.count;
-        
+
         await notificationManager.sendWarning(
           `⚠️  DELETION SCOPE: ${documentsToDelete} documents will be permanently deleted`,
           {
@@ -77,32 +77,29 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpS
             documents_to_delete: documentsToDelete,
             index: params.index,
             confirmation_required: true,
-          }
+          },
         );
 
         if (documentsToDelete > 10000) {
           await notificationManager.sendWarning(
             `🔥 LARGE DELETION: Deleting ${documentsToDelete} documents - this may impact cluster performance`,
             {
-              operation_type: "delete_by_query", 
+              operation_type: "delete_by_query",
               large_deletion_warning: true,
               documents_count: documentsToDelete,
               recommendation: "Consider using smaller batches or lower requests_per_second",
-            }
+            },
           );
         }
       } catch (countError) {
         logger.warn("Could not get document count for deletion estimate", {
           error: countError instanceof Error ? countError.message : String(countError),
         });
-        
-        await notificationManager.sendWarning(
-          "Unable to determine deletion scope - proceeding with caution",
-          {
-            operation_type: "delete_by_query",
-            warning: "Could not count documents to be deleted",
-          }
-        );
+
+        await notificationManager.sendWarning("Unable to determine deletion scope - proceeding with caution", {
+          operation_type: "delete_by_query",
+          warning: "Could not count documents to be deleted",
+        });
       }
 
       await tracker.updateProgress(20, "Starting document deletion operation");
@@ -127,31 +124,29 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpS
       // Handle different response types based on wait_for_completion
       if (params.waitForCompletion === false && result.task) {
         // Asynchronous mode - return task ID
-        await tracker.complete(
-          { task: result.task },
-          `Delete by query task created: ${result.task}`
-        );
-        
-        await notificationManager.sendInfo(
-          `Delete by query task created: ${result.task}`,
-          {
-            operation_type: "delete_by_query",
-            mode: "asynchronous",
-            task_id: result.task,
-            note: "Use task management API to monitor deletion progress",
-          }
-        );
+        await tracker.complete({ task: result.task }, `Delete by query task created: ${result.task}`);
+
+        await notificationManager.sendInfo(`Delete by query task created: ${result.task}`, {
+          operation_type: "delete_by_query",
+          mode: "asynchronous",
+          task_id: result.task,
+          note: "Use task management API to monitor deletion progress",
+        });
 
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify({
-                task: result.task,
-                message: "Delete by query started asynchronously. Use task management API to monitor progress.",
-                monitor_command: `elasticsearch_tasks_get_task with taskId: "${result.task}"`,
-                warning: "Deletion is in progress - documents are being permanently removed",
-              }, null, 2),
+              text: JSON.stringify(
+                {
+                  task: result.task,
+                  message: "Delete by query started asynchronously. Use task management API to monitor progress.",
+                  monitor_command: `elasticsearch_tasks_get_task with taskId: "${result.task}"`,
+                  warning: "Deletion is in progress - documents are being permanently removed",
+                },
+                null,
+                2,
+              ),
             },
           ],
         };
@@ -174,23 +169,20 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpS
         if (summary.failures.length > 0 || summary.version_conflicts > 0) {
           await tracker.complete(
             summary,
-            `Deletion completed with issues: ${summary.deleted} deleted, ${summary.version_conflicts} conflicts, ${summary.failures.length} failures`
+            `Deletion completed with issues: ${summary.deleted} deleted, ${summary.version_conflicts} conflicts, ${summary.failures.length} failures`,
           );
-          
-          await notificationManager.sendWarning(
-            `Delete by query completed with issues`,
-            {
-              ...summary,
-              operation_type: "delete_by_query",
-              success_rate: summary.total > 0 ? ((summary.deleted / summary.total) * 100).toFixed(1) + "%" : "N/A",
-            }
-          );
+
+          await notificationManager.sendWarning(`Delete by query completed with issues`, {
+            ...summary,
+            operation_type: "delete_by_query",
+            success_rate: summary.total > 0 ? `${((summary.deleted / summary.total) * 100).toFixed(1)}%` : "N/A",
+          });
         } else {
           await tracker.complete(
             summary,
-            `Delete by query completed: ${summary.deleted} documents permanently deleted in ${summary.took}ms`
+            `Delete by query completed: ${summary.deleted} documents permanently deleted in ${summary.took}ms`,
           );
-          
+
           await notificationManager.sendInfo(
             `✅ Delete by query completed: ${summary.deleted} documents permanently deleted`,
             {
@@ -198,7 +190,7 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpS
               operation_type: "delete_by_query",
               success_rate: "100%",
               note: "Documents have been permanently removed from the index",
-            }
+            },
           );
         }
 
@@ -207,11 +199,8 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpS
         };
       }
     } catch (error) {
-      await tracker.fail(
-        error instanceof Error ? error : new Error(String(error)),
-        "Delete by query operation failed"
-      );
-      
+      await tracker.fail(error instanceof Error ? error : new Error(String(error)), "Delete by query operation failed");
+
       await notificationManager.sendError(
         "Delete by query operation failed",
         error instanceof Error ? error : new Error(String(error)),
@@ -220,9 +209,9 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpS
           target_index: params.index,
           partial_deletion_risk: "Some documents may have been deleted before the error occurred",
           recovery_suggestion: "Check index state and consider running the operation again if needed",
-        }
+        },
       );
-      
+
       logger.error("Failed to delete by query:", {
         error: error instanceof Error ? error.message : String(error),
       });
@@ -239,45 +228,33 @@ export const registerDeleteByQueryTool: ToolRegistrationFunction = (server: McpS
 
   // Tool registration using modern registerTool method
 
-
   server.registerTool(
-
-
     "elasticsearch_delete_by_query",
 
-
     {
-
-
       title: "Delete By Query",
 
-
-      description: "Delete documents by query in Elasticsearch. Best for bulk document deletion, data cleanup, removing documents matching specific criteria. Use when you need to delete multiple documents based on query conditions rather than individual document IDs in Elasticsearch.",
-
+      description:
+        "Delete documents by query in Elasticsearch. Best for bulk document deletion, data cleanup, removing documents matching specific criteria. Use when you need to delete multiple documents based on query conditions rather than individual document IDs in Elasticsearch.",
 
       inputSchema: {
-      index: z.string().min(1, "Index cannot be empty"),
-      query: z.object({}).passthrough(),
-      maxDocs: z.number().optional(),
-      conflicts: z.enum(["abort", "proceed"]).optional(),
-      refresh: booleanField().optional(),
-      timeout: z.string().optional(),
-      waitForActiveShards: z.custom<WaitForActiveShards>().optional(),
-      waitForCompletion: booleanField().optional(),
-      requestsPerSecond: z.number().optional(),
-      scroll: z.string().optional(),
-      scrollSize: z.number().optional(),
-      searchType: z.enum(["query_then_fetch", "dfs_query_then_fetch"]).optional(),
-      searchTimeout: z.string().optional(),
-      slices: z.number().optional(),
+        index: z.string().min(1, "Index cannot be empty"),
+        query: z.object({}).passthrough(),
+        maxDocs: z.number().optional(),
+        conflicts: z.enum(["abort", "proceed"]).optional(),
+        refresh: booleanField().optional(),
+        timeout: z.string().optional(),
+        waitForActiveShards: z.union([z.string(), z.number()]).optional(),
+        waitForCompletion: booleanField().optional(),
+        requestsPerSecond: z.number().optional(),
+        scroll: z.string().optional(),
+        scrollSize: z.number().optional(),
+        searchType: z.enum(["query_then_fetch", "dfs_query_then_fetch"]).optional(),
+        searchTimeout: z.string().optional(),
+        slices: z.number().optional(),
+      },
     },
 
-
-    },
-
-
-    withReadOnlyCheck("elasticsearch_delete_by_query", deleteByQueryImpl, OperationType.DELETE),
-
-
-  );;
+    withReadOnlyCheck("elasticsearch_delete_by_query", deleteByQueryImpl, OperationType.DELETE) as any,
+  );
 };

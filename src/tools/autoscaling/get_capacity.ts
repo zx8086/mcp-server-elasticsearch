@@ -4,7 +4,7 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const GetAutoscalingCapacityParams = z.object({
@@ -17,19 +17,17 @@ export const registerAutoscalingGetCapacityTool: ToolRegistrationFunction = (ser
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_autoscaling_get_capacity",
 
     {
-
       title: "Autoscaling Get Capacity",
 
-      description: "Get the current autoscaling capacity from Elasticsearch. Best for capacity planning, resource monitoring, cluster scaling analysis. Use when you need to monitor Elasticsearch cluster autoscaling decisions and capacity recommendations. NOTE: Designed for Elasticsearch Service, ECE, and ECK.",
+      description:
+        "Get the current autoscaling capacity from Elasticsearch. Best for capacity planning, resource monitoring, cluster scaling analysis. Use when you need to monitor Elasticsearch cluster autoscaling decisions and capacity recommendations. NOTE: Designed for Elasticsearch Service, ECE, and ECK.",
 
       inputSchema: {
-      masterTimeout: z.string().optional(),
-    },
-
+        masterTimeout: z.string().optional(),
+      },
     },
 
     async (params: GetAutoscalingCapacityParamsType): Promise<SearchResult> => {
@@ -54,6 +52,5 @@ export const registerAutoscalingGetCapacityTool: ToolRegistrationFunction = (ser
         };
       }
     },
-
-  );;
+  );
 };

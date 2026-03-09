@@ -150,9 +150,16 @@ const toolTracer = traceable(handler, {
 // LangSmith client initialization with EXPLICIT project configuration
 let langsmithClient: LangSmithClient | null = null;
 let isTracingEnabled = false;
-let configuredProject: string | null = null;
+let isInitialized = false;
 
 export function initializeTracing(): void {
+  // Guard against multiple initializations
+  if (isInitialized) {
+    logger.debug("LangSmith tracing already initialized, skipping");
+    return;
+  }
+
+  // Also check environment variables directly for runtime configuration
   const tracingEnabled =
     config.langsmith.tracing || 
     process.env.LANGSMITH_TRACING === "true" || 
@@ -163,47 +170,52 @@ export function initializeTracing(): void {
     process.env.LANGSMITH_API_KEY || 
     process.env.LANGCHAIN_API_KEY;
 
-  // CRITICAL: Explicit project name resolution
-  const projectName = 
-    config.langsmith.project ||
-    process.env.LANGSMITH_PROJECT ||
-    process.env.LANGCHAIN_PROJECT ||
-    "mcp-server-default"; // Always have a fallback
+  // Mark as initialized regardless of success to prevent retries
+  isInitialized = true;
 
-  if (!tracingEnabled || !apiKey) {
+  if (!tracingEnabled) {
     logger.info("LangSmith tracing is disabled");
     return;
   }
 
+  if (!apiKey) {
+    logger.warn("LangSmith tracing is enabled but API key is missing");
+    return;
+  }
+
   try {
+    // Use environment variables with fallback to config
+    const endpoint = process.env.LANGSMITH_ENDPOINT || config.langsmith.endpoint;
+    const project = process.env.LANGSMITH_PROJECT || config.langsmith.project;
+
     // Set environment variables for LangSmith SDK
     process.env.LANGSMITH_TRACING = "true";
     process.env.LANGCHAIN_TRACING_V2 = "true";
     process.env.LANGSMITH_API_KEY = apiKey;
-    process.env.LANGSMITH_PROJECT = projectName; // Ensure env var is set
-    
-    // Initialize client with EXPLICIT project
+    process.env.LANGCHAIN_API_KEY = apiKey;
+    process.env.LANGSMITH_ENDPOINT = endpoint;
+    process.env.LANGCHAIN_ENDPOINT = endpoint;
+    process.env.LANGSMITH_PROJECT = project;
+    process.env.LANGCHAIN_PROJECT = project;
+
+    // Initialize LangSmith client with EXPLICIT project routing
     langsmithClient = new LangSmithClient({
       apiKey: apiKey,
       apiUrl: endpoint,
-      projectName: projectName // CRITICAL: Explicit project routing
+      projectName: project, // CRITICAL: Explicit project routing to prevent traces going to wrong project
     });
 
-    configuredProject = projectName; // Store for use in traceable functions
     isTracingEnabled = true;
-    
-    logger.info("✅ LangSmith tracing initialized", {
-      project: projectName,
-      endpoint: endpoint
+    logger.info("LangSmith tracing initialized", {
+      endpoint: endpoint,
+      project: project,
+      source: "MCP Server",
     });
   } catch (error) {
-    logger.error("Failed to initialize LangSmith tracing", { error });
+    logger.error("Failed to initialize LangSmith tracing", {
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
-}
-
-// Export project name for use in traceable functions
-export function getConfiguredProject(): string | null {
-  return configuredProject;
 }
 ```
 
@@ -214,68 +226,74 @@ export function getConfiguredProject(): string | null {
 - **Environment Variable Setup**: Ensure all required env vars are set
 - **Graceful Fallback**: Always have a default project name
 
-### 3. Dynamic Tool Tracing Function
+### 3. Conversation-Aware Tool Tracing Function
 
-**🔥 REQUIRED**: Implement dynamic tool names using function-based approach for proper tool identification in traces.
+**🔥 REQUIRED**: Our implementation uses conversation-aware tracing with session context for better trace organization.
 
 **Essential Implementation Pattern:**
 
 ```typescript
-export function traceToolExecution(toolName: string, _args: any, handler: () => Promise<any>) {
-  // Get the configured project to ensure consistent routing
-  const projectName = getConfiguredProject();
+// Tool tracing with conversation context (src/utils/tracingEnhanced.ts)
+export function traceToolExecutionWithConversation(
+  toolName: string,
+  toolArgs: any,
+  extra: any,
+  contextSession: any,
+  handler: (toolArgs: any, extra: any) => Promise<any>,
+) {
+  // Get current session context for conversation tracking
+  const session = getCurrentSession();
+  const project = process.env.LANGSMITH_PROJECT || config.langsmith.project;
   
-  // Create a traceable function with the SPECIFIC tool name AND project
-  const toolTracer = traceable(
-    async () => {
-      const startTime = Date.now();
-      const currentRun = getCurrentRunTree();
+  if (!session) {
+    // Fallback to basic context-based tracing
+    const basicContext: ToolContext = {
+      toolName,
+      connectionId: contextSession?.connectionId || "unknown",
+      sessionId: contextSession?.sessionId || "unknown",
+    };
 
-      logger.debug("Executing tool with tracing", {
-        toolName,
-        project: projectName,
-        hasParentTrace: !!currentRun,
-        parentTraceId: currentRun?.id,
-      });
+    const tracer = traceNamedToolExecution(basicContext);
+    return tracer(toolArgs, async () => handler(toolArgs, extra));
+  }
 
-      try {
-        const result = await handler();
+  // Get or create conversation context for this tool call
+  const conversation = getOrCreateConversation(session.sessionId, toolName);
 
-        const executionTime = Date.now() - startTime;
-        logger.debug("Tool execution completed", {
-          toolName,
-          project: projectName,
-          executionTime,
-          hasResult: !!result,
-        });
+  // Enhanced trace context with conversation information
+  const conversationContext: ToolContext = {
+    toolName,
+    connectionId: session.connectionId,
+    sessionId: session.sessionId,
+    conversationId: conversation.conversationId,
+    conversationMessageCount: conversation.messageCount,
+    isNewConversation: conversation.isNewConversation,
+    clientInfo: session.clientInfo,
+  };
 
-        return {
-          ...result,
-          _trace: {
-            runId: currentRun?.id,
-            executionTime,
-            project: projectName,
-          },
-        };
-      } catch (error) {
-        const executionTime = Date.now() - startTime;
-        logger.error("Tool execution failed", {
-          toolName,
-          project: projectName,
-          executionTime,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        throw error;
-      }
-    },
-    {
-      name: toolName, // 🔥 CRITICAL: Dynamic tool name for proper identification
-      run_type: "tool",
-      project_name: projectName, // 🔥 CRITICAL: Ensure traces go to correct project
+  // Execute with enhanced tracing context
+  const tracer = traceNamedToolExecution(conversationContext);
+  return tracer(toolArgs, async () => handler(toolArgs, extra));
+}
+
+// Named tool execution with conversation context
+export function createNamedToolTrace(context: ToolContext) {
+  let traceName = `${context.toolName}`;
+
+  // Add conversation context for better trace separation
+  if (context.conversationId) {
+    const conversationParts = context.conversationId.split("_");
+    const conversationIdentifier = conversationParts[conversationParts.length - 1].substring(0, 6);
+
+    // Show new conversation indicator
+    if (context.isNewConversation) {
+      traceName += ` [NEW:${conversationIdentifier}]`;
+    } else {
+      traceName += ` [${conversationIdentifier}:${context.conversationMessageCount}]`;
     }
-  );
+  }
 
-  return toolTracer();
+  return traceName;
 }
 ```
 
@@ -322,61 +340,80 @@ try {
 
 ### Universal Tool Wrapping (`src/tools/index.ts`)
 
-The registration system automatically wraps ALL tools with tracing:
+The registration system automatically wraps ALL tools with conversation-aware tracing:
 
 ```typescript
 export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[] {
+  // Track registered tools for MCP tools/list handler
   const registeredTools: ToolInfo[] = [];
 
-  // Override the tool method to add automatic tracing and security validation
-  const originalTool = server.tool.bind(server);
-  server.tool = (name: string, description: string, inputSchema: any, handler: any) => {
-    registeredTools.push({ name, description, inputSchema });
+  // Override the registerTool method to capture tool information and add both tracing and security validation
+  const originalRegisterTool = server.registerTool.bind(server);
+  server.registerTool = (name: string, config: any, handler: any) => {
+    registeredTools.push({
+      name,
+      description: config.description || config.title || "",
+      inputSchema: config.inputSchema,
+    });
 
-    // Skip security validation for read-only operations
+    // Skip security validation for read-only search operations
     const readOnlyTools = [
-      'elasticsearch_search', 
-      'elasticsearch_list_indices', 
-      'elasticsearch_get_mappings', 
-      'elasticsearch_get_shards', 
-      'elasticsearch_indices_summary'
+      "elasticsearch_search",
+      "elasticsearch_list_indices", 
+      "elasticsearch_get_mappings",
+      "elasticsearch_get_shards",
+      "elasticsearch_indices_summary",
+      "elasticsearch_diagnostics",
     ];
     const shouldValidate = !readOnlyTools.includes(name);
-    
-    // Create enhanced handler with BOTH tracing AND security validation
+
+    // Create enhanced handler with both tracing and security validation
     let enhancedHandler = handler;
-    
-    // Add tracing wrapper to ALL tools (unconditional)
-    enhancedHandler = async (args: any) => {
-      return traceToolExecution(name, args, async () => {
-        return handler(args);
+
+    // Add conversation-aware tracing wrapper to ALL tools
+    enhancedHandler = async (toolArgs: any, extra: any) => {
+      // Extract connection and client info from context for tracing
+      const currentSession = getCurrentSession();
+      const connectionId = currentSession?.connectionId || `conn-${Date.now()}`;
+      const clientInfo = currentSession?.clientInfo || { name: "Claude Desktop", platform: "desktop" };
+
+      logger.debug("Tool execution with conversation-aware tracing", {
+        toolName: name,
+        connectionId: `${connectionId.substring(0, 8)}...`,
       });
+
+      // Pass context information to conversation-aware tracing (maintains exact same signature)
+      const contextSession = { sessionId: connectionId, connectionId, clientInfo };
+      return traceToolExecutionWithConversation(
+        name,
+        toolArgs,
+        extra,
+        contextSession,
+        async (toolArgs: any, extra: any) => {
+          return handler(toolArgs, extra);
+        },
+      );
     };
-    
+
     // Add security validation wrapper for write operations
     if (shouldValidate) {
       enhancedHandler = withSecurityValidation(name, enhancedHandler);
     }
 
-    return originalTool(name, description, inputSchema, enhancedHandler);
+    return originalRegisterTool(name, config, enhancedHandler);
   };
 
-  logger.info("🚀 Registering all tools with automatic tracing and security validation", {
-    tracingEnabled: true, // All tools will be traced
+  logger.info("Registering all tools with conversation-aware tracing and security validation", {
+    conversationTracingEnabled: true, // All tools will be traced with conversation context
     securityEnabled: true,
   });
 
-  // Register all tools - they automatically get tracing
+  // Now register all tools with the wrapped server
+  // They will automatically get tracing without any changes!
   registerListIndicesTool(server, esClient);
   registerGetMappingsTool(server, esClient);
   registerSearchTool(server, esClient);
-  // ... 94+ tools total
-
-  logger.info("✅ All tools registered with automatic tracing and security validation", {
-    toolCount: registeredTools.length,
-    tracingActive: true,
-    enhancementsEnabled: true,
-  });
+  // ... 170+ tools total
 
   return registeredTools;
 }
@@ -384,22 +421,23 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
 
 **Key Architecture Decisions:**
 
-1. **Server Method Override**: Intercepts `server.tool()` calls to add wrappers
-2. **Layered Enhancement**: Tracing + Security validation in sequence
-3. **Unconditional Tracing**: Every tool gets traced, no exceptions
-4. **Preserved Functionality**: Original tool logic unchanged
-5. **Production Safety**: Security validation maintained
+1. **RegisterTool Method Override**: Intercepts `server.registerTool()` calls to add wrappers
+2. **Conversation-Aware Tracing**: Uses session context for better trace organization
+3. **Layered Enhancement**: Tracing + Security validation in sequence
+4. **Unconditional Tracing**: Every tool gets traced, no exceptions  
+5. **Preserved Functionality**: Original tool logic unchanged
+6. **Production Safety**: Security validation maintained
 
 ### Wrapper Layer Architecture
 
 ```
 Original Tool Handler
         ↓
-    Tracing Wrapper    ← traceToolExecution(name, args, originalHandler)
+Conversation-Aware Tracing Wrapper  ← traceToolExecutionWithConversation(name, args, extra, context, originalHandler)
         ↓
-  Security Wrapper     ← withSecurityValidation(name, tracedHandler) [if needed]
+Security Wrapper                    ← withSecurityValidation(name, tracedHandler) [if needed]
         ↓
-   MCP Server Tool     ← server.tool(name, description, schema, enhancedHandler)
+MCP Server Tool                     ← server.registerTool(name, config, enhancedHandler)
 ```
 
 ## Dynamic Tool Name Resolution
@@ -441,13 +479,100 @@ Tool Execution
 ...
 ```
 
-**After (Correct):**
+**After (Correct - With Conversation Context):**
 ```
-elasticsearch_search
-elasticsearch_get_cluster_health
-elasticsearch_list_indices
-elasticsearch_get_mappings
+elasticsearch_search [NEW:abc123]
+elasticsearch_get_cluster_health [def456:2]
+elasticsearch_list_indices [abc123:3]
+elasticsearch_get_mappings [abc123:4]
 ...
+```
+
+**Trace Name Structure:**
+- `elasticsearch_search [NEW:abc123]` - New conversation, conversation ID ending in 'abc123'
+- `elasticsearch_search [def456:2]` - Continuing conversation, 2nd message in conversation 'def456'
+
+## Conversation-Aware Tracing System
+
+Our implementation includes a sophisticated conversation tracking system that groups related tool calls and provides better trace organization in LangSmith:
+
+### Session Context with AsyncLocalStorage
+
+```typescript
+// Session context propagated through AsyncLocalStorage
+export interface SessionContext {
+  sessionId: string;
+  connectionId: string;
+  transportMode: "stdio" | "sse";
+  clientInfo?: {
+    name?: string;
+    version?: string;
+    platform?: string;
+  };
+  userId?: string;
+  startTime?: number;
+}
+
+// Session storage using Node.js AsyncLocalStorage
+const sessionStorage = new AsyncLocalStorage<SessionContext>();
+
+export function getCurrentSession(): SessionContext | undefined {
+  return sessionStorage.getStore();
+}
+```
+
+### Conversation Tracking
+
+```typescript
+// Conversation context for related tool calls
+interface ConversationInfo {
+  conversationId: string;
+  messageCount: number;
+  isNewConversation: boolean;
+  lastToolCall: string;
+  startTime: number;
+}
+
+export function getOrCreateConversation(sessionId: string, toolName?: string): ConversationInfo {
+  // Creates or retrieves conversation context
+  // Tracks message count and conversation continuity
+  // Generates unique conversation IDs for trace grouping
+}
+```
+
+### Named Connection Traces
+
+```typescript
+// Creates descriptive session trace names
+export function createNamedConnectionTrace(context: ConnectionContext) {
+  let traceName = "";
+  
+  // Add client identification
+  if (context.clientInfo?.name) {
+    traceName = `${context.clientInfo.name}`;
+    if (context.clientInfo.version) {
+      traceName += ` v${context.clientInfo.version}`;
+    }
+  } else if (context.transportMode === "stdio") {
+    traceName = "Claude Desktop";
+  } else if (context.transportMode === "sse") {
+    traceName = "Web Client";
+  }
+  
+  // Add transport mode and session identifier
+  traceName += ` (${context.transportMode.toUpperCase()})`;
+  
+  if (context.sessionId) {
+    const sessionIdentifier = context.sessionId.split("-").pop()?.substring(0, 6) || "session";
+    traceName += ` [${sessionIdentifier}]`;
+  }
+  
+  return traceName;
+}
+
+// Example trace names:
+// "Claude Desktop (STDIO) [abc123]"
+// "n8n v1.0.0 (SSE) [xyz789]"
 ```
 
 ## Production Patterns

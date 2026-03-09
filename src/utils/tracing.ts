@@ -1,57 +1,34 @@
 /* src/utils/tracing.ts */
 
-import { Client as LangSmithClient } from "langsmith";
 import type { RunTree } from "langsmith/run_trees";
 import { getCurrentRunTree, withRunTree } from "langsmith/singletons/traceable";
 import { traceable } from "langsmith/traceable";
 import { config } from "../config.js";
 import { logger } from "./logger.js";
-// Enhanced context interface for conversation-level tracing
-interface TraceContext {
-  sessionId: string;
-  connectionId: string;
-  conversationId?: string;
-  conversationMessageCount?: number;
-  isNewConversation?: boolean;
-  clientInfo?: {
-    name?: string;
-    version?: string;
-    platform?: string;
-  };
-}
+import { getCurrentSession } from "./sessionContext.js";
 
 // =============================================================================
-// LANGSMITH CLIENT INITIALIZATION
+// STATE
 // =============================================================================
 
-let langsmithClient: LangSmithClient | null = null;
 let isTracingEnabled = false;
 let isInitialized = false;
 
+// =============================================================================
+// INITIALIZATION
+// =============================================================================
+
 export function initializeTracing(): void {
-  // Guard against multiple initializations
   if (isInitialized) {
-    logger.debug("LangSmith tracing already initialized, skipping", {
-      alreadyInitialized: true,
-      tracingEnabled: isTracingEnabled,
-      clientExists: !!langsmithClient,
-    });
     return;
   }
 
-  logger.debug("Starting LangSmith tracing initialization", {
-    processId: process.pid,
-    callStack: new Error().stack?.split('\n')[1]?.trim(),
-  });
+  isInitialized = true;
 
-  // Also check environment variables directly for runtime configuration
   const tracingEnabled =
     config.langsmith.tracing || process.env.LANGSMITH_TRACING === "true" || process.env.LANGCHAIN_TRACING_V2 === "true";
 
   const apiKey = config.langsmith.apiKey || process.env.LANGSMITH_API_KEY || process.env.LANGCHAIN_API_KEY;
-
-  // Mark as initialized regardless of success to prevent retries
-  isInitialized = true;
 
   if (!tracingEnabled) {
     logger.info("LangSmith tracing is disabled");
@@ -64,11 +41,10 @@ export function initializeTracing(): void {
   }
 
   try {
-    // Use environment variables with fallback to config
     const endpoint = process.env.LANGSMITH_ENDPOINT || config.langsmith.endpoint;
     const project = process.env.LANGSMITH_PROJECT || config.langsmith.project;
 
-    // Set environment variables for LangSmith SDK
+    // Set environment variables for LangSmith SDK (it reads these natively)
     process.env.LANGSMITH_TRACING = "true";
     process.env.LANGCHAIN_TRACING_V2 = "true";
     process.env.LANGSMITH_API_KEY = apiKey;
@@ -78,19 +54,8 @@ export function initializeTracing(): void {
     process.env.LANGSMITH_PROJECT = project;
     process.env.LANGCHAIN_PROJECT = project;
 
-    // Initialize LangSmith client with EXPLICIT project routing
-    langsmithClient = new LangSmithClient({
-      apiKey: apiKey,
-      apiUrl: endpoint,
-      projectName: project, // CRITICAL: Explicit project routing to prevent traces going to wrong project
-    });
-
     isTracingEnabled = true;
-    logger.info("LangSmith tracing initialized", {
-      endpoint: endpoint,
-      project: project,
-      source: "MCP Server",
-    });
+    logger.info("LangSmith tracing initialized", { endpoint, project });
   } catch (error) {
     logger.error("Failed to initialize LangSmith tracing", {
       error: error instanceof Error ? error.message : String(error),
@@ -99,7 +64,7 @@ export function initializeTracing(): void {
 }
 
 // =============================================================================
-// TRACING UTILITIES
+// QUERIES (used by elasticsearchObservability.ts)
 // =============================================================================
 
 export interface TraceMetadata {
@@ -128,233 +93,159 @@ export function getCurrentTrace(): RunTree | undefined {
 
   try {
     return getCurrentRunTree(true);
-  } catch (error) {
-    logger.debug("No active trace context", {
-      error: error instanceof Error ? error.message : String(error),
-    });
+  } catch {
     return undefined;
   }
 }
 
 // =============================================================================
-// MCP CONNECTION TRACING
+// TOOL TRACING (consolidated from tracingEnhanced.ts)
 // =============================================================================
 
-export const traceMcpConnection = traceable(
-  async (
-    connectionId: string,
-    transportMode: string,
-    handler: () => Promise<any>,
-    clientInfo?: { name?: string; version?: string },
-  ) => {
-    const startTime = Date.now();
-
-    logger.debug("Starting MCP connection trace", {
-      connectionId,
-      transportMode,
-      clientInfo,
-    });
-
-    try {
-      const result = await handler();
-
-      const executionTime = Date.now() - startTime;
-      logger.debug("MCP connection completed", {
-        connectionId,
-        executionTime,
-        clientInfo,
-      });
-
-      return result;
-    } catch (error) {
-      const executionTime = Date.now() - startTime;
-      logger.error("MCP connection failed", {
-        connectionId,
-        executionTime,
-        error: error instanceof Error ? error.message : String(error),
-        clientInfo,
-      });
-      throw error;
-    }
-  },
-  {
-    name: "MCP Connection",
-    run_type: "chain",
-  },
-);
-
-// =============================================================================
-// TOOL EXECUTION TRACING
-// =============================================================================
-
-export function traceToolExecution(
+export function traceToolCall(
   toolName: string,
   toolArgs: any,
   extra: any,
-  context: TraceContext,
   handler: (toolArgs: any, extra: any) => Promise<any>,
 ) {
-  // Get configured project for consistent routing
   const project = process.env.LANGSMITH_PROJECT || config.langsmith.project;
+  const session = getCurrentSession();
+  const sessionId = session?.sessionId || "unknown";
+  const connectionId = session?.connectionId || "unknown";
+  const clientName = session?.clientInfo?.name || "unknown";
 
-  // Use simple tool name for tracing with conversation context
-  const shortConnectionId = context.connectionId.split("-").pop()?.substring(0, 6) || "conn";
-  const shortConversationId = context.conversationId?.split("_").pop()?.substring(0, 6) || "chat";
-  const traceName = context.conversationId ? `${toolName} [${shortConversationId}]` : toolName;
-
-  // Create a traceable function with session-aware naming
   const toolTracer = traceable(
-    async (inputs: any) => {
+    async (_inputs: any) => {
       const startTime = Date.now();
-      const currentRun = getCurrentRunTree();
-
-      logger.debug("Executing tool with conversation tracing", {
-        toolName,
-        connectionId: shortConnectionId,
-        conversationId: shortConversationId,
-        conversationMessageCount: context.conversationMessageCount,
-        isNewConversation: context.isNewConversation,
-        fullConnectionId: context.connectionId,
-        fullConversationId: context.conversationId,
-        clientName: context.clientInfo?.name,
-        project,
-        hasParentTrace: !!currentRun,
-        parentTraceId: currentRun?.id,
-        toolArgsProvided: !!toolArgs,
-        extraProvided: !!extra,
-      });
 
       try {
         const result = await handler(toolArgs, extra);
-
         const executionTime = Date.now() - startTime;
-        logger.debug("Tool execution completed", {
-          toolName,
-          project,
-          executionTime,
-          hasResult: !!result,
-        });
+
+        logger.debug("Tool execution completed", { toolName, executionTime });
 
         return {
           ...result,
-          _trace: {
-            runId: currentRun?.id,
-            executionTime,
-            project,
-            connectionId: context.connectionId,
-            conversationId: context.conversationId,
-            conversationMessageCount: context.conversationMessageCount,
-            isNewConversation: context.isNewConversation,
-          },
+          _trace: { executionTime, project },
         };
       } catch (error) {
-        const executionTime = Date.now() - startTime;
         logger.error("Tool execution failed", {
           toolName,
-          project,
-          executionTime,
+          executionTime: Date.now() - startTime,
           error: error instanceof Error ? error.message : String(error),
         });
         throw error;
       }
     },
     {
-      name: traceName, // Use clean tool name
+      name: toolName,
       run_type: "tool",
-      project_name: project, // CRITICAL: Ensure traces go to correct project
+      project_name: project,
       metadata: {
-        // Context metadata for LangSmith correlation
-        connection_id: context.connectionId,
-        conversation_id: context.conversationId || "no-conversation",
-        conversation_message_count: context.conversationMessageCount || 1,
-        is_new_conversation: context.isNewConversation || false,
-        client_name: context.clientInfo?.name || "unknown",
-        client_platform: context.clientInfo?.platform || "unknown",
-        
-        // Tool-specific metadata
         tool_name: toolName,
+        session_id: sessionId,
+        connection_id: connectionId,
+        client_name: clientName,
+      },
+      tags: ["mcp-tool", `tool:${toolName}`, `client:${clientName.toLowerCase().replace(/\s+/g, "-")}`],
+    },
+  );
+
+  return (toolTracer as any)({
+    tool_name: toolName,
+    arguments: toolArgs,
+    timestamp: new Date().toISOString(),
+  });
+}
+
+// Backward-compat alias used by test files that import traceToolExecution
+export function traceToolExecution(
+  toolName: string,
+  toolArgs: any,
+  extra: any,
+  _context: any,
+  handler: (toolArgs: any, extra: any) => Promise<any>,
+) {
+  return traceToolCall(toolName, toolArgs, extra, handler);
+}
+
+// =============================================================================
+// CONNECTION TRACING (consolidated from tracingEnhanced.ts)
+// =============================================================================
+
+export interface ConnectionContext {
+  connectionId: string;
+  transportMode: "stdio" | "sse" | "sse-bun" | string;
+  clientInfo?: {
+    name?: string;
+    version?: string;
+    platform?: string;
+  };
+  sessionId?: string;
+}
+
+export async function traceConnection(context: ConnectionContext, handler: () => Promise<any>): Promise<any> {
+  let traceName = context.clientInfo?.name || (context.transportMode === "stdio" ? "Claude Desktop" : "Web Client");
+  traceName += ` (${context.transportMode.toUpperCase()})`;
+
+  if (context.sessionId) {
+    const short = context.sessionId.split("-").pop()?.substring(0, 6) || context.sessionId.substring(0, 8);
+    traceName += ` [${short}]`;
+  }
+
+  const traced = traceable(
+    async (_input: any) => {
+      const startTime = Date.now();
+
+      logger.info(`Starting MCP session: ${traceName}`, {
+        connectionId: context.connectionId,
+        transportMode: context.transportMode,
+      });
+
+      try {
+        const result = await handler();
+        logger.info(`MCP session established: ${traceName}`, {
+          connectionId: context.connectionId,
+          executionTime: Date.now() - startTime,
+        });
+        return result;
+      } catch (error) {
+        logger.error(`MCP session failed: ${traceName}`, {
+          connectionId: context.connectionId,
+          executionTime: Date.now() - startTime,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        throw error;
+      }
+    },
+    {
+      name: traceName,
+      run_type: "chain",
+      metadata: {
+        connection_id: context.connectionId,
+        transport_mode: context.transportMode,
+        client_name: context.clientInfo?.name || "unknown",
+        session_id: context.sessionId,
       },
       tags: [
-        "mcp-tool",
-        `connection:${shortConnectionId}`,
-        `conversation:${shortConversationId}`,
-        `client:${context.clientInfo?.name?.toLowerCase().replace(/\s+/g, "-") || "unknown"}`,
-        `tool:${toolName}`,
-        context.isNewConversation ? "new-conversation" : "continuing-conversation",
+        "mcp-connection",
+        `transport:${context.transportMode}`,
+        context.clientInfo?.name ? `client:${context.clientInfo.name}` : "client:unknown",
       ],
     },
   );
 
-  // Pass the toolArgs as inputs to the trace AND execute the function
-  return toolTracer({
-    tool_name: toolName,
-    arguments: toolArgs,
-    extra_context: extra,
-    timestamp: new Date().toISOString(),
-    
-    // Context for trace correlation
-    context: {
-      connection_id: context.connectionId,
-      conversation_id: context.conversationId,
-      conversation_message_count: context.conversationMessageCount,
-      is_new_conversation: context.isNewConversation,
-      client_info: context.clientInfo,
-    },
-  });
+  return (traced as any)({ connectionId: context.connectionId, timestamp: new Date().toISOString() });
 }
 
 // =============================================================================
-// ELASTICSEARCH OPERATION TRACING
-// =============================================================================
-
-export const traceElasticsearchOperation = traceable(
-  async (operation: string, index: string | undefined, query: any, handler: () => Promise<any>) => {
-    const startTime = Date.now();
-
-    logger.debug("Executing Elasticsearch operation", {
-      operation,
-      index,
-      hasQuery: !!query,
-    });
-
-    try {
-      const result = await handler();
-
-      const executionTime = Date.now() - startTime;
-      logger.debug("Elasticsearch operation completed", {
-        operation,
-        index,
-        executionTime,
-        resultCount: result?.hits?.total?.value || result?.count || 0,
-      });
-
-      return result;
-    } catch (error) {
-      const executionTime = Date.now() - startTime;
-      logger.error("Elasticsearch operation failed", {
-        operation,
-        index,
-        executionTime,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  },
-  {
-    name: "Elasticsearch Operation",
-    run_type: "retriever",
-  },
-);
-
-// =============================================================================
-// NESTED OPERATION TRACING
+// NESTED TRACE (used by elasticsearchObservability.ts)
 // =============================================================================
 
 export async function withNestedTrace<T>(
   name: string,
   runType: "chain" | "tool" | "retriever" | "llm",
   handler: () => Promise<T>,
-  metadata?: TraceMetadata,
 ): Promise<T> {
   if (!isTracingEnabled) {
     return handler();
@@ -362,21 +253,10 @@ export async function withNestedTrace<T>(
 
   const parentRun = getCurrentRunTree();
 
-  const tracedHandler = traceable(
-    async () => {
-      logger.debug(`Starting nested trace: ${name}`, {
-        hasParent: !!parentRun,
-        parentId: parentRun?.id,
-        metadata,
-      });
-
-      return handler();
-    },
-    {
-      name,
-      run_type: runType,
-    },
-  );
+  const tracedHandler = traceable(async () => handler(), {
+    name,
+    run_type: runType,
+  });
 
   if (parentRun) {
     return withRunTree(parentRun, tracedHandler);
@@ -385,124 +265,33 @@ export async function withNestedTrace<T>(
 }
 
 // =============================================================================
-// TRACE METADATA HELPERS
+// CLIENT DETECTION (moved from tracingEnhanced.ts)
 // =============================================================================
 
-export function createToolMetadata(toolName: string, args: any, connectionId?: string): TraceMetadata {
-  const metadata: TraceMetadata = {
-    toolName,
-    connectionId,
-    timestamp: new Date().toISOString(),
-  };
-
-  // Extract common fields from args
-  if (args?.index) metadata.index = args.index;
-  if (args?.operation) metadata.operation = args.operation;
-  if (args?.queryBody) metadata.queryType = "query_dsl";
-  if (args?.query) metadata.queryType = "sql";
-
-  return metadata;
-}
-
-export function createConnectionMetadata(
-  connectionId: string,
+export function detectClient(
   transportMode: string,
-  sessionId?: string,
-  conversationId?: string,
-  conversationMessageCount?: number,
-  isNewConversation?: boolean,
-): TraceMetadata {
-  return {
-    connectionId,
-    sessionId,
-    conversationId,
-    conversationMessageCount,
-    isNewConversation,
-    transportMode,
-    timestamp: new Date().toISOString(),
-  };
-}
-
-// =============================================================================
-// PERFORMANCE MONITORING
-// =============================================================================
-
-export interface PerformanceMetrics {
-  startTime: number;
-  endTime?: number;
-  duration?: number;
-  memoryUsage?: NodeJS.MemoryUsage;
-}
-
-export class PerformanceMonitor {
-  private metrics: PerformanceMetrics;
-
-  constructor() {
-    this.metrics = {
-      startTime: Date.now(),
-      memoryUsage: process.memoryUsage(),
-    };
+  _headers?: Record<string, string>,
+  userAgent?: string,
+): { name: string; version?: string; platform?: string } {
+  if (transportMode === "stdio") {
+    return { name: "Claude Desktop", platform: process.platform };
   }
 
-  end(): PerformanceMetrics {
-    this.metrics.endTime = Date.now();
-    this.metrics.duration = this.metrics.endTime - this.metrics.startTime;
-    this.metrics.memoryUsage = process.memoryUsage();
-    return this.metrics;
-  }
-
-  logSlowOperation(threshold: number, operation: string): void {
-    const duration = Date.now() - this.metrics.startTime;
-    if (duration > threshold) {
-      logger.warn(`Slow operation detected: ${operation}`, {
-        duration,
-        threshold,
-      });
+  if (transportMode === "sse") {
+    if (userAgent) {
+      if (userAgent.includes("n8n")) return { name: "n8n", platform: "web" };
+      if (userAgent.includes("Chrome")) return { name: "Chrome Browser", platform: "web" };
+      if (userAgent.includes("Safari")) return { name: "Safari Browser", platform: "web" };
     }
+    return { name: "Web Client", platform: "web" };
   }
+
+  return { name: "Unknown Client", platform: "unknown" };
 }
 
-// =============================================================================
-// FEEDBACK INTEGRATION
-// =============================================================================
-
-export async function submitFeedback(
-  runId: string,
-  score: -1 | 0 | 1,
-  comment?: string,
-  metadata?: Record<string, any>,
-): Promise<void> {
-  if (!isTracingEnabled || !langsmithClient) {
-    logger.debug("Cannot submit feedback: tracing not enabled");
-    return;
-  }
-
-  try {
-    await langsmithClient.createFeedback(runId, "user_rating", {
-      score,
-      comment,
-      sourceInfo: {
-        ...metadata,
-        timestamp: new Date().toISOString(),
-        source: "mcp-elasticsearch-server",
-      },
-    });
-
-    logger.debug("Feedback submitted successfully", {
-      runId,
-      score,
-    });
-  } catch (error) {
-    logger.error("Failed to submit feedback", {
-      runId,
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
+export function generateSessionId(_connectionId: string, clientInfo?: { name?: string }): string {
+  const timestamp = Date.now();
+  const clientPrefix = clientInfo?.name?.toLowerCase().replace(/\s+/g, "-") || "unknown";
+  const randomSuffix = Math.random().toString(36).substring(2, 8);
+  return `${clientPrefix}-${timestamp}-${randomSuffix}`;
 }
-
-// =============================================================================
-// INITIALIZATION
-// =============================================================================
-
-// Note: Tracing is now initialized explicitly in index.ts main() function
-// to prevent multiple initializations when this module is imported

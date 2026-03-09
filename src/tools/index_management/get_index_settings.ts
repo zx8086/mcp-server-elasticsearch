@@ -26,10 +26,13 @@ const getIndexSettingsValidator = z.object({
   masterTimeout: z.string().optional(),
 });
 
-type GetIndexSettingsParams = z.infer<typeof getIndexSettingsValidator>;
+type _GetIndexSettingsParams = z.infer<typeof getIndexSettingsValidator>;
 
 // MCP error handling
-function createGetIndexSettingsMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createGetIndexSettingsMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution" | "index_not_found"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -82,9 +85,9 @@ export const registerGetIndexSettingsTool: ToolRegistrationFunction = (server: M
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createGetIndexSettingsMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createGetIndexSettingsMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -110,30 +113,27 @@ export const registerGetIndexSettingsTool: ToolRegistrationFunction = (server: M
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_get_index_settings",
 
     {
-
       title: "Get Index Settings",
 
-      description: "Get index settings from Elasticsearch. Best for configuration review, performance analysis, troubleshooting. Use when you need to inspect index-level settings and configurations in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Get index settings from Elasticsearch. Best for configuration review, performance analysis, troubleshooting. Use when you need to inspect index-level settings and configurations in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      index: z.string(), // Name of the index to get settings for
-      name: z.string().optional(), // Specific setting name to retrieve
-      ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
-      allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
-      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
-      flatSettings: z.boolean().optional(), // Return settings in flat format
-      includeDefaults: z.boolean().optional(), // Include default settings
-      local: z.boolean().optional(), // Return local information only
-      masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
-    },
-
+        index: z.string(), // Name of the index to get settings for
+        name: z.string().optional(), // Specific setting name to retrieve
+        ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+        allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+        expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
+        flatSettings: z.boolean().optional(), // Return settings in flat format
+        includeDefaults: z.boolean().optional(), // Include default settings
+        local: z.boolean().optional(), // Return local information only
+        masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
+      },
     },
 
     withReadOnlyCheck("elasticsearch_get_index_settings", getIndexSettingsHandler, OperationType.READ),
-
-  );;
+  );
 };

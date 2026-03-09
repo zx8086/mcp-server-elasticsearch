@@ -17,10 +17,13 @@ const deactivateWatchValidator = z.object({
   watch_id: z.string().min(1, "Watch ID cannot be empty"),
 });
 
-type DeactivateWatchParams = z.infer<typeof deactivateWatchValidator>;
+type _DeactivateWatchParams = z.infer<typeof deactivateWatchValidator>;
 
 // MCP error handling
-function createDeactivateWatchMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createDeactivateWatchMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution" | "watch_not_found"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -65,9 +68,9 @@ export const registerWatcherDeactivateWatchTool: ToolRegistrationFunction = (ser
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createDeactivateWatchMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createDeactivateWatchMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -93,22 +96,19 @@ export const registerWatcherDeactivateWatchTool: ToolRegistrationFunction = (ser
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_watcher_deactivate_watch",
 
     {
-
       title: "Watcher Deactivate Watch",
 
-      description: "Deactivate a watch in Elasticsearch Watcher. Best for monitoring control, alerting management, watch lifecycle control. Use when you need to disable watch execution while preserving the watch definition in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Deactivate a watch in Elasticsearch Watcher. Best for monitoring control, alerting management, watch lifecycle control. Use when you need to disable watch execution while preserving the watch definition in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      watch_id: z.string(), // Watch ID to deactivate
-    },
-
+        watch_id: z.string(), // Watch ID to deactivate
+      },
     },
 
     withReadOnlyCheck("elasticsearch_watcher_deactivate_watch", deactivateWatchHandler, OperationType.WRITE),
-
-  );;
+  );
 };

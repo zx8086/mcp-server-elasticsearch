@@ -61,6 +61,7 @@ export const registerGetStatusTool: ToolRegistrationFunction = (server: McpServe
       }
 
       // Enhanced response with status interpretation
+      const resultAny = result as any;
       const status = result.operation_mode || "unknown";
       const isEnabled = status === "RUNNING";
 
@@ -68,7 +69,7 @@ export const registerGetStatusTool: ToolRegistrationFunction = (server: McpServe
         ilm_status: status,
         is_running: isEnabled,
         operation_mode: result.operation_mode,
-        ...(result.policy_count !== undefined && { policy_count: result.policy_count }),
+        ...(resultAny.policy_count !== undefined && { policy_count: resultAny.policy_count }),
         timestamp: new Date().toISOString(),
       };
 
@@ -80,7 +81,7 @@ export const registerGetStatusTool: ToolRegistrationFunction = (server: McpServe
             text: `## ILM Status: ${isEnabled ? "✅ RUNNING" : `❌ ${status}`}
 
 **Operation Mode**: ${result.operation_mode || "unknown"}
-${result.policy_count !== undefined ? `**Policy Count**: ${result.policy_count}` : ""}
+${resultAny.policy_count !== undefined ? `**Policy Count**: ${resultAny.policy_count}` : ""}
 
 Status checked at: ${new Date().toISOString()}`,
           },
@@ -114,21 +115,18 @@ Status checked at: ${new Date().toISOString()}`,
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_ilm_get_status",
 
     {
-
       title: "Ilm Get Status",
 
-      description: "Get ILM status. Check if Index Lifecycle Management is running and operational. Uses direct JSON Schema and standardized MCP error codes. No parameters required.",
+      description:
+        "Get ILM status. Check if Index Lifecycle Management is running and operational. Uses direct JSON Schema and standardized MCP error codes. No parameters required.",
 
       inputSchema: {},
-
     },
 
     // Direct JSON Schema
     getStatusHandler,
-
   );
 };

@@ -5,7 +5,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
-import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetMultiTermVectorsParams = z.object({
@@ -36,17 +36,15 @@ export const registerGetMultiTermVectorsTool: ToolRegistrationFunction = (server
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_get_multi_term_vectors",
 
     {
-
       title: "Get Multi Term Vectors",
 
-      description: "Get term vectors for multiple documents in Elasticsearch. Best for text analysis, similarity calculations, relevance tuning. Use when you need to analyze term frequency and position data for multiple documents in Elasticsearch indices.",
+      description:
+        "Get term vectors for multiple documents in Elasticsearch. Best for text analysis, similarity calculations, relevance tuning. Use when you need to analyze term frequency and position data for multiple documents in Elasticsearch indices.",
 
       inputSchema: GetMultiTermVectorsParams.shape,
-
     },
 
     async (params: GetMultiTermVectorsParamsType): Promise<SearchResult> => {
@@ -69,7 +67,7 @@ export const registerGetMultiTermVectorsTool: ToolRegistrationFunction = (server
               version_type: doc.version_type,
             })),
             ids: params.ids,
-          },
+          } as any,
           {
             opaqueId: "elasticsearch_get_multi_term_vectors",
           },
@@ -91,6 +89,5 @@ export const registerGetMultiTermVectorsTool: ToolRegistrationFunction = (server
         };
       }
     },
-
-  );;
+  );
 };

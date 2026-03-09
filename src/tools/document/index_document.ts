@@ -22,10 +22,13 @@ const indexDocumentValidator = z.object({
   pipeline: z.string().optional(),
 });
 
-type IndexDocumentParams = z.infer<typeof indexDocumentValidator>;
+type _IndexDocumentParams = z.infer<typeof indexDocumentValidator>;
 
 // MCP error handling
-function createIndexDocumentMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createIndexDocumentMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution" | "document_already_exists" | "version_conflict"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -76,9 +79,9 @@ export const registerIndexDocumentTool: ToolRegistrationFunction = (server: McpS
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createIndexDocumentMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createIndexDocumentMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -118,27 +121,24 @@ export const registerIndexDocumentTool: ToolRegistrationFunction = (server: McpS
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_index_document",
 
     {
-
       title: "Index Document",
 
-      description: "Index a JSON document into Elasticsearch. Best for adding new documents, bulk data ingestion, real-time indexing. Use when you need to store structured JSON documents in Elasticsearch indices with optional routing and pipeline processing. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Index a JSON document into Elasticsearch. Best for adding new documents, bulk data ingestion, real-time indexing. Use when you need to store structured JSON documents in Elasticsearch indices with optional routing and pipeline processing. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      index: z.string(), // REQUIRED: Name of the Elasticsearch index to store the document. Example: 'users', 'logs-2024.01'
-      id: z.string().optional(), // Optional: Unique identifier for the document. If not provided, Elasticsearch will generate one
-      document: z.object({}), // REQUIRED: The JSON document to index
-      refresh: z.enum(["true", "false", "wait_for"]).optional(), // Whether to refresh the index after the operation
-      routing: z.string().optional(), // Custom routing value for document placement
-      pipeline: z.string().optional(), // Ingest pipeline to use for document processing
-    },
-
+        index: z.string(), // REQUIRED: Name of the Elasticsearch index to store the document. Example: 'users', 'logs-2024.01'
+        id: z.string().optional(), // Optional: Unique identifier for the document. If not provided, Elasticsearch will generate one
+        document: z.object({}), // REQUIRED: The JSON document to index
+        refresh: z.enum(["true", "false", "wait_for"]).optional(), // Whether to refresh the index after the operation
+        routing: z.string().optional(), // Custom routing value for document placement
+        pipeline: z.string().optional(), // Ingest pipeline to use for document processing
+      },
     },
 
     withReadOnlyCheck("elasticsearch_index_document", indexDocumentHandler, OperationType.WRITE),
-
-  );;
+  );
 };

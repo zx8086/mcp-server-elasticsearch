@@ -23,25 +23,23 @@ export const registerGetFieldMappingTool: ToolRegistrationFunction = (server: Mc
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_get_field_mapping",
 
     {
-
       title: "Get Field Mapping",
 
-      description: "Get field mapping for a specific field in an Elasticsearch index. Best for schema inspection, field analysis, mapping troubleshooting. Use when you need to examine how specific fields are mapped and analyzed in Elasticsearch indices for search optimization.",
+      description:
+        "Get field mapping for a specific field in an Elasticsearch index. Best for schema inspection, field analysis, mapping troubleshooting. Use when you need to examine how specific fields are mapped and analyzed in Elasticsearch indices for search optimization.",
 
       inputSchema: {
-      index: z.string().min(1, "Index cannot be empty"),
-      field: z.string().min(1, "Field name cannot be empty"),
-      includeDefaults: booleanField().optional(),
-      local: booleanField().optional(),
-      ignoreUnavailable: booleanField().optional(),
-      allowNoIndices: booleanField().optional(),
-      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
-    },
-
+        index: z.string().min(1, "Index cannot be empty"),
+        field: z.string().min(1, "Field name cannot be empty"),
+        includeDefaults: booleanField().optional(),
+        local: booleanField().optional(),
+        ignoreUnavailable: booleanField().optional(),
+        allowNoIndices: booleanField().optional(),
+        expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
+      },
     },
 
     async (params: GetFieldMappingParamsType): Promise<SearchResult> => {
@@ -50,11 +48,10 @@ export const registerGetFieldMappingTool: ToolRegistrationFunction = (server: Mc
           index: params.index,
           fields: params.field,
           include_defaults: params.includeDefaults,
-          local: params.local,
           ignore_unavailable: params.ignoreUnavailable,
           allow_no_indices: params.allowNoIndices,
           expand_wildcards: params.expandWildcards,
-        });
+        } as any);
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) } as TextContent],
         };
@@ -72,6 +69,5 @@ export const registerGetFieldMappingTool: ToolRegistrationFunction = (server: Mc
         };
       }
     },
-
-  );;
+  );
 };

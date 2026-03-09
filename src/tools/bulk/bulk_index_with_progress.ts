@@ -10,14 +10,14 @@ import { createProgressTracker, notificationManager } from "../../utils/notifica
 // Tool validator
 const bulkIndexWithProgressValidator = z.object({
   index: z.string().min(1).describe("Target index for bulk indexing"),
-  documents: z.array(z.record(z.any())).min(1).max(1000).describe("Array of documents to index (max 1000)"),
+  documents: z.array(z.record(z.string(), z.any())).min(1).max(1000).describe("Array of documents to index (max 1000)"),
   refresh: z.enum(["true", "false", "wait_for"]).optional().describe("Whether to refresh the index after operations"),
   pipeline: z.string().optional().describe("Ingest pipeline to use"),
   routing: z.string().optional().describe("Custom routing value"),
   batchSize: z.number().min(1).max(100).default(50).describe("Number of documents to process per batch"),
 });
 
-type BulkIndexWithProgressParams = z.infer<typeof bulkIndexWithProgressValidator>;
+type _BulkIndexWithProgressParams = z.infer<typeof bulkIndexWithProgressValidator>;
 
 /**
  * Bulk index documents with progress notifications
@@ -30,12 +30,12 @@ export const registerBulkIndexWithProgress = (server: McpServer, esClient: Clien
 
       // Check for progress token from MCP client
       const progressToken = extra?.params?._meta?.progressToken;
-      
+
       // Create progress tracker
       const tracker = await createProgressTracker(
         "bulk_index",
         params.documents.length,
-        `Bulk indexing ${params.documents.length} documents to ${params.index}`
+        `Bulk indexing ${params.documents.length} documents to ${params.index}`,
       );
 
       // Security validation is handled automatically by the server wrapper
@@ -53,16 +53,13 @@ export const registerBulkIndexWithProgress = (server: McpServer, esClient: Clien
       });
 
       // Send initial notification
-      await notificationManager.sendInfo(
-        `Starting bulk indexing of ${totalDocs} documents`,
-        {
-          operation_type: "bulk_index",
-          index,
-          total_documents: totalDocs,
-          batch_size: batchSize,
-          batches,
-        }
-      );
+      await notificationManager.sendInfo(`Starting bulk indexing of ${totalDocs} documents`, {
+        operation_type: "bulk_index",
+        index,
+        total_documents: totalDocs,
+        batch_size: batchSize,
+        batches,
+      });
 
       let totalProcessed = 0;
       let totalErrors = 0;
@@ -77,7 +74,7 @@ export const registerBulkIndexWithProgress = (server: McpServer, esClient: Clien
 
         await tracker.updateProgress(
           totalProcessed,
-          `Processing batch ${batchIndex + 1} of ${batches} (${batchDocs.length} documents)`
+          `Processing batch ${batchIndex + 1} of ${batches} (${batchDocs.length} documents)`,
         );
 
         try {
@@ -88,7 +85,7 @@ export const registerBulkIndexWithProgress = (server: McpServer, esClient: Clien
             const indexOp: any = { index: { _index: index } };
             if (pipeline) indexOp.index.pipeline = pipeline;
             if (routing) indexOp.index.routing = routing;
-            
+
             body.push(indexOp);
             body.push(doc);
           }
@@ -122,12 +119,11 @@ export const registerBulkIndexWithProgress = (server: McpServer, esClient: Clien
           const progress = Math.min(totalProcessed, totalDocs);
           await tracker.updateProgress(
             progress,
-            `Completed batch ${batchIndex + 1}: ${totalSuccess} success, ${totalErrors} errors`
+            `Completed batch ${batchIndex + 1}: ${totalSuccess} success, ${totalErrors} errors`,
           );
 
           // Small delay to allow progress to be visible
-          await new Promise(resolve => setTimeout(resolve, 100));
-
+          await new Promise((resolve) => setTimeout(resolve, 100));
         } catch (batchError) {
           logger.error("Batch processing error", {
             batchIndex,
@@ -137,7 +133,7 @@ export const registerBulkIndexWithProgress = (server: McpServer, esClient: Clien
           // Count all documents in failed batch as errors
           totalErrors += batchDocs.length;
           totalProcessed += batchDocs.length;
-          
+
           errors.push({
             batch_index: batchIndex,
             batch_size: batchDocs.length,
@@ -146,7 +142,7 @@ export const registerBulkIndexWithProgress = (server: McpServer, esClient: Clien
 
           await tracker.updateProgress(
             totalProcessed,
-            `Batch ${batchIndex + 1} failed: ${batchError instanceof Error ? batchError.message : String(batchError)}`
+            `Batch ${batchIndex + 1} failed: ${batchError instanceof Error ? batchError.message : String(batchError)}`,
           );
         }
       }
@@ -166,32 +162,26 @@ export const registerBulkIndexWithProgress = (server: McpServer, esClient: Clien
       if (totalErrors === totalDocs) {
         await tracker.fail(
           new Error(`All ${totalDocs} documents failed to index`),
-          "Bulk indexing operation failed completely"
+          "Bulk indexing operation failed completely",
         );
-        
-        throw new McpError(
-          ErrorCode.InternalError,
-          `Bulk indexing failed: All ${totalDocs} documents failed to index`
-        );
+
+        throw new McpError(ErrorCode.InternalError, `Bulk indexing failed: All ${totalDocs} documents failed to index`);
       } else if (totalErrors > 0) {
         await tracker.complete(
           result,
-          `Bulk indexing completed with ${totalSuccess} successes and ${totalErrors} errors`
+          `Bulk indexing completed with ${totalSuccess} successes and ${totalErrors} errors`,
         );
-        
+
         await notificationManager.sendWarning(
           `Bulk indexing completed with errors: ${totalSuccess} successful, ${totalErrors} failed`,
-          result
+          result,
         );
       } else {
-        await tracker.complete(
-          result,
-          `Bulk indexing completed successfully: ${totalSuccess} documents indexed`
-        );
-        
+        await tracker.complete(result, `Bulk indexing completed successfully: ${totalSuccess} documents indexed`);
+
         await notificationManager.sendInfo(
           `Bulk indexing completed successfully: ${totalSuccess} documents indexed`,
-          result
+          result,
         );
       }
 
@@ -203,59 +193,53 @@ export const registerBulkIndexWithProgress = (server: McpServer, esClient: Clien
           },
         ],
       };
-
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new McpError(
           ErrorCode.InvalidParams,
-          `Validation failed: ${error.errors.map(e => e.message).join(", ")}`
+          `Validation failed: ${error.issues.map((e) => e.message).join(", ")}`,
         );
       }
-      
+
       logger.error("Bulk index with progress failed", {
         error: error instanceof Error ? error.message : String(error),
       });
-      
+
       throw new McpError(
         ErrorCode.InternalError,
-        `Bulk index operation failed: ${error instanceof Error ? error.message : String(error)}`
+        `Bulk index operation failed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   };
 
   // Tool registration using modern registerTool method
 
-
   server.registerTool(
-
-
     "elasticsearch_bulk_index_with_progress",
 
-
     {
-
-
       title: "Bulk Index With Progress",
 
-
-      description: "Bulk index multiple documents into Elasticsearch with real-time progress notifications. Processes documents in batches and reports progress for long-running operations. Use for indexing large datasets with progress tracking.",
-
+      description:
+        "Bulk index multiple documents into Elasticsearch with real-time progress notifications. Processes documents in batches and reports progress for long-running operations. Use for indexing large datasets with progress tracking.",
 
       inputSchema: {
-      index: z.string().min(1).describe("Target index for bulk indexing"),
-      documents: z.array(z.record(z.any())).min(1).max(1000).describe("Array of documents to index (max 1000)"),
-      refresh: z.enum(["true", "false", "wait_for"]).optional().describe("Whether to refresh the index after operations"),
-      pipeline: z.string().optional().describe("Ingest pipeline to use"),
-      routing: z.string().optional().describe("Custom routing value"),
-      batchSize: z.number().min(1).max(100).default(50).describe("Number of documents to process per batch"),
+        index: z.string().min(1).describe("Target index for bulk indexing"),
+        documents: z
+          .array(z.record(z.string(), z.any()))
+          .min(1)
+          .max(1000)
+          .describe("Array of documents to index (max 1000)"),
+        refresh: z
+          .enum(["true", "false", "wait_for"])
+          .optional()
+          .describe("Whether to refresh the index after operations"),
+        pipeline: z.string().optional().describe("Ingest pipeline to use"),
+        routing: z.string().optional().describe("Custom routing value"),
+        batchSize: z.number().min(1).max(100).default(50).describe("Number of documents to process per batch"),
+      },
     },
-
-
-    },
-
 
     handler,
-
-
   );
 };

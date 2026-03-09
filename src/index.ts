@@ -8,8 +8,7 @@ import { createElasticsearchMcpServer } from "./server.js";
 import { SSETransportManager } from "./transport/sseTransport.js";
 import { logger } from "./utils/logger.js";
 import { createSessionContext, runWithSession } from "./utils/sessionContext.js";
-import { createConnectionMetadata, initializeTracing, traceMcpConnection } from "./utils/tracing.js";
-import { detectClient, traceNamedMcpConnection } from "./utils/tracingEnhanced.js";
+import { detectClient, initializeTracing, traceConnection } from "./utils/tracing.js";
 
 async function main() {
   try {
@@ -110,16 +109,13 @@ async function main() {
       // Create session context without a static sessionId - let SessionManager handle it dynamically
       const sessionContext = createSessionContext(connectionId, "stdio", connectionId, clientInfo);
 
-      // Connect with session context and enhanced tracing if enabled
+      // Connect with session context and tracing if enabled
       await runWithSession(sessionContext, async () => {
         if (config.langsmith.tracing) {
-          const tracedConnection = traceNamedMcpConnection({
-            connectionId,
-            transportMode: "stdio",
-            clientInfo,
-            sessionId: connectionId, // Use connectionId as initial sessionId
-          });
-          await tracedConnection(async () => server.connect(transport));
+          await traceConnection(
+            { connectionId, transportMode: "stdio", clientInfo, sessionId: connectionId },
+            async () => server.connect(transport),
+          );
         } else {
           await server.connect(transport);
         }

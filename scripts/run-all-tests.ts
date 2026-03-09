@@ -4,7 +4,7 @@
  * Runs all test suites with detailed reporting and validation
  */
 
-import { type ChildProcess, spawn } from "node:child_process";
+import { spawn } from "node:child_process";
 import { mkdir, readdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -69,7 +69,9 @@ class TestRunner {
     }
 
     console.log(`📋 Found ${testFiles.length} test suites:`);
-    testFiles.forEach((file) => console.log(`   • ${file.category}/${file.name}`));
+    for (const file of testFiles) {
+      console.log(`   • ${file.category}/${file.name}`);
+    }
     console.log("");
 
     // Run tests by category for better organization
@@ -147,11 +149,7 @@ class TestRunner {
     });
   }
 
-  private async runTestSuite(testFile: {
-    name: string;
-    category: string;
-    path: string;
-  }): Promise<void> {
+  private async runTestSuite(testFile: { name: string; category: string; path: string }): Promise<void> {
     const startTime = Date.now();
     const suiteName = testFile.name.replace(".test.ts", "").replace(".test.js", "");
 
@@ -214,23 +212,23 @@ class TestRunner {
     errors: string[];
   }> {
     return new Promise((resolve, reject) => {
-      const process = spawn("bun", ["test", testPath, "--reporter", "verbose"], {
+      const childProcess = spawn("bun", ["test", testPath, "--reporter", "verbose"], {
         stdio: ["pipe", "pipe", "pipe"],
-        cwd: process.cwd,
+        cwd: process.cwd(),
       });
 
       let stdout = "";
       let stderr = "";
 
-      process.stdout?.on("data", (data) => {
+      childProcess.stdout?.on("data", (data) => {
         stdout += data.toString();
       });
 
-      process.stderr?.on("data", (data) => {
+      childProcess.stderr?.on("data", (data) => {
         stderr += data.toString();
       });
 
-      process.on("close", (code) => {
+      childProcess.on("close", (code) => {
         const output = stdout + stderr;
         const result = this.parseTestOutput(output);
 
@@ -245,7 +243,7 @@ class TestRunner {
         }
       });
 
-      process.on("error", (error) => {
+      childProcess.on("error", (error) => {
         reject(error);
       });
 
@@ -274,7 +272,7 @@ class TestRunner {
       if (line.includes("✅") || line.includes("PASS") || line.match(/\d+ pass/i)) {
         const match = line.match(/(\d+)/);
         if (match) {
-          passed += Number.parseInt(match[1]);
+          passed += Number.parseInt(match[1], 10);
         } else {
           passed++;
         }
@@ -283,7 +281,7 @@ class TestRunner {
       if (line.includes("❌") || line.includes("FAIL") || line.match(/\d+ fail/i)) {
         const match = line.match(/(\d+)/);
         if (match) {
-          failed += Number.parseInt(match[1]);
+          failed += Number.parseInt(match[1], 10);
         } else {
           failed++;
         }
@@ -292,7 +290,7 @@ class TestRunner {
       if (line.includes("⏭️") || line.includes("SKIP") || line.match(/\d+ skip/i)) {
         const match = line.match(/(\d+)/);
         if (match) {
-          skipped += Number.parseInt(match[1]);
+          skipped += Number.parseInt(match[1], 10);
         } else {
           skipped++;
         }
@@ -314,21 +312,21 @@ class TestRunner {
       if (passMatches) {
         passed = passMatches.reduce((sum, match) => {
           const num = match.match(/\d+/);
-          return sum + (num ? Number.parseInt(num[0]) : 0);
+          return sum + (num ? Number.parseInt(num[0], 10) : 0);
         }, 0);
       }
 
       if (failMatches) {
         failed = failMatches.reduce((sum, match) => {
           const num = match.match(/\d+/);
-          return sum + (num ? Number.parseInt(num[0]) : 0);
+          return sum + (num ? Number.parseInt(num[0], 10) : 0);
         }, 0);
       }
 
       if (skipMatches) {
         skipped = skipMatches.reduce((sum, match) => {
           const num = match.match(/\d+/);
-          return sum + (num ? Number.parseInt(num[0]) : 0);
+          return sum + (num ? Number.parseInt(num[0], 10) : 0);
         }, 0);
       }
     }

@@ -24,10 +24,13 @@ const documentExistsValidator = z.object({
   versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(),
 });
 
-type DocumentExistsParams = z.infer<typeof documentExistsValidator>;
+type _DocumentExistsParams = z.infer<typeof documentExistsValidator>;
 
 // MCP error handling
-function createDocumentExistsMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createDocumentExistsMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution" | "version_conflict"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -61,7 +64,7 @@ export const registerDocumentExistsTool: ToolRegistrationFunction = (server: Mcp
         refresh: params.refresh,
         version: params.version,
         version_type: params.versionType,
-      });
+      } as any);
 
       const duration = performance.now() - perfStart;
       if (duration > 5000) {
@@ -74,9 +77,9 @@ export const registerDocumentExistsTool: ToolRegistrationFunction = (server: Mcp
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createDocumentExistsMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createDocumentExistsMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -105,29 +108,26 @@ export const registerDocumentExistsTool: ToolRegistrationFunction = (server: Mcp
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_document_exists",
 
     {
-
       title: "Document Exists",
 
-      description: "Check if a document exists in Elasticsearch by index and id. Best for document validation, existence checks, conditional operations. Use when you need to verify document presence in Elasticsearch indices before performing operations. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Check if a document exists in Elasticsearch by index and id. Best for document validation, existence checks, conditional operations. Use when you need to verify document presence in Elasticsearch indices before performing operations. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      index: z.string(), // REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'
-      id: z.string(), // REQUIRED: Unique identifier of the document to check
-      routing: z.string().optional(), // Custom routing value for document placement
-      preference: z.string().optional(), // Preference for shard selection
-      realtime: z.boolean().optional(), // Whether to perform a real-time check
-      refresh: z.boolean().optional(), // Whether to refresh before checking existence
-      version: z.number().optional(), // Expected document version for optimistic concurrency control
-      versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(), // Version type for concurrency control
-    },
-
+        index: z.string(), // REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'
+        id: z.string(), // REQUIRED: Unique identifier of the document to check
+        routing: z.string().optional(), // Custom routing value for document placement
+        preference: z.string().optional(), // Preference for shard selection
+        realtime: z.boolean().optional(), // Whether to perform a real-time check
+        refresh: z.boolean().optional(), // Whether to refresh before checking existence
+        version: z.number().optional(), // Expected document version for optimistic concurrency control
+        versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(), // Version type for concurrency control
+      },
     },
 
     documentExistsHandler,
-
   );
 };

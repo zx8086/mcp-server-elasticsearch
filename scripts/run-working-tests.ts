@@ -86,8 +86,8 @@ async function runTest(test: (typeof workingTests)[0]): Promise<TestResult> {
       const passMatch = output.match(/(\d+) pass/);
       const failMatch = output.match(/(\d+) fail/);
 
-      const passed = passMatch ? Number.parseInt(passMatch[1]) : 0;
-      const failed = failMatch ? Number.parseInt(failMatch[1]) : 0;
+      const passed = passMatch ? Number.parseInt(passMatch[1], 10) : 0;
+      const failed = failMatch ? Number.parseInt(failMatch[1], 10) : 0;
       const success = code === 0 && failed === 0;
 
       const result: TestResult = {

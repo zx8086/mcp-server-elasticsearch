@@ -5,7 +5,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
-import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const GetTaskParams = z.object({
@@ -20,28 +20,26 @@ export const registerGetTaskTool: ToolRegistrationFunction = (server: McpServer,
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_tasks_get_task",
 
     {
-
       title: "Tasks Get Task",
 
-      description: "Get information about a specific Elasticsearch task. Best for task monitoring, operation tracking, performance analysis. Use when you need to inspect the status and details of running or completed tasks in Elasticsearch.",
+      description:
+        "Get information about a specific Elasticsearch task. Best for task monitoring, operation tracking, performance analysis. Use when you need to inspect the status and details of running or completed tasks in Elasticsearch.",
 
       inputSchema: {
-      taskId: z.string().min(1, "Task ID cannot be empty"),
-      timeout: z.union([z.string(), z.number(), z.literal(-1), z.literal(0)]).optional(),
-      waitForCompletion: booleanField().optional(),
-    },
-
+        taskId: z.string().min(1, "Task ID cannot be empty"),
+        timeout: z.union([z.string(), z.number(), z.literal(-1), z.literal(0)]).optional(),
+        waitForCompletion: booleanField().optional(),
+      },
     },
 
     async (params: GetTaskParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.tasks.get({
           task_id: params.taskId,
-          timeout: params.timeout,
+          timeout: params.timeout as any,
           wait_for_completion: params.waitForCompletion,
         });
         return {
@@ -62,6 +60,5 @@ export const registerGetTaskTool: ToolRegistrationFunction = (server: McpServer,
         };
       }
     },
-
-  );;
+  );
 };

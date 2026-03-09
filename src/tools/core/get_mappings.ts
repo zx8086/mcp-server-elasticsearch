@@ -16,7 +16,7 @@ const getMappingsValidator = z.object({
   index: z.string().trim().min(1).optional(),
 });
 
-type GetMappingsParams = z.infer<typeof getMappingsValidator>;
+type _GetMappingsParams = z.infer<typeof getMappingsValidator>;
 
 // MCP error handling
 function createGetMappingsMcpError(
@@ -67,9 +67,9 @@ export const registerGetMappingsTool: ToolRegistrationFunction = (server: McpSer
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createGetMappingsMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createGetMappingsMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -97,7 +97,8 @@ export const registerGetMappingsTool: ToolRegistrationFunction = (server: McpSer
     "elasticsearch_get_mappings",
     {
       title: "Get Field Mappings",
-      description: "Get field mappings for Elasticsearch indices. Uses direct JSON Schema and standardized MCP error codes. PARAMETER: 'index' (string, default '*'). Best for understanding document structure, field types, and analyzers. Example: {index: 'logs-*'}",
+      description:
+        "Get field mappings for Elasticsearch indices. Uses direct JSON Schema and standardized MCP error codes. PARAMETER: 'index' (string, default '*'). Best for understanding document structure, field types, and analyzers. Example: {index: 'logs-*'}",
       inputSchema: {
         index: z.string().optional(), // Name of the Elasticsearch index to get mappings for. Use '*' for all indices
       },

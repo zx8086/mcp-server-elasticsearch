@@ -8,7 +8,7 @@ import { logger } from "../../utils/logger.js";
 import { createPaginationHeader, paginateResults, responsePresets } from "../../utils/responseHandling.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
-const getShardsSchema = {
+const _getShardsSchema = {
   type: "object",
   properties: {
     index: {
@@ -36,7 +36,7 @@ const getShardsValidator = z.object({
   sortBy: z.enum(["state", "index", "size", "docs"]).optional(),
 });
 
-type GetShardsParams = z.infer<typeof getShardsValidator>;
+type _GetShardsParams = z.infer<typeof getShardsValidator>;
 
 function createGetShardsMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
@@ -97,14 +97,14 @@ export const registerGetShardsTool: ToolRegistrationFunction = (server: McpServe
         });
       } else if (sortBy === "size") {
         sortedShards.sort((a, b) => {
-          const sizeA = Number.parseInt((a.store as string)?.replace(/[^\d]/g, "") || "0");
-          const sizeB = Number.parseInt((b.store as string)?.replace(/[^\d]/g, "") || "0");
+          const sizeA = Number.parseInt((a.store as string)?.replace(/[^\d]/g, "") || "0", 10);
+          const sizeB = Number.parseInt((b.store as string)?.replace(/[^\d]/g, "") || "0", 10);
           return sizeB - sizeA;
         });
       } else if (sortBy === "docs") {
         sortedShards.sort((a, b) => {
-          const docsA = Number.parseInt((a.docs as string) || "0");
-          const docsB = Number.parseInt((b.docs as string) || "0");
+          const docsA = Number.parseInt((a.docs as string) || "0", 10);
+          const docsB = Number.parseInt((b.docs as string) || "0", 10);
           return docsB - docsA;
         });
       } else if (sortBy === "index") {
@@ -164,34 +164,22 @@ export const registerGetShardsTool: ToolRegistrationFunction = (server: McpServe
 
   // Tool registration using modern registerTool method
 
-
   server.registerTool(
-
-
     "elasticsearch_get_shards",
 
-
     {
-
-
       title: "Get Shards",
 
-
-      description: "Get shard information. WARNING: Clusters often have 1000+ shards. Check cluster stats first to see shard count. If >500 shards, MUST use 'limit' or will fail. Patterns: {limit: 100, sortBy: 'state'} for health check, {limit: 50, sortBy: 'size'} for storage analysis. Empty {} only works for small clusters (<500 shards). FIXED: Uses Zod Schema for proper MCP parameter handling.",
-
+      description:
+        "Get shard information. WARNING: Clusters often have 1000+ shards. Check cluster stats first to see shard count. If >500 shards, MUST use 'limit' or will fail. Patterns: {limit: 100, sortBy: 'state'} for health check, {limit: 50, sortBy: 'size'} for storage analysis. Empty {} only works for small clusters (<500 shards). FIXED: Uses Zod Schema for proper MCP parameter handling.",
 
       inputSchema: {
-      index: z.string().optional(),
-      limit: z.number().min(1).max(1000).optional(),
-      sortBy: z.enum(["state", "index", "size", "docs"]).optional(),
+        index: z.string().optional(),
+        limit: z.number().min(1).max(1000).optional(),
+        sortBy: z.enum(["state", "index", "size", "docs"]).optional(),
+      },
     },
-
-
-    },
-
 
     getShardsHandler,
-
-
   );
 };

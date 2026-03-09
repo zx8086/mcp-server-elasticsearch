@@ -119,11 +119,10 @@ export const getFieldMapping = {
         index: args.index,
         fields: args.field,
         include_defaults: args.includeDefaults,
-        local: args.local,
         ignore_unavailable: args.ignoreUnavailable,
         allow_no_indices: args.allowNoIndices,
         expand_wildcards: args.expandWildcards,
-      });
+      } as any);
 
       logger.debug("Field mapping retrieved successfully", {
         index: args.index,

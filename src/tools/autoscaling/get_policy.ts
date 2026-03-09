@@ -4,7 +4,7 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema
 const GetAutoscalingPolicyParams = z.object({
@@ -18,20 +18,18 @@ export const registerAutoscalingGetPolicyTool: ToolRegistrationFunction = (serve
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_autoscaling_get_policy",
 
     {
-
       title: "Autoscaling Get Policy",
 
-      description: "Get an autoscaling policy from Elasticsearch. Best for policy inspection, capacity planning, configuration review. Use when you need to retrieve autoscaling policies in Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
+      description:
+        "Get an autoscaling policy from Elasticsearch. Best for policy inspection, capacity planning, configuration review. Use when you need to retrieve autoscaling policies in Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
 
       inputSchema: {
-      name: z.string().min(1, "Policy name cannot be empty"),
-      masterTimeout: z.string().optional(),
-    },
-
+        name: z.string().min(1, "Policy name cannot be empty"),
+        masterTimeout: z.string().optional(),
+      },
     },
 
     async (params: GetAutoscalingPolicyParamsType): Promise<SearchResult> => {
@@ -62,6 +60,5 @@ export const registerAutoscalingGetPolicyTool: ToolRegistrationFunction = (serve
         };
       }
     },
-
-  );;
+  );
 };

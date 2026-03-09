@@ -65,7 +65,7 @@ export const listTasks = {
         group_by: args.groupBy,
         nodes: args.nodes,
         parent_task_id: args.parentTaskId,
-        timeout: args.timeout,
+        timeout: args.timeout as any,
         wait_for_completion: args.waitForCompletion,
       });
 
@@ -121,7 +121,7 @@ export const getTask = {
 
       const result = await client.tasks.get({
         task_id: args.taskId,
-        timeout: args.timeout,
+        timeout: args.timeout as any,
         wait_for_completion: args.waitForCompletion,
       });
 

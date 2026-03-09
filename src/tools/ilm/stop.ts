@@ -24,7 +24,7 @@ const stopValidator = z.object({
   timeout: z.string().optional(),
 });
 
-type StopParams = z.infer<typeof stopValidator>;
+type _StopParams = z.infer<typeof stopValidator>;
 
 // =============================================================================
 // 2. STANDARDIZED MCP ERROR HANDLING
@@ -108,9 +108,9 @@ Operation completed at: ${new Date().toISOString()}`,
     } catch (error) {
       // Standardized MCP error handling
       if (error instanceof z.ZodError) {
-        throw createIlmStopMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createIlmStopMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -144,24 +144,21 @@ Operation completed at: ${new Date().toISOString()}`,
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_ilm_stop",
 
     {
-
       title: "Ilm Stop",
 
-      description: "Stop ILM. Stop the Index Lifecycle Management plugin to halt automated operations. Uses direct JSON Schema and standardized MCP error codes. Examples: {} (no params needed), {masterTimeout: 30s}.",
+      description:
+        "Stop ILM. Stop the Index Lifecycle Management plugin to halt automated operations. Uses direct JSON Schema and standardized MCP error codes. Examples: {} (no params needed), {masterTimeout: 30s}.",
 
       inputSchema: {
-      masterTimeout: z.string().optional(), // Master node timeout
-      timeout: z.string().optional(), // Request timeout
-    },
-
+        masterTimeout: z.string().optional(), // Master node timeout
+        timeout: z.string().optional(), // Request timeout
+      },
     },
 
     // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_stop", stopHandler, OperationType.WRITE),
-
-  );;
+  );
 };

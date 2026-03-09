@@ -21,10 +21,13 @@ const refreshIndexValidator = z.object({
   expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
 });
 
-type RefreshIndexParams = z.infer<typeof refreshIndexValidator>;
+type _RefreshIndexParams = z.infer<typeof refreshIndexValidator>;
 
 // MCP error handling
-function createRefreshIndexMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createRefreshIndexMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution" | "index_not_found"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -72,9 +75,9 @@ export const registerRefreshIndexTool: ToolRegistrationFunction = (server: McpSe
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createRefreshIndexMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createRefreshIndexMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -100,25 +103,22 @@ export const registerRefreshIndexTool: ToolRegistrationFunction = (server: McpSe
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_refresh_index",
 
     {
-
       title: "Refresh Index",
 
-      description: "Refresh an index in Elasticsearch. Best for data visibility, search consistency, real-time operations. Use when you need to make recently indexed documents immediately searchable in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Refresh an index in Elasticsearch. Best for data visibility, search consistency, real-time operations. Use when you need to make recently indexed documents immediately searchable in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      index: z.string(), // Name of the index to refresh
-      ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
-      allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
-      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
-    },
-
+        index: z.string(), // Name of the index to refresh
+        ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+        allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+        expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
+      },
     },
 
     withReadOnlyCheck("elasticsearch_refresh_index", refreshIndexHandler, OperationType.WRITE),
-
-  );;
+  );
 };

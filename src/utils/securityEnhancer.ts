@@ -3,7 +3,6 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { logger } from "./logger.js";
 
-
 interface SecurityConfig {
   maxInputSize: number;
   enableInjectionDetection: boolean;
@@ -24,7 +23,7 @@ interface SecurityViolation {
 
 export class SecurityEnhancer {
   private config: SecurityConfig;
-  private suspiciousPatterns: Map<string, RegExp[]>;
+  private suspiciousPatterns!: Map<string, RegExp[]>;
 
   constructor(config: Partial<SecurityConfig> = {}) {
     this.config = {
@@ -220,7 +219,7 @@ export class SecurityEnhancer {
       field.toLowerCase().includes("id");
 
     // Expanded patterns for legitimate Elasticsearch values
-    const isElasticsearchValue = 
+    const isElasticsearchValue =
       // Index patterns with wildcards, commas, hyphens, dots
       /^[a-zA-Z0-9\-_*,.\s]+$/.test(value) ||
       // Repository/snapshot names with hyphens
@@ -296,10 +295,14 @@ export class SecurityEnhancer {
 
       if (Array.isArray(obj)) {
         complexity += obj.length;
-        obj.forEach((item) => traverse(item, depth + 1));
+        for (const item of obj) {
+          traverse(item, depth + 1);
+        }
       } else if (typeof obj === "object") {
         complexity += Object.keys(obj).length;
-        Object.values(obj).forEach((value) => traverse(value, depth + 1));
+        for (const value of Object.values(obj)) {
+          traverse(value, depth + 1);
+        }
       } else {
         complexity += 1;
       }

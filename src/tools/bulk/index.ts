@@ -3,9 +3,8 @@ import type { Client } from "@elastic/elasticsearch";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { OperationType, readOnlyManager, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
+import { OperationType, readOnlyManager } from "../../utils/readOnlyMode.js";
 import { booleanField } from "../../utils/zodHelpers.js";
-import type { TextContent } from "../types.js";
 
 // Define bulk operations error types
 export class BulkOperationError extends Error {
@@ -82,7 +81,7 @@ const bulkOperationsImpl = async (client: Client, args: z.infer<typeof bulkOpera
     const result = await client.helpers.bulk(
       {
         datasource: args.operations,
-        onDocument(doc) {
+        onDocument(doc: any) {
           return {
             index: {
               _index: args.index || doc._index,
@@ -93,7 +92,7 @@ const bulkOperationsImpl = async (client: Client, args: z.infer<typeof bulkOpera
               timeout: args.timeout,
               wait_for_active_shards: args.waitForActiveShards,
             },
-          };
+          } as any;
         },
         flushBytes: args.flushBytes,
         concurrency: args.concurrency,
@@ -228,7 +227,7 @@ export const multiGet = {
       }
 
       const result = await client.mget({
-        docs: args.docs,
+        docs: args.docs as any,
         index: args.index,
         preference: args.preference,
         realtime: args.realtime,
@@ -241,8 +240,8 @@ export const multiGet = {
 
       logger.debug("Multi-get operation completed successfully", {
         docsRequested: args.docs.length,
-        docsFound: result.docs?.filter((doc) => doc.found).length || 0,
-        docsNotFound: result.docs?.filter((doc) => !doc.found).length || 0,
+        docsFound: result.docs?.filter((doc) => (doc as any).found).length || 0,
+        docsNotFound: result.docs?.filter((doc) => !(doc as any).found).length || 0,
       });
 
       return {

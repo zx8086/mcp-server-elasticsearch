@@ -6,6 +6,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
+import type { ProgressTracker } from "../../utils/notifications.js";
 import { createProgressTracker, notificationManager } from "../../utils/notifications.js";
 import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
@@ -32,10 +33,13 @@ const updateByQueryValidator = z.object({
   slices: z.number().optional(),
 });
 
-type UpdateByQueryParams = z.infer<typeof updateByQueryValidator>;
+type _UpdateByQueryParams = z.infer<typeof updateByQueryValidator>;
 
 // MCP error handling
-function createUpdateByQueryMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createUpdateByQueryMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -50,16 +54,18 @@ function createUpdateByQueryMcpError(error: Error | string, context: { type: str
 export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const updateByQueryHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
+    let tracker: ProgressTracker | undefined;
+    let params: z.infer<typeof updateByQueryValidator> | undefined;
 
     try {
       // Validate parameters
-      const params = updateByQueryValidator.parse(args);
+      params = updateByQueryValidator.parse(args);
 
       // Create progress tracker
-      const tracker = await createProgressTracker(
+      tracker = await createProgressTracker(
         "update_by_query",
         100, // percentage-based for async operations
-        `Updating documents in ${params.index} matching query`
+        `Updating documents in ${params.index} matching query`,
       );
 
       logger.debug("Starting update by query operation", {
@@ -70,16 +76,13 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpS
       });
 
       // Send initial notification
-      await notificationManager.sendInfo(
-        `Starting update by query operation`,
-        {
-          operation_type: "update_by_query",
-          target_index: params.index,
-          max_docs: params.maxDocs,
-          wait_for_completion: params.waitForCompletion,
-          requests_per_second: params.requestsPerSecond,
-        }
-      );
+      await notificationManager.sendInfo(`Starting update by query operation`, {
+        operation_type: "update_by_query",
+        target_index: params.index,
+        max_docs: params.maxDocs,
+        wait_for_completion: params.waitForCompletion,
+        requests_per_second: params.requestsPerSecond,
+      });
 
       // First, get a count of documents that match the query for progress estimation
       let estimatedTotal = 0;
@@ -87,18 +90,15 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpS
         await tracker.updateProgress(10, "Counting documents matching query");
         const countResult = await esClient.count({
           index: params.index,
-          body: { query: params.query },
-        });
+          query: params.query,
+        } as any);
         estimatedTotal = countResult.count;
-        
-        await notificationManager.sendInfo(
-          `Found ${estimatedTotal} documents matching update query`,
-          {
-            operation_type: "update_by_query",
-            estimated_documents: estimatedTotal,
-            index: params.index,
-          }
-        );
+
+        await notificationManager.sendInfo(`Found ${estimatedTotal} documents matching update query`, {
+          operation_type: "update_by_query",
+          estimated_documents: estimatedTotal,
+          index: params.index,
+        });
       } catch (countError) {
         logger.warn("Could not get document count for progress estimation", {
           error: countError instanceof Error ? countError.message : String(countError),
@@ -138,30 +138,28 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpS
       // Handle different response types based on wait_for_completion
       if (params.waitForCompletion === false && result.task) {
         // Asynchronous mode - return task ID
-        await tracker.complete(
-          { task: result.task },
-          `Update by query task created: ${result.task}`
-        );
-        
-        await notificationManager.sendInfo(
-          `Update by query task created: ${result.task}`,
-          {
-            operation_type: "update_by_query",
-            mode: "asynchronous",
-            task_id: result.task,
-            note: "Use task management API to monitor progress",
-          }
-        );
+        await tracker.complete({ task: result.task }, `Update by query task created: ${result.task}`);
+
+        await notificationManager.sendInfo(`Update by query task created: ${result.task}`, {
+          operation_type: "update_by_query",
+          mode: "asynchronous",
+          task_id: result.task,
+          note: "Use task management API to monitor progress",
+        });
 
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify({
-                task: result.task,
-                message: "Update by query started asynchronously. Use task management API to monitor progress.",
-                monitor_command: `elasticsearch_tasks_get_task with taskId: "${result.task}"`,
-              }, null, 2),
+              text: JSON.stringify(
+                {
+                  task: result.task,
+                  message: "Update by query started asynchronously. Use task management API to monitor progress.",
+                  monitor_command: `elasticsearch_tasks_get_task with taskId: "${result.task}"`,
+                },
+                null,
+                2,
+              ),
             },
           ],
         };
@@ -184,33 +182,27 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpS
         if (summary.failures.length > 0 || summary.version_conflicts > 0) {
           await tracker.complete(
             summary,
-            `Update completed with issues: ${summary.updated} updated, ${summary.version_conflicts} conflicts, ${summary.failures.length} failures`
+            `Update completed with issues: ${summary.updated} updated, ${summary.version_conflicts} conflicts, ${summary.failures.length} failures`,
           );
-          
-          await notificationManager.sendWarning(
-            `Update by query completed with issues`,
-            {
-              ...summary,
-              operation_type: "update_by_query",
-              duration_ms: duration,
-              success_rate: summary.total > 0 ? ((summary.updated / summary.total) * 100).toFixed(1) + "%" : "N/A",
-            }
-          );
+
+          await notificationManager.sendWarning(`Update by query completed with issues`, {
+            ...summary,
+            operation_type: "update_by_query",
+            duration_ms: duration,
+            success_rate: summary.total > 0 ? `${((summary.updated / summary.total) * 100).toFixed(1)}%` : "N/A",
+          });
         } else {
           await tracker.complete(
             summary,
-            `Update by query completed successfully: ${summary.updated} documents updated in ${summary.took}ms`
+            `Update by query completed successfully: ${summary.updated} documents updated in ${summary.took}ms`,
           );
-          
-          await notificationManager.sendInfo(
-            `Update by query completed: ${summary.updated} documents updated`,
-            {
-              ...summary,
-              operation_type: "update_by_query",
-              duration_ms: duration,
-              success_rate: "100%",
-            }
-          );
+
+          await notificationManager.sendInfo(`Update by query completed: ${summary.updated} documents updated`, {
+            ...summary,
+            operation_type: "update_by_query",
+            duration_ms: duration,
+            success_rate: "100%",
+          });
         }
 
         return {
@@ -218,11 +210,11 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpS
         };
       }
     } catch (error) {
-      await tracker.fail(
+      await tracker?.fail(
         error instanceof Error ? error : new Error(String(error)),
-        "Update by query operation failed"
+        "Update by query operation failed",
       );
-      
+
       await notificationManager.sendError(
         "Update by query operation failed",
         error instanceof Error ? error : new Error(String(error)),
@@ -230,14 +222,14 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpS
           operation_type: "update_by_query",
           target_index: params?.index,
           duration_ms: performance.now() - perfStart,
-        }
+        },
       );
-      
+
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createUpdateByQueryMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createUpdateByQueryMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -255,36 +247,33 @@ export const registerUpdateByQueryTool: ToolRegistrationFunction = (server: McpS
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_update_by_query",
 
     {
-
       title: "Update By Query",
 
-      description: "Update documents by query in Elasticsearch. Best for bulk document updates, field modifications, script-based transformations. Use when you need to update multiple documents based on query conditions rather than individual document updates. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Update documents by query in Elasticsearch. Best for bulk document updates, field modifications, script-based transformations. Use when you need to update multiple documents based on query conditions rather than individual document updates. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      index: z.string(), // Index name or pattern to update
-      query: z.object({}), // Query DSL to select documents to update
-      script: z.object({}).optional(), // Script to apply to matching documents
-      maxDocs: z.number().optional(),
-      conflicts: z.enum(["abort", "proceed"]).optional(),
-      refresh: z.boolean().optional(),
-      timeout: z.string().optional(),
-      waitForActiveShards: z.any().optional(),
-      waitForCompletion: z.boolean().optional(),
-      requestsPerSecond: z.number().optional(),
-      scroll: z.string().optional(),
-      scrollSize: z.number().optional(),
-      searchType: z.enum(["query_then_fetch", "dfs_query_then_fetch"]).optional(),
-      searchTimeout: z.string().optional(),
-      slices: z.number().optional(),
-    },
-
+        index: z.string(), // Index name or pattern to update
+        query: z.object({}), // Query DSL to select documents to update
+        script: z.object({}).optional(), // Script to apply to matching documents
+        maxDocs: z.number().optional(),
+        conflicts: z.enum(["abort", "proceed"]).optional(),
+        refresh: z.boolean().optional(),
+        timeout: z.string().optional(),
+        waitForActiveShards: z.any().optional(),
+        waitForCompletion: z.boolean().optional(),
+        requestsPerSecond: z.number().optional(),
+        scroll: z.string().optional(),
+        scrollSize: z.number().optional(),
+        searchType: z.enum(["query_then_fetch", "dfs_query_then_fetch"]).optional(),
+        searchTimeout: z.string().optional(),
+        slices: z.number().optional(),
+      },
     },
 
     updateByQueryHandler,
-
-  );;
+  );
 };

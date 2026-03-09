@@ -2,10 +2,19 @@
 
 import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
 import { logger } from "../utils/logger.js";
 import { withSecurityValidation } from "../utils/securityEnhancer.js";
-import { traceToolExecutionWithConversation } from "../utils/tracingEnhanced.js";
-import { getCurrentSession } from "../utils/sessionContext.js";
+import { traceToolCall } from "../utils/tracing.js";
+
+/**
+ * Wrap a Zod shape (Record<string, ZodType>) in z.object() using Zod v4 classic.
+ * This prevents the MCP SDK from wrapping the shape with zod/v4-mini which is
+ * incompatible with Zod v4 classic schema instances.
+ */
+function wrapZodShape(shape: Record<string, any>): any {
+  return z.object(shape);
+}
 
 // Core Tools (List Indices, Get Mappings, Search, Get Shards)
 import { registerGetMappingsTool } from "./core/get_mappings.js";
@@ -13,19 +22,32 @@ import { registerGetShardsTool } from "./core/get_shards.js";
 import { registerIndicesSummaryTool } from "./core/indices_summary.js";
 import { registerListIndicesTool } from "./core/list_indices.js";
 import { registerSearchTool } from "./core/search.js";
+
 // import { registerEnhancedSearchTool } from "./core/search_enhanced.js";
 
-// // Document Tools (Index Document, Get Document, Update Document, Delete Document, Document Exists)
-// import { registerDeleteDocumentTool } from "./document/delete_document.js";
-// import { registerDocumentExistsTool } from "./document/document_exists.js";
-// import { registerGetDocumentTool } from "./document/get_document.js";
-// import { registerIndexDocumentTool } from "./document/index_document.js";
-// import { registerUpdateDocumentTool } from "./document/update_document.js";
-
+// Advanced Tools (Delete By Query, Translate SQL Query)
+import { registerDeleteByQueryTool } from "./advanced/delete_by_query.js";
+import { registerTranslateSqlQueryTool } from "./advanced/translate_sql_query.js";
 // Bulk Tools (Bulk Operations, Multi Get)
 import { registerBulkOperationsTool } from "./bulk/bulk_operations.js";
 import { registerMultiGetTool } from "./bulk/multi_get.js";
-
+// Document Tools (Index Document, Get Document, Update Document, Delete Document, Document Exists)
+import { registerDeleteDocumentTool } from "./document/delete_document.js";
+import { registerDocumentExistsTool } from "./document/document_exists.js";
+import { registerGetDocumentTool } from "./document/get_document.js";
+import { registerIndexDocumentTool } from "./document/index_document.js";
+import { registerUpdateDocumentTool } from "./document/update_document.js";
+// Index Management Tools (Create Index, Delete Index, Index Exists, Get Index, Update Index Settings, Get Index Settings, Refresh Index, Flush Index, Reindex Documents, Put Mapping)
+import { registerCreateIndexTool } from "./index_management/create_index.js";
+import { registerDeleteIndexTool } from "./index_management/delete_index.js";
+import { registerFlushIndexTool } from "./index_management/flush_index.js";
+import { registerGetIndexTool } from "./index_management/get_index.js";
+import { registerGetIndexSettingsTool } from "./index_management/get_index_settings.js";
+import { registerIndexExistsTool } from "./index_management/index_exists.js";
+import { registerPutMappingTool } from "./index_management/put_mapping.js";
+import { registerRefreshIndexTool } from "./index_management/refresh_index.js";
+import { registerReindexDocumentsTool } from "./index_management/reindex_documents.js";
+import { registerUpdateIndexSettingsTool } from "./index_management/update_index_settings.js";
 // Search Tools (Execute SQL Query, Update By Query, Count Documents, Scroll Search, Multi Search, Clear Scroll)
 import { registerClearScrollTool } from "./search/clear_scroll.js";
 import { registerCountDocumentsTool } from "./search/count_documents.js";
@@ -34,50 +56,29 @@ import { registerMultiSearchTool } from "./search/multi_search.js";
 import { registerScrollSearchTool } from "./search/scroll_search.js";
 import { registerUpdateByQueryTool } from "./search/update_by_query.js";
 
-// // Index Management Tools (Create Index, Delete Index, Index Exists, Get Index, Update Index Settings, Get Index Settings, Refresh Index, Flush Index, Reindex Documents, Put Mapping)
-// import { registerCreateIndexTool } from "./index_management/create_index.js";
-// import { registerDeleteIndexTool } from "./index_management/delete_index.js";
-// import { registerFlushIndexTool } from "./index_management/flush_index.js";
-// import { registerGetIndexTool } from "./index_management/get_index.js";
-// import { registerGetIndexSettingsTool } from "./index_management/get_index_settings.js";
-// import { registerIndexExistsTool } from "./index_management/index_exists.js";
-// import { registerPutMappingTool } from "./index_management/put_mapping.js";
-// import { registerRefreshIndexTool } from "./index_management/refresh_index.js";
-// import { registerReindexDocumentsTool } from "./index_management/reindex_documents.js";
-// import { registerUpdateIndexSettingsTool } from "./index_management/update_index_settings.js";
-
-// // Advanced Tools (Delete By Query, Translate SQL Query)
-// import { registerDeleteByQueryTool } from "./advanced/delete_by_query.js";
-// import { registerTranslateSqlQueryTool } from "./advanced/translate_sql_query.js";
-
-// // Template Tools (Search Template, Multi Search Template, Get Index Template, Put Index Template, Delete Index Template)
-// import { registerDeleteIndexTemplateTool } from "./template/delete_index_template.js";
-// import { registerGetIndexTemplateTool } from "./template/get_index_template_improved.js";
-// import { registerMultiSearchTemplateTool } from "./template/multi_search_template.js";
-// import { registerPutIndexTemplateTool } from "./template/put_index_template.js";
-// import { registerSearchTemplateTool } from "./template/search_template.js";
+// Template Tools (Search Template, Multi Search Template, Get Index Template, Put Index Template, Delete Index Template)
+import { registerDeleteIndexTemplateTool } from "./template/delete_index_template.js";
+import { registerGetIndexTemplateTool } from "./template/get_index_template_improved.js";
+import { registerMultiSearchTemplateTool } from "./template/multi_search_template.js";
+import { registerPutIndexTemplateTool } from "./template/put_index_template.js";
+import { registerSearchTemplateTool } from "./template/search_template.js";
 
 // // Analytics Tools (Get Term Vectors, Get Multi Term Vectors, Timestamp Analysis)
 // import { registerGetMultiTermVectorsTool } from "./analytics/get_multi_term_vectors.js";
 // import { registerGetTermVectorsTool } from "./analytics/get_term_vectors.js";
 // import { registerTimestampAnalysisTool } from "./analytics/timestamp_analysis.js";
 
-// import { registerDeleteAliasTool } from "./alias/delete_alias.js";
-// // Alias Tools (Get Aliases, Put Alias, Delete Alias, Update Aliases)
-// import { registerGetAliasesTool } from "./alias/get_aliases_improved.js";
-// import { registerPutAliasTool } from "./alias/put_alias.js";
-// import { registerUpdateAliasesTool } from "./alias/update_aliases.js";
+import { registerDeleteAliasTool } from "./alias/delete_alias.js";
+// Alias Tools (Get Aliases, Put Alias, Delete Alias, Update Aliases)
+import { registerGetAliasesTool } from "./alias/get_aliases_improved.js";
+import { registerPutAliasTool } from "./alias/put_alias.js";
+import { registerUpdateAliasesTool } from "./alias/update_aliases.js";
 
 // Cluster Tools (Get Cluster Health, Get Cluster Stats, Get Nodes Info, Get Nodes Stats)
 import { registerGetClusterHealthTool } from "./cluster/get_cluster_health.js";
 import { registerGetClusterStatsTool } from "./cluster/get_cluster_stats.js";
 import { registerGetNodesInfoTool } from "./cluster/get_nodes_info.js";
 import { registerGetNodesStatsTool } from "./cluster/get_nodes_stats.js";
-
-// Field Mapping Tools (Get Field Mapping, Clear SQL Cursor)
-import { registerClearSqlCursorTool } from "./mapping/clear_sql_cursor.js";
-import { registerGetFieldMappingTool } from "./mapping/get_field_mapping.js";
-
 // ILM Tools (Index Lifecycle Management)
 import { registerDeleteLifecycleTool } from "./ilm/delete_lifecycle.js";
 import { registerExplainLifecycleTool } from "./ilm/explain_lifecycle.js";
@@ -90,6 +91,9 @@ import { registerRemovePolicyTool } from "./ilm/remove_policy.js";
 import { registerRetryTool } from "./ilm/retry.js";
 import { registerStartTool } from "./ilm/start.js";
 import { registerStopTool } from "./ilm/stop.js";
+// Field Mapping Tools (Get Field Mapping, Clear SQL Cursor)
+import { registerClearSqlCursorTool } from "./mapping/clear_sql_cursor.js";
+import { registerGetFieldMappingTool } from "./mapping/get_field_mapping.js";
 
 // // Enrich Tools (Get Policy, Put Policy, Delete Policy, Execute Policy, Stats)
 // import { registerEnrichDeletePolicyTool } from "./enrich/delete_policy.js";
@@ -104,11 +108,6 @@ import { registerStopTool } from "./ilm/stop.js";
 // import { registerAutoscalingGetPolicyTool } from "./autoscaling/get_policy.js";
 // import { registerAutoscalingPutPolicyTool } from "./autoscaling/put_policy.js";
 
-// Task Tools (List Tasks, Get Task, Cancel Task)
-// import { registerCancelTaskTool } from "./tasks/cancel_task.js";
-import { registerGetTaskTool } from "./tasks/get_task.js";
-import { registerListTasksTool } from "./tasks/list_tasks.js";
-
 // Indices Analysis Tools (Field Usage Stats, Disk Usage, Data Lifecycle Stats, Enhanced Index Info)
 import { registerDiskUsageTool } from "./indices/disk_usage.js";
 import { registerExistsAliasTool } from "./indices/exists_alias.js";
@@ -120,6 +119,10 @@ import { registerGetDataLifecycleStatsTool } from "./indices/get_data_lifecycle_
 import { registerGetIndexInfoTool } from "./indices/get_index_info.js";
 import { registerGetIndexSettingsAdvancedTool } from "./indices/get_index_settings_advanced.js";
 import { registerRolloverTool } from "./indices/rollover.js";
+// Task Tools (List Tasks, Get Task, Cancel Task)
+// import { registerCancelTaskTool } from "./tasks/cancel_task.js";
+import { registerGetTaskTool } from "./tasks/get_task.js";
+import { registerListTasksTool } from "./tasks/list_tasks.js";
 
 // Watcher Tools
 // import {
@@ -163,7 +166,27 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
   // Override the registerTool method to capture tool information and add both tracing and security validation
   const originalRegisterTool = server.registerTool.bind(server);
   server.registerTool = (name: string, config: any, handler: any) => {
-    registeredTools.push({ name, description: config.description || config.title || "", inputSchema: config.inputSchema });
+    // Wrap raw Zod shapes in z.object() using Zod v4 classic to prevent the
+    // MCP SDK from wrapping them with zod/v4-mini (which is incompatible)
+    if (
+      config.inputSchema &&
+      typeof config.inputSchema === "object" &&
+      !config.inputSchema._def &&
+      !config.inputSchema._zod
+    ) {
+      const values = Object.values(config.inputSchema);
+      const isZodShape =
+        values.length > 0 && values.some((v: any) => v && typeof v === "object" && ("_def" in v || "_zod" in v));
+      if (isZodShape) {
+        config = { ...config, inputSchema: wrapZodShape(config.inputSchema) };
+      }
+    }
+
+    registeredTools.push({
+      name,
+      description: config.description || config.title || "",
+      inputSchema: config.inputSchema,
+    });
 
     // Skip security validation for read-only search operations
     const readOnlyTools = [
@@ -179,23 +202,9 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
     // Create enhanced handler with both tracing and security validation
     let enhancedHandler = handler;
 
-    // Add conversation-aware tracing wrapper to ALL tools
+    // Add tracing wrapper to ALL tools
     enhancedHandler = async (toolArgs: any, extra: any) => {
-      // Extract connection and client info from context for tracing (same as before)
-      const currentSession = getCurrentSession();
-      const connectionId = currentSession?.connectionId || `conn-${Date.now()}`;
-      const clientInfo = currentSession?.clientInfo || { name: "Claude Desktop", platform: "desktop" };
-
-      logger.debug("Tool execution with conversation-aware tracing", {
-        toolName: name,
-        connectionId: connectionId.substring(0, 8) + "...",
-      });
-
-      // Pass context information to conversation-aware tracing (maintains exact same signature)
-      const contextSession = { sessionId: connectionId, connectionId, clientInfo };
-      return traceToolExecutionWithConversation(name, toolArgs, extra, contextSession, async (toolArgs: any, extra: any) => {
-        return handler(toolArgs, extra);
-      });
+      return traceToolCall(name, toolArgs, extra, handler);
     };
 
     // Add security validation wrapper for write operations
@@ -206,10 +215,7 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
     return originalRegisterTool(name, config, enhancedHandler);
   };
 
-  logger.info("Registering all tools with conversation-aware tracing and security validation", {
-    conversationTracingEnabled: true, // All tools will be traced with conversation context
-    securityEnabled: true,
-  });
+  logger.info("Registering all tools with tracing and security validation");
 
   // Now register all tools with the wrapped server
   // They will automatically get tracing without any changes!
@@ -220,11 +226,11 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
   registerGetShardsTool(server, esClient);
   registerIndicesSummaryTool(server, esClient);
 
-  // registerIndexDocumentTool(server, esClient);
-  // registerGetDocumentTool(server, esClient);
-  // registerUpdateDocumentTool(server, esClient);
-  // registerDeleteDocumentTool(server, esClient);
-  // registerDocumentExistsTool(server, esClient);
+  registerIndexDocumentTool(server, esClient);
+  registerGetDocumentTool(server, esClient);
+  registerUpdateDocumentTool(server, esClient);
+  registerDeleteDocumentTool(server, esClient);
+  registerDocumentExistsTool(server, esClient);
 
   registerBulkOperationsTool(server, esClient);
   registerMultiGetTool(server, esClient);
@@ -236,34 +242,34 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
   registerMultiSearchTool(server, esClient);
   registerClearScrollTool(server, esClient);
 
-  // registerCreateIndexTool(server, esClient);
-  // registerDeleteIndexTool(server, esClient);
-  // registerIndexExistsTool(server, esClient);
-  // registerGetIndexTool(server, esClient);
-  // registerUpdateIndexSettingsTool(server, esClient);
-  // registerGetIndexSettingsTool(server, esClient);
-  // registerRefreshIndexTool(server, esClient);
-  // registerFlushIndexTool(server, esClient);
-  // registerReindexDocumentsTool(server, esClient);
-  // registerPutMappingTool(server, esClient);
+  registerCreateIndexTool(server, esClient);
+  registerDeleteIndexTool(server, esClient);
+  registerIndexExistsTool(server, esClient);
+  registerGetIndexTool(server, esClient);
+  registerUpdateIndexSettingsTool(server, esClient);
+  registerGetIndexSettingsTool(server, esClient);
+  registerRefreshIndexTool(server, esClient);
+  registerFlushIndexTool(server, esClient);
+  registerReindexDocumentsTool(server, esClient);
+  registerPutMappingTool(server, esClient);
 
-  // registerDeleteByQueryTool(server, esClient);
-  // registerTranslateSqlQueryTool(server, esClient);
+  registerDeleteByQueryTool(server, esClient);
+  registerTranslateSqlQueryTool(server, esClient);
 
-  // registerSearchTemplateTool(server, esClient);
-  // registerMultiSearchTemplateTool(server, esClient);
-  // registerGetIndexTemplateTool(server, esClient);
-  // registerPutIndexTemplateTool(server, esClient);
-  // registerDeleteIndexTemplateTool(server, esClient);
+  registerSearchTemplateTool(server, esClient);
+  registerMultiSearchTemplateTool(server, esClient);
+  registerGetIndexTemplateTool(server, esClient);
+  registerPutIndexTemplateTool(server, esClient);
+  registerDeleteIndexTemplateTool(server, esClient);
 
   // registerGetTermVectorsTool(server, esClient);
   // registerGetMultiTermVectorsTool(server, esClient);
   // registerTimestampAnalysisTool(server, esClient);
 
-  // registerGetAliasesTool(server, esClient);
-  // registerPutAliasTool(server, esClient);
-  // registerDeleteAliasTool(server, esClient);
-  // registerUpdateAliasesTool(server, esClient);
+  registerGetAliasesTool(server, esClient);
+  registerPutAliasTool(server, esClient);
+  registerDeleteAliasTool(server, esClient);
+  registerUpdateAliasesTool(server, esClient);
 
   registerGetClusterHealthTool(server, esClient);
   registerGetClusterStatsTool(server, esClient);
@@ -339,10 +345,8 @@ export function registerAllTools(server: McpServer, esClient: Client): ToolInfo[
     registerTool(server, esClient);
   }
 
-  logger.info("All tools registered with conversation-aware tracing and security validation", {
+  logger.info("All tools registered", {
     toolCount: registeredTools.length,
-    conversationTracingActive: true, // All tools are traced with conversation context
-    enhancementsEnabled: true,
     notificationTools: notificationTools.length,
   });
 

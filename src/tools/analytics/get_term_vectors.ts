@@ -5,7 +5,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
-import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const GetTermVectorsParams = z.object({
@@ -22,7 +22,7 @@ const GetTermVectorsParams = z.object({
   version: z.number().optional(),
   version_type: z.enum(["internal", "external", "external_gte", "force"]).optional(),
   filter: z.object({}).passthrough().optional(),
-  per_field_analyzer: z.record(z.string()).optional(),
+  per_field_analyzer: z.record(z.string(), z.string()).optional(),
   preference: z.string().optional(),
   realtime: booleanField().optional(),
 });
@@ -32,20 +32,18 @@ export const registerGetTermVectorsTool: ToolRegistrationFunction = (server: Mcp
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_get_term_vectors",
 
     {
-
       title: "Get Term Vectors",
 
-      description: "Get term vectors for a document in Elasticsearch. Best for text analysis, relevance tuning, similarity calculations. Use when you need to analyze term frequency, positions, and offsets for document text analysis in Elasticsearch.",
+      description:
+        "Get term vectors for a document in Elasticsearch. Best for text analysis, relevance tuning, similarity calculations. Use when you need to analyze term frequency, positions, and offsets for document text analysis in Elasticsearch.",
 
       inputSchema: GetTermVectorsParams.shape,
-
     },
 
-    async (params: GetTermVectorsParamsType): Promise<SearchResult> => {
+    async (params: GetTermVectorsParamsType, _extra: any): Promise<SearchResult> => {
       try {
         const result = await esClient.termvectors(
           {
@@ -65,7 +63,7 @@ export const registerGetTermVectorsTool: ToolRegistrationFunction = (server: Mcp
             per_field_analyzer: params.per_field_analyzer,
             preference: params.preference,
             realtime: params.realtime,
-          },
+          } as any,
           {
             opaqueId: "elasticsearch_get_term_vectors",
           },
@@ -87,6 +85,5 @@ export const registerGetTermVectorsTool: ToolRegistrationFunction = (server: Mcp
         };
       }
     },
-
-  );;
+  );
 };

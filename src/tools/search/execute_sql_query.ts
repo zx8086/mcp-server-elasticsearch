@@ -18,10 +18,13 @@ const executeSqlQueryValidator = z.object({
   fetchSize: z.number().optional(),
 });
 
-type ExecuteSqlQueryParams = z.infer<typeof executeSqlQueryValidator>;
+type _ExecuteSqlQueryParams = z.infer<typeof executeSqlQueryValidator>;
 
 // MCP error handling
-function createExecuteSqlQueryMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createExecuteSqlQueryMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -63,9 +66,9 @@ export const registerExecuteSqlQueryTool: ToolRegistrationFunction = (server: Mc
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createExecuteSqlQueryMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createExecuteSqlQueryMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -83,24 +86,21 @@ export const registerExecuteSqlQueryTool: ToolRegistrationFunction = (server: Mc
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_execute_sql_query",
 
     {
-
       title: "Execute Sql Query",
 
-      description: "Execute a SQL query using Elasticsearch SQL API. PARAMETER: 'query' (SQL string). Best for familiar SQL syntax, structured queries, data analysis. Example: {query: 'SELECT * FROM logs-* WHERE status = 500 LIMIT 100'}. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Execute a SQL query using Elasticsearch SQL API. PARAMETER: 'query' (SQL string). Best for familiar SQL syntax, structured queries, data analysis. Example: {query: 'SELECT * FROM logs-* WHERE status = 500 LIMIT 100'}. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      query: z.string().optional(), // SQL query to execute. Example: 'SELECT * FROM logs-* LIMIT 10'
-      format: z.enum(["json", "csv", "tsv", "txt", "yaml", "cbor", "smile"]).optional(),
-      fetchSize: z.number().optional(),
-    },
-
+        query: z.string().optional(), // SQL query to execute. Example: 'SELECT * FROM logs-* LIMIT 10'
+        format: z.enum(["json", "csv", "tsv", "txt", "yaml", "cbor", "smile"]).optional(),
+        fetchSize: z.number().optional(),
+      },
     },
 
     executeSqlQueryHandler,
-
   );
 };

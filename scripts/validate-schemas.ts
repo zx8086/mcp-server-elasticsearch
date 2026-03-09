@@ -7,10 +7,9 @@
  * and detects common issues like passing raw Zod objects without conversion.
  */
 
-import { readFile, readdir } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
-import { zodToJsonSchemaCompat as zodToJsonSchema } from "../src/utils/zodToJsonSchema.js";
 
 // Check version compatibility
 async function checkVersionCompatibility() {
@@ -18,15 +17,14 @@ async function checkVersionCompatibility() {
   const zodVersion = packageJson.dependencies?.zod || "";
 
   // Extract major version numbers
-  const zodMajor = Number.parseInt(zodVersion.replace(/[\^~]/, "").split(".")[0]);
+  const zodMajor = Number.parseInt(zodVersion.replace(/[\^~]/, "").split(".")[0], 10);
 
   if (zodMajor < 4) {
     console.warn("⚠️  Using Zod 3.x - consider upgrading to Zod 4.x");
     console.log(`   Zod: ${zodVersion}`);
   } else {
-    console.log("✅ Using Zod 4.x with custom compatibility wrapper");
+    console.log("✅ Using Zod 4.x with MCP SDK native conversion");
     console.log(`   Zod: ${zodVersion}`);
-    console.log("   Compatibility wrapper: src/utils/zodToJsonSchema.ts");
   }
 
   return true;
@@ -132,7 +130,7 @@ async function findToolFiles(dir: string): Promise<string[]> {
  * Test schema conversion
  */
 function testSchemaConversion() {
-  console.log("\n📋 Testing Schema Conversion:\n");
+  console.log("\n📋 Testing Schema Patterns:\n");
 
   // Test case 1: Plain object with Zod validators (MCP SDK compatible)
   const _plainObjectSchema = {
@@ -141,25 +139,16 @@ function testSchemaConversion() {
   };
 
   console.log("✅ Plain object with Zod validators:");
-  console.log("   MCP SDK can handle this directly\n");
+  console.log("   MCP SDK handles conversion via registerTool()\n");
 
-  // Test case 2: Zod object (needs conversion)
-  const zodObjectSchema = z.object({
+  // Test case 2: Zod object shape (used with registerTool inputSchema)
+  const _zodObjectSchema = z.object({
     name: z.string().min(1),
     age: z.number().positive(),
   });
 
-  console.log("❌ Zod object without conversion:");
-  console.log("   Will include internal Zod metadata\n");
-
-  // Test case 3: Properly converted Zod object
-  const convertedSchema = zodToJsonSchema(zodObjectSchema, {
-    $refStrategy: "none",
-    target: "jsonSchema7",
-  });
-
-  console.log("✅ Properly converted Zod object:");
-  console.log(`${JSON.stringify(convertedSchema, null, 2).substring(0, 200)}...\n`);
+  console.log("✅ Zod object with registerTool():");
+  console.log("   MCP SDK converts Zod schemas automatically\n");
 }
 
 /**

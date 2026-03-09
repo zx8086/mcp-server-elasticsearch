@@ -1,6 +1,5 @@
 /* src/utils/responseHandling.ts */
 
-
 import { logger } from "./logger.js";
 
 export interface PaginationOptions {

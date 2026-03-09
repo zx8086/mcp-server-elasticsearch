@@ -118,6 +118,16 @@ export function shouldSkipIntegrationTests(): boolean {
 }
 
 /**
+ * Gets a registered tool from an McpServer by name.
+ * Works with real McpServer instances (accesses internal _registeredTools).
+ */
+export function getToolFromServer(server: any, toolName: string): { handler: Function } | undefined {
+  const tool = server._registeredTools?.[toolName];
+  if (!tool) return undefined;
+  return { handler: tool.handler };
+}
+
+/**
  * Test if Elasticsearch connection is available
  * Uses the exact same client configuration as the real server
  */

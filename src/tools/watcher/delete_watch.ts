@@ -17,10 +17,13 @@ const deleteWatchValidator = z.object({
   id: z.string().min(1, "Watch ID cannot be empty"),
 });
 
-type DeleteWatchParams = z.infer<typeof deleteWatchValidator>;
+type _DeleteWatchParams = z.infer<typeof deleteWatchValidator>;
 
 // MCP error handling
-function createDeleteWatchMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createDeleteWatchMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution" | "watch_not_found"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -65,9 +68,9 @@ export const registerWatcherDeleteWatchTool: ToolRegistrationFunction = (server:
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createDeleteWatchMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createDeleteWatchMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -93,22 +96,19 @@ export const registerWatcherDeleteWatchTool: ToolRegistrationFunction = (server:
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_watcher_delete_watch",
 
     {
-
       title: "Watcher Delete Watch",
 
-      description: "Delete a watch from Elasticsearch Watcher. Best for watch cleanup, configuration management, removing unused monitors. Use when you need to permanently remove watch definitions from Elasticsearch alerting system. IMPORTANT: Use only this API, not direct index deletion. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Delete a watch from Elasticsearch Watcher. Best for watch cleanup, configuration management, removing unused monitors. Use when you need to permanently remove watch definitions from Elasticsearch alerting system. IMPORTANT: Use only this API, not direct index deletion. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      id: z.string(), // Watch ID to delete
-    },
-
+        id: z.string(), // Watch ID to delete
+      },
     },
 
     withReadOnlyCheck("elasticsearch_watcher_delete_watch", deleteWatchHandler, OperationType.WRITE),
-
-  );;
+  );
 };

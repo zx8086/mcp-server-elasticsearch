@@ -13,25 +13,25 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    
+
     # Rate limiting
     nginx.ingress.kubernetes.io/rate-limit: "100"
     nginx.ingress.kubernetes.io/rate-limit-window: "1m"
-    
+
     # CORS for SSE connections
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "Content-Type, Authorization"
-    
+
     # Timeouts for long-running operations
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
-    
+
     # SSL configuration
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    
+
     # Alternative: AWS Load Balancer Controller
     # kubernetes.io/ingress.class: "alb"
     # alb.ingress.kubernetes.io/scheme: internet-facing
@@ -39,12 +39,12 @@ metadata:
     # alb.ingress.kubernetes.io/ssl-redirect: '443'
 spec:
   ingressClassName: nginx
-  
+
   tls:
   - hosts:
     - mcp-server.your-domain.com
     secretName: elasticsearch-mcp-tls
-  
+
   rules:
   - host: mcp-server.your-domain.com
     http:
@@ -56,7 +56,7 @@ spec:
             name: elasticsearch-mcp-server
             port:
               number: 80
-      
+
       # Health check endpoint
       - path: /health
         pathType: Exact

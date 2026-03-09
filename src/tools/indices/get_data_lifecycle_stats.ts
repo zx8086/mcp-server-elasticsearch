@@ -6,7 +6,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition - This tool has no parameters according to the API documentation
 // FIXED: Original JSON Schema definition removed - now using Zod schema inline
@@ -14,7 +14,7 @@ import type { SearchResult, TextContent, ToolRegistrationFunction } from "../typ
 // Zod validator for runtime validation (empty object)
 const getDataLifecycleStatsValidator = z.object({});
 
-type GetDataLifecycleStatsParams = z.infer<typeof getDataLifecycleStatsValidator>;
+type _GetDataLifecycleStatsParams = z.infer<typeof getDataLifecycleStatsValidator>;
 
 // MCP error handling
 function createGetDataLifecycleStatsMcpError(
@@ -29,7 +29,7 @@ function createGetDataLifecycleStatsMcpError(
   const errorCodeMap = {
     validation: ErrorCode.InvalidParams,
     execution: ErrorCode.InternalError,
-    feature_not_available: ErrorCode.MethodNotAllowed,
+    feature_not_available: ErrorCode.InvalidRequest,
   };
 
   return new McpError(
@@ -62,10 +62,10 @@ export const registerGetDataLifecycleStatsTool: ToolRegistrationFunction = (serv
       // Error handling
       if (error instanceof z.ZodError) {
         throw createGetDataLifecycleStatsMcpError(
-          `Validation failed: ${error.errors.map((e) => e.message).join(", ")}`,
+          `Validation failed: ${error.issues.map((e) => e.message).join(", ")}`,
           {
             type: "validation",
-            details: { validationErrors: error.errors, providedArgs: args },
+            details: { validationErrors: error.issues, providedArgs: args },
           },
         );
       }
@@ -90,20 +90,17 @@ export const registerGetDataLifecycleStatsTool: ToolRegistrationFunction = (serv
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_get_data_lifecycle_stats",
 
     {
-
       title: "Get Data Lifecycle Stats",
 
-      description: "Get data stream lifecycle statistics from Elasticsearch. Best for data stream monitoring, lifecycle analysis, storage planning. Use when you need to track data stream lifecycle management and retention policies in Elasticsearch.",
+      description:
+        "Get data stream lifecycle statistics from Elasticsearch. Best for data stream monitoring, lifecycle analysis, storage planning. Use when you need to track data stream lifecycle management and retention policies in Elasticsearch.",
 
       inputSchema: {},
-
     },
 
     getDataLifecycleStatsHandler,
-
   );
 };

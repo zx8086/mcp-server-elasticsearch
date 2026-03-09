@@ -18,10 +18,13 @@ const ackWatchValidator = z.object({
   action_id: z.union([z.string(), z.array(z.string())]).optional(),
 });
 
-type AckWatchParams = z.infer<typeof ackWatchValidator>;
+type _AckWatchParams = z.infer<typeof ackWatchValidator>;
 
 // MCP error handling
-function createAckWatchMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createAckWatchMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution" | "watch_not_found"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -67,9 +70,9 @@ export const registerWatcherAckWatchTool: ToolRegistrationFunction = (server: Mc
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createAckWatchMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createAckWatchMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -95,23 +98,20 @@ export const registerWatcherAckWatchTool: ToolRegistrationFunction = (server: Mc
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_watcher_ack_watch",
 
     {
-
       title: "Watcher Ack Watch",
 
-      description: "Acknowledge a watch in Elasticsearch Watcher to throttle actions. Best for alert management, action throttling, notification control. Use when you need to manually acknowledge watch actions to prevent repeated executions in Elasticsearch alerting. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Acknowledge a watch in Elasticsearch Watcher to throttle actions. Best for alert management, action throttling, notification control. Use when you need to manually acknowledge watch actions to prevent repeated executions in Elasticsearch alerting. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      watch_id: z.string(), // Watch ID to acknowledge
-      action_id: z.any().optional(), // Action ID(s) to acknowledge
-    },
-
+        watch_id: z.string(), // Watch ID to acknowledge
+        action_id: z.any().optional(), // Action ID(s) to acknowledge
+      },
     },
 
     withReadOnlyCheck("elasticsearch_watcher_ack_watch", ackWatchHandler, OperationType.WRITE),
-
-  );;
+  );
 };

@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 
 import { readFile, writeFile } from "node:fs/promises";
-import { glob } from "bun";
 
 interface TestFix {
   file: string;

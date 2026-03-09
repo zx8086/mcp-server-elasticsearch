@@ -17,10 +17,13 @@ const getWatchValidator = z.object({
   id: z.string().min(1, "Watch ID cannot be empty"),
 });
 
-type GetWatchParams = z.infer<typeof getWatchValidator>;
+type _GetWatchParams = z.infer<typeof getWatchValidator>;
 
 // MCP error handling
-function createGetWatchMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createGetWatchMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution" | "watch_not_found"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -65,9 +68,9 @@ export const registerWatcherGetWatchTool: ToolRegistrationFunction = (server: Mc
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createGetWatchMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createGetWatchMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -93,22 +96,19 @@ export const registerWatcherGetWatchTool: ToolRegistrationFunction = (server: Mc
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_watcher_get_watch",
 
     {
-
       title: "Watcher Get Watch",
 
-      description: "Get a watch configuration from Elasticsearch Watcher. Best for monitoring automation, alerting configuration, watch inspection. Use when you need to retrieve watch definitions for Elasticsearch alerting and monitoring workflows. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Get a watch configuration from Elasticsearch Watcher. Best for monitoring automation, alerting configuration, watch inspection. Use when you need to retrieve watch definitions for Elasticsearch alerting and monitoring workflows. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      id: z.string(), // Watch ID to retrieve
-    },
-
+        id: z.string(), // Watch ID to retrieve
+      },
     },
 
     withReadOnlyCheck("elasticsearch_watcher_get_watch", getWatchHandler, OperationType.READ),
-
-  );;
+  );
 };

@@ -15,7 +15,7 @@ const indicesSummaryValidator = z.object({
   groupBy: z.enum(["prefix", "date", "type"]).optional(),
 });
 
-type IndicesSummaryParams = z.infer<typeof indicesSummaryValidator>;
+type _IndicesSummaryParams = z.infer<typeof indicesSummaryValidator>;
 
 function createIndicesSummaryMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
   const message = error instanceof Error ? error.message : error;
@@ -60,7 +60,7 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: Mcp
         duration: `${duration.toFixed(2)}ms`,
       });
 
-      const categories = {
+      const categories: Record<string, { name: string; docs: number }[]> = {
         system: [],
         dataStreams: [],
         application: [],
@@ -85,7 +85,7 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: Mcp
         else if (index.health === "yellow") stats.yellow++;
         else if (index.health === "red") stats.red++;
 
-        const docCount = Number.parseInt(index["docs.count"] || "0");
+        const docCount = Number.parseInt(index["docs.count"] || "0", 10);
         stats.totalDocs += docCount;
 
         const indexName = index.index;
@@ -134,7 +134,7 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: Mcp
         .map(([pattern, indices]) => ({
           pattern,
           count: indices.length,
-          total_docs: indices.reduce((sum, idx) => sum + Number.parseInt(idx["docs.count"] || "0"), 0),
+          total_docs: indices.reduce((sum, idx) => sum + Number.parseInt(idx["docs.count"] || "0", 10), 0),
           health_status: {
             green: indices.filter((i) => i.health === "green").length,
             yellow: indices.filter((i) => i.health === "yellow").length,
@@ -165,7 +165,7 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: Mcp
         },
         patterns: patternSummary,
         largest_indices: response
-          .sort((a, b) => Number.parseInt(b["docs.count"] || "0") - Number.parseInt(a["docs.count"] || "0"))
+          .sort((a, b) => Number.parseInt(b["docs.count"] || "0", 10) - Number.parseInt(a["docs.count"] || "0", 10))
           .slice(0, 10)
           .map((i) => ({
             index: i.index,
@@ -195,33 +195,21 @@ export const registerIndicesSummaryTool: ToolRegistrationFunction = (server: Mcp
 
   // Tool registration using modern registerTool method
 
-
   server.registerTool(
-
-
     "elasticsearch_indices_summary",
 
-
     {
-
-
       title: "Indices Summary",
 
-
-      description: "Get a high-level summary of indices without overwhelming detail in Elasticsearch. Best for cluster overview, index organization analysis, storage planning. Use when you need to understand index patterns, health distribution, and storage usage across your Elasticsearch cluster. Uses direct JSON Schema and standardized MCP error codes.",
-
+      description:
+        "Get a high-level summary of indices without overwhelming detail in Elasticsearch. Best for cluster overview, index organization analysis, storage planning. Use when you need to understand index patterns, health distribution, and storage usage across your Elasticsearch cluster. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      indexPattern: z.string().optional(), // Elasticsearch index pattern to summarize (supports wildcards like logs-*, app-*)
-      groupBy: z.enum(["prefix", "date", "type"]).optional(), // How to group Elasticsearch indices for summary analysis
+        indexPattern: z.string().optional(), // Elasticsearch index pattern to summarize (supports wildcards like logs-*, app-*)
+        groupBy: z.enum(["prefix", "date", "type"]).optional(), // How to group Elasticsearch indices for summary analysis
+      },
     },
-
-
-    },
-
 
     indicesSummaryHandler,
-
-
   );
 };

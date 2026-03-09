@@ -33,7 +33,7 @@ const moveToStepValidator = z.object({
   }),
 });
 
-type MoveToStepParams = z.infer<typeof moveToStepValidator>;
+type _MoveToStepParams = z.infer<typeof moveToStepValidator>;
 
 // =============================================================================
 // 2. STANDARDIZED MCP ERROR HANDLING
@@ -66,10 +66,11 @@ function createIlmMoveToStepMcpError(
 export const registerMoveToStepTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const moveToStepHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
+    let params: z.infer<typeof moveToStepValidator> | undefined;
 
     try {
       // Simple validation - no complex parameter extraction
-      const params = moveToStepValidator.parse(args);
+      params = moveToStepValidator.parse(args);
 
       logger.debug("Moving index to ILM step", {
         index: params.index,
@@ -138,9 +139,9 @@ Operation completed at: ${new Date().toISOString()}`,
     } catch (error) {
       // Standardized MCP error handling
       if (error instanceof z.ZodError) {
-        throw createIlmMoveToStepMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createIlmMoveToStepMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -188,32 +189,33 @@ Operation completed at: ${new Date().toISOString()}`,
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_ilm_move_to_step",
 
     {
-
       title: "Ilm Move To Step",
 
-      description: "Move index to ILM step. Manually move an index to a specific ILM policy step. Uses direct JSON Schema and standardized MCP error codes. Expert-level operation for troubleshooting. Examples: {index: my-index, currentStep: {phase: hot, action: rollover, name: check-rollover-ready}, nextStep: {phase: warm}}",
+      description:
+        "Move index to ILM step. Manually move an index to a specific ILM policy step. Uses direct JSON Schema and standardized MCP error codes. Expert-level operation for troubleshooting. Examples: {index: my-index, currentStep: {phase: hot, action: rollover, name: check-rollover-ready}, nextStep: {phase: warm}}",
 
       inputSchema: {
-      index: z.string().min(1, "Index name cannot be empty"),
-      currentStep: z.object({
-        phase: z.string().min(1, "Phase is required"),
-        action: z.string().min(1, "Action is required"),  
-        name: z.string().min(1, "Step name is required"),
-      }).describe("Current ILM step the index is in"),
-      nextStep: z.object({
-        phase: z.string().min(1, "Phase is required"),
-        action: z.string().optional().describe("Action (optional, will use default if not provided)"),
-        name: z.string().optional().describe("Step name (optional, will use default if not provided)"),
-      }).describe("Target ILM step to move the index to"),
-    },
-
+        index: z.string().min(1, "Index name cannot be empty"),
+        currentStep: z
+          .object({
+            phase: z.string().min(1, "Phase is required"),
+            action: z.string().min(1, "Action is required"),
+            name: z.string().min(1, "Step name is required"),
+          })
+          .describe("Current ILM step the index is in"),
+        nextStep: z
+          .object({
+            phase: z.string().min(1, "Phase is required"),
+            action: z.string().optional().describe("Action (optional, will use default if not provided)"),
+            name: z.string().optional().describe("Step name (optional, will use default if not provided)"),
+          })
+          .describe("Target ILM step to move the index to"),
+      },
     },
 
     withReadOnlyCheck("elasticsearch_ilm_move_to_step", moveToStepHandler, OperationType.DESTRUCTIVE),
-
-  );;
+  );
 };

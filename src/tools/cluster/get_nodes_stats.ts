@@ -21,7 +21,7 @@ const nodesStatsValidator = z.object({
   summary: z.boolean().optional(),
 });
 
-type NodesStatsParams = z.infer<typeof nodesStatsValidator>;
+type _NodesStatsParams = z.infer<typeof nodesStatsValidator>;
 
 // Helper function to format node stats summary
 function formatNodeStatsSummary(result: any): string {
@@ -155,7 +155,7 @@ export const registerGetNodesStatsTool: ToolRegistrationFunction = (server: McpS
         const minimalResult = await esClient.nodes.stats(
           {
             node_id: nodeId,
-            metric: "os,jvm", // Minimal useful metrics
+            metric: "os,jvm" as any, // Minimal useful metrics
             level: "node", // Node level stats
             timeout: timeout,
           },
@@ -193,8 +193,8 @@ export const registerGetNodesStatsTool: ToolRegistrationFunction = (server: McpS
         const result = await esClient.nodes.stats(
           {
             node_id: nodeId,
-            metric: metric,
-            index_metric: "docs,store", // Just document count and size
+            metric: metric as any,
+            index_metric: "docs,store" as any, // Just document count and size
             level: level,
             timeout: timeout,
           },
@@ -226,8 +226,8 @@ export const registerGetNodesStatsTool: ToolRegistrationFunction = (server: McpS
       const result = await esClient.nodes.stats(
         {
           node_id: nodeId,
-          metric: metric,
-          index_metric: indexMetric,
+          metric: metric as any,
+          index_metric: indexMetric as any,
           level: level,
           timeout: timeout,
         },
@@ -257,9 +257,9 @@ export const registerGetNodesStatsTool: ToolRegistrationFunction = (server: McpS
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createNodesStatsMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createNodesStatsMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -308,27 +308,24 @@ export const registerGetNodesStatsTool: ToolRegistrationFunction = (server: McpS
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_get_nodes_stats",
 
     {
-
       title: "Get Nodes Stats",
 
-      description: "Get node statistics. WARNING: Returns massive data without metric filter. BEST PRACTICES: {metric: 'jvm', level: 'node'} for JVM summary, {metric: 'os'} for system stats, {metric: 'fs'} for disk only, {metric: 'indices', indexMetric: 'docs,store'} for index metrics. NEVER use empty {} or {metric: 'indices'} without indexMetric. READ operation - safe for production use.",
+      description:
+        "Get node statistics. WARNING: Returns massive data without metric filter. BEST PRACTICES: {metric: 'jvm', level: 'node'} for JVM summary, {metric: 'os'} for system stats, {metric: 'fs'} for disk only, {metric: 'indices', indexMetric: 'docs,store'} for index metrics. NEVER use empty {} or {metric: 'indices'} without indexMetric. READ operation - safe for production use.",
 
       inputSchema: {
-      nodeId: z.string().optional(), // Specific node ID, or leave empty for all nodes
-      metric: z.string().optional(), // CRITICAL: Specify exact metrics needed. Options: 'os', 'jvm', 'fs', 'process', 'http', 'transport', 'indices'. Combine: 'os,jvm'
-      indexMetric: z.string().optional(), // When using 'indices' metric, MUST specify: 'docs', 'store', 'indexing', 'search', 'segments', etc.
-      level: z.enum(["node", "indices", "shards"]).optional(), // Aggregation level. Use 'node' for node-level stats (default)
-      timeout: z.string().optional(), // Timeout for the request (e.g., '30s', '1m')
-      summary: z.boolean().optional(), // Return summarized node statistics instead of full details
-    },
-
+        nodeId: z.string().optional(), // Specific node ID, or leave empty for all nodes
+        metric: z.string().optional(), // CRITICAL: Specify exact metrics needed. Options: 'os', 'jvm', 'fs', 'process', 'http', 'transport', 'indices'. Combine: 'os,jvm'
+        indexMetric: z.string().optional(), // When using 'indices' metric, MUST specify: 'docs', 'store', 'indexing', 'search', 'segments', etc.
+        level: z.enum(["node", "indices", "shards"]).optional(), // Aggregation level. Use 'node' for node-level stats (default)
+        timeout: z.string().optional(), // Timeout for the request (e.g., '30s', '1m')
+        summary: z.boolean().optional(), // Return summarized node statistics instead of full details
+      },
     },
 
     nodesStatsHandler,
-
   );
 };

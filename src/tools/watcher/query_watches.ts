@@ -7,7 +7,6 @@ import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
-import { formatAsMarkdown } from "../../utils/responseHandling.js";
 import { booleanField } from "../../utils/zodHelpers.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
@@ -25,10 +24,13 @@ const queryWatchesValidator = z.object({
   search_after: z.array(z.union([z.number(), z.string(), booleanField(), z.null()])).optional(),
 });
 
-type QueryWatchesParams = z.infer<typeof queryWatchesValidator>;
+type _QueryWatchesParams = z.infer<typeof queryWatchesValidator>;
 
 // MCP error handling
-function createQueryWatchesMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createQueryWatchesMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -56,8 +58,8 @@ export const registerWatcherQueryWatchesTool: ToolRegistrationFunction = (server
         from: params.from,
         size: params.size || 20, // Default size if not specified
         query: params.query,
-        sort: params.sort,
-        search_after: params.search_after,
+        sort: params.sort as any,
+        search_after: params.search_after as any,
       });
 
       const duration = performance.now() - perfStart;
@@ -84,8 +86,8 @@ export const registerWatcherQueryWatchesTool: ToolRegistrationFunction = (server
         for (const watch of watches) {
           responseContent.push(`### Watch: ${watch._id || "Unknown"}`);
 
-          if (watch._source) {
-            const source = watch._source;
+          if ((watch as any)._source) {
+            const source = (watch as any)._source;
 
             // Show key watch information
             if (source.trigger) {
@@ -133,9 +135,9 @@ export const registerWatcherQueryWatchesTool: ToolRegistrationFunction = (server
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createQueryWatchesMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createQueryWatchesMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -153,26 +155,23 @@ export const registerWatcherQueryWatchesTool: ToolRegistrationFunction = (server
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_watcher_query_watches",
 
     {
-
       title: "Watcher Query Watches",
 
-      description: "Query and filter watches in Elasticsearch Watcher. Best for watch discovery, configuration management, monitoring overview. Use when you need to search and paginate through watch definitions in Elasticsearch alerting system. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Query and filter watches in Elasticsearch Watcher. Best for watch discovery, configuration management, monitoring overview. Use when you need to search and paginate through watch definitions in Elasticsearch alerting system. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      from: z.number().min(0).optional(), // Starting offset for pagination
-      size: z.number().min(1).max(50).optional(), // Number of watches to return
-      query: z.object({}).optional(), // Query to filter watches
-      sort: z.any().optional(), // Sort criteria for results
-      search_after: z.array(z.any().optional()).optional(), // Values to search after for pagination
-    },
-
+        from: z.number().min(0).optional(), // Starting offset for pagination
+        size: z.number().min(1).max(50).optional(), // Number of watches to return
+        query: z.object({}).optional(), // Query to filter watches
+        sort: z.any().optional(), // Sort criteria for results
+        search_after: z.array(z.any().optional()).optional(), // Values to search after for pagination
+      },
     },
 
     withReadOnlyCheck("elasticsearch_watcher_query_watches", queryWatchesHandler, OperationType.READ),
-
-  );;
+  );
 };

@@ -1,6 +1,7 @@
 /* src/utils/notifications.ts */
 
-import type { RequestHandlerExtra, ServerRequest, ServerNotification } from "@modelcontextprotocol/sdk/shared/protocol.js";
+import type { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol.js";
+import type { ServerNotification, ServerRequest } from "@modelcontextprotocol/sdk/types.js";
 import { getCurrentRunTree, withRunTree } from "langsmith/singletons/traceable";
 import { logger } from "./logger.js";
 
@@ -26,15 +27,14 @@ export interface GeneralNotification {
 
 export class NotificationManager {
   private requestContext: RequestHandlerExtra<ServerRequest, ServerNotification> | null = null;
-  private activeOperations: Map<string, { 
-    progressToken: string | number; 
-    total?: number; 
-    lastProgress: number 
-  }> = new Map();
-
-  constructor() {
-    // No server needed - we use the request context
-  }
+  private activeOperations: Map<
+    string,
+    {
+      progressToken: string | number;
+      total?: number;
+      lastProgress: number;
+    }
+  > = new Map();
 
   setRequestContext(context: RequestHandlerExtra<ServerRequest, ServerNotification>): void {
     this.requestContext = context;
@@ -57,14 +57,14 @@ export class NotificationManager {
     }
 
     // CRITICAL: Safely get trace context without throwing errors
-    let currentTrace;
+    let currentTrace: any;
     try {
       currentTrace = getCurrentRunTree(true); // Allow absent run tree
-    } catch (error) {
+    } catch (_error) {
       // No tracing context available - this is fine
       currentTrace = null;
     }
-    
+
     const sendNotificationSafely = async () => {
       try {
         // Use the sendNotification function from RequestHandlerExtra
@@ -125,7 +125,6 @@ export class NotificationManager {
       case "debug":
         logger.debug(logMessage, logMetadata);
         break;
-      case "info":
       default:
         logger.info(logMessage, logMetadata);
         break;
@@ -144,7 +143,7 @@ export class NotificationManager {
     operationId: string,
     progressToken: string | number,
     total?: number,
-    description?: string
+    description?: string,
   ): Promise<void> {
     this.activeOperations.set(operationId, {
       progressToken,
@@ -177,11 +176,7 @@ export class NotificationManager {
     });
   }
 
-  async updateProgress(
-    operationId: string,
-    progress: number,
-    message?: string
-  ): Promise<void> {
+  async updateProgress(operationId: string, progress: number, message?: string): Promise<void> {
     const operation = this.activeOperations.get(operationId);
     if (!operation) {
       logger.warn("Attempted to update progress for unknown operation", { operationId });
@@ -218,11 +213,7 @@ export class NotificationManager {
     });
   }
 
-  async completeOperation(
-    operationId: string,
-    result?: any,
-    message?: string
-  ): Promise<void> {
+  async completeOperation(operationId: string, result?: any, message?: string): Promise<void> {
     const operation = this.activeOperations.get(operationId);
     if (!operation) {
       logger.warn("Attempted to complete unknown operation", { operationId });
@@ -257,11 +248,7 @@ export class NotificationManager {
     });
   }
 
-  async failOperation(
-    operationId: string,
-    error: Error | string,
-    message?: string
-  ): Promise<void> {
+  async failOperation(operationId: string, error: Error | string, message?: string): Promise<void> {
     const operation = this.activeOperations.get(operationId);
     if (!operation) {
       logger.warn("Attempted to fail unknown operation", { operationId });
@@ -344,12 +331,12 @@ export class NotificationManager {
 export const notificationManager = new NotificationManager();
 
 export function withNotificationContext<TArgs, TResult>(
-  handler: (args: TArgs, extra: RequestHandlerExtra<ServerRequest, ServerNotification>) => Promise<TResult>
+  handler: (args: TArgs, extra: RequestHandlerExtra<ServerRequest, ServerNotification>) => Promise<TResult>,
 ): (args: TArgs, extra: RequestHandlerExtra<ServerRequest, ServerNotification>) => Promise<TResult> {
   return async (args: TArgs, extra: RequestHandlerExtra<ServerRequest, ServerNotification>): Promise<TResult> => {
     // Set the request context so notifications can be sent
     notificationManager.setRequestContext(extra);
-    
+
     try {
       const result = await handler(args, extra);
       return result;
@@ -362,24 +349,24 @@ export function withNotificationContext<TArgs, TResult>(
 
 export function withNotifications<T extends any[], R>(
   toolName: string,
-  handler: (...args: T) => Promise<R>
+  handler: (...args: T) => Promise<R>,
 ): (...args: T) => Promise<R> {
   return async (...args: T): Promise<R> => {
     const operationId = NotificationManager.generateOperationId(toolName);
-    const progressToken = NotificationManager.generateProgressToken(operationId);
+    const _progressToken = NotificationManager.generateProgressToken(operationId);
 
     try {
       // For long-running operations, we could start progress tracking here
       // But for now, just execute and notify on errors
       const result = await handler(...args);
-      
+
       return result;
     } catch (error) {
       // Send error notification for failed operations
       await notificationManager.sendError(
         `Tool ${toolName} execution failed`,
         error instanceof Error ? error : new Error(String(error)),
-        { tool: toolName, operation_id: operationId }
+        { tool: toolName, operation_id: operationId },
       );
       throw error;
     }
@@ -397,7 +384,7 @@ export interface ProgressTracker {
 export async function createProgressTracker(
   toolName: string,
   total?: number,
-  description?: string
+  description?: string,
 ): Promise<ProgressTracker> {
   const operationId = NotificationManager.generateOperationId(toolName);
   const progressToken = NotificationManager.generateProgressToken(operationId);
@@ -409,9 +396,7 @@ export async function createProgressTracker(
     progressToken,
     updateProgress: (progress: number, message?: string) =>
       notificationManager.updateProgress(operationId, progress, message),
-    complete: (result?: any, message?: string) =>
-      notificationManager.completeOperation(operationId, result, message),
-    fail: (error: Error | string, message?: string) =>
-      notificationManager.failOperation(operationId, error, message),
+    complete: (result?: any, message?: string) => notificationManager.completeOperation(operationId, result, message),
+    fail: (error: Error | string, message?: string) => notificationManager.failOperation(operationId, error, message),
   };
 }

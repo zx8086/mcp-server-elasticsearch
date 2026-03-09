@@ -7,11 +7,10 @@ import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { OperationType, withReadOnlyCheck } from "../../utils/readOnlyMode.js";
 import { createPaginationHeader, paginateResults, responsePresets } from "../../utils/responseHandling.js";
-import { createTextContent, createIndexMetadata } from "../../utils/mcpAnnotations.js";
 import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
-const listIndicesSchema = {
+const _listIndicesSchema = {
   type: "object",
   properties: {
     indexPattern: {
@@ -55,7 +54,7 @@ const listIndicesValidator = z.object({
   includeSize: z.boolean().optional(),
 });
 
-type ListIndicesParams = z.infer<typeof listIndicesValidator>;
+type _ListIndicesParams = z.infer<typeof listIndicesValidator>;
 
 // MCP error handling
 
@@ -125,13 +124,13 @@ export const registerListIndicesTool: ToolRegistrationFunction = (server: McpSer
       filteredIndices.sort((a: any, b: any) => {
         switch (params.sortBy) {
           case "size": {
-            const sizeA = Number.parseInt(a["store.size"]?.replace(/[^\d]/g, "") || "0");
-            const sizeB = Number.parseInt(b["store.size"]?.replace(/[^\d]/g, "") || "0");
+            const sizeA = Number.parseInt(a["store.size"]?.replace(/[^\d]/g, "") || "0", 10);
+            const sizeB = Number.parseInt(b["store.size"]?.replace(/[^\d]/g, "") || "0", 10);
             return sizeB - sizeA; // Descending
           }
           case "docs": {
-            const docsA = Number.parseInt(a["docs.count"] || "0");
-            const docsB = Number.parseInt(b["docs.count"] || "0");
+            const docsA = Number.parseInt(a["docs.count"] || "0", 10);
+            const docsB = Number.parseInt(b["docs.count"] || "0", 10);
             return docsB - docsA; // Descending
           }
           case "creation": {
@@ -179,45 +178,22 @@ export const registerListIndicesTool: ToolRegistrationFunction = (server: McpSer
         logger.warn("Slow operation: elasticsearch_list_indices", { duration });
       }
 
-      // Create enhanced content with metadata  
       const headerMessage = createPaginationHeader(metadata, "Indices");
-      
-      const indexMetadata = createIndexMetadata({
-        executionTimeMs: Math.round(duration),
-        index: params.indexPattern || "*",
-        operation: "list_indices",
-      });
 
       return {
         content: [
-          createTextContent(headerMessage, indexMetadata),
-          createTextContent(
-            JSON.stringify(summary, null, 2),
-            {
-              operation: "indices_summary",
-              totalResults: (indicesInfo as any[]).length,
-              timestamp: new Date().toISOString(),
-            }
-          ),
-          createTextContent(
-            JSON.stringify(indicesInfo, null, 2),
-            {
-              operation: "indices_details",
-              totalResults: (indicesInfo as any[]).length,
-              returnedResults: metadata.returned,
-              timestamp: new Date().toISOString(),
-              audience: ["user"],
-            }
-          ),
+          { type: "text", text: headerMessage },
+          { type: "text", text: JSON.stringify(summary, null, 2) },
+          { type: "text", text: JSON.stringify(indicesInfo, null, 2) },
         ],
       };
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           toolName: "elasticsearch_list_indices",
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -245,7 +221,8 @@ export const registerListIndicesTool: ToolRegistrationFunction = (server: McpSer
     "elasticsearch_list_indices",
     {
       title: "List Elasticsearch Indices",
-      description: "List indices with filtering. Uses Zod Schema for proper MCP parameter handling. TIP: Use this FIRST to check cluster size before other tools. Common patterns: {limit: 50, excludeSystemIndices: true} for overview, {indexPattern: 'logs-*', limit: 100} for specific indices.",
+      description:
+        "List indices with filtering. Uses Zod Schema for proper MCP parameter handling. TIP: Use this FIRST to check cluster size before other tools. Common patterns: {limit: 50, excludeSystemIndices: true} for overview, {indexPattern: 'logs-*', limit: 100} for specific indices.",
       inputSchema: {
         indexPattern: z.string().optional(),
         limit: z.number().min(1).max(1000).optional(),

@@ -50,7 +50,7 @@ const updateAliasesValidator = z.object({
   masterTimeout: z.string().optional(),
 });
 
-type UpdateAliasesParams = z.infer<typeof updateAliasesValidator>;
+type _UpdateAliasesParams = z.infer<typeof updateAliasesValidator>;
 
 // MCP error handling
 function createMcpError(
@@ -179,10 +179,10 @@ export const registerUpdateAliasesTool: ToolRegistrationFunction = (server: McpS
     } catch (error) {
       // Error handling with specific alias error types
       if (error instanceof z.ZodError) {
-        throw createMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           toolName: "elasticsearch_update_aliases",
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -243,24 +243,21 @@ export const registerUpdateAliasesTool: ToolRegistrationFunction = (server: McpS
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_update_aliases",
 
     {
-
       title: "Update Aliases",
 
-      description: "Update index aliases in Elasticsearch using the aliases API. Best for alias management, index switching, zero-downtime deployments. Use when you need to atomically add, remove, or modify multiple index aliases in Elasticsearch. DESTRUCTIVE: Actions are performed atomically but modify alias configurations permanently. TIP: Use [{add: {index: new-index, alias: my-alias}}, {remove: {index: old-index, alias: my-alias}}] for zero-downtime index switching.",
+      description:
+        "Update index aliases in Elasticsearch using the aliases API. Best for alias management, index switching, zero-downtime deployments. Use when you need to atomically add, remove, or modify multiple index aliases in Elasticsearch. DESTRUCTIVE: Actions are performed atomically but modify alias configurations permanently. TIP: Use [{add: {index: new-index, alias: my-alias}}, {remove: {index: old-index, alias: my-alias}}] for zero-downtime index switching.",
 
       inputSchema: {
-      actions: z.array(z.object({}).optional()), // Array of alias actions to perform atomically. Each action should have 'add', 'remove', or 'remove_index' key with appropriate configuration
-      timeout: z.string().optional(), // Timeout for the request (e.g., '30s', '1m'). Optional
-      masterTimeout: z.string().optional(), // Timeout for waiting for master node response (e.g., '30s', '1m'). Optional
-    },
-
+        actions: z.array(z.object({}).optional()), // Array of alias actions to perform atomically. Each action should have 'add', 'remove', or 'remove_index' key with appropriate configuration
+        timeout: z.string().optional(), // Timeout for the request (e.g., '30s', '1m'). Optional
+        masterTimeout: z.string().optional(), // Timeout for waiting for master node response (e.g., '30s', '1m'). Optional
+      },
     },
 
     withReadOnlyCheck("elasticsearch_update_aliases", updateAliasesHandler, OperationType.DESTRUCTIVE),
-
-  );;
+  );
 };

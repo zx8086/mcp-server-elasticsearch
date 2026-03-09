@@ -23,10 +23,13 @@ const deleteIndexValidator = z.object({
   expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
 });
 
-type DeleteIndexParams = z.infer<typeof deleteIndexValidator>;
+type _DeleteIndexParams = z.infer<typeof deleteIndexValidator>;
 
 // MCP error handling
-function createDeleteIndexMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createDeleteIndexMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution" | "index_not_found"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -76,9 +79,9 @@ export const registerDeleteIndexTool: ToolRegistrationFunction = (server: McpSer
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createDeleteIndexMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createDeleteIndexMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -104,27 +107,24 @@ export const registerDeleteIndexTool: ToolRegistrationFunction = (server: McpSer
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_delete_index",
 
     {
-
       title: "Delete Index",
 
-      description: "Delete an entire index in Elasticsearch. Best for index cleanup, data lifecycle management, removing obsolete indices. Use when you need to permanently remove complete Elasticsearch indices and all their documents. DESTRUCTIVE OPERATION. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Delete an entire index in Elasticsearch. Best for index cleanup, data lifecycle management, removing obsolete indices. Use when you need to permanently remove complete Elasticsearch indices and all their documents. DESTRUCTIVE OPERATION. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      index: z.string(), // Name of the index to delete
-      timeout: z.string().optional(), // Operation timeout (e.g., '30s')
-      masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
-      ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
-      allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
-      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
-    },
-
+        index: z.string(), // Name of the index to delete
+        timeout: z.string().optional(), // Operation timeout (e.g., '30s')
+        masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
+        ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+        allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+        expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
+      },
     },
 
     withReadOnlyCheck("elasticsearch_delete_index", deleteIndexHandler, OperationType.DESTRUCTIVE),
-
-  );;
+  );
 };

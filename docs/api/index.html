@@ -22,27 +22,16 @@
             margin-bottom: 30px;
             text-align: center;
         }
-        .header h1 {
-            margin: 0;
-            font-size: 2.5em;
-        }
-        .header p {
-            margin: 10px 0 0 0;
-            opacity: 0.9;
-        }
+        .header h1 { margin: 0; font-size: 2.5em; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; }
         .stats {
             display: flex;
             justify-content: center;
             gap: 40px;
             margin-top: 20px;
         }
-        .stat {
-            text-align: center;
-        }
-        .stat-number {
-            font-size: 2em;
-            font-weight: bold;
-        }
+        .stat { text-align: center; }
+        .stat-number { font-size: 2em; font-weight: bold; }
         .nav {
             background: white;
             padding: 20px;
@@ -50,31 +39,27 @@
             margin-bottom: 30px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .nav h2 {
-            margin-top: 0;
-            color: #667eea;
-        }
+        .nav h2 { margin-top: 0; color: #667eea; }
         .nav-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
         }
         .nav-item {
             background: #f8f9fa;
-            padding: 15px;
+            padding: 12px 15px;
             border-radius: 8px;
             text-decoration: none;
             color: #333;
             transition: all 0.3s ease;
             border-left: 4px solid #667eea;
         }
-        .nav-item:hover {
-            background: #e9ecef;
-            transform: translateY(-2px);
-        }
+        .nav-item:hover { background: #e9ecef; transform: translateY(-2px); }
+        .nav-item strong { display: block; }
+        .nav-item small { color: #666; }
         .category {
             background: white;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -82,103 +67,62 @@
         .category-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 30px;
+            padding: 25px 30px;
         }
-        .category-header h2 {
-            margin: 0;
-            font-size: 1.8em;
-        }
-        .category-content {
-            padding: 30px;
-        }
+        .category-header h2 { margin: 0; font-size: 1.6em; }
+        .category-header p { margin: 5px 0 0 0; opacity: 0.9; font-size: 0.9em; }
+        .category-content { padding: 20px 30px; }
         .tool {
             border-bottom: 1px solid #eee;
-            padding: 30px 0;
+            padding: 18px 0;
         }
-        .tool:last-child {
-            border-bottom: none;
-        }
+        .tool:last-child { border-bottom: none; }
         .tool-header {
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
+            gap: 10px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
         }
         .tool-name {
-            font-size: 1.4em;
+            font-size: 1.1em;
             font-weight: bold;
             color: #667eea;
-            margin-right: 15px;
+            font-family: monospace;
         }
-        .tool-tags {
-            display: flex;
-            gap: 8px;
-        }
+        .tool-tags { display: flex; gap: 6px; }
         .tag {
             background: #e9ecef;
-            padding: 4px 12px;
+            padding: 2px 10px;
             border-radius: 20px;
-            font-size: 0.8em;
+            font-size: 0.75em;
             color: #495057;
         }
-        .tool-description {
-            margin-bottom: 20px;
-            color: #666;
-        }
-        .schema-container {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        .schema-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #495057;
-        }
-        pre {
-            background: #2d3748;
-            color: #e2e8f0;
-            padding: 20px;
-            border-radius: 8px;
-            overflow-x: auto;
-            font-size: 0.9em;
-        }
-        .examples {
-            margin-top: 20px;
-        }
-        .example {
-            background: #f1f3f4;
-            border-left: 4px solid #667eea;
-            padding: 20px;
-            margin: 15px 0;
-            border-radius: 0 8px 8px 0;
-        }
-        .example-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #667eea;
-        }
+        .tag.destructive { background: #fee; color: #c00; }
+        .tag.write { background: #fff3cd; color: #856404; }
+        .tag.read { background: #d4edda; color: #155724; }
+        .tool-description { color: #555; font-size: 0.95em; }
         .footer {
             text-align: center;
-            padding: 40px;
+            padding: 30px;
             color: #666;
             background: white;
             border-radius: 10px;
-            margin-top: 40px;
+            margin-top: 30px;
         }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>Elasticsearch MCP Server API</h1>
-        <p>Version 1.0.0 - Production-Ready Elasticsearch MCP Server</p>
+        <p>Version 0.1.1 &mdash; Comprehensive Elasticsearch MCP Server</p>
         <div class="stats">
             <div class="stat">
-                <div class="stat-number">3+</div>
+                <div class="stat-number">99</div>
                 <div>Tools</div>
             </div>
             <div class="stat">
-                <div class="stat-number">3</div>
+                <div class="stat-number">18</div>
                 <div>Categories</div>
             </div>
         </div>
@@ -187,242 +131,896 @@
     <div class="nav">
         <h2>Categories</h2>
         <div class="nav-grid">
-            <a href="#search" class="nav-item">
-                <strong>Search</strong><br>
-                1 tools
-            </a>
-            <a href="#core" class="nav-item">
-                <strong>Core</strong><br>
-                1 tools
-            </a>
-            <a href="#cluster" class="nav-item">
-                <strong>Cluster</strong><br>
-                1 tools
-            </a>
+            <a href="#advanced" class="nav-item"><strong>Advanced</strong><small>2 tools</small></a>
+            <a href="#alias" class="nav-item"><strong>Alias</strong><small>4 tools</small></a>
+            <a href="#analytics" class="nav-item"><strong>Analytics</strong><small>3 tools</small></a>
+            <a href="#autoscaling" class="nav-item"><strong>Autoscaling</strong><small>4 tools</small></a>
+            <a href="#bulk" class="nav-item"><strong>Bulk</strong><small>3 tools</small></a>
+            <a href="#cluster" class="nav-item"><strong>Cluster</strong><small>4 tools</small></a>
+            <a href="#core" class="nav-item"><strong>Core</strong><small>5 tools</small></a>
+            <a href="#diagnostics" class="nav-item"><strong>Diagnostics</strong><small>1 tool</small></a>
+            <a href="#document" class="nav-item"><strong>Document</strong><small>5 tools</small></a>
+            <a href="#enrich" class="nav-item"><strong>Enrich</strong><small>5 tools</small></a>
+            <a href="#ilm" class="nav-item"><strong>ILM</strong><small>11 tools</small></a>
+            <a href="#index-management" class="nav-item"><strong>Index Management</strong><small>11 tools</small></a>
+            <a href="#indices" class="nav-item"><strong>Indices</strong><small>10 tools</small></a>
+            <a href="#mapping" class="nav-item"><strong>Mapping</strong><small>2 tools</small></a>
+            <a href="#search" class="nav-item"><strong>Search</strong><small>6 tools</small></a>
+            <a href="#tasks" class="nav-item"><strong>Tasks</strong><small>4 tools</small></a>
+            <a href="#template" class="nav-item"><strong>Template</strong><small>5 tools</small></a>
+            <a href="#watcher" class="nav-item"><strong>Watcher</strong><small>13 tools</small></a>
         </div>
     </div>
-    <div class="category" id="search">
+
+    <!-- Advanced -->
+    <div class="category" id="advanced">
         <div class="category-header">
-            <h2>Search</h2>
+            <h2>Advanced</h2>
+            <p>Advanced Elasticsearch features including SQL translation and delete-by-query</p>
         </div>
         <div class="category-content">
-            <p>Advanced search capabilities including SQL queries, scrolling, and multi-search</p>
             <div class="tool">
                 <div class="tool-header">
-                    <span class="tool-name">search</span>
-                    <div class="tool-tags"><span class="tag">search</span><span class="tag">read</span>
-                    </div>
+                    <span class="tool-name">elasticsearch_delete_by_query</span>
+                    <div class="tool-tags"><span class="tag destructive">destructive</span></div>
                 </div>
-                <div class="tool-description">Search documents across Elasticsearch indices with advanced query capabilities</div>
-                <div class="schema-container">
-                    <div class="schema-title">Input Schema</div>
-                    <pre><code>{
-  "type": "object",
-  "properties": {
-    "index": {
-      "type": "string",
-      "description": "Index name or pattern"
-    },
-    "query": {
-      "type": "object",
-      "description": "Elasticsearch query DSL"
-    },
-    "size": {
-      "type": "number",
-      "description": "Number of results to return",
-      "default": 10
-    },
-    "from": {
-      "type": "number",
-      "description": "Offset for pagination",
-      "default": 0
-    }
-  }
-}</code></pre>
-                </div><div class="examples">
-                <div class="example">
-                    <div class="example-title">Basic Search</div>
-                    <p>Simple text search across all indices</p>
-                    <div class="schema-container">
-                        <div class="schema-title">Input</div>
-                        <pre><code>{
-  "query": {
-    "match_all": {}
-  },
-  "size": 10
-}</code></pre>
-                    </div>
-                    <div class="schema-container">
-                        <div class="schema-title">Expected Output</div>
-                        <pre><code>{
-  "hits": {
-    "total": {
-      "value": 100
-    },
-    "hits": [
-      {
-        "_index": "logs",
-        "_id": "1",
-        "_source": {
-          "message": "example log"
-        }
-      }
-    ]
-  }
-}</code></pre>
-                    </div></div>
-                <div class="example">
-                    <div class="example-title">Filtered Search</div>
-                    <p>Search with filters and specific index</p>
-                    <div class="schema-container">
-                        <div class="schema-title">Input</div>
-                        <pre><code>{
-  "index": "logs-2024",
-  "query": {
-    "bool": {
-      "must": [
-        {
-          "match": {
-            "level": "error"
-          }
-        }
-      ],
-      "filter": [
-        {
-          "range": {
-            "timestamp": {
-              "gte": "2024-01-01"
-            }
-          }
-        }
-      ]
-    }
-  }
-}</code></pre>
-                    </div></div></div></div>
+                <div class="tool-description">Delete documents matching a query. Supports throttling, conflict handling, and async execution with task tracking.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_translate_sql_query</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Translate SQL queries to Elasticsearch Query DSL.</div>
+            </div>
         </div>
     </div>
-    <div class="category" id="core">
+
+    <!-- Alias -->
+    <div class="category" id="alias">
         <div class="category-header">
-            <h2>Core</h2>
+            <h2>Alias</h2>
+            <p>Index alias management for zero-downtime deployments and index abstraction</p>
         </div>
         <div class="category-content">
-            <p>Essential Elasticsearch operations including search, mappings, and indices management</p>
             <div class="tool">
                 <div class="tool-header">
-                    <span class="tool-name">list_indices</span>
-                    <div class="tool-tags"><span class="tag">core</span><span class="tag">read</span>
-                    </div>
+                    <span class="tool-name">elasticsearch_delete_alias</span>
+                    <div class="tool-tags"><span class="tag destructive">destructive</span></div>
                 </div>
-                <div class="tool-description">List all available Elasticsearch indices with health and document count information</div>
-                <div class="schema-container">
-                    <div class="schema-title">Input Schema</div>
-                    <pre><code>{
-  "type": "object",
-  "properties": {
-    "format": {
-      "type": "string",
-      "description": "Output format",
-      "enum": [
-        "json",
-        "table"
-      ]
-    },
-    "health": {
-      "type": "string",
-      "description": "Filter by health status",
-      "enum": [
-        "green",
-        "yellow",
-        "red"
-      ]
-    }
-  }
-}</code></pre>
-                </div><div class="examples">
-                <div class="example">
-                    <div class="example-title">List All Indices</div>
-                    <p>Get all indices with basic information</p>
-                    <div class="schema-container">
-                        <div class="schema-title">Input</div>
-                        <pre><code>{}</code></pre>
-                    </div>
-                    <div class="schema-container">
-                        <div class="schema-title">Expected Output</div>
-                        <pre><code>[
-  {
-    "index": "logs-2024.01",
-    "health": "green",
-    "docs": 1000
-  },
-  {
-    "index": "metrics-2024.01",
-    "health": "green",
-    "docs": 5000
-  }
-]</code></pre>
-                    </div></div></div></div>
+                <div class="tool-description">Delete an alias from an index.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_get_aliases</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get index aliases with pagination and filtering. Supports summary mode and sorting.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_put_alias</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Add an alias to an index.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_update_aliases</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Atomically add, remove, or modify multiple index aliases.</div>
+            </div>
         </div>
     </div>
+
+    <!-- Analytics -->
+    <div class="category" id="analytics">
+        <div class="category-header">
+            <h2>Analytics</h2>
+            <p>Analytics, term vectors, and timestamp analysis</p>
+        </div>
+        <div class="category-content">
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_analyze_timestamps</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Analyze timestamp distribution to identify data quality issues.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_get_multi_term_vectors</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get term vectors for multiple documents.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_get_term_vectors</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get term vectors for a single document.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Autoscaling -->
+    <div class="category" id="autoscaling">
+        <div class="category-header">
+            <h2>Autoscaling</h2>
+            <p>Autoscaling policy management for Elasticsearch Service, ECE, and ECK</p>
+        </div>
+        <div class="category-content">
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_autoscaling_delete_policy</span>
+                    <div class="tool-tags"><span class="tag destructive">destructive</span></div>
+                </div>
+                <div class="tool-description">Delete an autoscaling policy.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_autoscaling_get_capacity</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get current autoscaling capacity and recommendations.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_autoscaling_get_policy</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get an autoscaling policy.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_autoscaling_put_policy</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Create or update an autoscaling policy.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk -->
+    <div class="category" id="bulk">
+        <div class="category-header">
+            <h2>Bulk</h2>
+            <p>Bulk operations for efficient large-scale data management</p>
+        </div>
+        <div class="category-content">
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_bulk_index_with_progress</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Bulk index documents with real-time progress notifications. Max 1000 per call.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_bulk_operations</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Execute bulk operations (index, create, update, delete) in a single call.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_multi_get</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Retrieve multiple documents by ID in a single request.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cluster -->
     <div class="category" id="cluster">
         <div class="category-header">
             <h2>Cluster</h2>
+            <p>Cluster monitoring and health management</p>
         </div>
         <div class="category-content">
-            <p>Cluster monitoring and health management tools</p>
             <div class="tool">
                 <div class="tool-header">
-                    <span class="tool-name">cluster_health</span>
-                    <div class="tool-tags"><span class="tag">cluster</span><span class="tag">admin</span>
-                    </div>
+                    <span class="tool-name">elasticsearch_get_cluster_health</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
                 </div>
-                <div class="tool-description">Get comprehensive cluster health information including node and shard status</div>
-                <div class="schema-container">
-                    <div class="schema-title">Input Schema</div>
-                    <pre><code>{
-  "type": "object",
-  "properties": {
-    "level": {
-      "type": "string",
-      "description": "Detail level",
-      "enum": [
-        "cluster",
-        "indices",
-        "shards"
-      ]
-    },
-    "wait_for_status": {
-      "type": "string",
-      "description": "Wait for status",
-      "enum": [
-        "green",
-        "yellow",
-        "red"
-      ]
-    }
-  }
-}</code></pre>
-                </div><div class="examples">
-                <div class="example">
-                    <div class="example-title">Check Cluster Health</div>
-                    <p>Get overall cluster health status</p>
-                    <div class="schema-container">
-                        <div class="schema-title">Input</div>
-                        <pre><code>{}</code></pre>
-                    </div>
-                    <div class="schema-container">
-                        <div class="schema-title">Expected Output</div>
-                        <pre><code>{
-  "status": "green",
-  "number_of_nodes": 3,
-  "active_primary_shards": 10,
-  "active_shards": 20
-}</code></pre>
-                    </div></div></div></div>
+                <div class="tool-description">Get cluster health including node count, shard status, and index-level health.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_get_cluster_stats</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get cluster-wide statistics including memory, CPU, storage, and index metrics.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_get_nodes_info</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get detailed node information including OS, JVM, plugins, and roles.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_get_nodes_stats</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get node-level statistics including JVM heap, CPU, disk, and search metrics.</div>
+            </div>
         </div>
     </div>
+
+    <!-- Core -->
+    <div class="category" id="core">
+        <div class="category-header">
+            <h2>Core</h2>
+            <p>Essential Elasticsearch operations for daily use</p>
+        </div>
+        <div class="category-content">
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_search</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Search documents with full Query DSL, aggregations, highlighting, sorting, and pagination.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_list_indices</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">List all indices with health, document count, and storage information.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_get_mappings</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get index mappings showing field types and configurations.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_get_shards</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get shard allocation information across cluster nodes.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_indices_summary</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get a high-level summary of all indices with health, docs, and storage.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Diagnostics -->
+    <div class="category" id="diagnostics">
+        <div class="category-header">
+            <h2>Diagnostics</h2>
+            <p>System diagnostics and health monitoring</p>
+        </div>
+        <div class="category-content">
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_diagnostics</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Run comprehensive diagnostics including cluster health, node status, and index statistics.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document -->
+    <div class="category" id="document">
+        <div class="category-header">
+            <h2>Document</h2>
+            <p>Document CRUD operations</p>
+        </div>
+        <div class="category-content">
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_get_document</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Retrieve a document by ID with optional source filtering.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_document_exists</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Check if a document exists by ID without retrieving it.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_index_document</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Index (create or update) a document in an index.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_update_document</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Partially update a document using doc or script.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_delete_document</span>
+                    <div class="tool-tags"><span class="tag destructive">destructive</span></div>
+                </div>
+                <div class="tool-description">Delete a document by ID from an index.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enrich -->
+    <div class="category" id="enrich">
+        <div class="category-header">
+            <h2>Enrich</h2>
+            <p>Enrich processor management for data enrichment pipelines</p>
+        </div>
+        <div class="category-content">
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_enrich_get_policy</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get enrich policy details with status and configuration.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_enrich_stats</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get enrich coordinator and executing policy statistics.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_enrich_put_policy</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Create or update an enrich policy.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_enrich_execute_policy</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Execute an enrich policy to create the enrich index.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_enrich_delete_policy</span>
+                    <div class="tool-tags"><span class="tag destructive">destructive</span></div>
+                </div>
+                <div class="tool-description">Delete an enrich policy.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ILM -->
+    <div class="category" id="ilm">
+        <div class="category-header">
+            <h2>ILM (Index Lifecycle Management)</h2>
+            <p>Automated index lifecycle operations across hot, warm, cold, frozen, and delete phases</p>
+        </div>
+        <div class="category-content">
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_ilm_get_lifecycle</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get ILM policy definitions with phase configurations.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_ilm_explain_lifecycle</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get detailed ILM status for indices including current phase and step.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_ilm_get_status</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get ILM operation status (RUNNING, STOPPING, STOPPED).</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_ilm_put_lifecycle</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Create or update an ILM policy with phase definitions.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_ilm_move_to_step</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Manually move an index to a specific ILM step.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_ilm_migrate_to_data_tiers</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Migrate ILM policies to use data tiers.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_ilm_remove_policy</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Remove an ILM policy from an index.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_ilm_retry</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Retry a failed ILM step for an index.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_ilm_start</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Start the ILM plugin.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_ilm_stop</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Stop the ILM plugin.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_ilm_delete_lifecycle</span>
+                    <div class="tool-tags"><span class="tag destructive">destructive</span></div>
+                </div>
+                <div class="tool-description">Delete an ILM policy. Must not be in use.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Index Management -->
+    <div class="category" id="index-management">
+        <div class="category-header">
+            <h2>Index Management</h2>
+            <p>Index creation, configuration, and maintenance</p>
+        </div>
+        <div class="category-content">
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_get_index</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get comprehensive index information including settings, mappings, and aliases.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_get_index_settings</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get index settings with optional filtering.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_index_exists</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Check if an index exists.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_create_index</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Create an index with custom settings and mappings.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_put_mapping</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Update field mappings for an existing index.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_update_index_settings</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Update dynamic index settings.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_refresh_index</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Refresh an index to make documents searchable.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_flush_index</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Flush an index to write data to disk.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_reindex_documents</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Reindex documents between indices.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_reindex_with_notifications</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Reindex with progress notifications and status updates.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_delete_index</span>
+                    <div class="tool-tags"><span class="tag destructive">destructive</span></div>
+                </div>
+                <div class="tool-description">Delete an entire index and all its documents.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indices -->
+    <div class="category" id="indices">
+        <div class="category-header">
+            <h2>Indices</h2>
+            <p>Index-specific information and lifecycle operations</p>
+        </div>
+        <div class="category-content">
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_disk_usage</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Analyze disk usage including field-level storage breakdown.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_exists_alias</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Check if an index alias exists.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_exists_index_template</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Check if a composable index template exists.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_exists_template</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Check if a legacy index template exists.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_explain_data_lifecycle</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Explain data lifecycle status for data stream indices.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_field_usage_stats</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get field usage statistics showing actively queried fields.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_get_data_lifecycle_stats</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get data lifecycle statistics for data streams.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_get_index_info</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get detailed index info including mappings, settings, aliases, and statistics.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_get_index_settings_advanced</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get advanced index settings with detailed breakdowns.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_rollover</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Roll over a data stream or alias based on age, size, or doc count conditions.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mapping -->
+    <div class="category" id="mapping">
+        <div class="category-header">
+            <h2>Mapping</h2>
+            <p>Field mapping inspection and SQL cursor management</p>
+        </div>
+        <div class="category-content">
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_get_field_mapping</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get mapping information for specific fields across indices.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_clear_sql_cursor</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Close an open SQL cursor to release resources.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="category" id="search">
+        <div class="category-header">
+            <h2>Search</h2>
+            <p>Advanced search including SQL, scrolling, and multi-search</p>
+        </div>
+        <div class="category-content">
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_count_documents</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Count documents matching a query without returning data.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_execute_sql_query</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Execute SQL queries against Elasticsearch.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_multi_search</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Execute multiple search requests in a single API call.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_scroll_search</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Paginated search using scroll API for large result sets.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_clear_scroll</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Clear a scroll context to release resources.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_update_by_query</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Update documents matching a query using a script.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tasks -->
+    <div class="category" id="tasks">
+        <div class="category-header">
+            <h2>Tasks</h2>
+            <p>Task monitoring and control for long-running operations</p>
+        </div>
+        <div class="category-content">
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_list_tasks</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">List all running tasks across the cluster.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_get_task</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get information about a specific task by ID.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_tasks_get_task</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get detailed task information including progress and parent relationships.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_cancel_task</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Cancel a running task.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template -->
+    <div class="category" id="template">
+        <div class="category-header">
+            <h2>Template</h2>
+            <p>Index template management for automated index configuration</p>
+        </div>
+        <div class="category-content">
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_get_index_template</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get composable index template definitions.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_search_template</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Execute a search using a stored or inline template.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_multi_search_template</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Execute multiple search template requests in one call.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_put_index_template</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Create or update a composable index template.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_delete_index_template</span>
+                    <div class="tool-tags"><span class="tag destructive">destructive</span></div>
+                </div>
+                <div class="tool-description">Delete a composable index template.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Watcher -->
+    <div class="category" id="watcher">
+        <div class="category-header">
+            <h2>Watcher</h2>
+            <p>Alerting and watch management for automated monitoring and notifications</p>
+        </div>
+        <div class="category-content">
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_watcher_get_watch</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get a watch definition by ID.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_watcher_query_watches</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Query watches with filtering and pagination.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_watcher_stats</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get watcher service statistics.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_watcher_get_settings</span>
+                    <div class="tool-tags"><span class="tag read">read</span></div>
+                </div>
+                <div class="tool-description">Get watcher service settings.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_watcher_put_watch</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Create or update a watch with trigger, input, condition, and actions.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_watcher_execute_watch</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Manually execute a watch to test conditions and actions.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_watcher_ack_watch</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Acknowledge a watch to prevent repeated notifications.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_watcher_activate_watch</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Activate a previously deactivated watch.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_watcher_deactivate_watch</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Deactivate a watch temporarily.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_watcher_update_settings</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Update watcher service settings.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_watcher_start</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Start the watcher service.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_watcher_stop</span>
+                    <div class="tool-tags"><span class="tag write">write</span></div>
+                </div>
+                <div class="tool-description">Stop the watcher service.</div>
+            </div>
+            <div class="tool">
+                <div class="tool-header">
+                    <span class="tool-name">elasticsearch_watcher_delete_watch</span>
+                    <div class="tool-tags"><span class="tag destructive">destructive</span></div>
+                </div>
+                <div class="tool-description">Delete a watch definition.</div>
+            </div>
+        </div>
+    </div>
+
     <div class="footer">
-        <p>Generated automatically from Zod schemas • 2025-09-08T02:52:48.040Z</p>
+        <p>Elasticsearch MCP Server v0.1.1 &mdash; 99 tools across 18 categories</p>
+        <p>Built with TypeScript on Bun runtime &bull; Zod v4 validation &bull; LangSmith tracing</p>
     </div>
 </body>
 </html>

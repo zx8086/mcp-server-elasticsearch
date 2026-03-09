@@ -23,10 +23,13 @@ const flushIndexValidator = z.object({
   waitIfOngoing: coerceBoolean.optional(),
 });
 
-type FlushIndexParams = z.infer<typeof flushIndexValidator>;
+type _FlushIndexParams = z.infer<typeof flushIndexValidator>;
 
 // MCP error handling
-function createFlushIndexMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createFlushIndexMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution" | "index_not_found"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -76,9 +79,9 @@ export const registerFlushIndexTool: ToolRegistrationFunction = (server: McpServ
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createFlushIndexMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createFlushIndexMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -104,27 +107,24 @@ export const registerFlushIndexTool: ToolRegistrationFunction = (server: McpServ
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_flush_index",
 
     {
-
       title: "Flush Index",
 
-      description: "Flush an Elasticsearch index to ensure all data is written to disk. Best for data persistence, index optimization, ensuring durability. Use when you need to force Elasticsearch to write buffered data to storage for consistency. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Flush an Elasticsearch index to ensure all data is written to disk. Best for data persistence, index optimization, ensuring durability. Use when you need to force Elasticsearch to write buffered data to storage for consistency. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      index: z.string(), // Name of the index to flush
-      ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
-      allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
-      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
-      force: z.boolean().optional(), // Force the flush operation even if not required
-      waitIfOngoing: z.boolean().optional(), // Wait if another flush operation is ongoing
-    },
-
+        index: z.string(), // Name of the index to flush
+        ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+        allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+        expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
+        force: z.boolean().optional(), // Force the flush operation even if not required
+        waitIfOngoing: z.boolean().optional(), // Wait if another flush operation is ongoing
+      },
     },
 
     withReadOnlyCheck("elasticsearch_flush_index", flushIndexHandler, OperationType.WRITE),
-
-  );;
+  );
 };

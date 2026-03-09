@@ -55,7 +55,7 @@ const putLifecycleValidator = z.object({
   timeout: z.string().optional(),
 });
 
-type PutLifecycleParams = z.infer<typeof putLifecycleValidator>;
+type _PutLifecycleParams = z.infer<typeof putLifecycleValidator>;
 
 // =============================================================================
 // 2. STANDARDIZED MCP ERROR HANDLING
@@ -102,17 +102,17 @@ export const registerPutLifecycleTool: ToolRegistrationFunction = (server: McpSe
       // Extract the correct policy body format for Elasticsearch API
       // The Elasticsearch client expects the body to contain the ENTIRE policy structure
       let policyBody: any;
-      
+
       // Check if body already has 'policy' wrapper (wrapped format) - use as-is
-      if ('policy' in params.body && params.body.policy) {
+      if ("policy" in params.body && params.body.policy) {
         // Body format: { policy: { phases: {...} } }
         policyBody = params.body;
-      } 
+      }
       // Check if body has 'phases' directly (direct format) - wrap it
-      else if ('phases' in params.body) {
+      else if ("phases" in params.body) {
         // Body format: { phases: {...} } -> wrap as { policy: { phases: {...} } }
         policyBody = { policy: params.body };
-      } 
+      }
       // Otherwise assume it's already properly formatted
       else {
         policyBody = params.body;
@@ -121,8 +121,8 @@ export const registerPutLifecycleTool: ToolRegistrationFunction = (server: McpSe
       logger.debug("Elasticsearch ILM API call", {
         policy: params.policy,
         bodyStructure: Object.keys(policyBody),
-        hasPolicyWrapper: 'policy' in policyBody,
-        hasPhases: policyBody.policy ? 'phases' in policyBody.policy : 'phases' in policyBody
+        hasPolicyWrapper: "policy" in policyBody,
+        hasPhases: policyBody.policy ? "phases" in policyBody.policy : "phases" in policyBody,
       });
 
       const result = await esClient.ilm.putLifecycle({
@@ -170,9 +170,9 @@ Operation completed at: ${new Date().toISOString()}`,
     } catch (error) {
       // Standardized MCP error handling
       if (error instanceof z.ZodError) {
-        throw createIlmPutLifecycleMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createIlmPutLifecycleMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -230,62 +230,59 @@ Operation completed at: ${new Date().toISOString()}`,
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_ilm_put_lifecycle",
 
     {
-
       title: "Ilm Put Lifecycle",
 
-      description: "Create or update ILM policy. Define Index Lifecycle Management policy with automated transitions through hot, warm, cold, and delete phases. FIXED: Uses flexible Zod Schema supporting both wrapped ({policy: {phases: {...}}}) and direct ({phases: {...}}) formats for proper MCP parameter handling.",
+      description:
+        "Create or update ILM policy. Define Index Lifecycle Management policy with automated transitions through hot, warm, cold, and delete phases. FIXED: Uses flexible Zod Schema supporting both wrapped ({policy: {phases: {...}}}) and direct ({phases: {...}}) formats for proper MCP parameter handling.",
 
       inputSchema: {
-      policy: z.string().min(1),
-      body: z.union([
-        // Format 1: {policy: {phases: {...}}} - wrapped format
-        z
-          .object({
-            policy: z
-              .object({
-                phases: z
-                  .record(
-                    z.string(),
-                    z
-                      .object({
-                        actions: z.record(z.string(), z.unknown()).optional(),
-                        min_age: z.string().optional(),
-                      })
-                      .passthrough(),
-                  )
-                  .optional(),
-              })
-              .passthrough(),
-          })
-          .passthrough(),
-        // Format 2: {phases: {...}} - direct format
-        z
-          .object({
-            phases: z
-              .record(
-                z.string(),
-                z
-                  .object({
-                    actions: z.record(z.string(), z.unknown()).optional(),
-                    min_age: z.string().optional(),
-                  })
-                  .passthrough(),
-              )
-              .optional(),
-          })
-          .passthrough(),
-      ]),
-      masterTimeout: z.string().optional(),
-      timeout: z.string().optional(),
-    },
-
+        policy: z.string().min(1),
+        body: z.union([
+          // Format 1: {policy: {phases: {...}}} - wrapped format
+          z
+            .object({
+              policy: z
+                .object({
+                  phases: z
+                    .record(
+                      z.string(),
+                      z
+                        .object({
+                          actions: z.record(z.string(), z.unknown()).optional(),
+                          min_age: z.string().optional(),
+                        })
+                        .passthrough(),
+                    )
+                    .optional(),
+                })
+                .passthrough(),
+            })
+            .passthrough(),
+          // Format 2: {phases: {...}} - direct format
+          z
+            .object({
+              phases: z
+                .record(
+                  z.string(),
+                  z
+                    .object({
+                      actions: z.record(z.string(), z.unknown()).optional(),
+                      min_age: z.string().optional(),
+                    })
+                    .passthrough(),
+                )
+                .optional(),
+            })
+            .passthrough(),
+        ]),
+        masterTimeout: z.string().optional(),
+        timeout: z.string().optional(),
+      },
     },
 
     withReadOnlyCheck("elasticsearch_ilm_put_lifecycle", secureHandler, OperationType.WRITE),
-
-  );;
+  );
 };

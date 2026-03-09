@@ -225,7 +225,7 @@ export function withReadOnlyCheck<T extends any[], R>(
     const result = await toolFunction(...args);
 
     if (check.warning) {
-      return readOnlyManager.createWarningResponse(toolName, result) as R;
+      return readOnlyManager.createWarningResponse(toolName, result as any) as R;
     }
 
     return result;

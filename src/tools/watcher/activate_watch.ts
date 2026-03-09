@@ -17,10 +17,13 @@ const activateWatchValidator = z.object({
   watch_id: z.string().min(1, "Watch ID cannot be empty"),
 });
 
-type ActivateWatchParams = z.infer<typeof activateWatchValidator>;
+type _ActivateWatchParams = z.infer<typeof activateWatchValidator>;
 
 // MCP error handling
-function createActivateWatchMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createActivateWatchMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution" | "watch_not_found"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -65,9 +68,9 @@ export const registerWatcherActivateWatchTool: ToolRegistrationFunction = (serve
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createActivateWatchMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createActivateWatchMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -93,22 +96,19 @@ export const registerWatcherActivateWatchTool: ToolRegistrationFunction = (serve
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_watcher_activate_watch",
 
     {
-
       title: "Watcher Activate Watch",
 
-      description: "Activate a watch in Elasticsearch Watcher. Best for monitoring automation, alerting management, watch lifecycle control. Use when you need to enable watch execution for Elasticsearch alerting and monitoring workflows. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Activate a watch in Elasticsearch Watcher. Best for monitoring automation, alerting management, watch lifecycle control. Use when you need to enable watch execution for Elasticsearch alerting and monitoring workflows. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      watch_id: z.string(), // Watch ID to activate
-    },
-
+        watch_id: z.string(), // Watch ID to activate
+      },
     },
 
     withReadOnlyCheck("elasticsearch_watcher_activate_watch", activateWatchHandler, OperationType.WRITE),
-
-  );;
+  );
 };

@@ -71,29 +71,29 @@ export const registerRetryTool: ToolRegistrationFunction = (server: McpServer, e
         const explainResult = await esClient.ilm.explainLifecycle({
           index: params.index,
         });
-        
+
         // Check if any indices have failed steps
-        const hasFailedSteps = Object.values(explainResult.indices || {}).some((indexInfo: any) => 
-          indexInfo.step_info?.failed_step || 
-          indexInfo.phase_execution?.failed_step ||
-          (indexInfo.step_info && indexInfo.step_info.error)
+        const hasFailedSteps = Object.values(explainResult.indices || {}).some(
+          (indexInfo: any) =>
+            indexInfo.step_info?.failed_step || indexInfo.phase_execution?.failed_step || indexInfo.step_info?.error,
         );
 
         if (!hasFailedSteps) {
           const indexNames = Object.keys(explainResult.indices || {});
-          throw new Error(`No ILM errors found for indices matching pattern '${params.index}'. Found ${indexNames.length} indices: ${indexNames.slice(0, 5).join(', ')}${indexNames.length > 5 ? '...' : ''}. None are in ERROR state requiring retry.`);
+          throw new Error(
+            `No ILM errors found for indices matching pattern '${params.index}'. Found ${indexNames.length} indices: ${indexNames.slice(0, 5).join(", ")}${indexNames.length > 5 ? "..." : ""}. None are in ERROR state requiring retry.`,
+          );
         }
 
         logger.info("Found ILM errors to retry", {
           index: params.index,
           indicesWithErrors: Object.keys(explainResult.indices || {}).filter((name: string) => {
             const indexInfo = explainResult.indices[name] as any;
-            return indexInfo.step_info?.failed_step || 
-                   indexInfo.phase_execution?.failed_step ||
-                   (indexInfo.step_info && indexInfo.step_info.error);
+            return (
+              indexInfo.step_info?.failed_step || indexInfo.phase_execution?.failed_step || indexInfo.step_info?.error
+            );
           }),
         });
-
       } catch (explainError) {
         logger.warn("Could not pre-check ILM status", {
           error: explainError instanceof Error ? explainError.message : String(explainError),
@@ -149,9 +149,9 @@ Operation completed at: ${new Date().toISOString()}`,
     } catch (error) {
       // Standardized MCP error handling
       if (error instanceof z.ZodError) {
-        throw createIlmRetryMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createIlmRetryMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -171,12 +171,13 @@ Operation completed at: ${new Date().toISOString()}`,
         }
 
         // Handle the specific "cannot retry an action" error
-        if (error.message.includes("illegal_argument_exception") && 
-            error.message.includes("cannot retry an action for an index")) {
-          
+        if (
+          error.message.includes("illegal_argument_exception") &&
+          error.message.includes("cannot retry an action for an index")
+        ) {
           const indexName = params?.index || args?.index || "unknown";
           let enhancedMessage = `Cannot retry ILM for index '${indexName}': ${error.message}`;
-          
+
           if (error.message.includes("has not encountered an error")) {
             enhancedMessage += "\n\nThis means the index is not currently in an ERROR state in its ILM lifecycle.";
             enhancedMessage += "\n\nPossible reasons:";
@@ -184,24 +185,29 @@ Operation completed at: ${new Date().toISOString()}`,
             enhancedMessage += "\n• Previous errors have already been resolved";
             enhancedMessage += "\n• The index doesn't have an ILM policy assigned";
             enhancedMessage += "\n• The specified index pattern doesn't match any indices with ILM errors";
-            enhancedMessage += "\n\n💡 Suggestion: Use 'elasticsearch_ilm_explain_lifecycle' to check the current ILM status.";
+            enhancedMessage +=
+              "\n\n💡 Suggestion: Use 'elasticsearch_ilm_explain_lifecycle' to check the current ILM status.";
           }
 
           throw createIlmRetryMcpError(enhancedMessage, {
             type: "no_failed_step",
-            details: { 
+            details: {
               index: indexName,
               originalError: error.message,
-              suggestion: "Use elasticsearch_ilm_explain_lifecycle to verify ILM status and identify indices in ERROR state" 
+              suggestion:
+                "Use elasticsearch_ilm_explain_lifecycle to verify ILM status and identify indices in ERROR state",
             },
           });
         }
 
         if (error.message.includes("no_failed_step") || error.message.includes("not in error state")) {
-          throw createIlmRetryMcpError(`No failed ILM steps to retry for: ${params?.index || args?.index || "unknown"}`, {
-            type: "no_failed_step",
-            details: { suggestion: "Use explain_lifecycle to check if indices are in ERROR state" },
-          });
+          throw createIlmRetryMcpError(
+            `No failed ILM steps to retry for: ${params?.index || args?.index || "unknown"}`,
+            {
+              type: "no_failed_step",
+              details: { suggestion: "Use explain_lifecycle to check if indices are in ERROR state" },
+            },
+          );
         }
       }
 
@@ -219,23 +225,20 @@ Operation completed at: ${new Date().toISOString()}`,
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_ilm_retry",
 
     {
-
       title: "Ilm Retry",
 
-      description: "Retry ILM policy execution. Retry Index Lifecycle Management policy execution for indices in ERROR state. Uses direct JSON Schema and standardized MCP error codes. Examples: {index: logs-*}, {index: failed-index-000001}",
+      description:
+        "Retry ILM policy execution. Retry Index Lifecycle Management policy execution for indices in ERROR state. Uses direct JSON Schema and standardized MCP error codes. Examples: {index: logs-*}, {index: failed-index-000001}",
 
       inputSchema: {
-      index: z.string(), // Index name or pattern to retry ILM policy execution for (cannot be empty)
-    },
-
+        index: z.string(), // Index name or pattern to retry ILM policy execution for (cannot be empty)
+      },
     },
 
     // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_retry", retryHandler, OperationType.WRITE),
-
-  );;
+  );
 };

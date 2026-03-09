@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an Elasticsearch MCP (Model Context Protocol) Server that enables AI assistants to interact with Elasticsearch clusters. It's built with TypeScript on the Bun runtime and provides 162+ tools for comprehensive Elasticsearch operations.
+This is an Elasticsearch MCP (Model Context Protocol) Server that enables AI assistants to interact with Elasticsearch clusters. It's built with TypeScript on the Bun runtime and provides 170+ tools for comprehensive Elasticsearch operations.
 
 ## Essential Commands
 
@@ -59,38 +59,6 @@ echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "el
 ```bash
 bun run connectivity-test      # Test connectivity
 ```
-
-### Monitoring System (Optional)
-The server includes comprehensive Prometheus metrics collection:
-- **Auto-detected**: No dependencies required - gracefully degrades if `prom-client` not installed
-- **Fully integrated**: Monitoring is initialized during server startup (src/server.ts)
-- **Configurable port**: Default port 9090, configurable via `MONITORING_PORT` environment variable
-- **Endpoints**: `/metrics` (Prometheus) and `/health` (health check)
-- **Metrics**: 50+ metrics covering performance, errors, and system health
-
-```bash
-# Install optional dependency to enable monitoring
-bun add prom-client
-
-# Server automatically detects and enables monitoring
-# Optional port configuration:
-# export MONITORING_PORT=9090  # Default port
-# Metrics available at:
-# http://localhost:9090/metrics (Prometheus scraping)
-# http://localhost:9090/health  (Health check)
-
-# Check if monitoring is active
-curl http://localhost:9090/health
-
-# Or use the built-in scripts
-bun run monitor:health         # Check monitoring health status
-bun run monitor:metrics        # View Prometheus metrics
-bun run monitor:status         # Check monitoring status
-bun run health-check           # Comprehensive health check
-bun run audit-report           # Generate audit report
-```
-
-**Note**: Monitoring is completely optional and does not affect core functionality. The system gracefully operates without monitoring dependencies.
 
 ## Architecture & Key Patterns
 
@@ -286,22 +254,11 @@ server.tool = (name: string, description: string, inputSchema: any, handler: any
 
 This pattern ensures every tool execution is automatically traced with proper input/output capture in LangSmith.
 
-### Production Readiness Features
-The server includes enterprise-grade infrastructure components:
-
-- **Circuit Breakers**: Automatic fault tolerance for Elasticsearch operations with configurable thresholds
-- **Connection Pooling**: Health monitoring with automatic failover and load balancing strategies  
-- **Multi-tier Caching**: Intelligent caching with pattern recognition (query, mapping, settings, cluster caches)
-- **Rate Limiting**: Configurable limits for tools and connections with burst handling
-- **Health Monitoring**: Comprehensive health checks every 30 seconds with detailed reporting
-- **Connection Warming**: Pre-warming and keep-alive mechanisms for optimal performance
-- **Optional Monitoring**: Prometheus metrics (50+ metrics, auto-detected, no configuration required)
+### Key Features
 - **Read-only Mode**: Production safety with strict/warning modes for monitoring scenarios
-- **Resource Management**: Memory thresholds, request limits, and automatic resource monitoring
-- **Enhanced Error Handling**: Structured MCP-compliant errors with detailed logging and redaction
-- **Universal Tool Tracing**: Automatic LangSmith tracing for all tools with dynamic naming and performance tracking
-
-All infrastructure components are automatically initialized and require no manual configuration.
+- **Security Validation**: Input validation prevents SQL injection, XSS, command injection
+- **Universal Tool Tracing**: Automatic LangSmith tracing for all tools with dynamic naming
+- **Error Handling**: Structured MCP-compliant errors with detailed logging and redaction
 
 ## Development Workflow
 
@@ -412,9 +369,7 @@ bun run test:infrastructure    # Infrastructure tests
 bun run test:config            # Configuration tests
 bun run test:tools             # Tool integration tests
 bun run test:e2e               # End-to-end workflows
-bun run test:monitoring        # Monitoring & metrics tests
 bun run test:performance       # Performance benchmarks
-bun run test:security          # Security & audit tests
 ```
 
 #### Special Test Modes
@@ -461,7 +416,7 @@ bun run test:dev               # Manual development tests
 - Client initialization in `src/server.ts`
 - Supports API key and username/password auth
 - SSL/TLS configuration with custom CA support
-- Connection pooling and retry logic
+- Built-in retry logic via `@elastic/elasticsearch` client
 
 ### MCP Protocol Implementation
 - Uses `@modelcontextprotocol/sdk`
@@ -510,25 +465,17 @@ server.registerTool(
 - **Gradual Migration**: Can migrate tools over time without pressure
 
 **Current Status**: 
-- **174 total tools** supported with dual wrapper system
-- **169 tools** using `server.tool()` method
-- **5 tools** using `server.registerTool()` method  
+- **170+ total tools** supported with dual wrapper system
+- All tools using `server.registerTool()` method for consistency
 - **All tools** get conversation-aware tracing and security validation
 
 ## Critical Dependencies
 
-### Zod 3.x Support with Compatibility Wrapper
-The project uses Zod 3.x with a custom compatibility wrapper for enhanced JSON Schema conversion:
-- **zod**: 3.23.8 (Zod 3 with stable ecosystem support)
-- **zod-to-json-schema**: 3.23.5 (Primary conversion library)
-- **Compatibility wrapper**: `src/utils/zodToJsonSchema.ts`
-
-The compatibility wrapper enhances zod-to-json-schema with:
-- Enhanced transform schema handling (coercion helpers from `zodHelpers.ts`)
-- Special cases like `z.record()`, `z.object({}).passthrough()`
-- Improved conversion to JSON Schema Draft 7 format
-- Better handling of required/optional fields with defaults
-- Fallback support for complex schemas that standard conversion can't handle
+### Zod
+The project uses Zod 4.x for runtime validation:
+- **zod**: 4.3.6
+- Tools use `z.object({...}).shape` for `inputSchema` in `server.registerTool()`
+- `zodHelpers.ts` provides coercion helpers used by many tools
 
 ## Common Patterns
 

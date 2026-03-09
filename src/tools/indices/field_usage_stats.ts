@@ -7,7 +7,7 @@ import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
-import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
 // FIXED: Original JSON Schema definition removed - now using Zod schema inline
@@ -24,7 +24,7 @@ const fieldUsageStatsValidator = z.object({
   fields: z.union([z.string(), z.array(z.string())]).optional(),
 });
 
-type FieldUsageStatsParams = z.infer<typeof fieldUsageStatsValidator>;
+type _FieldUsageStatsParams = z.infer<typeof fieldUsageStatsValidator>;
 
 // MCP error handling
 function createFieldUsageStatsMcpError(
@@ -74,9 +74,9 @@ export const registerFieldUsageStatsTool: ToolRegistrationFunction = (server: Mc
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createFieldUsageStatsMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createFieldUsageStatsMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -107,26 +107,23 @@ export const registerFieldUsageStatsTool: ToolRegistrationFunction = (server: Mc
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_field_usage_stats",
 
     {
-
       title: "Field Usage Stats",
 
-      description: "Get field usage statistics per shard and field in Elasticsearch. Best for query optimization, field analysis, performance tuning. Use when you need to understand which fields are accessed during queries for Elasticsearch index optimization.",
+      description:
+        "Get field usage statistics per shard and field in Elasticsearch. Best for query optimization, field analysis, performance tuning. Use when you need to understand which fields are accessed during queries for Elasticsearch index optimization.",
 
       inputSchema: {
-      index: z.any(), // Index name(s) or pattern(s) to get field usage stats for. Examples: 'logs-*', ['users', 'products']
-      allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard indices expression resolves into no concrete indices
-      expandWildcards: z.any().optional(), // Type of index that wildcard patterns can match
-      ignoreUnavailable: z.boolean().optional(), // Whether specified concrete indices should be ignored when unavailable
-      fields: z.any().optional(), // Field name(s) to get usage stats for. If not specified, stats for all fields are returned
-    },
-
+        index: z.any(), // Index name(s) or pattern(s) to get field usage stats for. Examples: 'logs-*', ['users', 'products']
+        allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard indices expression resolves into no concrete indices
+        expandWildcards: z.any().optional(), // Type of index that wildcard patterns can match
+        ignoreUnavailable: z.boolean().optional(), // Whether specified concrete indices should be ignored when unavailable
+        fields: z.any().optional(), // Field name(s) to get usage stats for. If not specified, stats for all fields are returned
+      },
     },
 
     fieldUsageStatsHandler,
-
   );
 };

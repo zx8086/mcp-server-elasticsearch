@@ -24,10 +24,13 @@ const indexExistsValidator = z.object({
   local: coerceBoolean.optional(),
 });
 
-type IndexExistsParams = z.infer<typeof indexExistsValidator>;
+type _IndexExistsParams = z.infer<typeof indexExistsValidator>;
 
 // MCP error handling
-function createIndexExistsMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createIndexExistsMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -77,9 +80,9 @@ export const registerIndexExistsTool: ToolRegistrationFunction = (server: McpSer
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createIndexExistsMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createIndexExistsMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -97,28 +100,25 @@ export const registerIndexExistsTool: ToolRegistrationFunction = (server: McpSer
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_index_exists",
 
     {
-
       title: "Index Exists",
 
-      description: "Check if an index exists in Elasticsearch. Best for index validation, conditional operations, deployment checks. Use when you need to verify index presence in Elasticsearch clusters before performing operations or creating indices. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Check if an index exists in Elasticsearch. Best for index validation, conditional operations, deployment checks. Use when you need to verify index presence in Elasticsearch clusters before performing operations or creating indices. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      index: z.string(), // Name of the index to check existence for
-      ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
-      allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
-      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
-      flatSettings: z.boolean().optional(), // Return settings in flat format
-      includeDefaults: z.boolean().optional(), // Include default settings
-      local: z.boolean().optional(), // Return local information only
-    },
-
+        index: z.string(), // Name of the index to check existence for
+        ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+        allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+        expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
+        flatSettings: z.boolean().optional(), // Return settings in flat format
+        includeDefaults: z.boolean().optional(), // Include default settings
+        local: z.boolean().optional(), // Return local information only
+      },
     },
 
     withReadOnlyCheck("elasticsearch_index_exists", indexExistsHandler, OperationType.READ),
-
-  );;
+  );
 };

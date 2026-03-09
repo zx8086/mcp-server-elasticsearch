@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Elasticsearch MCP Server API",
-    "description": "Comprehensive Elasticsearch MCP Server with 104+ tools for enterprise-grade operations",
-    "version": "1.0.0",
+    "description": "Comprehensive Elasticsearch MCP Server with 99 tools across 18 categories for enterprise-grade operations",
+    "version": "0.1.1",
     "contact": {
       "name": "MCP Elasticsearch Team"
     },
@@ -18,192 +18,239 @@
     },
     {
       "url": "stdio://",
-      "description": "Studio transport (Claude Desktop)"
+      "description": "Stdio transport (Claude Desktop)"
     }
   ],
   "tags": [
     {
-      "name": "Search",
-      "description": "Advanced search capabilities including SQL queries, scrolling, and multi-search",
-      "externalDocs": {
-        "description": "1 tools available"
-      }
+      "name": "Advanced",
+      "description": "Advanced Elasticsearch features including SQL translation and delete-by-query",
+      "externalDocs": { "description": "2 tools available" }
     },
     {
-      "name": "Core",
-      "description": "Essential Elasticsearch operations including search, mappings, and indices management",
-      "externalDocs": {
-        "description": "1 tools available"
-      }
+      "name": "Alias",
+      "description": "Index alias management for zero-downtime deployments",
+      "externalDocs": { "description": "4 tools available" }
+    },
+    {
+      "name": "Analytics",
+      "description": "Analytics, term vectors, and timestamp analysis",
+      "externalDocs": { "description": "3 tools available" }
+    },
+    {
+      "name": "Autoscaling",
+      "description": "Autoscaling policy management for Elasticsearch Service, ECE, and ECK",
+      "externalDocs": { "description": "4 tools available" }
+    },
+    {
+      "name": "Bulk",
+      "description": "Bulk operations for efficient large-scale data management",
+      "externalDocs": { "description": "3 tools available" }
     },
     {
       "name": "Cluster",
-      "description": "Cluster monitoring and health management tools",
-      "externalDocs": {
-        "description": "1 tools available"
-      }
+      "description": "Cluster monitoring and health management",
+      "externalDocs": { "description": "4 tools available" }
+    },
+    {
+      "name": "Core",
+      "description": "Essential operations including search, mappings, and indices listing",
+      "externalDocs": { "description": "5 tools available" }
+    },
+    {
+      "name": "Diagnostics",
+      "description": "System diagnostics and health monitoring",
+      "externalDocs": { "description": "1 tool available" }
+    },
+    {
+      "name": "Document",
+      "description": "Document CRUD operations",
+      "externalDocs": { "description": "5 tools available" }
+    },
+    {
+      "name": "Enrich",
+      "description": "Enrich processor management for data enrichment pipelines",
+      "externalDocs": { "description": "5 tools available" }
+    },
+    {
+      "name": "ILM",
+      "description": "Index Lifecycle Management for automated lifecycle operations",
+      "externalDocs": { "description": "11 tools available" }
+    },
+    {
+      "name": "Index Management",
+      "description": "Index creation, configuration, and maintenance",
+      "externalDocs": { "description": "11 tools available" }
+    },
+    {
+      "name": "Indices",
+      "description": "Index-specific information and lifecycle operations",
+      "externalDocs": { "description": "10 tools available" }
+    },
+    {
+      "name": "Mapping",
+      "description": "Field mapping inspection and SQL cursor management",
+      "externalDocs": { "description": "2 tools available" }
+    },
+    {
+      "name": "Search",
+      "description": "Advanced search including SQL, scrolling, and multi-search",
+      "externalDocs": { "description": "6 tools available" }
+    },
+    {
+      "name": "Tasks",
+      "description": "Task monitoring and control for long-running operations",
+      "externalDocs": { "description": "4 tools available" }
+    },
+    {
+      "name": "Template",
+      "description": "Index template management for automated index configuration",
+      "externalDocs": { "description": "5 tools available" }
+    },
+    {
+      "name": "Watcher",
+      "description": "Alerting and watch management for automated monitoring",
+      "externalDocs": { "description": "13 tools available" }
     }
   ],
   "paths": {
-    "/tools/search": {
+    "/tools/elasticsearch_search": {
       "post": {
-        "tags": [
-          "Search"
-        ],
-        "summary": "Search documents across Elasticsearch indices with advanced query capabilities",
-        "description": "Search documents across Elasticsearch indices with advanced query capabilities",
+        "tags": ["Core"],
+        "summary": "Search documents with full Query DSL support",
+        "description": "Search Elasticsearch with natural Query DSL parameters. Supports document search, aggregations, highlighting, sorting, pagination, and source filtering.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/searchInput"
-              }
+              "schema": { "$ref": "#/components/schemas/searchInput" }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "content": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "example": "text"
-                          },
-                          "text": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request parameters"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
+          "200": { "$ref": "#/components/responses/ToolSuccess" },
+          "400": { "description": "Invalid request parameters" },
+          "500": { "description": "Internal server error" }
         }
       }
     },
-    "/tools/list_indices": {
+    "/tools/elasticsearch_list_indices": {
       "post": {
-        "tags": [
-          "Core"
-        ],
-        "summary": "List all available Elasticsearch indices with health and document count information",
-        "description": "List all available Elasticsearch indices with health and document count information",
+        "tags": ["Core"],
+        "summary": "List all indices with health and document count",
+        "description": "List all available Elasticsearch indices with health status, document count, and storage information. Supports filtering and pagination.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/list_indicesInput"
-              }
+              "schema": { "$ref": "#/components/schemas/listIndicesInput" }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "content": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "example": "text"
-                          },
-                          "text": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request parameters"
-          },
-          "500": {
-            "description": "Internal server error"
-          }
+          "200": { "$ref": "#/components/responses/ToolSuccess" },
+          "400": { "description": "Invalid request parameters" },
+          "500": { "description": "Internal server error" }
         }
       }
     },
-    "/tools/cluster_health": {
+    "/tools/elasticsearch_get_cluster_health": {
       "post": {
-        "tags": [
-          "Cluster"
-        ],
-        "summary": "Get comprehensive cluster health information including node and shard status",
-        "description": "Get comprehensive cluster health information including node and shard status",
+        "tags": ["Cluster"],
+        "summary": "Get cluster health status",
+        "description": "Get comprehensive cluster health including node count, shard status, and index-level health.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/cluster_healthInput"
-              }
+              "schema": { "$ref": "#/components/schemas/clusterHealthInput" }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "content": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "example": "text"
-                          },
-                          "text": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
+          "200": { "$ref": "#/components/responses/ToolSuccess" },
+          "400": { "description": "Invalid request parameters" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/tools/elasticsearch_get_document": {
+      "post": {
+        "tags": ["Document"],
+        "summary": "Retrieve a document by ID",
+        "description": "Retrieve a document by ID with optional source filtering.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/getDocumentInput" }
             }
-          },
-          "400": {
-            "description": "Invalid request parameters"
-          },
-          "500": {
-            "description": "Internal server error"
           }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/ToolSuccess" },
+          "400": { "description": "Invalid request parameters" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/tools/elasticsearch_index_document": {
+      "post": {
+        "tags": ["Document"],
+        "summary": "Index a document",
+        "description": "Index (create or update) a document in an Elasticsearch index.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/indexDocumentInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/ToolSuccess" },
+          "400": { "description": "Invalid request parameters" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/tools/elasticsearch_create_index": {
+      "post": {
+        "tags": ["Index Management"],
+        "summary": "Create an index with settings and mappings",
+        "description": "Create an index with custom settings and mappings for document storage.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/createIndexInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/ToolSuccess" },
+          "400": { "description": "Invalid request parameters" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/tools/elasticsearch_bulk_operations": {
+      "post": {
+        "tags": ["Bulk"],
+        "summary": "Execute bulk operations",
+        "description": "Execute bulk operations (index, create, update, delete) in a single API call.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/bulkOperationsInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/ToolSuccess" },
+          "400": { "description": "Invalid request parameters" },
+          "500": { "description": "Internal server error" }
         }
       }
     }
@@ -213,68 +260,89 @@
       "searchInput": {
         "type": "object",
         "properties": {
-          "index": {
-            "type": "string",
-            "description": "Index name or pattern"
-          },
-          "query": {
-            "type": "object",
-            "description": "Elasticsearch query DSL"
-          },
-          "size": {
-            "type": "number",
-            "description": "Number of results to return",
-            "default": 10
-          },
-          "from": {
-            "type": "number",
-            "description": "Offset for pagination",
-            "default": 0
-          }
+          "index": { "type": "string", "description": "Index name or pattern (e.g., logs-*)" },
+          "query": { "type": "object", "description": "Elasticsearch Query DSL" },
+          "size": { "type": "number", "description": "Number of results to return", "default": 10 },
+          "from": { "type": "number", "description": "Offset for pagination", "default": 0 },
+          "sort": { "type": "array", "description": "Sort criteria" },
+          "aggs": { "type": "object", "description": "Aggregation definitions" },
+          "_source": { "description": "Source filtering (boolean, array of fields, or include/exclude object)" },
+          "highlight": { "type": "object", "description": "Highlight configuration" }
         }
       },
-      "list_indicesInput": {
+      "listIndicesInput": {
         "type": "object",
         "properties": {
-          "format": {
-            "type": "string",
-            "description": "Output format",
-            "enum": [
-              "json",
-              "table"
-            ]
-          },
-          "health": {
-            "type": "string",
-            "description": "Filter by health status",
-            "enum": [
-              "green",
-              "yellow",
-              "red"
-            ]
-          }
+          "limit": { "type": "number", "description": "Maximum number of indices to return" },
+          "summary": { "type": "boolean", "description": "Return summary view" },
+          "index": { "type": "string", "description": "Index name or pattern to filter" }
         }
       },
-      "cluster_healthInput": {
+      "clusterHealthInput": {
         "type": "object",
         "properties": {
-          "level": {
-            "type": "string",
-            "description": "Detail level",
-            "enum": [
-              "cluster",
-              "indices",
-              "shards"
-            ]
-          },
-          "wait_for_status": {
-            "type": "string",
-            "description": "Wait for status",
-            "enum": [
-              "green",
-              "yellow",
-              "red"
-            ]
+          "index": { "type": "string", "description": "Index to check health for" },
+          "level": { "type": "string", "description": "Detail level", "enum": ["cluster", "indices", "shards"] },
+          "wait_for_status": { "type": "string", "description": "Wait for status", "enum": ["green", "yellow", "red"] }
+        }
+      },
+      "getDocumentInput": {
+        "type": "object",
+        "required": ["index", "id"],
+        "properties": {
+          "index": { "type": "string", "description": "Index name" },
+          "id": { "type": "string", "description": "Document ID" },
+          "_source": { "description": "Source filtering" }
+        }
+      },
+      "indexDocumentInput": {
+        "type": "object",
+        "required": ["index", "document"],
+        "properties": {
+          "index": { "type": "string", "description": "Target index" },
+          "id": { "type": "string", "description": "Document ID (optional, auto-generated if omitted)" },
+          "document": { "type": "object", "description": "Document body" },
+          "refresh": { "type": "string", "description": "Refresh policy", "enum": ["true", "false", "wait_for"] }
+        }
+      },
+      "createIndexInput": {
+        "type": "object",
+        "required": ["index"],
+        "properties": {
+          "index": { "type": "string", "description": "Index name" },
+          "settings": { "type": "object", "description": "Index settings" },
+          "mappings": { "type": "object", "description": "Field mappings" }
+        }
+      },
+      "bulkOperationsInput": {
+        "type": "object",
+        "required": ["operations"],
+        "properties": {
+          "operations": { "type": "array", "description": "Array of bulk operations" },
+          "refresh": { "type": "string", "description": "Refresh policy" }
+        }
+      }
+    },
+    "responses": {
+      "ToolSuccess": {
+        "description": "Successful tool response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": { "type": "string", "example": "text" },
+                      "text": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -294,11 +362,7 @@
     }
   },
   "security": [
-    {
-      "ApiKeyAuth": []
-    },
-    {
-      "BasicAuth": []
-    }
+    { "ApiKeyAuth": [] },
+    { "BasicAuth": [] }
   ]
 }

@@ -2,8 +2,7 @@
 
 import { spawn } from "node:child_process";
 import { watch } from "node:fs";
-import { readdir, stat } from "node:fs/promises";
-import path from "node:path";
+import { stat } from "node:fs/promises";
 import { performance } from "node:perf_hooks";
 
 interface DevToolsConfig {

@@ -6,11 +6,11 @@
 
 A production-ready Model Context Protocol (MCP) server that connects AI assistants like Claude Desktop to Elasticsearch clusters. This server provides comprehensive Elasticsearch operations through natural language interactions, featuring advanced configuration management, security controls, and extensive tooling.
 
-This is an enhancement of the Official Elastic MCP Server with the four tools (Core Operations).
+This is a comprehensive enhancement of the Official Elastic MCP Server, expanding from 4 core tools to 170+ specialized operations covering the full Elasticsearch ecosystem.
 
 ## 🚀 Key Features
 
-- **🔧 Comprehensive Tooling**: 104+ Elasticsearch operations including search, indexing, cluster management, analytics, and specialized tools
+- **🔧 Comprehensive Tooling**: 170+ Elasticsearch operations including search, indexing, cluster management, analytics, and specialized tools
 - **⚙️ Advanced Configuration**: Type-safe configuration system with environment variable validation
 - **🔒 Security Controls**: Read-only mode with strict/warning options for safe production monitoring
 - **📊 Rich Search**: Advanced search with automatic highlighting, aggregations, and SQL support
@@ -19,7 +19,7 @@ This is an enhancement of the Official Elastic MCP Server with the four tools (C
 - **🛡️ Error Handling**: Robust error handling with detailed logging and troubleshooting guides
 - **📊 Auto-Detection Monitoring**: Prometheus metrics with Grafana dashboards (auto-detects and gracefully degrades)
 - **🔄 Circuit Breakers**: Production-grade resilience with connection pooling and rate limiting
-- **🎯 Multi-Agent Development**: Sophisticated development coordination with 15+ specialized agents
+- **🎯 Multi-Agent Development**: Sophisticated development coordination with 15+ specialized agents for orchestrated workflows
 - **📈 LangSmith Integration**: Advanced tracing and performance monitoring for AI interactions
 - **⚡ Performance**: Built on Bun runtime for optimal performance and modern JavaScript features
 
@@ -388,6 +388,30 @@ READ_ONLY_STRICT_MODE=false
 - **`enrich_delete_policy`** - Delete enrich policies *(Destructive Operation)*
 - **`enrich_execute_policy`** - Execute enrich policies *(Write Operation)*
 - **`enrich_stats`** - Get enrich statistics
+
+### Watcher Operations
+- **`watcher_put_watch`** - Create or update watch *(Write Operation)*
+- **`watcher_get_watch`** - Get watch definition
+- **`watcher_delete_watch`** - Delete watch *(Destructive Operation)*
+- **`watcher_execute_watch`** - Execute watch *(Write Operation)*
+- **`watcher_ack_watch`** - Acknowledge watch *(Write Operation)*
+- **`watcher_activate_watch`** - Activate watch *(Write Operation)*
+- **`watcher_deactivate_watch`** - Deactivate watch *(Write Operation)*
+- **`watcher_stats`** - Get watcher statistics
+- **`watcher_start`** - Start watcher service *(Write Operation)*
+- **`watcher_stop`** - Stop watcher service *(Write Operation)*
+
+### Autoscaling
+- **`autoscaling_get_policy`** - Get autoscaling policies
+- **`autoscaling_put_policy`** - Create autoscaling policies *(Write Operation)*
+- **`autoscaling_delete_policy`** - Delete autoscaling policies *(Destructive Operation)*
+- **`autoscaling_get_capacity`** - Get autoscaling capacity
+
+### Advanced Operations
+- **`reindex_with_notifications`** - Reindex with progress notifications *(Write Operation)*
+- **`bulk_index_with_progress`** - Bulk index with progress tracking *(Write Operation)*
+- **`elasticsearch_diagnostics`** - Comprehensive cluster diagnostics
+- **`analyze_timestamps`** - Analyze timestamp fields for data quality issues
 
 ## 💡 Usage Examples
 

@@ -2,7 +2,6 @@
 
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
 
 interface TestResult {
   suite: string;
@@ -165,8 +164,8 @@ export class ConfigurationTestRunner {
         const passedMatch = output.match(/(\d+) passed/);
         const failedMatch = output.match(/(\d+) failed/);
 
-        result.passed = passedMatch ? Number.parseInt(passedMatch[1]) : 0;
-        result.failed = failedMatch ? Number.parseInt(failedMatch[1]) : 0;
+        result.passed = passedMatch ? Number.parseInt(passedMatch[1], 10) : 0;
+        result.failed = failedMatch ? Number.parseInt(failedMatch[1], 10) : 0;
         result.success = code === 0 && result.failed === 0;
 
         // Extract error messages

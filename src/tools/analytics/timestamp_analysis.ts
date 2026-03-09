@@ -3,8 +3,7 @@ import type { Client } from "@elastic/elasticsearch";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { OperationType } from "../../utils/readOnlyMode.js";
-import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Timestamp analysis schema
 const timestampAnalysisSchema = z.object({
@@ -13,7 +12,7 @@ const timestampAnalysisSchema = z.object({
   sampleSize: z.number().min(1).max(1000).default(100),
 });
 
-type TimestampAnalysisParams = z.infer<typeof timestampAnalysisSchema>;
+type _TimestampAnalysisParams = z.infer<typeof timestampAnalysisSchema>;
 
 function formatTimestamp(ts: any): string {
   if (typeof ts === "number") {
@@ -44,7 +43,7 @@ function analyzeTimestamp(ts: any): {
       return { formatted: String(ts), isValid: false, isFuture: false, isPast: false, daysFromNow: 0 };
     }
 
-    const isValid = !isNaN(date.getTime());
+    const isValid = !Number.isNaN(date.getTime());
     if (!isValid) {
       return { formatted: String(ts), isValid: false, isFuture: false, isPast: false, daysFromNow: 0 };
     }
@@ -61,7 +60,7 @@ function analyzeTimestamp(ts: any): {
       isPast,
       daysFromNow: Math.round(daysFromNow * 100) / 100,
     };
-  } catch (error) {
+  } catch (_error) {
     return { formatted: String(ts), isValid: false, isFuture: false, isPast: false, daysFromNow: 0 };
   }
 }
@@ -138,12 +137,12 @@ export const registerTimestampAnalysisTool: ToolRegistrationFunction = (server, 
 
       // Analyze sample timestamps
       const futureCount = sampleResult.hits.hits.filter((hit) => {
-        const ts = hit._source?.[timestampField];
+        const ts = (hit._source as any)?.[timestampField];
         return analyzeTimestamp(ts).isFuture;
       }).length;
 
       const validCount = sampleResult.hits.hits.filter((hit) => {
-        const ts = hit._source?.[timestampField];
+        const ts = (hit._source as any)?.[timestampField];
         return analyzeTimestamp(ts).isValid;
       }).length;
 
@@ -159,10 +158,10 @@ export const registerTimestampAnalysisTool: ToolRegistrationFunction = (server, 
 
       analysis += `## Recent Sample Documents\n`;
       sampleResult.hits.hits.slice(0, 10).forEach((hit, i) => {
-        const ts = hit._source?.[timestampField];
+        const ts = (hit._source as any)?.[timestampField];
         const tsAnalysis = analyzeTimestamp(ts);
-        const service = hit._source?.["service.name"] || "unknown";
-        const message = hit._source?.message || "no message";
+        const service = (hit._source as any)?.["service.name"] || "unknown";
+        const message = (hit._source as any)?.message || "no message";
 
         analysis += `${i + 1}. **${hit._id}** (${service})\n`;
         analysis += `   - Timestamp: ${tsAnalysis.formatted}\n`;
@@ -195,7 +194,7 @@ export const registerTimestampAnalysisTool: ToolRegistrationFunction = (server, 
       if (error instanceof z.ZodError) {
         throw new McpError(
           ErrorCode.InvalidParams,
-          `Invalid parameters: ${error.errors.map((e) => e.message).join(", ")}`,
+          `Invalid parameters: ${error.issues.map((e) => e.message).join(", ")}`,
         );
       }
 
@@ -208,52 +207,40 @@ export const registerTimestampAnalysisTool: ToolRegistrationFunction = (server, 
 
   // Tool registration using modern registerTool method
 
-
   server.registerTool(
-
-
     "elasticsearch_analyze_timestamps",
 
-
     {
-
-
       title: "Analyze Timestamps",
 
-
-      description: "Analyze timestamp distribution in Elasticsearch indices to identify data quality issues. Helps diagnose why time range queries may return unexpected results. Provides statistics and sample analysis.",
-
+      description:
+        "Analyze timestamp distribution in Elasticsearch indices to identify data quality issues. Helps diagnose why time range queries may return unexpected results. Provides statistics and sample analysis.",
 
       inputSchema: {
-      type: "object",
-      properties: {
-        index: {
-          type: "string",
-          description: "Index pattern to analyze (e.g., 'logs-*', '.ds-logs-*')",
+        type: "object",
+        properties: {
+          index: {
+            type: "string",
+            description: "Index pattern to analyze (e.g., 'logs-*', '.ds-logs-*')",
+          },
+          timestampField: {
+            type: "string",
+            description: "Timestamp field to analyze (default: '@timestamp')",
+            default: "@timestamp",
+          },
+          sampleSize: {
+            type: "number",
+            description: "Number of recent documents to sample for analysis (1-1000, default: 100)",
+            minimum: 1,
+            maximum: 1000,
+            default: 100,
+          },
         },
-        timestampField: {
-          type: "string",
-          description: "Timestamp field to analyze (default: '@timestamp')",
-          default: "@timestamp",
-        },
-        sampleSize: {
-          type: "number",
-          description: "Number of recent documents to sample for analysis (1-1000, default: 100)",
-          minimum: 1,
-          maximum: 1000,
-          default: 100,
-        },
+        required: ["index"],
+        additionalProperties: false,
       },
-      required: ["index"],
-      additionalProperties: false,
     },
-
-
-    },
-
 
     handler,
-
-
-  );;
+  );
 };

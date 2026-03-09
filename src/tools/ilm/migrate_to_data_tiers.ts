@@ -26,7 +26,7 @@ const migrateToDataTiersValidator = z.object({
   masterTimeout: z.string().optional(),
 });
 
-type MigrateToDataTiersParams = z.infer<typeof migrateToDataTiersValidator>;
+type _MigrateToDataTiersParams = z.infer<typeof migrateToDataTiersValidator>;
 
 // =============================================================================
 // 2. STANDARDIZED MCP ERROR HANDLING
@@ -129,10 +129,10 @@ Operation completed at: ${new Date().toISOString()}`,
       // Standardized MCP error handling
       if (error instanceof z.ZodError) {
         throw createIlmMigrateToDataTiersMcpError(
-          `Validation failed: ${error.errors.map((e) => e.message).join(", ")}`,
+          `Validation failed: ${error.issues.map((e) => e.message).join(", ")}`,
           {
             type: "validation",
-            details: { validationErrors: error.errors, providedArgs: args },
+            details: { validationErrors: error.issues, providedArgs: args },
           },
         );
       }
@@ -174,26 +174,23 @@ Operation completed at: ${new Date().toISOString()}`,
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_ilm_migrate_to_data_tiers",
 
     {
-
       title: "Ilm Migrate To Data Tiers",
 
-      description: "Migrate to data tiers. Migrate from custom node attributes to data tiers routing in Elasticsearch ILM. Uses direct JSON Schema and standardized MCP error codes. Requires ILM to be stopped first. Examples: {dryRun: true}, {nodeAttribute: box_type, legacyTemplateToDelete: old-template}",
+      description:
+        "Migrate to data tiers. Migrate from custom node attributes to data tiers routing in Elasticsearch ILM. Uses direct JSON Schema and standardized MCP error codes. Requires ILM to be stopped first. Examples: {dryRun: true}, {nodeAttribute: box_type, legacyTemplateToDelete: old-template}",
 
       inputSchema: {
-      legacyTemplateToDelete: z.string().optional(), // Name of legacy template to delete during migration
-      nodeAttribute: z.string().optional(), // Node attribute to migrate from (e.g., 'box_type')
-      dryRun: z.boolean().optional(), // Perform a dry run without making changes
-      masterTimeout: z.string().optional(), // Master node timeout
-    },
-
+        legacyTemplateToDelete: z.string().optional(), // Name of legacy template to delete during migration
+        nodeAttribute: z.string().optional(), // Node attribute to migrate from (e.g., 'box_type')
+        dryRun: z.boolean().optional(), // Perform a dry run without making changes
+        masterTimeout: z.string().optional(), // Master node timeout
+      },
     },
 
     // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_migrate_to_data_tiers", migrateToDataTiersHandler, OperationType.DESTRUCTIVE),
-
-  );;
+  );
 };

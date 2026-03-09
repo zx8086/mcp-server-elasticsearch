@@ -6,9 +6,9 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import getRawBody from "raw-body";
 import type { Config } from "../config.js";
 import { logger } from "../utils/logger.js";
-import { detectClient, generateSessionId, traceNamedMcpConnection } from "../utils/tracingEnhanced.js";
+import { detectClient, traceConnection } from "../utils/tracing.js";
 
-interface SSEConnection {
+interface _SSEConnection {
   transport: SSEServerTransport;
   sessionId: string;
   clientInfo: any;
@@ -110,13 +110,9 @@ export class SSETransportManager {
     try {
       // Connect with tracing if enabled
       if (this.config.langsmith.tracing) {
-        const tracedConnection = traceNamedMcpConnection({
-          connectionId,
-          transportMode: "sse",
-          clientInfo,
-          sessionId,
-        });
-        await tracedConnection(async () => this.server.connect(transport));
+        await traceConnection({ connectionId, transportMode: "sse", clientInfo, sessionId }, async () =>
+          this.server.connect(transport),
+        );
       } else {
         await this.server.connect(transport);
       }
@@ -162,7 +158,7 @@ export class SSETransportManager {
       }
 
       // Find the transport for this session
-      const connection = this.server.getConnectionBySessionId(sessionId);
+      const connection = (this.server as any).getConnectionBySessionId(sessionId);
 
       if (!connection) {
         res.writeHead(404);

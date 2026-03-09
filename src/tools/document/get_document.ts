@@ -27,10 +27,13 @@ const getDocumentValidator = z.object({
   versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(),
 });
 
-type GetDocumentParams = z.infer<typeof getDocumentValidator>;
+type _GetDocumentParams = z.infer<typeof getDocumentValidator>;
 
 // MCP error handling
-function createGetDocumentMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createGetDocumentMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution" | "document_not_found" | "version_conflict"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -68,7 +71,7 @@ export const registerGetDocumentTool: ToolRegistrationFunction = (server: McpSer
         refresh: params.refresh,
         version: params.version,
         version_type: params.versionType,
-      });
+      } as any);
 
       const duration = performance.now() - perfStart;
       if (duration > 5000) {
@@ -81,9 +84,9 @@ export const registerGetDocumentTool: ToolRegistrationFunction = (server: McpSer
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createGetDocumentMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createGetDocumentMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -112,32 +115,29 @@ export const registerGetDocumentTool: ToolRegistrationFunction = (server: McpSer
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_get_document",
 
     {
-
       title: "Get Document",
 
-      description: "Get a document from Elasticsearch by index and id. Best for retrieving specific JSON documents, document validation, real-time data access. This tool REQUIRES both 'index' and 'id' parameters - it cannot work with empty {}. Use when you need to fetch individual documents by their unique identifier from Elasticsearch indices. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Get a document from Elasticsearch by index and id. Best for retrieving specific JSON documents, document validation, real-time data access. This tool REQUIRES both 'index' and 'id' parameters - it cannot work with empty {}. Use when you need to fetch individual documents by their unique identifier from Elasticsearch indices. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      index: z.string(), // REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'
-      id: z.string(), // REQUIRED: Unique identifier of the document to retrieve. Example: '123', 'user-456'
-      source: z.boolean().optional(), // Whether to return the _source field
-      sourceExcludes: z.array(z.string().optional()).optional(), // Fields to exclude from the _source (optional)
-      sourceIncludes: z.array(z.string().optional()).optional(), // Fields to include in the _source (optional)
-      routing: z.string().optional(), // Custom routing value (optional)
-      preference: z.string().optional(), // Preference for shard selection (optional)
-      realtime: z.boolean().optional(), // Whether to perform a real-time get
-      refresh: z.boolean().optional(), // Whether to refresh before retrieval
-      version: z.number().optional(), // Expected document version for optimistic concurrency control (optional)
-      versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(), // Version type for concurrency control (optional)
-    },
-
+        index: z.string(), // REQUIRED: Name of the Elasticsearch index containing the document. Example: 'users', 'logs-2024.01'
+        id: z.string(), // REQUIRED: Unique identifier of the document to retrieve. Example: '123', 'user-456'
+        source: z.boolean().optional(), // Whether to return the _source field
+        sourceExcludes: z.array(z.string().optional()).optional(), // Fields to exclude from the _source (optional)
+        sourceIncludes: z.array(z.string().optional()).optional(), // Fields to include in the _source (optional)
+        routing: z.string().optional(), // Custom routing value (optional)
+        preference: z.string().optional(), // Preference for shard selection (optional)
+        realtime: z.boolean().optional(), // Whether to perform a real-time get
+        refresh: z.boolean().optional(), // Whether to refresh before retrieval
+        version: z.number().optional(), // Expected document version for optimistic concurrency control (optional)
+        versionType: z.enum(["internal", "external", "external_gte", "force"]).optional(), // Version type for concurrency control (optional)
+      },
     },
 
     getDocumentHandler,
-
   );
 };

@@ -16,51 +16,51 @@ services:
       - MCP_PORT=8080
       - MCP_SERVER_NAME=elasticsearch-mcp-server
       - MCP_SERVER_VERSION=0.1.1
-      
+
       # Elasticsearch Configuration
       - ES_URL=${ES_URL:-http://elasticsearch:9200}
       - ES_API_KEY=${ES_API_KEY:-}
       - ES_USERNAME=${ES_USERNAME:-}
       - ES_PASSWORD=${ES_PASSWORD:-}
-      
+
       # Security Configuration
       - READ_ONLY_MODE=${READ_ONLY_MODE:-false}
       - READ_ONLY_STRICT_MODE=${READ_ONLY_STRICT_MODE:-true}
-      
+
       # Logging Configuration
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - LOG_FORMAT=json
-      
+
       # Performance Configuration
       - MCP_MAX_QUERY_TIMEOUT=30000
       - MCP_MAX_RESULTS_PER_QUERY=1000
       - MCP_MAX_RESPONSE_SIZE_BYTES=1000000
-      
+
       # LangSmith Configuration (optional)
       - LANGSMITH_TRACING=${LANGSMITH_TRACING:-false}
       - LANGSMITH_API_KEY=${LANGSMITH_API_KEY:-}
       - LANGSMITH_PROJECT=${LANGSMITH_PROJECT:-elasticsearch-mcp-server}
-    
+
     volumes:
       # Optional: Mount configuration files
       - ./config:/app/config:ro
-      
+
     depends_on:
       elasticsearch:
         condition: service_healthy
-    
+
     networks:
       - mcp-network
-    
+
     restart: unless-stopped
-    
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-    
+
     # Resource limits
     deploy:
       resources:
@@ -81,31 +81,31 @@ services:
       - xpack.security.enrollment.enabled=false
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
       - bootstrap.memory_lock=true
-    
+
     ulimits:
       memlock:
         soft: -1
         hard: -1
-    
+
     ports:
       - "9200:9200"
       - "9300:9300"
-    
+
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
-    
+
     networks:
       - mcp-network
-    
+
     restart: unless-stopped
-    
+
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
       start_period: 30s
-    
+
     # Resource limits for testing
     deploy:
       resources:
@@ -123,19 +123,19 @@ services:
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - xpack.security.enabled=false
-    
+
     ports:
       - "5601:5601"
-    
+
     depends_on:
       elasticsearch:
         condition: service_healthy
-    
+
     networks:
       - mcp-network
-    
+
     restart: unless-stopped
-    
+
     profiles:
       - dev  # Only start with: docker-compose --profile dev up
 

@@ -69,9 +69,9 @@ export const registerEnrichDeletePolicyTool: ToolRegistrationFunction = (server:
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createDeletePolicyMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createDeletePolicyMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -124,23 +124,20 @@ export const registerEnrichDeletePolicyTool: ToolRegistrationFunction = (server:
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_enrich_delete_policy",
 
     {
-
       title: "Enrich Delete Policy",
 
-      description: "Delete an enrich policy and its index in Elasticsearch. Best for policy cleanup, configuration management, removing unused enrichment. Use when you need to remove enrich policies and their associated indices from Elasticsearch.",
+      description:
+        "Delete an enrich policy and its index in Elasticsearch. Best for policy cleanup, configuration management, removing unused enrichment. Use when you need to remove enrich policies and their associated indices from Elasticsearch.",
 
       inputSchema: {
-      name: z.string(), // Name of the enrich policy to delete
-      masterTimeout: z.string().optional(), // Timeout for master node operations. Examples: '30s', '1m'
-    },
-
+        name: z.string(), // Name of the enrich policy to delete
+        masterTimeout: z.string().optional(), // Timeout for master node operations. Examples: '30s', '1m'
+      },
     },
 
     withReadOnlyCheck("elasticsearch_enrich_delete_policy", deletePolicyImpl, OperationType.DELETE),
-
-  );;
+  );
 };

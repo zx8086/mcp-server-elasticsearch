@@ -14,7 +14,7 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 // =============================================================================
 
 // Direct JSON Schema definition (no complex Zod conversion)
-const getLifecycleSchema = {
+const _getLifecycleSchema = {
   type: "object",
   properties: {
     policy: {
@@ -64,7 +64,7 @@ const getLifecycleValidator = z.object({
   sortBy: z.enum(["name", "modified_date", "version", "indices_count"]).optional(),
 });
 
-type GetLifecycleParams = z.infer<typeof getLifecycleValidator>;
+type _GetLifecycleParams = z.infer<typeof getLifecycleValidator>;
 
 // =============================================================================
 // 2. STANDARDIZED MCP ERROR HANDLING
@@ -96,6 +96,7 @@ function createIlmMcpError(
 export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const getLifecycleHandler = async (args: any, extra?: any): Promise<SearchResult> => {
     const perfStart = performance.now();
+    let params: z.infer<typeof getLifecycleValidator> | undefined;
 
     try {
       logger.debug("ILM Handler received", {
@@ -108,7 +109,7 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
       });
 
       // Simple validation - no complex parameter extraction
-      const params = getLifecycleValidator.parse(args);
+      params = getLifecycleValidator.parse(args);
 
       logger.debug("Getting ILM lifecycle policies (simplified)", {
         policy: params.policy,
@@ -165,24 +166,25 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
         let retentionDays: number | undefined;
 
         if (deletePhase?.min_age) {
-          const minAge = deletePhase.min_age;
+          const minAge = String(deletePhase.min_age);
           const match = minAge.match(/(\d+)d/);
           if (match) {
-            retentionDays = Number.parseInt(match[1]);
+            retentionDays = Number.parseInt(match[1], 10);
           }
         }
 
+        const policyAny = policy as any;
         return {
           ...policy,
           retention_days: retentionDays,
-          indices_count: policy.in_use_by?.indices?.length || 0,
-          data_streams_count: policy.in_use_by?.data_streams?.length || 0,
+          indices_count: policyAny.in_use_by?.indices?.length || 0,
+          data_streams_count: policyAny.in_use_by?.data_streams?.length || 0,
         };
       });
 
       // Sort policies
       const sortedPolicies = enrichedPolicies.sort((a, b) => {
-        switch (params.sortBy) {
+        switch (params?.sortBy) {
           case "modified_date":
             return new Date(b.modified_date || 0).getTime() - new Date(a.modified_date || 0).getTime();
           case "version":
@@ -239,11 +241,11 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
             retention_days: policy.retention_days,
             policy_definition: policy.policy?.phases,
             ...(params.includeIndices &&
-              policy.in_use_by && {
+              (policy as any).in_use_by && {
                 in_use_by: {
-                  indices: policy.in_use_by.indices?.slice(0, 10), // Limit for readability
-                  data_streams: policy.in_use_by.data_streams?.slice(0, 10),
-                  composable_templates: policy.in_use_by.composable_templates,
+                  indices: (policy as any).in_use_by.indices?.slice(0, 10), // Limit for readability
+                  data_streams: (policy as any).in_use_by.data_streams?.slice(0, 10),
+                  composable_templates: (policy as any).in_use_by.composable_templates,
                 },
               }),
           };
@@ -283,9 +285,9 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
     } catch (error) {
       // Standardized MCP error handling
       if (error instanceof z.ZodError) {
-        throw createIlmMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createIlmMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -302,9 +304,9 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
         }
 
         if (error.message.includes("resource_not_found")) {
-          throw createIlmMcpError(`ILM policy not found: ${params.policy || "unknown"}`, {
+          throw createIlmMcpError(`ILM policy not found: ${params?.policy || "unknown"}`, {
             type: "not_found",
-            details: { policy: params.policy },
+            details: { policy: params?.policy },
           });
         }
       }
@@ -323,27 +325,24 @@ export const registerGetLifecycleTool: ToolRegistrationFunction = (server: McpSe
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_ilm_get_lifecycle",
 
     {
-
       title: "Ilm Get Lifecycle",
 
-      description: "Get ILM policies. PARAMETERS: 'policy' (string, optional - supports comma-separated list for multiple policies), 'limit' (number 1-100), 'summary' (boolean), 'sortBy' (enum). Examples: {limit: 50, summary: true} or {policy: 'policy1,policy2,policy3'}. Uses Zod Schema for proper MCP parameter handling.",
+      description:
+        "Get ILM policies. PARAMETERS: 'policy' (string, optional - supports comma-separated list for multiple policies), 'limit' (number 1-100), 'summary' (boolean), 'sortBy' (enum). Examples: {limit: 50, summary: true} or {policy: 'policy1,policy2,policy3'}. Uses Zod Schema for proper MCP parameter handling.",
 
       inputSchema: {
-      policy: z.string().optional(),
-      limit: z.number().min(1).max(100).optional(),
-      summary: z.boolean().optional(),
-      sortBy: z.enum(["name", "modified_date", "version", "indices_count"]).optional(),
-    },
-
+        policy: z.string().optional(),
+        limit: z.number().min(1).max(100).optional(),
+        summary: z.boolean().optional(),
+        sortBy: z.enum(["name", "modified_date", "version", "indices_count"]).optional(),
+      },
     },
 
     // Use Zod schema instead
     getLifecycleHandler,
-
   );
 };
 

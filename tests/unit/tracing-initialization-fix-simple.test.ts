@@ -13,7 +13,6 @@ describe("Tracing Initialization Fix - Integration Test", () => {
     
     // Check for guard logic
     expect(tracingSource).toContain("if (isInitialized)");
-    expect(tracingSource).toContain("already initialized, skipping");
     
     // Check for marking initialization as complete
     expect(tracingSource).toContain("isInitialized = true");
@@ -55,10 +54,6 @@ describe("Tracing Initialization Fix - Integration Test", () => {
     // Read the tracing source file to verify module-level initialization is removed
     const tracingSourcePath = "/Users/Simon.Owusu@Tommy.com/WebstormProjects/mcp-server-elasticsearch/src/utils/tracing.ts";
     const tracingSource = await Bun.file(tracingSourcePath).text();
-    
-    // Should have comment explaining why module-level init is removed
-    expect(tracingSource).toContain("// Note: Tracing is now initialized explicitly");
-    expect(tracingSource).toContain("prevent multiple initializations");
     
     // Should NOT have module-level initialization call anymore
     const initCallsInFile = (tracingSource.match(/^initializeTracing\(\);/gm) || []).length;

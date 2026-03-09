@@ -7,7 +7,7 @@ import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
-import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
 // FIXED: Original JSON Schema definition removed - now using Zod schema inline
@@ -19,7 +19,7 @@ const explainDataLifecycleValidator = z.object({
   masterTimeout: z.string().optional(),
 });
 
-type ExplainDataLifecycleParams = z.infer<typeof explainDataLifecycleValidator>;
+type _ExplainDataLifecycleParams = z.infer<typeof explainDataLifecycleValidator>;
 
 // MCP error handling
 function createExplainDataLifecycleMcpError(
@@ -69,10 +69,10 @@ export const registerExplainDataLifecycleTool: ToolRegistrationFunction = (serve
       // Error handling
       if (error instanceof z.ZodError) {
         throw createExplainDataLifecycleMcpError(
-          `Validation failed: ${error.errors.map((e) => e.message).join(", ")}`,
+          `Validation failed: ${error.issues.map((e) => e.message).join(", ")}`,
           {
             type: "validation",
-            details: { validationErrors: error.errors, providedArgs: args },
+            details: { validationErrors: error.issues, providedArgs: args },
           },
         );
       }
@@ -111,24 +111,21 @@ export const registerExplainDataLifecycleTool: ToolRegistrationFunction = (serve
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_explain_data_lifecycle",
 
     {
-
       title: "Explain Data Lifecycle",
 
-      description: "Get data stream lifecycle status and execution details in Elasticsearch. Best for lifecycle monitoring, troubleshooting, policy analysis. Use when you need to understand data stream lifecycle execution status and configuration in Elasticsearch.",
+      description:
+        "Get data stream lifecycle status and execution details in Elasticsearch. Best for lifecycle monitoring, troubleshooting, policy analysis. Use when you need to understand data stream lifecycle execution status and configuration in Elasticsearch.",
 
       inputSchema: {
-      index: z.any(), // Data stream or index name(s) to explain lifecycle for. Examples: 'logs-*', ['stream1', 'stream2']
-      includeDefaults: z.boolean().optional(), // Whether to return default values in the response
-      masterTimeout: z.string().optional(), // Timeout for connection to master node
-    },
-
+        index: z.any(), // Data stream or index name(s) to explain lifecycle for. Examples: 'logs-*', ['stream1', 'stream2']
+        includeDefaults: z.boolean().optional(), // Whether to return default values in the response
+        masterTimeout: z.string().optional(), // Timeout for connection to master node
+      },
     },
 
     explainDataLifecycleHandler,
-
   );
 };

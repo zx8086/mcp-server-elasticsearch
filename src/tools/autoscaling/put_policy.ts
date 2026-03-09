@@ -50,35 +50,23 @@ export const registerAutoscalingPutPolicyTool: ToolRegistrationFunction = (serve
 
   // Tool registration using modern registerTool method
 
-
   server.registerTool(
-
-
     "elasticsearch_autoscaling_put_policy",
 
-
     {
-
-
       title: "Autoscaling Put Policy",
 
-
-      description: "Create or update an autoscaling policy in Elasticsearch. Best for capacity management, resource automation, cluster scaling. Use when you need to define autoscaling policies for Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
-
+      description:
+        "Create or update an autoscaling policy in Elasticsearch. Best for capacity management, resource automation, cluster scaling. Use when you need to define autoscaling policies for Elasticsearch Service, ECE, or ECK environments. NOTE: Designed for indirect use.",
 
       inputSchema: {
-      name: z.string().min(1, "Policy name cannot be empty"),
-      policy: z.any(),
-      masterTimeout: z.string().optional(),
-      timeout: z.string().optional(),
+        name: z.string().min(1, "Policy name cannot be empty"),
+        policy: z.any(),
+        masterTimeout: z.string().optional(),
+        timeout: z.string().optional(),
+      },
     },
-
-
-    },
-
 
     withReadOnlyCheck("elasticsearch_autoscaling_put_policy", putAutoscalingPolicyImpl, OperationType.WRITE),
-
-
-  );;
+  );
 };

@@ -5,8 +5,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { notificationManager, createProgressTracker, withNotificationContext } from "../../utils/notifications.js";
-import { createTextContent, createSearchMetadata } from "../../utils/mcpAnnotations.js";
+import { createProgressTracker, notificationManager, withNotificationContext } from "../../utils/notifications.js";
 import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
 
 interface MappingResponse {
@@ -21,11 +20,7 @@ interface SearchQueryBody {
   from?: number;
   size?: number;
   aggs?: any;
-  highlight?: {
-    fields: Record<string, any>;
-    pre_tags: string[];
-    post_tags: string[];
-  };
+  highlight?: any;
   [key: string]: unknown;
 }
 
@@ -92,7 +87,7 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
     const progressTracker = await createProgressTracker(
       "elasticsearch_search",
       100,
-      `Elasticsearch search on ${params?.index || "*"}`
+      `Elasticsearch search on ${params?.index || "*"}`,
     );
 
     try {
@@ -134,10 +129,10 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
       });
 
       // Log warning for potential timestamp issues if range queries are used
-      if (query && typeof query === "object" && query.range?.["@timestamp"]) {
-        const rangeQuery = query.range["@timestamp"];
+      if (query && typeof query === "object" && (query as any).range?.["@timestamp"]) {
+        const rangeQuery = (query as any).range["@timestamp"];
         logger.debug("Time range query detected", { rangeQuery, currentTime: new Date().toISOString() });
-        
+
         await notificationManager.sendInfo("Time range query detected", {
           timeRange: rangeQuery,
           currentTime: new Date().toISOString(),
@@ -213,7 +208,7 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
       }
 
       // DEBUG: Log the exact request being sent to Elasticsearch
-      logger.debug("EXACT Elasticsearch request:", JSON.stringify(searchRequest, null, 2));
+      logger.debug("EXACT Elasticsearch request:", { request: JSON.stringify(searchRequest, null, 2) });
 
       await progressTracker.updateProgress(55, "Search request prepared, configuring highlighting");
 
@@ -239,14 +234,17 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
             pre_tags: ["<em>"],
             post_tags: ["</em>"],
           };
-          await progressTracker.updateProgress(65, `Configured highlighting for ${Object.keys(textFields).length} text fields`);
+          await progressTracker.updateProgress(
+            65,
+            `Configured highlighting for ${Object.keys(textFields).length} text fields`,
+          );
         } else {
           await progressTracker.updateProgress(65, "No text fields found for highlighting");
         }
       }
 
       await progressTracker.updateProgress(70, "Executing search query against Elasticsearch");
-      
+
       // Send notification before the potentially long-running search
       await notificationManager.sendInfo("Executing search query", {
         index: searchRequest.index,
@@ -270,29 +268,17 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
       // Handle aggregation-only queries (size=0) - only return aggregations if explicitly no documents wanted
       if (sizeLimit === 0) {
         const totalHits = typeof result.hits.total === "number" ? result.hits.total : result.hits.total?.value || 0;
-        const duration = performance.now() - perfStart;
-        
-        const searchMetadata = createSearchMetadata({
-          totalResults: totalHits,
-          returnedResults: 0,
-          executionTimeMs: Math.round(duration),
-          elasticsearchTimeMs: result.took,
-          queryType: isEmptyQuery ? "match_all" : "custom",
-          index: index || "*",
-          hasAggregations: true,
-          fromOffset: from ?? 0,
-        });
 
         return {
           content: [
-            createTextContent(
-              `Search results with aggregations (${totalHits} total hits, ${result.took}ms):`,
-              searchMetadata
-            ),
-            createTextContent(
-              JSON.stringify(result.aggregations || {}, null, 2),
-              { operation: "aggregations", timestamp: new Date().toISOString() }
-            ),
+            {
+              type: "text",
+              text: `Search results with aggregations (${totalHits} total hits, ${result.took}ms):`,
+            },
+            {
+              type: "text",
+              text: JSON.stringify(result.aggregations || {}, null, 2),
+            },
           ],
         };
       }
@@ -327,22 +313,10 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
       });
 
       const totalHits = typeof result.hits.total === "number" ? result.hits.total : result.hits.total?.value || 0;
-      
+
       await progressTracker.updateProgress(95, "Formatting search results for display");
 
       const duration = performance.now() - perfStart;
-      
-      // Create comprehensive search metadata
-      const searchMetadata = createSearchMetadata({
-        totalResults: totalHits,
-        returnedResults: result.hits.hits.length,
-        executionTimeMs: Math.round(duration),
-        elasticsearchTimeMs: result.took,
-        queryType: isEmptyQuery ? "match_all" : "custom",
-        index: index || "*",
-        hasAggregations: !!result.aggregations,
-        fromOffset,
-      });
 
       // Performance and result notifications
       const resultMetrics = {
@@ -362,47 +336,34 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
         });
       }
 
-      // Create enhanced content with metadata
-      const metadataFragment = createTextContent(
-        `Total results: ${totalHits}, showing ${result.hits.hits.length} from position ${fromOffset}`,
-        searchMetadata
-      );
-
-      // Enhanced content fragments for documents
-      const enhancedContentFragments = contentFragments.map(fragment => 
-        createTextContent(fragment.text, {
-          operation: "document_result",
-          timestamp: new Date().toISOString(),
-          audience: ["user"],
-        })
-      );
-
-      // Build response content with enhanced items
-      const responseContent = [metadataFragment, ...enhancedContentFragments];
+      // Build response content
+      const responseContent: TextContent[] = [
+        {
+          type: "text",
+          text: `Total results: ${totalHits}, showing ${result.hits.hits.length} from position ${fromOffset}`,
+        },
+        ...contentFragments,
+      ];
 
       if (hasAggregations && result.aggregations) {
-        const aggregationsFragment = createTextContent(
-          `\n=== AGGREGATIONS ===\n${JSON.stringify(result.aggregations, null, 2)}`,
-          {
-            operation: "aggregations",
-            hasAggregations: true,
-            timestamp: new Date().toISOString(),
-            audience: ["user"],
-          }
-        );
-        responseContent.push(aggregationsFragment);
+        responseContent.push({
+          type: "text",
+          text: `\n=== AGGREGATIONS ===\n${JSON.stringify(result.aggregations, null, 2)}`,
+        });
         await progressTracker.updateProgress(98, "Added aggregation results to response");
       }
 
       // Complete the operation with comprehensive metrics
-      await progressTracker.complete(resultMetrics, 
-        `Search completed: ${totalHits} total hits, ${result.hits.hits.length} returned in ${Math.round(duration)}ms`
+      await progressTracker.complete(
+        resultMetrics,
+        `Search completed: ${totalHits} total hits, ${result.hits.hits.length} returned in ${Math.round(duration)}ms`,
       );
 
       // Send final success notification
       await notificationManager.sendInfo("Elasticsearch search completed successfully", {
         ...resultMetrics,
-        performance: duration < 1000 ? "excellent" : duration < 5000 ? "good" : duration < 15000 ? "acceptable" : "slow",
+        performance:
+          duration < 1000 ? "excellent" : duration < 5000 ? "good" : duration < 15000 ? "acceptable" : "slow",
       });
 
       return {
@@ -412,18 +373,23 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
       // Fail the progress tracker and send error notifications
       const duration = performance.now() - perfStart;
       const errorMessage = error instanceof Error ? error.message : String(error);
-      
-      await progressTracker.fail(error instanceof Error ? error : new Error(errorMessage), 
-        `Search failed after ${Math.round(duration)}ms`
+
+      await progressTracker.fail(
+        error instanceof Error ? error : new Error(errorMessage),
+        `Search failed after ${Math.round(duration)}ms`,
       );
 
       // Send detailed error notification
-      await notificationManager.sendError("Elasticsearch search failed", error instanceof Error ? error : errorMessage, {
-        tool: "elasticsearch_search",
-        duration: Math.round(duration),
-        index: params?.index || "*",
-        hasQuery: !!params?.query,
-      });
+      await notificationManager.sendError(
+        "Elasticsearch search failed",
+        error instanceof Error ? error : errorMessage,
+        {
+          tool: "elasticsearch_search",
+          duration: Math.round(duration),
+          index: params?.index || "*",
+          hasQuery: !!params?.query,
+        },
+      );
 
       // Error handling - JSON parsing errors
       if (error instanceof SyntaxError && error.message.includes("JSON")) {
@@ -439,7 +405,7 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
             searchedIndex: params?.index || "*",
             suggestion: "Verify index name and ensure it exists",
           });
-          
+
           throw createSearchMcpError(`Index not found: ${params?.index || "*"}`, {
             type: "index_not_found",
             details: { originalError: error.message },
@@ -451,7 +417,7 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
             providedQuery: params?.query,
             suggestion: "Check query syntax and field names",
           });
-          
+
           throw createSearchMcpError(`Query parsing failed: ${error.message}`, {
             type: "query_parsing",
             details: { query: params?.query },
@@ -474,7 +440,8 @@ export const registerSearchTool: ToolRegistrationFunction = (server: McpServer, 
     "elasticsearch_search",
     {
       title: "Search Elasticsearch",
-      description: "Search Elasticsearch with natural Query DSL parameters. Supports both document search and analytics. Parameters: query (filter), size (document count), from (pagination), sort, aggs (analytics), _source (fields), highlight. Use size=0 for pure analytics, size=10+ for documents. Both documents and aggregations can be returned together. Example: {index: 'logs-*', query: {range: {'@timestamp': {gte: 'now-24h'}}}, size: 50, aggs: {hourly: {date_histogram: {field: '@timestamp', fixed_interval: '1h'}}}}",
+      description:
+        "Search Elasticsearch with natural Query DSL parameters. Supports both document search and analytics. Parameters: query (filter), size (document count), from (pagination), sort, aggs (analytics), _source (fields), highlight. Use size=0 for pure analytics, size=10+ for documents. Both documents and aggregations can be returned together. Example: {index: 'logs-*', query: {range: {'@timestamp': {gte: 'now-24h'}}}, size: 50, aggs: {hourly: {date_histogram: {field: '@timestamp', fixed_interval: '1h'}}}}",
       inputSchema: SearchParams.shape,
     },
     withNotificationContext(searchHandler),

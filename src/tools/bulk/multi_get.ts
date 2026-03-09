@@ -5,7 +5,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
-import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const MultiGetParams = z.object({
@@ -37,23 +37,21 @@ export const registerMultiGetTool: ToolRegistrationFunction = (server: McpServer
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_multi_get",
 
     {
-
       title: "Multi Get",
 
-      description: "Get multiple documents from Elasticsearch in a single request. Best for batch document retrieval, efficient bulk operations, reducing network overhead. Use when you need to fetch multiple JSON documents by their IDs from Elasticsearch indices in one operation.",
+      description:
+        "Get multiple documents from Elasticsearch in a single request. Best for batch document retrieval, efficient bulk operations, reducing network overhead. Use when you need to fetch multiple JSON documents by their IDs from Elasticsearch indices in one operation.",
 
       inputSchema: MultiGetParams.shape,
-
     },
 
     async (params: MultiGetParamsType): Promise<SearchResult> => {
       try {
         const result = await esClient.mget({
-          docs: params.docs,
+          docs: params.docs as any,
           index: params.index,
           preference: params.preference,
           realtime: params.realtime,
@@ -80,6 +78,5 @@ export const registerMultiGetTool: ToolRegistrationFunction = (server: McpServer
         };
       }
     },
-
-  );;
+  );
 };

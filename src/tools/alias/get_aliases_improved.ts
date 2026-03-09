@@ -25,7 +25,7 @@ const getAliasesValidator = z.object({
   sortBy: z.enum(["name", "index_count", "alias_name"]).optional(),
 });
 
-type GetAliasesParams = z.infer<typeof getAliasesValidator>;
+type _GetAliasesParams = z.infer<typeof getAliasesValidator>;
 
 interface AliasSummary {
   alias: string;
@@ -200,12 +200,12 @@ export const registerGetAliasesTool: ToolRegistrationFunction = (server: McpServ
         }
 
         // Add distribution summary if there are many aliases
-        if (totalFound > 10) {
+        if (aliasArray.length > 10) {
           responseContent.push("\n## Statistics");
           const totalIndices = aliasArray.reduce((sum, alias) => sum + alias.index_count, 0);
           const avgIndicesPerAlias = (totalIndices / aliasArray.length).toFixed(1);
 
-          responseContent.push(`- **Total Aliases**: ${totalFound}`);
+          responseContent.push(`- **Total Aliases**: ${aliasArray.length}`);
           responseContent.push(`- **Total Index Mappings**: ${totalIndices}`);
           responseContent.push(`- **Average Indices per Alias**: ${avgIndicesPerAlias}`);
 
@@ -252,10 +252,10 @@ export const registerGetAliasesTool: ToolRegistrationFunction = (server: McpServ
     } catch (error) {
       // Error handling with specific alias error types
       if (error instanceof z.ZodError) {
-        throw createMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           toolName: "elasticsearch_get_aliases",
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 

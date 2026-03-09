@@ -16,10 +16,13 @@ const clearScrollValidator = z.object({
   scrollId: z.string().min(1, "Scroll ID cannot be empty"),
 });
 
-type ClearScrollParams = z.infer<typeof clearScrollValidator>;
+type _ClearScrollParams = z.infer<typeof clearScrollValidator>;
 
 // MCP error handling
-function createClearScrollMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createClearScrollMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -54,9 +57,9 @@ export const registerClearScrollTool: ToolRegistrationFunction = (server: McpSer
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createClearScrollMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createClearScrollMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -74,22 +77,19 @@ export const registerClearScrollTool: ToolRegistrationFunction = (server: McpSer
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_clear_scroll",
 
     {
-
       title: "Clear Scroll",
 
-      description: "Clear a scroll context in Elasticsearch to free resources. Best for cleanup operations, memory management, scroll lifecycle management. Use when you need to explicitly release scroll contexts after completing large result set iterations in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Clear a scroll context in Elasticsearch to free resources. Best for cleanup operations, memory management, scroll lifecycle management. Use when you need to explicitly release scroll contexts after completing large result set iterations in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      scrollId: z.string(), // Scroll ID to clear from memory
-    },
-
+        scrollId: z.string(), // Scroll ID to clear from memory
+      },
     },
 
     clearScrollHandler,
-
   );
 };

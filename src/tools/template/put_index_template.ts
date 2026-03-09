@@ -16,6 +16,7 @@ const putIndexTemplateValidator = z.object({
   name: z.string().min(1, "Template name cannot be empty"),
   indexPatterns: z.array(z.string()).optional(),
   template: z.object({}).passthrough().optional(),
+  dataStream: z.object({}).passthrough().optional(),
   composedOf: z.array(z.string()).optional(),
   priority: z.number().optional(),
   version: z.number().optional(),
@@ -25,7 +26,7 @@ const putIndexTemplateValidator = z.object({
   masterTimeout: z.string().optional(),
 });
 
-type PutIndexTemplateParams = z.infer<typeof putIndexTemplateValidator>;
+type _PutIndexTemplateParams = z.infer<typeof putIndexTemplateValidator>;
 
 // MCP error handling
 function createTemplateMcpError(
@@ -60,6 +61,7 @@ export const registerPutIndexTemplateTool: ToolRegistrationFunction = (server: M
         name,
         indexPatterns,
         template,
+        dataStream,
         composedOf,
         priority,
         version,
@@ -76,6 +78,7 @@ export const registerPutIndexTemplateTool: ToolRegistrationFunction = (server: M
           name,
           index_patterns: indexPatterns,
           template,
+          data_stream: dataStream,
           composed_of: composedOf,
           priority,
           version,
@@ -100,9 +103,9 @@ export const registerPutIndexTemplateTool: ToolRegistrationFunction = (server: M
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createTemplateMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createTemplateMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -150,6 +153,7 @@ export const registerPutIndexTemplateTool: ToolRegistrationFunction = (server: M
       name: z.string(), // Template name (cannot be empty)
       indexPatterns: z.array(z.string().optional()).optional(), // Array of index patterns that this template applies to
       template: z.object({}).optional(), // Template definition containing settings, mappings, and/or aliases
+      dataStream: z.object({}).optional(), // Data stream configuration (e.g. {} for default, or {hidden: true})
       composedOf: z.array(z.string().optional()).optional(), // Array of component template names this template is composed of
       priority: z.number().optional(), // Template priority (higher number = higher priority)
       version: z.number().optional(), // Template version number

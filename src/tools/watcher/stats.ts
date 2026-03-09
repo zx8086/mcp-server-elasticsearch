@@ -24,10 +24,13 @@ const watcherStatsValidator = z.object({
   emit_stacktraces: booleanField().optional(),
 });
 
-type WatcherStatsParams = z.infer<typeof watcherStatsValidator>;
+type _WatcherStatsParams = z.infer<typeof watcherStatsValidator>;
 
 // MCP error handling
-function createWatcherStatsMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createWatcherStatsMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -72,9 +75,9 @@ export const registerWatcherStatsTool: ToolRegistrationFunction = (server: McpSe
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createWatcherStatsMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createWatcherStatsMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -92,23 +95,20 @@ export const registerWatcherStatsTool: ToolRegistrationFunction = (server: McpSe
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_watcher_stats",
 
     {
-
       title: "Watcher Stats",
 
-      description: "Get Elasticsearch Watcher statistics and metrics. Best for performance monitoring, service analysis, execution tracking. Use when you need to monitor Watcher service performance and execution statistics in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Get Elasticsearch Watcher statistics and metrics. Best for performance monitoring, service analysis, execution tracking. Use when you need to monitor Watcher service performance and execution statistics in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      metric: z.any().optional(), // Limit the information returned to specific metrics
-      emit_stacktraces: z.boolean().optional(), // Whether to emit stack traces of currently running watches
-    },
-
+        metric: z.any().optional(), // Limit the information returned to specific metrics
+        emit_stacktraces: z.boolean().optional(), // Whether to emit stack traces of currently running watches
+      },
     },
 
     withReadOnlyCheck("elasticsearch_watcher_stats", watcherStatsHandler, OperationType.READ),
-
-  );;
+  );
 };

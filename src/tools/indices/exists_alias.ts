@@ -7,7 +7,7 @@ import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
-import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
 // FIXED: Original JSON Schema definition removed - now using Zod schema inline
@@ -25,7 +25,7 @@ const existsAliasValidator = z.object({
   masterTimeout: z.string().optional(),
 });
 
-type ExistsAliasParams = z.infer<typeof existsAliasValidator>;
+type _ExistsAliasParams = z.infer<typeof existsAliasValidator>;
 
 // MCP error handling
 function createExistsAliasMcpError(
@@ -76,9 +76,9 @@ export const registerExistsAliasTool: ToolRegistrationFunction = (server: McpSer
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createExistsAliasMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createExistsAliasMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -109,27 +109,24 @@ export const registerExistsAliasTool: ToolRegistrationFunction = (server: McpSer
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_exists_alias",
 
     {
-
       title: "Exists Alias",
 
-      description: "Check if index or data stream aliases exist in Elasticsearch. Best for alias validation, deployment verification, configuration checks. Use when you need to verify alias presence before operations in Elasticsearch.",
+      description:
+        "Check if index or data stream aliases exist in Elasticsearch. Best for alias validation, deployment verification, configuration checks. Use when you need to verify alias presence before operations in Elasticsearch.",
 
       inputSchema: {
-      name: z.any(), // Alias name(s) to check existence for. Examples: 'logs', ['alias1', 'alias2']
-      index: z.any().optional(), // Index name(s) or pattern(s) to check for aliases
-      allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard indices expression resolves into no concrete indices
-      expandWildcards: z.any().optional(), // Type of index that wildcard patterns can match
-      ignoreUnavailable: z.boolean().optional(), // Whether specified concrete indices should be ignored when unavailable
-      masterTimeout: z.string().optional(), // Timeout for connection to master node
-    },
-
+        name: z.any(), // Alias name(s) to check existence for. Examples: 'logs', ['alias1', 'alias2']
+        index: z.any().optional(), // Index name(s) or pattern(s) to check for aliases
+        allowNoIndices: z.boolean().optional(), // Whether to ignore if a wildcard indices expression resolves into no concrete indices
+        expandWildcards: z.any().optional(), // Type of index that wildcard patterns can match
+        ignoreUnavailable: z.boolean().optional(), // Whether specified concrete indices should be ignored when unavailable
+        masterTimeout: z.string().optional(), // Timeout for connection to master node
+      },
     },
 
     existsAliasHandler,
-
   );
 };

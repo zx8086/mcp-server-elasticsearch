@@ -17,10 +17,13 @@ const getWatcherSettingsValidator = z.object({
   masterTimeout: z.string().optional(),
 });
 
-type GetWatcherSettingsParams = z.infer<typeof getWatcherSettingsValidator>;
+type _GetWatcherSettingsParams = z.infer<typeof getWatcherSettingsValidator>;
 
 // MCP error handling
-function createGetWatcherSettingsMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createGetWatcherSettingsMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -64,9 +67,9 @@ export const registerWatcherGetSettingsTool: ToolRegistrationFunction = (server:
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createGetWatcherSettingsMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createGetWatcherSettingsMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -84,22 +87,19 @@ export const registerWatcherGetSettingsTool: ToolRegistrationFunction = (server:
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_watcher_get_settings",
 
     {
-
       title: "Watcher Get Settings",
 
-      description: "Get Elasticsearch Watcher index settings for .watches index. Best for configuration review, troubleshooting, system analysis. Use when you need to inspect Watcher internal index settings in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Get Elasticsearch Watcher index settings for .watches index. Best for configuration review, troubleshooting, system analysis. Use when you need to inspect Watcher internal index settings in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      masterTimeout: z.string().optional(), // Explicit operation timeout for connection to master node
-    },
-
+        masterTimeout: z.string().optional(), // Explicit operation timeout for connection to master node
+      },
     },
 
     withReadOnlyCheck("elasticsearch_watcher_get_settings", getWatcherSettingsHandler, OperationType.READ),
-
-  );;
+  );
 };

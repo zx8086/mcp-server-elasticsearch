@@ -321,7 +321,8 @@ function loadConfigFromEnv(): Partial<Config> {
   // Load Session Tracking config
   config.sessionTracking = {
     enabled:
-      (parseEnvVar(Bun.env[envVarMapping.sessionTracking.enabled], "boolean") as boolean) ?? defaultConfig.sessionTracking.enabled,
+      (parseEnvVar(Bun.env[envVarMapping.sessionTracking.enabled], "boolean") as boolean) ??
+      defaultConfig.sessionTracking.enabled,
     sessionTimeoutMinutes:
       (parseEnvVar(Bun.env[envVarMapping.sessionTracking.sessionTimeoutMinutes], "number") as number) ||
       defaultConfig.sessionTracking.sessionTimeoutMinutes,

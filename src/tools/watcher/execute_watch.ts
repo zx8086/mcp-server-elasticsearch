@@ -16,7 +16,9 @@ import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 // Zod validator for runtime validation
 const executeWatchValidator = z.object({
   id: z.string().optional(),
-  action_modes: z.record(z.enum(["simulate", "force_simulate", "execute", "force_execute", "skip"])).optional(),
+  action_modes: z
+    .record(z.string(), z.enum(["simulate", "force_simulate", "execute", "force_execute", "skip"]))
+    .optional(),
   alternative_input: z.object({}).passthrough().optional(),
   ignore_condition: booleanField().optional(),
   record_execution: booleanField().optional(),
@@ -49,10 +51,13 @@ const executeWatchValidator = z.object({
   debug: booleanField().optional(),
 });
 
-type ExecuteWatchParams = z.infer<typeof executeWatchValidator>;
+type _ExecuteWatchParams = z.infer<typeof executeWatchValidator>;
 
 // MCP error handling
-function createExecuteWatchMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createExecuteWatchMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution" | "watch_not_found"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -79,13 +84,13 @@ export const registerWatcherExecuteWatchTool: ToolRegistrationFunction = (server
 
       const result = await esClient.watcher.executeWatch({
         id: params.id,
-        action_modes: params.action_modes,
+        action_modes: params.action_modes as any,
         alternative_input: params.alternative_input,
         ignore_condition: params.ignore_condition,
         record_execution: params.record_execution,
-        simulated_actions: params.simulated_actions,
-        trigger_data: params.trigger_data,
-        watch: params.watch,
+        simulated_actions: params.simulated_actions as any,
+        trigger_data: params.trigger_data as any,
+        watch: params.watch as any,
         debug: params.debug,
       });
 
@@ -105,9 +110,9 @@ export const registerWatcherExecuteWatchTool: ToolRegistrationFunction = (server
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createExecuteWatchMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createExecuteWatchMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -133,30 +138,27 @@ export const registerWatcherExecuteWatchTool: ToolRegistrationFunction = (server
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_watcher_execute_watch",
 
     {
-
       title: "Watcher Execute Watch",
 
-      description: "Execute a watch in Elasticsearch Watcher for testing or debugging. Best for watch testing, debugging workflows, manual execution. Use when you need to force watch execution outside normal triggers in Elasticsearch alerting systems. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Execute a watch in Elasticsearch Watcher for testing or debugging. Best for watch testing, debugging workflows, manual execution. Use when you need to force watch execution outside normal triggers in Elasticsearch alerting systems. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      id: z.string().optional(), // Watch ID to execute
-      action_modes: z.object({}).optional(), // Override action execution modes
-      alternative_input: z.object({}).optional(), // Alternative input to use instead of the watch input
-      ignore_condition: z.boolean().optional(), // Whether to ignore the condition and always execute the actions
-      record_execution: z.boolean().optional(), // Whether to record the execution in the watch history
-      simulated_actions: z.object({}).optional(), // Actions to simulate instead of executing
-      trigger_data: z.object({}).optional(), // Trigger data to use for execution
-      watch: z.object({}).optional(), // Watch definition to execute inline
-      debug: z.boolean().optional(), // Enable debug mode for execution
-    },
-
+        id: z.string().optional(), // Watch ID to execute
+        action_modes: z.object({}).optional(), // Override action execution modes
+        alternative_input: z.object({}).optional(), // Alternative input to use instead of the watch input
+        ignore_condition: z.boolean().optional(), // Whether to ignore the condition and always execute the actions
+        record_execution: z.boolean().optional(), // Whether to record the execution in the watch history
+        simulated_actions: z.object({}).optional(), // Actions to simulate instead of executing
+        trigger_data: z.object({}).optional(), // Trigger data to use for execution
+        watch: z.object({}).optional(), // Watch definition to execute inline
+        debug: z.boolean().optional(), // Enable debug mode for execution
+      },
     },
 
     withReadOnlyCheck("elasticsearch_watcher_execute_watch", executeWatchHandler, OperationType.WRITE),
-
-  );;
+  );
 };

@@ -17,10 +17,13 @@ const startWatcherValidator = z.object({
   master_timeout: z.string().optional(),
 });
 
-type StartWatcherParams = z.infer<typeof startWatcherValidator>;
+type _StartWatcherParams = z.infer<typeof startWatcherValidator>;
 
 // MCP error handling
-function createStartWatcherMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createStartWatcherMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -64,9 +67,9 @@ export const registerWatcherStartTool: ToolRegistrationFunction = (server: McpSe
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createStartWatcherMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createStartWatcherMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -84,22 +87,19 @@ export const registerWatcherStartTool: ToolRegistrationFunction = (server: McpSe
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_watcher_start",
 
     {
-
       title: "Watcher Start",
 
-      description: "Start the Elasticsearch Watcher service. Best for service management, monitoring activation, system initialization. Use when you need to enable the Watcher service for Elasticsearch alerting and monitoring capabilities. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Start the Elasticsearch Watcher service. Best for service management, monitoring activation, system initialization. Use when you need to enable the Watcher service for Elasticsearch alerting and monitoring capabilities. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      master_timeout: z.string().optional(), // Explicit operation timeout for connection to master node
-    },
-
+        master_timeout: z.string().optional(), // Explicit operation timeout for connection to master node
+      },
     },
 
     withReadOnlyCheck("elasticsearch_watcher_start", startWatcherHandler, OperationType.WRITE),
-
-  );;
+  );
 };

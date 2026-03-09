@@ -25,10 +25,13 @@ const getIndexValidator = z.object({
   masterTimeout: z.string().optional(),
 });
 
-type GetIndexParams = z.infer<typeof getIndexValidator>;
+type _GetIndexParams = z.infer<typeof getIndexValidator>;
 
 // MCP error handling
-function createGetIndexMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createGetIndexMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution" | "index_not_found"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -80,9 +83,9 @@ export const registerGetIndexTool: ToolRegistrationFunction = (server: McpServer
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createGetIndexMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createGetIndexMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -108,29 +111,26 @@ export const registerGetIndexTool: ToolRegistrationFunction = (server: McpServer
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_get_index",
 
     {
-
       title: "Get Index",
 
-      description: "Get comprehensive index information from Elasticsearch including settings, mappings, and aliases. Best for index inspection, configuration analysis, troubleshooting. Empty {} parameters will default to getting information for all indices. Use when you need detailed metadata about Elasticsearch indices structure and configuration. Parameters have smart defaults: index=*, ignoreUnavailable=true, allowNoIndices=true. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Get comprehensive index information from Elasticsearch including settings, mappings, and aliases. Best for index inspection, configuration analysis, troubleshooting. Empty {} parameters will default to getting information for all indices. Use when you need detailed metadata about Elasticsearch indices structure and configuration. Parameters have smart defaults: index=*, ignoreUnavailable=true, allowNoIndices=true. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      index: z.string(), // Index pattern to get information for. Use '*' for all indices. Supports wildcards.
-      ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
-      allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
-      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to: 'all', 'open', 'closed', 'hidden', or 'none'
-      flatSettings: z.boolean().optional(), // Return settings in flat format
-      includeDefaults: z.boolean().optional(), // Include default settings
-      local: z.boolean().optional(), // Return local information only
-      masterTimeout: z.string().optional(), // Timeout for connection to master node
-    },
-
+        index: z.string(), // Index pattern to get information for. Use '*' for all indices. Supports wildcards.
+        ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+        allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+        expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to: 'all', 'open', 'closed', 'hidden', or 'none'
+        flatSettings: z.boolean().optional(), // Return settings in flat format
+        includeDefaults: z.boolean().optional(), // Include default settings
+        local: z.boolean().optional(), // Return local information only
+        masterTimeout: z.string().optional(), // Timeout for connection to master node
+      },
     },
 
     withReadOnlyCheck("elasticsearch_get_index", getIndexHandler, OperationType.READ),
-
-  );;
+  );
 };

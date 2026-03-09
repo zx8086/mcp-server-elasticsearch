@@ -26,10 +26,13 @@ const updateIndexSettingsValidator = z.object({
   flatSettings: coerceBoolean.optional(),
 });
 
-type UpdateIndexSettingsParams = z.infer<typeof updateIndexSettingsValidator>;
+type _UpdateIndexSettingsParams = z.infer<typeof updateIndexSettingsValidator>;
 
 // MCP error handling
-function createUpdateIndexSettingsMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createUpdateIndexSettingsMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution" | "index_not_found" | "resource_already_exists"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -63,23 +66,23 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (server
 
       // Check if settings object is empty or contains only empty objects
       const hasValidSettings = (settings: any): boolean => {
-        if (!settings || typeof settings !== 'object') return false;
-        
+        if (!settings || typeof settings !== "object") return false;
+
         // Check for deeply nested empty objects
         const checkNested = (obj: any): boolean => {
-          if (typeof obj !== 'object' || obj === null) return true;
+          if (typeof obj !== "object" || obj === null) return true;
           const keys = Object.keys(obj);
           if (keys.length === 0) return false;
-          
-          return keys.some(key => {
+
+          return keys.some((key) => {
             const value = obj[key];
-            if (typeof value === 'object' && value !== null) {
+            if (typeof value === "object" && value !== null) {
               return checkNested(value);
             }
             return true; // Primitive values are valid
           });
         };
-        
+
         return checkNested(settings);
       };
 
@@ -90,24 +93,24 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (server
       // Filter out common read-only settings that cause validation errors
       const filterReadOnlySettings = (settings: any): any => {
         const readOnlyPrefixes = [
-          'index.uuid',
-          'index.version',
-          'index.provided_name',
-          'index.creation_date',
-          'index.history',
-          'index.verified_before_close',
+          "index.uuid",
+          "index.version",
+          "index.provided_name",
+          "index.creation_date",
+          "index.history",
+          "index.verified_before_close",
         ];
-        
+
         const filterObject = (obj: any): any => {
-          if (typeof obj !== 'object' || obj === null) return obj;
-          
+          if (typeof obj !== "object" || obj === null) return obj;
+
           const filtered: any = {};
           for (const [key, value] of Object.entries(obj)) {
             const fullPath = key;
-            const isReadOnly = readOnlyPrefixes.some(prefix => fullPath.startsWith(prefix));
-            
+            const isReadOnly = readOnlyPrefixes.some((prefix) => fullPath.startsWith(prefix));
+
             if (!isReadOnly) {
-              if (typeof value === 'object' && value !== null) {
+              if (typeof value === "object" && value !== null) {
                 const filteredValue = filterObject(value);
                 if (Object.keys(filteredValue).length > 0) {
                   filtered[key] = filteredValue;
@@ -121,12 +124,12 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (server
           }
           return filtered;
         };
-        
+
         return filterObject(settings);
       };
 
       const filteredSettings = filterReadOnlySettings(params.settings);
-      
+
       if (!hasValidSettings(filteredSettings)) {
         throw new Error("All provided settings are read-only and cannot be updated");
       }
@@ -164,9 +167,9 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (server
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createUpdateIndexSettingsMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createUpdateIndexSettingsMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -181,22 +184,23 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (server
       // Handle validation errors (action_request_validation_exception)
       if (error instanceof Error && error.message.includes("action_request_validation_exception")) {
         let enhancedMessage = `Settings validation failed: ${error.message}`;
-        
+
         if (error.message.includes("no settings to update")) {
-          enhancedMessage += "\n\nPossible causes:\n" +
+          enhancedMessage +=
+            "\n\nPossible causes:\n" +
             "1. The settings object is empty or contains only read-only settings\n" +
             "2. The settings are nested incorrectly (try flattening: 'index.lifecycle.name' instead of nested objects)\n" +
             "3. Some settings may be read-only for data stream backing indices\n" +
             "\nFor ILM settings on data streams, consider using ILM policy tools instead.";
         }
-        
+
         throw createUpdateIndexSettingsMcpError(enhancedMessage, {
           type: "validation",
-          details: { 
-            index: args.index, 
+          details: {
+            index: args.index,
             settings: args.settings,
-            isDataStream: (args.index as string).startsWith('.ds-'),
-            suggestion: "Try using flat setting names like 'index.lifecycle.name' instead of nested objects"
+            isDataStream: (args.index as string).startsWith(".ds-"),
+            suggestion: "Try using flat setting names like 'index.lifecycle.name' instead of nested objects",
           },
         });
       }
@@ -223,30 +227,27 @@ export const registerUpdateIndexSettingsTool: ToolRegistrationFunction = (server
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_update_index_settings",
 
     {
-
       title: "Update Index Settings",
 
-      description: "Update index settings in Elasticsearch. Best for performance tuning, configuration changes, index optimization. Use when you need to modify index settings for better performance or functionality in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Update index settings in Elasticsearch. Best for performance tuning, configuration changes, index optimization. Use when you need to modify index settings for better performance or functionality in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      index: z.string(), // Name of the index to update settings for
-      settings: z.object({}), // Index settings to update
-      preserveExisting: z.boolean().optional(), // Preserve existing settings that are not specified
-      timeout: z.string().optional(), // Operation timeout (e.g., '30s')
-      masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
-      ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
-      allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
-      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
-      flatSettings: z.boolean().optional(), // Accept settings in flat format
-    },
-
+        index: z.string(), // Name of the index to update settings for
+        settings: z.object({}), // Index settings to update
+        preserveExisting: z.boolean().optional(), // Preserve existing settings that are not specified
+        timeout: z.string().optional(), // Operation timeout (e.g., '30s')
+        masterTimeout: z.string().optional(), // Master node timeout (e.g., '30s')
+        ignoreUnavailable: z.boolean().optional(), // Ignore unavailable indices
+        allowNoIndices: z.boolean().optional(), // Allow wildcards that match no indices
+        expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(), // Which indices to expand wildcards to
+        flatSettings: z.boolean().optional(), // Accept settings in flat format
+      },
     },
 
     withReadOnlyCheck("elasticsearch_update_index_settings", updateIndexSettingsHandler, OperationType.WRITE),
-
-  );;
+  );
 };

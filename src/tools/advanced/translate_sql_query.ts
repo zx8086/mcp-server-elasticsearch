@@ -4,8 +4,7 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
-import { zodToJsonSchemaCompat as zodToJsonSchema } from "../../utils/zodToJsonSchema.js";
-import { type SearchResult, TextContent, type ToolRegistrationFunction } from "../types.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Define the parameter schema type
 const TranslateSqlQueryParams = z.object({
@@ -16,35 +15,17 @@ const TranslateSqlQueryParams = z.object({
 
 type TranslateSqlQueryParamsType = z.infer<typeof TranslateSqlQueryParams>;
 export const registerTranslateSqlQueryTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
-  // Convert Zod schema to JSON Schema for MCP SDK
-  const jsonSchema = zodToJsonSchema(TranslateSqlQueryParams, {
-    $refStrategy: "none",
-    target: "jsonSchema7",
-  });
-
-  // Tool registration using modern registerTool method
-
-
   server.registerTool(
-
-
     "elasticsearch_translate_sql_query",
 
-
     {
-
-
       title: "Translate Sql Query",
 
+      description:
+        "Translate a SQL query to Elasticsearch Query DSL using the SQL Translate API. Best for SQL-to-DSL conversion, query optimization, learning Elasticsearch Query DSL. Use when you need to convert familiar SQL syntax to native Elasticsearch queries.",
 
-      description: "Translate a SQL query to Elasticsearch Query DSL using the SQL Translate API. Best for SQL-to-DSL conversion, query optimization, learning Elasticsearch Query DSL. Use when you need to convert familiar SQL syntax to native Elasticsearch queries.",
-
-
-      inputSchema: jsonSchema.shape,
-
-
+      inputSchema: TranslateSqlQueryParams.shape,
     },
-
 
     async (params: any): Promise<SearchResult> => {
       // Validate params with Zod schema
@@ -72,7 +53,5 @@ export const registerTranslateSqlQueryTool: ToolRegistrationFunction = (server: 
         };
       }
     },
-
-
-  );;
+  );
 };

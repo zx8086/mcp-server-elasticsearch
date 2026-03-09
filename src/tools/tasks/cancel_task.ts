@@ -54,36 +54,24 @@ export const registerCancelTaskTool: ToolRegistrationFunction = (server: McpServ
 
   // Tool registration using modern registerTool method
 
-
   server.registerTool(
-
-
     "elasticsearch_tasks_cancel_task",
 
-
     {
-
-
       title: "Tasks Cancel Task",
 
-
-      description: "Cancel a running Elasticsearch task. Best for operation control, resource management, stopping long-running operations. Use when you need to terminate tasks that are taking too long or consuming too many resources in Elasticsearch. WARNING: Task management API is beta.",
-
+      description:
+        "Cancel a running Elasticsearch task. Best for operation control, resource management, stopping long-running operations. Use when you need to terminate tasks that are taking too long or consuming too many resources in Elasticsearch. WARNING: Task management API is beta.",
 
       inputSchema: {
-      taskId: z.string().optional(),
-      actions: z.union([z.string(), z.array(z.string())]).optional(),
-      nodes: z.array(z.string()).optional(),
-      parentTaskId: z.string().optional(),
-      waitForCompletion: booleanField().optional(),
+        taskId: z.string().optional(),
+        actions: z.union([z.string(), z.array(z.string())]).optional(),
+        nodes: z.array(z.string()).optional(),
+        parentTaskId: z.string().optional(),
+        waitForCompletion: booleanField().optional(),
+      },
     },
-
-
-    },
-
 
     withReadOnlyCheck("elasticsearch_tasks_cancel_task", cancelTaskImpl, OperationType.WRITE),
-
-
-  );;
+  );
 };

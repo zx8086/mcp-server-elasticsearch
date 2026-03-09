@@ -4,9 +4,8 @@ import type { Client } from "@elastic/elasticsearch";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import type { ToolRegistrationFunction } from "../../types.js";
-import { ElasticsearchDiagnostics, ObservableTransport } from "../../utils/elasticsearchObservability.js";
 import { logger } from "../../utils/logger.js";
+import type { ToolRegistrationFunction } from "../types.js";
 
 // Schema for diagnostic options
 const diagnosticsValidator = z.object({
@@ -16,7 +15,7 @@ const diagnosticsValidator = z.object({
   timeWindowMinutes: z.number().min(1).max(60).optional().default(5),
 });
 
-type DiagnosticsParams = z.infer<typeof diagnosticsValidator>;
+type _DiagnosticsParams = z.infer<typeof diagnosticsValidator>;
 
 export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const handler = async (toolArgs: any): Promise<any> => {
@@ -24,7 +23,7 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (serve
       const params = diagnosticsValidator.parse(toolArgs);
 
       // Generate basic health report using standard client info
-      let clusterInfo;
+      let clusterInfo: any;
       try {
         clusterInfo = await esClient.info();
       } catch (error) {
@@ -78,8 +77,8 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (serve
           output += "## Cluster Statistics\n\n";
           output += `- **Total Indices:** ${stats.indices?.count || "N/A"}\n`;
           output += `- **Total Documents:** ${stats.indices?.docs?.count || "N/A"}\n`;
-          output += `- **Store Size:** ${stats.indices?.store?.size_in_bytes ? Math.round((stats.indices.store.size_in_bytes / 1024 / 1024 / 1024) * 100) / 100 + "GB" : "N/A"}\n`;
-          output += `- **Memory Usage:** ${stats.nodes?.jvm?.mem?.heap_used_in_bytes ? Math.round(stats.nodes.jvm.mem.heap_used_in_bytes / 1024 / 1024) + "MB" : "N/A"}\n\n`;
+          output += `- **Store Size:** ${stats.indices?.store?.size_in_bytes ? `${Math.round((stats.indices.store.size_in_bytes / 1024 / 1024 / 1024) * 100) / 100}GB` : "N/A"}\n`;
+          output += `- **Memory Usage:** ${stats.nodes?.jvm?.mem?.heap_used_in_bytes ? `${Math.round(stats.nodes.jvm.mem.heap_used_in_bytes / 1024 / 1024)}MB` : "N/A"}\n\n`;
         } catch (error) {
           output += "## Cluster Statistics\n\n";
           output += `⚠️ Could not retrieve cluster stats: ${error instanceof Error ? error.message : String(error)}\n\n`;
@@ -89,7 +88,9 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (serve
       // Performance recommendations
       output += "## Performance Recommendations\n\n";
 
-      const majorVersion = clusterInfo.version?.number ? Number.parseInt(clusterInfo.version.number.split(".")[0]) : 0;
+      const majorVersion = clusterInfo.version?.number
+        ? Number.parseInt(clusterInfo.version.number.split(".")[0], 10)
+        : 0;
       if (majorVersion < 8) {
         output += "- Consider upgrading to Elasticsearch 8.x for better performance and security\n";
       }
@@ -145,7 +146,7 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (serve
       if (error instanceof z.ZodError) {
         throw new McpError(
           ErrorCode.InvalidParams,
-          `Validation failed: ${error.errors.map((e) => e.message).join(", ")}`,
+          `Validation failed: ${error.issues.map((e) => e.message).join(", ")}`,
         );
       }
 
@@ -162,49 +163,41 @@ export const registerElasticsearchDiagnostics: ToolRegistrationFunction = (serve
 
   // Tool registration using modern registerTool method
 
-
   server.registerTool(
-
-
     "elasticsearch_diagnostics",
 
-
     {
-
-
       title: "Diagnostics",
 
-
-      description: "Generate comprehensive Elasticsearch transport and performance diagnostics report. Provides insights into connection health, request patterns, slow queries, error rates, and performance recommendations.",
-
+      description:
+        "Generate comprehensive Elasticsearch transport and performance diagnostics report. Provides insights into connection health, request patterns, slow queries, error rates, and performance recommendations.",
 
       inputSchema: {
-      includeMetrics: z.boolean().optional().default(true).describe("Include detailed transport metrics in the report"),
-      includeRecentRequests: z
-        .boolean()
-        .optional()
-        .default(false)
-        .describe("Include list of recent requests (can be verbose)"),
-      includeSlowQueries: z
-        .boolean()
-        .optional()
-        .default(true)
-        .describe("Include details about slow queries (>2 seconds)"),
-      timeWindowMinutes: z
-        .number()
-        .min(1)
-        .max(60)
-        .optional()
-        .default(5)
-        .describe("Time window for analysis in minutes (1-60)"),
+        includeMetrics: z
+          .boolean()
+          .optional()
+          .default(true)
+          .describe("Include detailed transport metrics in the report"),
+        includeRecentRequests: z
+          .boolean()
+          .optional()
+          .default(false)
+          .describe("Include list of recent requests (can be verbose)"),
+        includeSlowQueries: z
+          .boolean()
+          .optional()
+          .default(true)
+          .describe("Include details about slow queries (>2 seconds)"),
+        timeWindowMinutes: z
+          .number()
+          .min(1)
+          .max(60)
+          .optional()
+          .default(5)
+          .describe("Time window for analysis in minutes (1-60)"),
+      },
     },
-
-
-    },
-
 
     handler,
-
-
   );
 };

@@ -24,7 +24,7 @@ const startValidator = z.object({
   timeout: z.string().optional(),
 });
 
-type StartParams = z.infer<typeof startValidator>;
+type _StartParams = z.infer<typeof startValidator>;
 
 // =============================================================================
 // 2. STANDARDIZED MCP ERROR HANDLING
@@ -106,9 +106,9 @@ Operation completed at: ${new Date().toISOString()}`,
     } catch (error) {
       // Standardized MCP error handling
       if (error instanceof z.ZodError) {
-        throw createIlmStartMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createIlmStartMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -142,24 +142,21 @@ Operation completed at: ${new Date().toISOString()}`,
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_ilm_start",
 
     {
-
       title: "Ilm Start",
 
-      description: "Start ILM. Start the Index Lifecycle Management plugin to resume automated operations. Uses direct JSON Schema and standardized MCP error codes. Examples: {} (no params needed), {masterTimeout: 30s}.",
+      description:
+        "Start ILM. Start the Index Lifecycle Management plugin to resume automated operations. Uses direct JSON Schema and standardized MCP error codes. Examples: {} (no params needed), {masterTimeout: 30s}.",
 
       inputSchema: {
-      masterTimeout: z.string().optional(), // Master node timeout
-      timeout: z.string().optional(), // Request timeout
-    },
-
+        masterTimeout: z.string().optional(), // Master node timeout
+        timeout: z.string().optional(), // Request timeout
+      },
     },
 
     // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_start", startHandler, OperationType.WRITE),
-
-  );;
+  );
 };

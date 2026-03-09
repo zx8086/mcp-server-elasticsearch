@@ -7,7 +7,7 @@ import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { logger } from "../../utils/logger.js";
 import { booleanField } from "../../utils/zodHelpers.js";
-import type { SearchResult, TextContent, ToolRegistrationFunction } from "../types.js";
+import type { SearchResult, ToolRegistrationFunction } from "../types.js";
 
 // Direct JSON Schema definition
 // FIXED: Original JSON Schema definition removed - now using Zod schema inline
@@ -20,7 +20,7 @@ const existsTemplateValidator = z.object({
   masterTimeout: z.string().optional(),
 });
 
-type ExistsTemplateParams = z.infer<typeof existsTemplateValidator>;
+type _ExistsTemplateParams = z.infer<typeof existsTemplateValidator>;
 
 // MCP error handling
 function createExistsTemplateMcpError(
@@ -69,9 +69,9 @@ export const registerExistsTemplateTool: ToolRegistrationFunction = (server: Mcp
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createExistsTemplateMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createExistsTemplateMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -105,25 +105,22 @@ export const registerExistsTemplateTool: ToolRegistrationFunction = (server: Mcp
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_exists_template",
 
     {
-
       title: "Exists Template",
 
-      description: "Check existence of legacy index templates in Elasticsearch. Best for legacy template validation, migration planning, compatibility checks. Use when you need to verify legacy index template presence in Elasticsearch (deprecated, use composable templates instead).",
+      description:
+        "Check existence of legacy index templates in Elasticsearch. Best for legacy template validation, migration planning, compatibility checks. Use when you need to verify legacy index template presence in Elasticsearch (deprecated, use composable templates instead).",
 
       inputSchema: {
-      name: z.any(), // Legacy template name(s) to check existence for. Examples: 'template1', ['template1', 'template2']
-      flatSettings: z.boolean().optional(), // Return settings in flat format
-      local: z.boolean().optional(), // Return local information, do not retrieve the state from master node
-      masterTimeout: z.string().optional(), // Timeout for connection to master node
-    },
-
+        name: z.any(), // Legacy template name(s) to check existence for. Examples: 'template1', ['template1', 'template2']
+        flatSettings: z.boolean().optional(), // Return settings in flat format
+        local: z.boolean().optional(), // Return local information, do not retrieve the state from master node
+        masterTimeout: z.string().optional(), // Timeout for connection to master node
+      },
     },
 
     existsTemplateHandler,
-
   );
 };

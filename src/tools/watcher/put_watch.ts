@@ -18,6 +18,7 @@ const putWatchValidator = z.object({
   id: z.string().min(1, "Watch ID cannot be empty"),
   actions: z
     .record(
+      z.string(),
       z.object({
         add_backing_index: z.object({}).passthrough().optional(),
         remove_backing_index: z.object({}).passthrough().optional(),
@@ -62,10 +63,13 @@ const putWatchValidator = z.object({
   version: z.number().optional(),
 });
 
-type PutWatchParams = z.infer<typeof putWatchValidator>;
+type _PutWatchParams = z.infer<typeof putWatchValidator>;
 
 // MCP error handling
-function createPutWatchMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createPutWatchMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution" | "watch_already_exists"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -92,14 +96,14 @@ export const registerWatcherPutWatchTool: ToolRegistrationFunction = (server: Mc
 
       const result = await esClient.watcher.putWatch({
         id: params.id,
-        actions: params.actions,
-        condition: params.condition,
-        input: params.input,
-        metadata: params.metadata,
+        actions: params.actions as any,
+        condition: params.condition as any,
+        input: params.input as any,
+        metadata: params.metadata as any,
         throttle_period: params.throttle_period,
         throttle_period_in_millis: params.throttle_period_in_millis,
-        transform: params.transform,
-        trigger: params.trigger,
+        transform: params.transform as any,
+        trigger: params.trigger as any,
         active: params.active,
         if_primary_term: params.if_primary_term,
         if_seq_no: params.if_seq_no,
@@ -122,9 +126,9 @@ export const registerWatcherPutWatchTool: ToolRegistrationFunction = (server: Mc
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createPutWatchMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createPutWatchMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -150,34 +154,31 @@ export const registerWatcherPutWatchTool: ToolRegistrationFunction = (server: Mc
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_watcher_put_watch",
 
     {
-
       title: "Watcher Put Watch",
 
-      description: "Create or update a watch in Elasticsearch Watcher. Best for alerting setup, monitoring automation, notification configuration. Use when you need to define watch triggers and actions for Elasticsearch alerting workflows. IMPORTANT: Use only this API, not direct index operations. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Create or update a watch in Elasticsearch Watcher. Best for alerting setup, monitoring automation, notification configuration. Use when you need to define watch triggers and actions for Elasticsearch alerting workflows. IMPORTANT: Use only this API, not direct index operations. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      id: z.string(), // Watch ID
-      actions: z.object({}).optional(), // Actions to execute when watch triggers
-      condition: z.object({}).optional(), // Condition that determines when to execute actions
-      input: z.object({}).optional(), // Input for the watch execution
-      metadata: z.object({}).optional(), // Watch metadata
-      throttle_period: z.string().optional(), // Throttle period for watch execution
-      throttle_period_in_millis: z.number().optional(), // Throttle period in milliseconds
-      transform: z.object({}).optional(), // Transform to apply to watch payload
-      trigger: z.object({}).optional(), // Trigger that determines when watch should run
-      active: z.boolean().optional(), // Whether the watch is active
-      if_primary_term: z.number().optional(), // Only perform operation if primary term matches
-      if_seq_no: z.number().optional(), // Only perform operation if sequence number matches
-      version: z.number().optional(), // Explicit version number for concurrency control
-    },
-
+        id: z.string(), // Watch ID
+        actions: z.object({}).optional(), // Actions to execute when watch triggers
+        condition: z.object({}).optional(), // Condition that determines when to execute actions
+        input: z.object({}).optional(), // Input for the watch execution
+        metadata: z.object({}).optional(), // Watch metadata
+        throttle_period: z.string().optional(), // Throttle period for watch execution
+        throttle_period_in_millis: z.number().optional(), // Throttle period in milliseconds
+        transform: z.object({}).optional(), // Transform to apply to watch payload
+        trigger: z.object({}).optional(), // Trigger that determines when watch should run
+        active: z.boolean().optional(), // Whether the watch is active
+        if_primary_term: z.number().optional(), // Only perform operation if primary term matches
+        if_seq_no: z.number().optional(), // Only perform operation if sequence number matches
+        version: z.number().optional(), // Explicit version number for concurrency control
+      },
     },
 
     withReadOnlyCheck("elasticsearch_watcher_put_watch", putWatchHandler, OperationType.WRITE),
-
-  );;
+  );
 };

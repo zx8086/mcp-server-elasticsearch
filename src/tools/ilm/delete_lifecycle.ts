@@ -58,10 +58,11 @@ function createIlmDeleteMcpError(
 export const registerDeleteLifecycleTool: ToolRegistrationFunction = (server: McpServer, esClient: Client) => {
   const deleteLifecycleHandler = async (args: any): Promise<SearchResult> => {
     const perfStart = performance.now();
+    let params: DeleteLifecycleParams | undefined;
 
     try {
       // Simple validation - no complex parameter extraction
-      const params = deleteLifecycleValidator.parse(args);
+      params = deleteLifecycleValidator.parse(args);
 
       logger.debug("Deleting ILM lifecycle policy (simplified)", {
         policy: params.policy,
@@ -124,9 +125,9 @@ export const registerDeleteLifecycleTool: ToolRegistrationFunction = (server: Mc
     } catch (error) {
       // Standardized MCP error handling
       if (error instanceof z.ZodError) {
-        throw createIlmDeleteMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createIlmDeleteMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -143,20 +144,22 @@ export const registerDeleteLifecycleTool: ToolRegistrationFunction = (server: Mc
         }
 
         if (error.message.includes("resource_not_found")) {
-          throw createIlmDeleteMcpError(`Policy '${params.policy}' not found`, {
+          const policyName = params?.policy || "unknown";
+          throw createIlmDeleteMcpError(`Policy '${policyName}' not found`, {
             type: "not_found",
-            details: { policy: params.policy },
+            details: { policy: policyName },
           });
         }
 
         // Check for policy in use error
         if (error.message.includes("cannot delete policy") || error.message.includes("in use")) {
+          const policyName = params?.policy || "unknown";
           throw createIlmDeleteMcpError(
-            `Policy '${params.policy}' cannot be deleted because it is currently in use by indices or templates`,
+            `Policy '${policyName}' cannot be deleted because it is currently in use by indices or templates`,
             {
               type: "in_use",
               details: {
-                policy: params.policy,
+                policy: policyName,
                 suggestion: "Remove the policy from all indices and templates before deleting it",
               },
             },
@@ -168,7 +171,7 @@ export const registerDeleteLifecycleTool: ToolRegistrationFunction = (server: Mc
         type: "execution",
         details: {
           duration: performance.now() - perfStart,
-          policy: params.policy,
+          policy: params?.policy || "unknown",
           args,
         },
       });
@@ -179,27 +182,24 @@ export const registerDeleteLifecycleTool: ToolRegistrationFunction = (server: Mc
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_ilm_delete_lifecycle",
 
     {
-
       title: "Ilm Delete Lifecycle",
 
-      description: "Delete an ILM policy. ⚠️ DESTRUCTIVE OPERATION: Cannot be undone. Policy must not be in use by any indices or templates. Examples: {policy: old-logs-policy}. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Delete an ILM policy. ⚠️ DESTRUCTIVE OPERATION: Cannot be undone. Policy must not be in use by any indices or templates. Examples: {policy: old-logs-policy}. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      policy: z.string(), // Policy name to delete (required)
-      masterTimeout: z.string().optional(), // Master node timeout
-      timeout: z.string().optional(), // Request timeout
-    },
-
+        policy: z.string().min(1).describe("Policy name to delete (required)"),
+        masterTimeout: z.string().optional().describe("Master node timeout"),
+        timeout: z.string().optional().describe("Request timeout"),
+      },
     },
 
     // Direct JSON Schema - no Zod conversion
     withReadOnlyCheck("elasticsearch_ilm_delete_lifecycle", deleteLifecycleHandler, OperationType.DELETE),
-
-  );;
+  );
 };
 
 // =============================================================================

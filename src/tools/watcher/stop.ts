@@ -17,10 +17,13 @@ const stopWatcherValidator = z.object({
   master_timeout: z.string().optional(),
 });
 
-type StopWatcherParams = z.infer<typeof stopWatcherValidator>;
+type _StopWatcherParams = z.infer<typeof stopWatcherValidator>;
 
 // MCP error handling
-function createStopWatcherMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createStopWatcherMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -64,9 +67,9 @@ export const registerWatcherStopTool: ToolRegistrationFunction = (server: McpSer
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createStopWatcherMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createStopWatcherMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -84,22 +87,19 @@ export const registerWatcherStopTool: ToolRegistrationFunction = (server: McpSer
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_watcher_stop",
 
     {
-
       title: "Watcher Stop",
 
-      description: "Stop the Elasticsearch Watcher service. Best for service management, monitoring deactivation, maintenance operations. Use when you need to disable the Watcher service for Elasticsearch maintenance or troubleshooting. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Stop the Elasticsearch Watcher service. Best for service management, monitoring deactivation, maintenance operations. Use when you need to disable the Watcher service for Elasticsearch maintenance or troubleshooting. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      master_timeout: z.string().optional(), // Explicit operation timeout for connection to master node
-    },
-
+        master_timeout: z.string().optional(), // Explicit operation timeout for connection to master node
+      },
     },
 
     withReadOnlyCheck("elasticsearch_watcher_stop", stopWatcherHandler, OperationType.WRITE),
-
-  );;
+  );
 };

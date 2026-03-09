@@ -17,7 +17,7 @@ const deleteIndexTemplateValidator = z.object({
   masterTimeout: z.string().optional(),
 });
 
-type DeleteIndexTemplateParams = z.infer<typeof deleteIndexTemplateValidator>;
+type _DeleteIndexTemplateParams = z.infer<typeof deleteIndexTemplateValidator>;
 
 // MCP error handling
 function createTemplateMcpError(
@@ -72,9 +72,9 @@ export const registerDeleteIndexTemplateTool: ToolRegistrationFunction = (server
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createTemplateMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createTemplateMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -111,23 +111,20 @@ export const registerDeleteIndexTemplateTool: ToolRegistrationFunction = (server
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_delete_index_template",
 
     {
-
       title: "Delete Index Template",
 
-      description: "Delete an index template in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes. Best for template management, configuration cleanup, removing unused templates. Use when you need to remove Elasticsearch index templates that define settings and mappings for new indices. WARNING: This is a destructive operation that cannot be undone.",
+      description:
+        "Delete an index template in Elasticsearch. Uses direct JSON Schema and standardized MCP error codes. Best for template management, configuration cleanup, removing unused templates. Use when you need to remove Elasticsearch index templates that define settings and mappings for new indices. WARNING: This is a destructive operation that cannot be undone.",
 
       inputSchema: {
-      name: z.string(), // Template name (cannot be empty)
-      masterTimeout: z.string().optional(), // Timeout for master node operations
-    },
-
+        name: z.string(), // Template name (cannot be empty)
+        masterTimeout: z.string().optional(), // Timeout for master node operations
+      },
     },
 
     deleteIndexTemplateHandler,
-
   );
 };

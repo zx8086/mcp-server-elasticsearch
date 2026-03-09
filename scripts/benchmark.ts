@@ -33,7 +33,7 @@ async function runBenchmarks() {
       "get_aliases",
       "indices_summary",
     ],
-    iterations: process.env.BENCHMARK_ITERATIONS ? Number.parseInt(process.env.BENCHMARK_ITERATIONS) : 100,
+    iterations: process.env.BENCHMARK_ITERATIONS ? Number.parseInt(process.env.BENCHMARK_ITERATIONS, 10) : 100,
     warmup: 10,
   };
 

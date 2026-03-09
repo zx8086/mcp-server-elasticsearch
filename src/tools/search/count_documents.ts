@@ -30,10 +30,13 @@ const countDocumentsValidator = z.object({
   terminateAfter: z.number().optional(),
 });
 
-type CountDocumentsParams = z.infer<typeof countDocumentsValidator>;
+type _CountDocumentsParams = z.infer<typeof countDocumentsValidator>;
 
 // MCP error handling
-function createCountDocumentsMcpError(error: Error | string, context: { type: string; details?: any }): McpError {
+function createCountDocumentsMcpError(
+  error: Error | string,
+  context: { type: "validation" | "execution"; details?: any },
+): McpError {
   const message = error instanceof Error ? error.message : error;
 
   const errorCodeMap = {
@@ -54,7 +57,8 @@ export const registerCountDocumentsTool: ToolRegistrationFunction = (server: Mcp
       const params = countDocumentsValidator.parse(args);
 
       // Handle empty query object - Elasticsearch rejects empty queries
-      const isEmptyQuery = !params.query || (typeof params.query === 'object' && Object.keys(params.query).length === 0);
+      const isEmptyQuery =
+        !params.query || (typeof params.query === "object" && Object.keys(params.query).length === 0);
       const finalQuery = isEmptyQuery ? undefined : params.query; // Let Elasticsearch default to match_all
 
       logger.debug("Count documents request", {
@@ -97,9 +101,9 @@ export const registerCountDocumentsTool: ToolRegistrationFunction = (server: Mcp
     } catch (error) {
       // Error handling
       if (error instanceof z.ZodError) {
-        throw createCountDocumentsMcpError(`Validation failed: ${error.errors.map((e) => e.message).join(", ")}`, {
+        throw createCountDocumentsMcpError(`Validation failed: ${error.issues.map((e) => e.message).join(", ")}`, {
           type: "validation",
-          details: { validationErrors: error.errors, providedArgs: args },
+          details: { validationErrors: error.issues, providedArgs: args },
         });
       }
 
@@ -107,7 +111,7 @@ export const registerCountDocumentsTool: ToolRegistrationFunction = (server: Mcp
       if (error instanceof Error) {
         if (error.message.includes("parsing_exception") && error.message.includes("query malformed")) {
           let enhancedMessage = `Query parsing failed: ${error.message}`;
-          
+
           if (error.message.includes("empty clause found")) {
             enhancedMessage += "\n\nThis error occurs when an empty query object {} is provided.";
             enhancedMessage += "\nSolutions:";
@@ -129,9 +133,9 @@ export const registerCountDocumentsTool: ToolRegistrationFunction = (server: Mcp
         if (error.message.includes("index_not_found_exception")) {
           throw createCountDocumentsMcpError(`Index not found: ${args.index || "*"}`, {
             type: "validation",
-            details: { 
+            details: {
               providedIndex: args.index,
-              suggestion: "Verify the index name or pattern exists" 
+              suggestion: "Verify the index name or pattern exists",
             },
           });
         }
@@ -151,36 +155,33 @@ export const registerCountDocumentsTool: ToolRegistrationFunction = (server: Mcp
   // Tool registration using modern registerTool method
 
   server.registerTool(
-
     "elasticsearch_count_documents",
 
     {
-
       title: "Count Documents",
 
-      description: "Count documents in Elasticsearch. PARAMETERS: index (string, default *), query (object, default match_all). Best for data analysis, result set sizing. Example: {index: logs-*, query: {match: {status: error}}}. Uses direct JSON Schema and standardized MCP error codes.",
+      description:
+        "Count documents in Elasticsearch. PARAMETERS: index (string, default *), query (object, default match_all). Best for data analysis, result set sizing. Example: {index: logs-*, query: {match: {status: error}}}. Uses direct JSON Schema and standardized MCP error codes.",
 
       inputSchema: {
-      index: z.string().optional(), // Index pattern to count documents in. Use '*' for all indices
-      query: z.object({}).optional(), // Query DSL to filter documents. Default matches all
-      analyzer: z.string().optional(),
-      analyzeWildcard: z.boolean().optional(),
-      defaultOperator: z.enum(["AND", "OR"]).optional(),
-      df: z.string().optional(),
-      expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
-      ignoreThrottled: z.boolean().optional(),
-      ignoreUnavailable: z.boolean().optional(),
-      allowNoIndices: z.boolean().optional(),
-      minScore: z.number().optional(),
-      preference: z.string().optional(),
-      routing: z.string().optional(),
-      q: z.string().optional(),
-      terminateAfter: z.number().optional(),
-    },
-
+        index: z.string().optional(), // Index pattern to count documents in. Use '*' for all indices
+        query: z.object({}).optional(), // Query DSL to filter documents. Default matches all
+        analyzer: z.string().optional(),
+        analyzeWildcard: z.boolean().optional(),
+        defaultOperator: z.enum(["AND", "OR"]).optional(),
+        df: z.string().optional(),
+        expandWildcards: z.enum(["all", "open", "closed", "hidden", "none"]).optional(),
+        ignoreThrottled: z.boolean().optional(),
+        ignoreUnavailable: z.boolean().optional(),
+        allowNoIndices: z.boolean().optional(),
+        minScore: z.number().optional(),
+        preference: z.string().optional(),
+        routing: z.string().optional(),
+        q: z.string().optional(),
+        terminateAfter: z.number().optional(),
+      },
     },
 
     countDocumentsHandler,
-
-  );;
+  );
 };
